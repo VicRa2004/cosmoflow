@@ -41,6 +41,7 @@ model Usuario {
   tareas           Tarea[]
   notas            Nota[]
   adjuntos         Adjunto[]
+  organizaciones   MiembroOrganizacion[]
 
   @@map("usuario")
 }
@@ -318,4 +319,39 @@ model Adjunto {
 
   @@index([usuarioId])
   @@map("adjunto")
+}
+
+/// Espacio de trabajo compartido (RN-13). Solo la ven sus miembros (RN-90).
+model Organizacion {
+  id          Int       @id @default(autoincrement()) @map("org_id")
+  nombre      String    @map("org_nombre") @db.VarChar(100)
+  descripcion String    @default("") @map("org_descripcion") @db.VarChar(500)
+  /// Hex `#rrggbb` (RN-15)
+  color       String    @map("org_color") @db.VarChar(7)
+  /// Clave en el almacenamiento; sin ella la interfaz muestra las iniciales
+  avatar      String?   @map("org_avatar") @db.VarChar(255)
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime? @updatedAt @map("updated_at")
+  /// Borrado lógico (RN-91)
+  deletedAt   DateTime? @map("deleted_at")
+
+  miembros MiembroOrganizacion[]
+
+  @@map("organizacion")
+}
+
+/// Pertenencia de un usuario a una organización (RN-02, RN-10).
+model MiembroOrganizacion {
+  organizacionId Int      @map("mor_fkorganizacion")
+  usuarioId      Int      @map("mor_fkusuario")
+  /// RN-11: el creador lo es por defecto
+  isAdmin        Boolean  @default(false) @map("mor_is_admin")
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  organizacion Organizacion @relation(fields: [organizacionId], references: [id], onDelete: Cascade)
+  usuario      Usuario      @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+
+  @@id([organizacionId, usuarioId])
+  @@index([usuarioId])
+  @@map("miembro_organizacion")
 }

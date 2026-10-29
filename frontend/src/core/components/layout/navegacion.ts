@@ -1,4 +1,5 @@
 import type { LinkProps } from "@tanstack/react-router";
+import { cn } from "@/core/utils/cn";
 import {
 	CircleDot,
 	ListTodo,
@@ -66,3 +67,11 @@ export const NAVEGACION: GrupoNavegacion[] = [
 		],
 	},
 ];
+
+/** Clases de un enlace del menú lateral (también los de organizaciones). */
+export const claseEnlaceLateral = (colapsado: boolean) =>
+	cn(
+		"group flex h-8 items-center gap-2.5 rounded-md px-2 text-sm text-lateral-suave transition-colors hover:bg-lateral-elevada hover:text-lateral-tinta",
+		"[&.active]:bg-lateral-elevada [&.active]:font-medium [&.active]:text-lateral-tinta",
+		colapsado && "justify-center px-0",
+	);

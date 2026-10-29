@@ -3,7 +3,8 @@ import { PanelLeftClose, PanelLeftOpen } from "lucide-react";
 import { usePermisos } from "@/core/auth/usePermisos";
 import { cn } from "@/core/utils/cn";
 import { Marca } from "./Marca";
-import { NAVEGACION } from "./navegacion";
+import { OrganizacionesNav } from "@/modules/organizaciones/components/OrganizacionesNav";
+import { claseEnlaceLateral, NAVEGACION } from "./navegacion";
 
 interface SidebarProps {
 	colapsado?: boolean;
@@ -56,11 +57,7 @@ export function Sidebar({
 										to={to}
 										onClick={onNavegar}
 										title={colapsado ? etiqueta : undefined}
-										className={cn(
-											"group flex h-8 items-center gap-2.5 rounded-md px-2 text-sm text-lateral-suave transition-colors hover:bg-lateral-elevada hover:text-lateral-tinta",
-											"[&.active]:bg-lateral-elevada [&.active]:font-medium [&.active]:text-lateral-tinta",
-											colapsado && "justify-center px-0",
-										)}
+										className={claseEnlaceLateral(colapsado)}
 									>
 										<Icono
 											aria-hidden
@@ -75,6 +72,9 @@ export function Sidebar({
 						</ul>
 					</div>
 				))}
+				{puede("organizaciones:leer") && (
+					<OrganizacionesNav colapsado={colapsado} onNavegar={onNavegar} />
+				)}
 			</nav>
 
 			{onAlternar && (

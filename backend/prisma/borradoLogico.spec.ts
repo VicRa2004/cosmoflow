@@ -11,6 +11,8 @@ const EXENTOS: Record<string, string> = {
 	UsuarioPermiso: "relación",
 	TareaTag: "relación",
 	NotaTag: "relación",
+	// Salir o ser expulsado borra la fila; quién lo hizo queda en auditoría.
+	MiembroOrganizacion: "relación",
 	// Técnicas: no son datos del usuario y caducan o se purgan solas.
 	RefreshToken: "técnica",
 	TokenCuenta: "técnica",

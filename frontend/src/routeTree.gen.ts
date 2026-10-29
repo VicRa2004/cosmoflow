@@ -25,6 +25,8 @@ import { Route as LoginGoogleRouteImport } from './routes/login_.google'
 import { Route as AuthenticatedNotasIndexRouteImport } from './routes/_authenticated/notas/index'
 import { Route as AuthenticatedNotasIdRouteImport } from './routes/_authenticated/notas/$id'
 import { Route as AuthenticatedNotasNuevaRouteImport } from './routes/_authenticated/notas/nueva'
+import { Route as AuthenticatedOrganizacionesIndexRouteImport } from './routes/_authenticated/organizaciones/index'
+import { Route as AuthenticatedOrganizacionesIdRouteImport } from './routes/_authenticated/organizaciones/$id'
 import { Route as AuthenticatedTareasIndexRouteImport } from './routes/_authenticated/tareas/index'
 import { Route as AuthenticatedTareasIdRouteImport } from './routes/_authenticated/tareas/$id'
 import { Route as AuthenticatedTareasNuevaRouteImport } from './routes/_authenticated/tareas/nueva'
@@ -108,6 +110,18 @@ const AuthenticatedNotasNuevaRoute = AuthenticatedNotasNuevaRouteImport.update({
   path: '/notas/nueva',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedOrganizacionesIndexRoute =
+  AuthenticatedOrganizacionesIndexRouteImport.update({
+    id: '/organizaciones/',
+    path: '/organizaciones/',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedOrganizacionesIdRoute =
+  AuthenticatedOrganizacionesIdRouteImport.update({
+    id: '/organizaciones/$id',
+    path: '/organizaciones/$id',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const AuthenticatedTareasIndexRoute =
   AuthenticatedTareasIndexRouteImport.update({
     id: '/tareas/',
@@ -141,9 +155,11 @@ export interface FileRoutesByFullPath {
   '/login/google': typeof LoginGoogleRoute
   '/notas/$id': typeof AuthenticatedNotasIdRoute
   '/notas/nueva': typeof AuthenticatedNotasNuevaRoute
+  '/organizaciones/$id': typeof AuthenticatedOrganizacionesIdRoute
   '/tareas/$id': typeof AuthenticatedTareasIdRoute
   '/tareas/nueva': typeof AuthenticatedTareasNuevaRoute
   '/notas/': typeof AuthenticatedNotasIndexRoute
+  '/organizaciones/': typeof AuthenticatedOrganizacionesIndexRoute
   '/tareas/': typeof AuthenticatedTareasIndexRoute
 }
 export interface FileRoutesByTo {
@@ -161,9 +177,11 @@ export interface FileRoutesByTo {
   '/login/google': typeof LoginGoogleRoute
   '/notas/$id': typeof AuthenticatedNotasIdRoute
   '/notas/nueva': typeof AuthenticatedNotasNuevaRoute
+  '/organizaciones/$id': typeof AuthenticatedOrganizacionesIdRoute
   '/tareas/$id': typeof AuthenticatedTareasIdRoute
   '/tareas/nueva': typeof AuthenticatedTareasNuevaRoute
   '/notas': typeof AuthenticatedNotasIndexRoute
+  '/organizaciones': typeof AuthenticatedOrganizacionesIndexRoute
   '/tareas': typeof AuthenticatedTareasIndexRoute
 }
 export interface FileRoutesById {
@@ -183,9 +201,11 @@ export interface FileRoutesById {
   '/login_/google': typeof LoginGoogleRoute
   '/_authenticated/notas/$id': typeof AuthenticatedNotasIdRoute
   '/_authenticated/notas/nueva': typeof AuthenticatedNotasNuevaRoute
+  '/_authenticated/organizaciones/$id': typeof AuthenticatedOrganizacionesIdRoute
   '/_authenticated/tareas/$id': typeof AuthenticatedTareasIdRoute
   '/_authenticated/tareas/nueva': typeof AuthenticatedTareasNuevaRoute
   '/_authenticated/notas/': typeof AuthenticatedNotasIndexRoute
+  '/_authenticated/organizaciones/': typeof AuthenticatedOrganizacionesIndexRoute
   '/_authenticated/tareas/': typeof AuthenticatedTareasIndexRoute
 }
 export interface FileRouteTypes {
@@ -205,9 +225,11 @@ export interface FileRouteTypes {
     | '/login/google'
     | '/notas/$id'
     | '/notas/nueva'
+    | '/organizaciones/$id'
     | '/tareas/$id'
     | '/tareas/nueva'
     | '/notas/'
+    | '/organizaciones/'
     | '/tareas/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -225,9 +247,11 @@ export interface FileRouteTypes {
     | '/login/google'
     | '/notas/$id'
     | '/notas/nueva'
+    | '/organizaciones/$id'
     | '/tareas/$id'
     | '/tareas/nueva'
     | '/notas'
+    | '/organizaciones'
     | '/tareas'
   id:
     | '__root__'
@@ -246,9 +270,11 @@ export interface FileRouteTypes {
     | '/login_/google'
     | '/_authenticated/notas/$id'
     | '/_authenticated/notas/nueva'
+    | '/_authenticated/organizaciones/$id'
     | '/_authenticated/tareas/$id'
     | '/_authenticated/tareas/nueva'
     | '/_authenticated/notas/'
+    | '/_authenticated/organizaciones/'
     | '/_authenticated/tareas/'
   fileRoutesById: FileRoutesById
 }
@@ -377,6 +403,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedNotasNuevaRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/organizaciones/': {
+      id: '/_authenticated/organizaciones/'
+      path: '/organizaciones'
+      fullPath: '/organizaciones/'
+      preLoaderRoute: typeof AuthenticatedOrganizacionesIndexRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/organizaciones/$id': {
+      id: '/_authenticated/organizaciones/$id'
+      path: '/organizaciones/$id'
+      fullPath: '/organizaciones/$id'
+      preLoaderRoute: typeof AuthenticatedOrganizacionesIdRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/tareas/': {
       id: '/_authenticated/tareas/'
       path: '/tareas'
@@ -409,9 +449,11 @@ interface AuthenticatedRouteChildren {
   AuthenticatedUsuariosRoute: typeof AuthenticatedUsuariosRoute
   AuthenticatedNotasIdRoute: typeof AuthenticatedNotasIdRoute
   AuthenticatedNotasNuevaRoute: typeof AuthenticatedNotasNuevaRoute
+  AuthenticatedOrganizacionesIdRoute: typeof AuthenticatedOrganizacionesIdRoute
   AuthenticatedTareasIdRoute: typeof AuthenticatedTareasIdRoute
   AuthenticatedTareasNuevaRoute: typeof AuthenticatedTareasNuevaRoute
   AuthenticatedNotasIndexRoute: typeof AuthenticatedNotasIndexRoute
+  AuthenticatedOrganizacionesIndexRoute: typeof AuthenticatedOrganizacionesIndexRoute
   AuthenticatedTareasIndexRoute: typeof AuthenticatedTareasIndexRoute
 }
 
@@ -423,9 +465,11 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedUsuariosRoute: AuthenticatedUsuariosRoute,
   AuthenticatedNotasIdRoute: AuthenticatedNotasIdRoute,
   AuthenticatedNotasNuevaRoute: AuthenticatedNotasNuevaRoute,
+  AuthenticatedOrganizacionesIdRoute: AuthenticatedOrganizacionesIdRoute,
   AuthenticatedTareasIdRoute: AuthenticatedTareasIdRoute,
   AuthenticatedTareasNuevaRoute: AuthenticatedTareasNuevaRoute,
   AuthenticatedNotasIndexRoute: AuthenticatedNotasIndexRoute,
+  AuthenticatedOrganizacionesIndexRoute: AuthenticatedOrganizacionesIndexRoute,
   AuthenticatedTareasIndexRoute: AuthenticatedTareasIndexRoute,
 }
 
