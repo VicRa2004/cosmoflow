@@ -3,6 +3,14 @@ import type { AppModule } from "@/core/shared/infrastructure/di/AppModule";
 import { TOKENS } from "@/core/shared/infrastructure/di/tokens";
 import { AUTH_TOKENS } from "@/modules/auth";
 import { EmisorInvitaciones } from "./application/services/EmisorInvitaciones";
+import { ActualizarRolUseCase } from "./application/useCases/ActualizarRolUseCase";
+import { AsignarRolesUseCase } from "./application/useCases/AsignarRolesUseCase";
+import { CrearRolUseCase } from "./application/useCases/CrearRolUseCase";
+import { EliminarRolUseCase } from "./application/useCases/EliminarRolUseCase";
+import { ObtenerRolesUseCase } from "./application/useCases/ObtenerRolesUseCase";
+import { RolController } from "./infrastructure/http/controllers/RolController";
+import { RolRouter } from "./infrastructure/http/routes/RolRouter";
+import { PrismaRolOrganizacionRepository } from "./infrastructure/repository/PrismaRolOrganizacionRepository";
 import { DelegarAdministracionUseCase } from "./application/useCases/DelegarAdministracionUseCase";
 import { ObtenerMiembrosUseCase } from "./application/useCases/ObtenerMiembrosUseCase";
 import { QuitarMiembroUseCase } from "./application/useCases/QuitarMiembroUseCase";
@@ -65,6 +73,22 @@ export const organizacionModule: AppModule = {
 					obtenerTodos: new ObtenerMiembrosUseCase(repo),
 					quitar: new QuitarMiembroUseCase(repo, eventBus, uow),
 					delegar: new DelegarAdministracionUseCase(repo, eventBus, uow),
+				}),
+			).router,
+		);
+
+		const roles = new PrismaRolOrganizacionRepository();
+		app.route(
+			"/api/organizaciones",
+			new RolRouter(
+				authMiddleware,
+				guard,
+				new RolController({
+					obtenerTodos: new ObtenerRolesUseCase(repo, roles),
+					crear: new CrearRolUseCase(repo, roles),
+					actualizar: new ActualizarRolUseCase(repo, roles),
+					eliminar: new EliminarRolUseCase(repo, roles),
+					asignar: new AsignarRolesUseCase(repo, roles),
 				}),
 			).router,
 		);

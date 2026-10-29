@@ -1,13 +1,15 @@
 import { describe, expect, it, mock } from "bun:test";
 import { AdminNoPuedeSalirError } from "../../domain/error/AdminNoPuedeSalirError";
 import { MiembroNoEncontradoError } from "../../domain/error/MiembroNoEncontradoError";
-import { SoloAdminOrganizacionError } from "../../domain/error/SoloAdminOrganizacionError";
+import { AdminNoExpulsableError } from "../../domain/error/AdminNoExpulsableError";
+import { SinPermisoOrganizacionError } from "../../domain/error/SinPermisoOrganizacionError";
 import { Organizacion } from "../../domain/Organizacion";
 import { QuitarMiembroUseCase } from "./QuitarMiembroUseCase";
 
 const ANA = 1; // admin
 const BETO = 2; // miembro
 const CARLA = 3; // no miembro
+const DANI = 4; // miembro con un rol que da miembros:expulsar
 
 const preparar = () => {
 	const organizacion = Organizacion.reconstituir(10, {
@@ -18,7 +20,13 @@ const preparar = () => {
 	});
 	const repo = {
 		buscarPorId: mock(async (usuarioId: number) =>
-			usuarioId === CARLA ? null : { organizacion, isAdmin: usuarioId === ANA },
+			usuarioId === CARLA
+				? null
+				: {
+						organizacion,
+						isAdmin: usuarioId === ANA,
+						permisos: usuarioId === DANI ? ["miembros:expulsar"] : [],
+					},
 		),
 		quitarMiembro: mock(async () => {}),
 	};
@@ -57,10 +65,10 @@ describe("QuitarMiembroUseCase", () => {
 		expect(repo.quitarMiembro).not.toHaveBeenCalled();
 	});
 
-	it("un miembro no expulsa a otro", async () => {
+	it("un miembro sin miembros:expulsar no expulsa a otro", async () => {
 		const { useCase, repo } = preparar();
-		expect(useCase.ejecutar(BETO, 10, ANA)).rejects.toThrow(
-			SoloAdminOrganizacionError,
+		expect(useCase.ejecutar(BETO, 10, DANI)).rejects.toThrow(
+			SinPermisoOrganizacionError,
 		);
 		expect(repo.quitarMiembro).not.toHaveBeenCalled();
 	});
@@ -69,6 +77,15 @@ describe("QuitarMiembroUseCase", () => {
 		const { useCase } = preparar();
 		expect(useCase.ejecutar(ANA, 10, CARLA)).rejects.toThrow(
 			MiembroNoEncontradoError,
+		);
+	});
+
+	it("con miembros:expulsar se expulsa a otros, pero nunca al admin", async () => {
+		const { useCase, repo } = preparar();
+		await useCase.ejecutar(DANI, 10, BETO);
+		expect(repo.quitarMiembro).toHaveBeenCalledWith(10, BETO);
+		expect(useCase.ejecutar(DANI, 10, ANA)).rejects.toThrow(
+			AdminNoExpulsableError,
 		);
 	});
 });

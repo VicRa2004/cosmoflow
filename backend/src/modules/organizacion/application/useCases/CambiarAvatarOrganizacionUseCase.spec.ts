@@ -1,6 +1,6 @@
 import { describe, expect, it, mock } from "bun:test";
 import { AvatarOrganizacionInvalidoError } from "../../domain/error/AvatarOrganizacionInvalidoError";
-import { SoloAdminOrganizacionError } from "../../domain/error/SoloAdminOrganizacionError";
+import { SinPermisoOrganizacionError } from "../../domain/error/SinPermisoOrganizacionError";
 import { Organizacion } from "../../domain/Organizacion";
 import { CambiarAvatarOrganizacionUseCase } from "./CambiarAvatarOrganizacionUseCase";
 
@@ -16,6 +16,7 @@ const preparar = (isAdmin: boolean, avatar: string | null = null) => {
 				avatar,
 			}),
 			isAdmin,
+			permisos: [],
 		})),
 		actualizar: mock(async (o: Organizacion) => o),
 	};
@@ -58,10 +59,10 @@ describe("CambiarAvatarOrganizacionUseCase", () => {
 		expect(almacenamiento.guardar).not.toHaveBeenCalled();
 	});
 
-	it("un miembro que no es administrador no sube nada", async () => {
+	it("un miembro sin organizacion:editar no sube nada", async () => {
 		const { useCase, almacenamiento } = preparar(false);
 		expect(useCase.ejecutar(7, 1, PNG)).rejects.toThrow(
-			SoloAdminOrganizacionError,
+			SinPermisoOrganizacionError,
 		);
 		expect(almacenamiento.guardar).not.toHaveBeenCalled();
 	});

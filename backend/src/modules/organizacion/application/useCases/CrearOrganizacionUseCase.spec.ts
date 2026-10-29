@@ -1,5 +1,6 @@
 import { describe, expect, it, mock } from "bun:test";
 import { Organizacion } from "../../domain/Organizacion";
+import { PERMISOS_ORGANIZACION } from "../../domain/permisosOrganizacion";
 import { CrearOrganizacionUseCase } from "./CrearOrganizacionUseCase";
 
 describe("CrearOrganizacionUseCase", () => {
@@ -30,6 +31,7 @@ describe("CrearOrganizacionUseCase", () => {
 			color: "#6366f1",
 			avatarUrl: null,
 			isAdmin: true,
+			permisos: [...PERMISOS_ORGANIZACION],
 		});
 	});
 });

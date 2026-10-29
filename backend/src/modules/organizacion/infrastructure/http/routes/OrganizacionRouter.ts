@@ -98,7 +98,7 @@ export class OrganizacionRouter {
 			path: "/{id}",
 			tags,
 			security,
-			summary: "Personalizar la organización (solo administrador)",
+			summary: "Personalizar la organización (permiso organizacion:editar)",
 			request: {
 				params: organizacionIdSchema,
 				body: {
@@ -172,7 +172,7 @@ export class OrganizacionRouter {
 			tags,
 			security,
 			summary:
-				"Subir el avatar (multipart, campo «archivo», máx. 2 MB; solo administrador)",
+				"Subir el avatar (multipart, campo «archivo», máx. 2 MB; permiso organizacion:editar)",
 			request: {
 				params: organizacionIdSchema,
 				body: {
@@ -214,7 +214,7 @@ export class OrganizacionRouter {
 			path: "/{id}/avatar",
 			tags,
 			security,
-			summary: "Quitar el avatar (solo administrador)",
+			summary: "Quitar el avatar (permiso organizacion:editar)",
 			request: { params: organizacionIdSchema },
 			responses: {
 				200: jsonResponse(organizacionDtoSchema, "Organización sin avatar"),

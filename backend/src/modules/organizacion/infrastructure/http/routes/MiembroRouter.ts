@@ -56,12 +56,14 @@ export class MiembroRouter {
 			tags,
 			security,
 			summary:
-				"Salir (con mi propio usuarioId) o expulsar a otro miembro (solo admin)",
+				"Salir (con mi propio usuarioId) o expulsar a otro miembro (permiso miembros:expulsar)",
 			request: { params: miembroParamsSchema },
 			responses: {
 				204: { description: "Ya no es miembro" },
 				...protectedErrorResponses(`${recurso}:leer`),
-				403: errorResponse("Solo el administrador expulsa"),
+				403: errorResponse(
+					"Sin el permiso miembros:expulsar, o el objetivo es el admin",
+				),
 				404: errorResponse("Organización o miembro no encontrados"),
 				409: errorResponse("El admin debe delegar antes de salir (RN-16)"),
 			},

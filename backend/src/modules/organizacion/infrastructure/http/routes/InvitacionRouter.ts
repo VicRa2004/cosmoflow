@@ -20,10 +20,10 @@ const security = [{ bearerAuth: [] }];
 const recurso = "organizaciones";
 const soloAdmin = {
 	...protectedErrorResponses(`${recurso}:actualizar`),
-	403: errorResponse("Solo el administrador puede hacerlo"),
+	403: errorResponse("Sin el permiso miembros:invitar"),
 };
 
-/** Se monta en `/api/organizaciones`: `/{id}/invitaciones...`. Solo el administrador. */
+/** Se monta en `/api/organizaciones`: `/{id}/invitaciones...`. Permiso `miembros:invitar`. */
 export class InvitacionRouter {
 	public readonly router = new OpenAPIHono();
 

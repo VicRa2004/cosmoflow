@@ -1,6 +1,18 @@
 import { prisma } from "@/core/config/prisma";
 import type { Paginacion } from "@/core/shared/domain/Paginacion";
 import type { Miembro } from "../../domain/Miembro";
+
+/** Roles vivos del miembro: de ahí salen sus permisos y el listado de miembros. */
+const rolesVivos = {
+	roles: {
+		where: { rol: { deletedAt: null } },
+		select: { rol: { select: { id: true, nombre: true, permisos: true } } },
+	},
+} as const;
+
+const unirPermisos = (roles: { rol: { permisos: string[] } }[]) => [
+	...new Set(roles.flatMap(({ rol }) => rol.permisos)),
+];
 import { Organizacion } from "../../domain/Organizacion";
 import type {
 	OrganizacionDelMiembro,
@@ -38,7 +50,7 @@ export class PrismaOrganizacionRepository implements OrganizacionRepository {
 		const [registros, totalElementos] = await prisma.$transaction([
 			prisma.miembroOrganizacion.findMany({
 				where,
-				include: { organizacion: true },
+				include: { organizacion: true, ...rolesVivos },
 				skip: (pagina - 1) * limite,
 				take: limite,
 				orderBy: { organizacion: { nombre: "asc" } },
@@ -50,6 +62,7 @@ export class PrismaOrganizacionRepository implements OrganizacionRepository {
 			datos: registros.map((registro) => ({
 				organizacion: this.toDomain(registro.organizacion),
 				isAdmin: registro.isAdmin,
+				permisos: unirPermisos(registro.roles),
 			})),
 			pagina,
 			totalElementos,
@@ -67,12 +80,13 @@ export class PrismaOrganizacionRepository implements OrganizacionRepository {
 				organizacionId: id,
 				organizacion: { deletedAt: null },
 			},
-			include: { organizacion: true },
+			include: { organizacion: true, ...rolesVivos },
 		});
 		return registro
 			? {
 					organizacion: this.toDomain(registro.organizacion),
 					isAdmin: registro.isAdmin,
+					permisos: unirPermisos(registro.roles),
 				}
 			: null;
 	}
@@ -134,15 +148,19 @@ export class PrismaOrganizacionRepository implements OrganizacionRepository {
 			where: { organizacionId, usuario: { deletedAt: null } },
 			include: {
 				usuario: { select: { nombre: true, email: true, avatar: true } },
+				...rolesVivos,
 			},
 			orderBy: [{ isAdmin: "desc" }, { usuario: { nombre: "asc" } }],
 		});
-		return registros.map(({ usuarioId, isAdmin, createdAt, usuario }) => ({
-			usuarioId,
-			isAdmin,
-			createdAt,
-			...usuario,
-		}));
+		return registros.map(
+			({ usuarioId, isAdmin, createdAt, usuario, roles }) => ({
+				usuarioId,
+				isAdmin,
+				createdAt,
+				...usuario,
+				roles: roles.map(({ rol }) => ({ id: rol.id, nombre: rol.nombre })),
+			}),
+		);
 	}
 
 	async quitarMiembro(

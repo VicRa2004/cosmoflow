@@ -6,7 +6,7 @@ import type { OrganizacionRepository } from "../../domain/repository/Organizacio
 import type { InvitacionDto } from "../dtos/InvitacionDto";
 import { InvitacionMapper } from "../mappers/InvitacionMapper";
 import type { EmisorInvitaciones } from "../services/EmisorInvitaciones";
-import { buscarComoAdmin } from "./buscarComoAdmin";
+import { buscarConPermiso } from "./buscarConPermiso";
 
 /** Invita por correo a una organización (RN-12). Solo el administrador. */
 export class InvitarUseCase {
@@ -21,10 +21,11 @@ export class InvitarUseCase {
 		organizacionId: number,
 		email: string,
 	): Promise<InvitacionDto> {
-		const organizacion = await buscarComoAdmin(
+		const { organizacion } = await buscarConPermiso(
 			this.organizacionRepository,
 			usuarioId,
 			organizacionId,
+			"miembros:invitar",
 		);
 		if (
 			await this.organizacionRepository.esMiembroPorEmail(organizacionId, email)

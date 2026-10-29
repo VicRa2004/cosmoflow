@@ -16,6 +16,8 @@ import { AvatarOrganizacion } from "../components/AvatarOrganizacion";
 import { AvatarOrganizacionControles } from "../components/AvatarOrganizacionControles";
 import { InvitacionesCard } from "../components/InvitacionesCard";
 import { MiembrosCard } from "../components/MiembrosCard";
+import { RolesCard } from "../components/RolesCard";
+import { puedeEn } from "../utils/permisos";
 import { OrganizacionForm } from "../components/OrganizacionForm";
 import { useEliminarOrganizacionMutation } from "../hooks/useOrganizacionesMutation";
 import { useOrganizacionQuery } from "../hooks/useOrganizacionesQuery";
@@ -55,42 +57,48 @@ export function OrganizacionPage({ id }: { id: number }) {
 
 			<MiembrosCard organizacion={data} />
 
+			{puedeEn(data, "organizacion:editar") && (
+				<Card>
+					<CardHeader>
+						<CardTitle>Personalización</CardTitle>
+						<CardDescription>
+							Imagen, o iniciales sobre el color elegido si no hay imagen.
+						</CardDescription>
+					</CardHeader>
+					<CardContent className="space-y-6">
+						<AvatarOrganizacionControles organizacion={data} />
+						<OrganizacionForm
+							key={data.id}
+							inicial={data}
+							onGuardado={() => {}}
+						/>
+					</CardContent>
+				</Card>
+			)}
+
+			{puedeEn(data, "miembros:invitar") && (
+				<InvitacionesCard organizacionId={data.id} />
+			)}
+
+			{puedeEn(data, "roles:gestionar") && (
+				<RolesCard organizacionId={data.id} />
+			)}
+
 			{data.isAdmin && (
-				<>
-					<Card>
-						<CardHeader>
-							<CardTitle>Personalización</CardTitle>
-							<CardDescription>
-								Imagen, o iniciales sobre el color elegido si no hay imagen.
-							</CardDescription>
-						</CardHeader>
-						<CardContent className="space-y-6">
-							<AvatarOrganizacionControles organizacion={data} />
-							<OrganizacionForm
-								key={data.id}
-								inicial={data}
-								onGuardado={() => {}}
-							/>
-						</CardContent>
-					</Card>
-
-					<InvitacionesCard organizacionId={data.id} />
-
-					<Card>
-						<CardHeader>
-							<CardTitle>Eliminar organización</CardTitle>
-							<CardDescription>
-								Deja de estar disponible para todos sus miembros.
-							</CardDescription>
-						</CardHeader>
-						<CardContent>
-							<Button variant="danger" onClick={() => setConfirmando(true)}>
-								<Trash2 className="h-4 w-4" />
-								Eliminar
-							</Button>
-						</CardContent>
-					</Card>
-				</>
+				<Card>
+					<CardHeader>
+						<CardTitle>Eliminar organización</CardTitle>
+						<CardDescription>
+							Deja de estar disponible para todos sus miembros.
+						</CardDescription>
+					</CardHeader>
+					<CardContent>
+						<Button variant="danger" onClick={() => setConfirmando(true)}>
+							<Trash2 className="h-4 w-4" />
+							Eliminar
+						</Button>
+					</CardContent>
+				</Card>
 			)}
 
 			<ConfirmDialog

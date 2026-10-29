@@ -17,6 +17,10 @@ export class CrearOrganizacionUseCase {
 			Organizacion.crear(dto),
 			usuarioId,
 		);
-		return OrganizacionMapper.toDto({ organizacion: creada, isAdmin: true });
+		return OrganizacionMapper.toDto({
+			organizacion: creada,
+			isAdmin: true,
+			permisos: [],
+		});
 	}
 }

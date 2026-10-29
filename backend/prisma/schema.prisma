@@ -337,6 +337,7 @@ model Organizacion {
 
   miembros     MiembroOrganizacion[]
   invitaciones Invitacion[]
+  roles        RolOrganizacion[]
 
   @@map("organizacion")
 }
@@ -349,8 +350,9 @@ model MiembroOrganizacion {
   isAdmin        Boolean  @default(false) @map("mor_is_admin")
   createdAt      DateTime @default(now()) @map("created_at")
 
-  organizacion Organizacion @relation(fields: [organizacionId], references: [id], onDelete: Cascade)
-  usuario      Usuario      @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  organizacion Organizacion             @relation(fields: [organizacionId], references: [id], onDelete: Cascade)
+  usuario      Usuario                  @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  roles        MiembroRolOrganizacion[]
 
   @@id([organizacionId, usuarioId])
   @@index([usuarioId])
@@ -383,4 +385,41 @@ model Invitacion {
 
   @@index([organizacionId, estado])
   @@map("invitacion")
+}
+
+/// Rol personalizado de una organización (RN-14). Sus permisos salen del catálogo fijo
+/// `PERMISOS_ORGANIZACION` del módulo `organizacion` (RN-17); los valida la aplicación.
+model RolOrganizacion {
+  id             Int       @id @default(autoincrement()) @map("rog_id")
+  organizacionId Int       @map("rog_fkorganizacion")
+  nombre         String    @map("rog_nombre") @db.VarChar(64)
+  permisos       String[]  @map("rog_permisos")
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime? @updatedAt @map("updated_at")
+  /// Borrado lógico (RN-91). El nombre único por organización lo valida la aplicación
+  /// ignorando los borrados.
+  deletedAt      DateTime? @map("deleted_at")
+
+  organizacion Organizacion             @relation(fields: [organizacionId], references: [id], onDelete: Cascade)
+  miembros     MiembroRolOrganizacion[]
+
+  /// Destino de la FK compuesta de `MiembroRolOrganizacion`
+  @@unique([organizacionId, id])
+  @@index([organizacionId])
+  @@map("rol_organizacion")
+}
+
+/// Roles de un miembro (N:M). Las FK llevan las dos `organizacionId`: la BD impide
+/// dar a un miembro un rol de otra organización (RN-90).
+model MiembroRolOrganizacion {
+  organizacionId Int @map("mro_fkorganizacion")
+  usuarioId      Int @map("mro_fkusuario")
+  rolId          Int @map("mro_fkrol")
+
+  miembro MiembroOrganizacion @relation(fields: [organizacionId, usuarioId], references: [organizacionId, usuarioId], onDelete: Cascade)
+  rol     RolOrganizacion     @relation(fields: [organizacionId, rolId], references: [organizacionId, id], onDelete: Cascade)
+
+  @@id([organizacionId, usuarioId, rolId])
+  @@index([organizacionId, rolId])
+  @@map("miembro_rol_organizacion")
 }

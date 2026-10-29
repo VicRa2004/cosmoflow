@@ -13,6 +13,7 @@ const EXENTOS: Record<string, string> = {
 	NotaTag: "relación",
 	// Salir o ser expulsado borra la fila; quién lo hizo queda en auditoría.
 	MiembroOrganizacion: "relación",
+	MiembroRolOrganizacion: "relación",
 	// Técnicas: no son datos del usuario y caducan o se purgan solas.
 	RefreshToken: "técnica",
 	TokenCuenta: "técnica",
@@ -20,7 +21,7 @@ const EXENTOS: Record<string, string> = {
 	Auditoria: "registro histórico, nunca se borra",
 	Adjunto: "inmutable y sin endpoint de borrado",
 	Invitacion: "cancelarla cambia su estado; nunca se borra",
-	// Catálogo global de la plantilla; los roles por organización (Fase 2) sí lo llevarán.
+	// Catálogo global de la plantilla; los roles por organización (RolOrganizacion) sí lo llevan.
 	Rol: "catálogo global de la plantilla",
 	Permiso: "catálogo global de la plantilla",
 };

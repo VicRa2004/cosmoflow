@@ -1,8 +1,10 @@
+import { permisosEfectivos } from "../../domain/permisosOrganizacion";
 import type { OrganizacionDelMiembro } from "../../domain/repository/OrganizacionRepository";
 import type { OrganizacionDto } from "../dtos/OrganizacionDto";
 
 export const OrganizacionMapper = {
-	toDto({ organizacion, isAdmin }: OrganizacionDelMiembro): OrganizacionDto {
+	toDto(miembro: OrganizacionDelMiembro): OrganizacionDto {
+		const { organizacion, isAdmin } = miembro;
 		const avatar = organizacion.getAvatar();
 		return {
 			id: organizacion.getId(),
@@ -14,6 +16,7 @@ export const OrganizacionMapper = {
 				? `/api/organizaciones/${organizacion.getId()}/avatar?v=${encodeURIComponent(avatar)}`
 				: null,
 			isAdmin,
+			permisos: permisosEfectivos(miembro),
 		};
 	},
 };

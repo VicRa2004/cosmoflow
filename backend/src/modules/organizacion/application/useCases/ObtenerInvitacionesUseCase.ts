@@ -2,7 +2,7 @@ import type { InvitacionRepository } from "../../domain/repository/InvitacionRep
 import type { OrganizacionRepository } from "../../domain/repository/OrganizacionRepository";
 import type { InvitacionDto } from "../dtos/InvitacionDto";
 import { InvitacionMapper } from "../mappers/InvitacionMapper";
-import { buscarComoAdmin } from "./buscarComoAdmin";
+import { buscarConPermiso } from "./buscarConPermiso";
 
 /** Invitaciones pendientes de la organización. Solo el administrador. */
 export class ObtenerInvitacionesUseCase {
@@ -15,10 +15,11 @@ export class ObtenerInvitacionesUseCase {
 		usuarioId: number,
 		organizacionId: number,
 	): Promise<InvitacionDto[]> {
-		await buscarComoAdmin(
+		await buscarConPermiso(
 			this.organizacionRepository,
 			usuarioId,
 			organizacionId,
+			"miembros:invitar",
 		);
 		const pendientes =
 			await this.invitacionRepository.buscarPendientes(organizacionId);

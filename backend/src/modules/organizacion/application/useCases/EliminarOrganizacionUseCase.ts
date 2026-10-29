@@ -1,5 +1,5 @@
 import type { OrganizacionRepository } from "../../domain/repository/OrganizacionRepository";
-import { buscarComoAdmin } from "./buscarComoAdmin";
+import { buscarConPermiso } from "./buscarConPermiso";
 
 export class EliminarOrganizacionUseCase {
 	constructor(
@@ -7,7 +7,7 @@ export class EliminarOrganizacionUseCase {
 	) {}
 
 	async ejecutar(usuarioId: number, id: number): Promise<void> {
-		await buscarComoAdmin(this.organizacionRepository, usuarioId, id);
+		await buscarConPermiso(this.organizacionRepository, usuarioId, id, "admin");
 		await this.organizacionRepository.eliminar(id);
 	}
 }

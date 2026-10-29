@@ -1,5 +1,5 @@
 import { useNavigate } from "@tanstack/react-router";
-import { Crown, LogOut, UserMinus } from "lucide-react";
+import { Crown, LogOut, Shield, UserMinus } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { useAuthStore } from "@/core/auth/store";
@@ -17,6 +17,8 @@ import { ConfirmDialog } from "@/core/components/ui/ConfirmDialog";
 import type { MiembroDto } from "../api/miembrosApi";
 import type { OrganizacionDto } from "../api/organizacionesApi";
 import { useGestionMiembros, useMiembrosQuery } from "../hooks/useMiembros";
+import { puedeEn } from "../utils/permisos";
+import { AsignarRolesDialog } from "./AsignarRolesDialog";
 
 type Accion = { tipo: "salir" | "expulsar" | "delegar"; miembro: MiembroDto };
 
@@ -40,7 +42,10 @@ const TEXTOS = {
 	},
 } as const;
 
-/** Lista de miembros; el admin expulsa o delega y cualquier otro puede salir (RN-11, RN-16). */
+/**
+ * Lista de miembros con sus roles. Delegar es del admin; expulsar y asignar roles,
+ * de quien tenga el permiso. Cualquiera menos el admin puede salir (RN-11, RN-16).
+ */
 export function MiembrosCard({
 	organizacion,
 }: {
@@ -51,6 +56,9 @@ export function MiembrosCard({
 	const { data: miembros } = useMiembrosQuery(organizacion.id);
 	const { quitar, delegar } = useGestionMiembros(organizacion.id);
 	const [accion, setAccion] = useState<Accion | null>(null);
+	const [asignando, setAsignando] = useState<MiembroDto | null>(null);
+	const puedeExpulsar = puedeEn(organizacion, "miembros:expulsar");
+	const puedeAsignar = puedeEn(organizacion, "roles:gestionar");
 
 	const confirmar = () => {
 		if (!accion) return;
@@ -97,6 +105,8 @@ export function MiembrosCard({
 									</p>
 									<p className="truncate text-xs text-tinta-tenue">
 										{miembro.email}
+										{miembro.roles.length > 0 &&
+											` · ${miembro.roles.map((r) => r.nombre).join(", ")}`}
 									</p>
 								</div>
 								{miembro.isAdmin && (
@@ -112,33 +122,52 @@ export function MiembrosCard({
 										Salir
 									</Button>
 								)}
+								{puedeAsignar && !miembro.isAdmin && (
+									<Button
+										variant="ghost"
+										size="sm"
+										aria-label={`Roles de ${miembro.nombre}`}
+										title="Roles"
+										onClick={() => setAsignando(miembro)}
+									>
+										<Shield className="h-4 w-4" />
+									</Button>
+								)}
 								{organizacion.isAdmin && !soyYo && (
-									<>
-										<Button
-											variant="ghost"
-											size="sm"
-											aria-label={`Hacer administrador a ${miembro.nombre}`}
-											title="Hacer administrador"
-											onClick={() => setAccion({ tipo: "delegar", miembro })}
-										>
-											<Crown className="h-4 w-4" />
-										</Button>
-										<Button
-											variant="dangerGhost"
-											size="sm"
-											aria-label={`Expulsar a ${miembro.nombre}`}
-											title="Expulsar"
-											onClick={() => setAccion({ tipo: "expulsar", miembro })}
-										>
-											<UserMinus className="h-4 w-4" />
-										</Button>
-									</>
+									<Button
+										variant="ghost"
+										size="sm"
+										aria-label={`Hacer administrador a ${miembro.nombre}`}
+										title="Hacer administrador"
+										onClick={() => setAccion({ tipo: "delegar", miembro })}
+									>
+										<Crown className="h-4 w-4" />
+									</Button>
+								)}
+								{puedeExpulsar && !soyYo && !miembro.isAdmin && (
+									<Button
+										variant="dangerGhost"
+										size="sm"
+										aria-label={`Expulsar a ${miembro.nombre}`}
+										title="Expulsar"
+										onClick={() => setAccion({ tipo: "expulsar", miembro })}
+									>
+										<UserMinus className="h-4 w-4" />
+									</Button>
 								)}
 							</li>
 						);
 					})}
 				</ul>
 			</CardContent>
+
+			{asignando && (
+				<AsignarRolesDialog
+					organizacionId={organizacion.id}
+					miembro={asignando}
+					onCerrar={() => setAsignando(null)}
+				/>
+			)}
 
 			<ConfirmDialog
 				abierto={accion !== null}

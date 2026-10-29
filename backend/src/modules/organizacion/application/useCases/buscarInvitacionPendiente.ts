@@ -2,7 +2,7 @@ import { InvitacionNoEncontradaError } from "../../domain/error/InvitacionNoEnco
 import { InvitacionNoVigenteError } from "../../domain/error/InvitacionNoVigenteError";
 import type { InvitacionRepository } from "../../domain/repository/InvitacionRepository";
 import type { OrganizacionRepository } from "../../domain/repository/OrganizacionRepository";
-import { buscarComoAdmin } from "./buscarComoAdmin";
+import { buscarConPermiso } from "./buscarConPermiso";
 
 /** Para reenviar o cancelar: como admin y con la invitación aún pendiente. */
 export async function buscarInvitacionPendiente(
@@ -14,10 +14,11 @@ export async function buscarInvitacionPendiente(
 	organizacionId: number,
 	id: number,
 ) {
-	const organizacion = await buscarComoAdmin(
+	const { organizacion } = await buscarConPermiso(
 		repos.organizaciones,
 		usuarioId,
 		organizacionId,
+		"miembros:invitar",
 	);
 	const invitacion = await repos.invitaciones.buscarPorId(organizacionId, id);
 	if (!invitacion) throw new InvitacionNoEncontradaError();

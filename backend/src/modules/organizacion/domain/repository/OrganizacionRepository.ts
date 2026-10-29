@@ -12,6 +12,8 @@ export interface OrganizacionFiltros {
 export interface OrganizacionDelMiembro {
 	organizacion: Organizacion;
 	isAdmin: boolean;
+	/** Unión de los permisos de sus roles vivos; ver `permisosEfectivos`. */
+	permisos: string[];
 }
 
 /**

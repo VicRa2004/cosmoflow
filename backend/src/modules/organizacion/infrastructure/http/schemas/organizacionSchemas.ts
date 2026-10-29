@@ -48,6 +48,9 @@ export const organizacionDtoSchema = z
 			example: "/api/organizaciones/1/avatar?v=organizaciones%2F1-abc.png",
 		}),
 		isAdmin: z.boolean().openapi({ example: true }),
+		permisos: z
+			.array(z.string())
+			.openapi({ example: ["organizacion:editar", "miembros:invitar"] }),
 	})
 	.openapi("OrganizacionDto");
 

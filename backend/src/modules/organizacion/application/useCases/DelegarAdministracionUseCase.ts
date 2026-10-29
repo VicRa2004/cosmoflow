@@ -3,7 +3,7 @@ import type { UnitOfWork } from "@/core/shared/domain/UnitOfWork";
 import { MiembroNoEncontradoError } from "../../domain/error/MiembroNoEncontradoError";
 import { AdministracionDelegadaEvent } from "../../domain/event/AdministracionDelegadaEvent";
 import type { OrganizacionRepository } from "../../domain/repository/OrganizacionRepository";
-import { buscarComoAdmin } from "./buscarComoAdmin";
+import { buscarConPermiso } from "./buscarConPermiso";
 
 /** El admin cede su puesto a otro miembro y queda como miembro normal (RN-11). */
 export class DelegarAdministracionUseCase {
@@ -18,10 +18,11 @@ export class DelegarAdministracionUseCase {
 		organizacionId: number,
 		aUsuarioId: number,
 	): Promise<void> {
-		await buscarComoAdmin(
+		await buscarConPermiso(
 			this.organizacionRepository,
 			usuarioId,
 			organizacionId,
+			"admin",
 		);
 		if (aUsuarioId === usuarioId) return;
 		if (

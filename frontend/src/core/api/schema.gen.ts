@@ -3470,7 +3470,7 @@ export interface paths {
                 };
             };
         };
-        /** Personalizar la organización (solo administrador) */
+        /** Personalizar la organización (permiso organizacion:editar) */
         put: {
             parameters: {
                 query?: never;
@@ -3648,7 +3648,7 @@ export interface paths {
                 };
             };
         };
-        /** Subir el avatar (multipart, campo «archivo», máx. 2 MB; solo administrador) */
+        /** Subir el avatar (multipart, campo «archivo», máx. 2 MB; permiso organizacion:editar) */
         put: {
             parameters: {
                 query?: never;
@@ -3724,7 +3724,7 @@ export interface paths {
             };
         };
         post?: never;
-        /** Quitar el avatar (solo administrador) */
+        /** Quitar el avatar (permiso organizacion:editar) */
         delete: {
             parameters: {
                 query?: never;
@@ -3854,7 +3854,7 @@ export interface paths {
         get?: never;
         put?: never;
         post?: never;
-        /** Salir (con mi propio usuarioId) o expulsar a otro miembro (solo admin) */
+        /** Salir (con mi propio usuarioId) o expulsar a otro miembro (permiso miembros:expulsar) */
         delete: {
             parameters: {
                 query?: never;
@@ -3883,7 +3883,7 @@ export interface paths {
                         "application/json": components["schemas"]["ErrorResponse"];
                     };
                 };
-                /** @description Solo el administrador expulsa */
+                /** @description Sin el permiso miembros:expulsar, o el objetivo es el admin */
                 403: {
                     headers: {
                         [name: string]: unknown;
@@ -3995,6 +3995,419 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/organizaciones/{id}/roles/catalogo": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Catálogo fijo de permisos y plantillas de rol (RN-17) */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Catálogo */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["CatalogoPermisosOrganizacion"];
+                    };
+                };
+                /** @description No autenticado */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Permiso denegado (requiere organizaciones:leer) */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/organizaciones/{id}/roles": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Roles de la organización (cualquier miembro) */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Roles */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["RolOrganizacionDto"][];
+                    };
+                };
+                /** @description No autenticado */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Permiso denegado (requiere organizaciones:leer) */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Organización no encontrada */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        /** Crear rol (desde cero o copiando una plantilla) */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        nombre: string;
+                        permisos: components["schemas"]["PermisoOrganizacion"][];
+                    };
+                };
+            };
+            responses: {
+                /** @description Rol creado */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["RolOrganizacionDto"];
+                    };
+                };
+                /** @description Validación fallida o permiso fuera del catálogo */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description No autenticado */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Sin el permiso roles:gestionar */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Organización no encontrada */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Ya hay un rol con ese nombre */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/organizaciones/{id}/roles/{rolId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Editar nombre y permisos de un rol */
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                    rolId: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        nombre: string;
+                        permisos: components["schemas"]["PermisoOrganizacion"][];
+                    };
+                };
+            };
+            responses: {
+                /** @description Rol guardado */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["RolOrganizacionDto"];
+                    };
+                };
+                /** @description Validación fallida o permiso fuera del catálogo */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description No autenticado */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Sin el permiso roles:gestionar */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Organización o rol no encontrados */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Ya hay un rol con ese nombre */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        /** Eliminar un rol (se les quita a quienes lo tengan) */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                    rolId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Rol eliminado */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description No autenticado */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Sin el permiso roles:gestionar */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Organización o rol no encontrados */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/organizaciones/{id}/miembros/{usuarioId}/roles": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Reemplazar los roles de un miembro (RN-14) */
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                    usuarioId: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        rolIds: number[];
+                    };
+                };
+            };
+            responses: {
+                /** @description Roles asignados */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Validación fallida */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description No autenticado */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Sin el permiso roles:gestionar */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Organización, miembro o rol no encontrados */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/organizaciones/{id}/invitaciones": {
         parameters: {
             query?: never;
@@ -4032,7 +4445,7 @@ export interface paths {
                         "application/json": components["schemas"]["ErrorResponse"];
                     };
                 };
-                /** @description Solo el administrador puede hacerlo */
+                /** @description Sin el permiso miembros:invitar */
                 403: {
                     headers: {
                         [name: string]: unknown;
@@ -4099,7 +4512,7 @@ export interface paths {
                         "application/json": components["schemas"]["ErrorResponse"];
                     };
                 };
-                /** @description Solo el administrador puede hacerlo */
+                /** @description Sin el permiso miembros:invitar */
                 403: {
                     headers: {
                         [name: string]: unknown;
@@ -4183,7 +4596,7 @@ export interface paths {
                         "application/json": components["schemas"]["ErrorResponse"];
                     };
                 };
-                /** @description Solo el administrador puede hacerlo */
+                /** @description Sin el permiso miembros:invitar */
                 403: {
                     headers: {
                         [name: string]: unknown;
@@ -4266,7 +4679,7 @@ export interface paths {
                         "application/json": components["schemas"]["ErrorResponse"];
                     };
                 };
-                /** @description Solo el administrador puede hacerlo */
+                /** @description Sin el permiso miembros:invitar */
                 403: {
                     headers: {
                         [name: string]: unknown;
@@ -4742,6 +5155,13 @@ export interface components {
             avatarUrl: string | null;
             /** @example true */
             isAdmin: boolean;
+            /**
+             * @example [
+             *       "organizacion:editar",
+             *       "miembros:invitar"
+             *     ]
+             */
+            permisos: string[];
         };
         MiembroDto: {
             /** @example 2 */
@@ -4754,8 +5174,30 @@ export interface components {
             avatarUrl: string | null;
             /** @example false */
             isAdmin: boolean;
+            roles: {
+                id: number;
+                nombre: string;
+            }[];
             /** @example 2026-10-29T12:00:00.000Z */
             createdAt: string;
+        };
+        CatalogoPermisosOrganizacion: {
+            permisos: components["schemas"]["PermisoOrganizacion"][];
+            plantillas: {
+                nombre: string;
+                permisos: components["schemas"]["PermisoOrganizacion"][];
+            }[];
+        };
+        /** @enum {string} */
+        PermisoOrganizacion: "organizacion:editar" | "miembros:invitar" | "miembros:expulsar" | "roles:gestionar" | "equipos:crear" | "equipos:editar" | "equipos:eliminar" | "proyectos:crear" | "proyectos:editar" | "proyectos:eliminar" | "tags:gestionar";
+        RolOrganizacionDto: {
+            /** @example 1 */
+            id: number;
+            /** @example Editor */
+            nombre: string;
+            permisos: components["schemas"]["PermisoOrganizacion"][];
+            /** @example 2 */
+            totalMiembros: number;
         };
         InvitacionDto: {
             /** @example 1 */
@@ -4801,6 +5243,9 @@ export type NotaDto = components['schemas']['NotaDto'];
 export type AdjuntoDto = components['schemas']['AdjuntoDto'];
 export type OrganizacionDto = components['schemas']['OrganizacionDto'];
 export type MiembroDto = components['schemas']['MiembroDto'];
+export type CatalogoPermisosOrganizacion = components['schemas']['CatalogoPermisosOrganizacion'];
+export type PermisoOrganizacion = components['schemas']['PermisoOrganizacion'];
+export type RolOrganizacionDto = components['schemas']['RolOrganizacionDto'];
 export type InvitacionDto = components['schemas']['InvitacionDto'];
 export type InvitacionRecibidaDto = components['schemas']['InvitacionRecibidaDto'];
 export type RespuestaInvitacionDto = components['schemas']['RespuestaInvitacionDto'];

@@ -20,6 +20,7 @@ export const miembroDtoSchema = z
 		email: z.string().openapi({ example: "beto@ejemplo.com" }),
 		avatarUrl: z.string().nullable().openapi({ example: null }),
 		isAdmin: z.boolean().openapi({ example: false }),
+		roles: z.array(z.object({ id: z.number().int(), nombre: z.string() })),
 		createdAt: z.string().openapi({ example: "2026-10-29T12:00:00.000Z" }),
 	})
 	.openapi("MiembroDto");

@@ -5,7 +5,7 @@ import { AvatarOrganizacionInvalidoError } from "../../domain/error/AvatarOrgani
 import type { OrganizacionRepository } from "../../domain/repository/OrganizacionRepository";
 import type { OrganizacionDto } from "../dtos/OrganizacionDto";
 import { OrganizacionMapper } from "../mappers/OrganizacionMapper";
-import { buscarComoAdmin } from "./buscarComoAdmin";
+import { buscarConPermiso } from "./buscarConPermiso";
 
 export const AVATAR_ORGANIZACION_MAX_BYTES = 2 * 1024 * 1024;
 
@@ -21,11 +21,13 @@ export class CambiarAvatarOrganizacionUseCase {
 		id: number,
 		datos: Uint8Array | null,
 	): Promise<OrganizacionDto> {
-		const organizacion = await buscarComoAdmin(
+		const encontrada = await buscarConPermiso(
 			this.organizacionRepository,
 			usuarioId,
 			id,
+			"organizacion:editar",
 		);
+		const { organizacion } = encontrada;
 
 		let clave: string | null = null;
 		if (datos) {
@@ -51,8 +53,8 @@ export class CambiarAvatarOrganizacionUseCase {
 				await this.organizacionRepository.actualizar(organizacion);
 			if (anterior) await this.almacenamiento.eliminar(anterior);
 			return OrganizacionMapper.toDto({
+				...encontrada,
 				organizacion: guardada,
-				isAdmin: true,
 			});
 		} catch (error) {
 			if (clave) await this.almacenamiento.eliminar(clave);

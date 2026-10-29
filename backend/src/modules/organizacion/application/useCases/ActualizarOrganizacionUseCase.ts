@@ -2,7 +2,7 @@ import type { OrganizacionRepository } from "../../domain/repository/Organizacio
 import type { ActualizarOrganizacionDto } from "../dtos/ActualizarOrganizacionDto";
 import type { OrganizacionDto } from "../dtos/OrganizacionDto";
 import { OrganizacionMapper } from "../mappers/OrganizacionMapper";
-import { buscarComoAdmin } from "./buscarComoAdmin";
+import { buscarConPermiso } from "./buscarConPermiso";
 
 export class ActualizarOrganizacionUseCase {
 	constructor(
@@ -14,15 +14,18 @@ export class ActualizarOrganizacionUseCase {
 		id: number,
 		dto: ActualizarOrganizacionDto,
 	): Promise<OrganizacionDto> {
-		const organizacion = await buscarComoAdmin(
+		const encontrada = await buscarConPermiso(
 			this.organizacionRepository,
 			usuarioId,
 			id,
+			"organizacion:editar",
 		);
-		organizacion.actualizar(dto);
+		encontrada.organizacion.actualizar(dto);
 		return OrganizacionMapper.toDto({
-			organizacion: await this.organizacionRepository.actualizar(organizacion),
-			isAdmin: true,
+			...encontrada,
+			organizacion: await this.organizacionRepository.actualizar(
+				encontrada.organizacion,
+			),
 		});
 	}
 }

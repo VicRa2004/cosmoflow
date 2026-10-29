@@ -1,5 +1,6 @@
 import { z } from "zod";
 import type { OrganizacionDto } from "../api/organizacionesApi";
+import type { PermisoOrganizacion } from "../api/rolesOrganizacionApi";
 
 /** Valida lo que se escribe en el formulario y lo convierte al cuerpo de la API. */
 export const organizacionFormSchema = z.object({
@@ -29,4 +30,16 @@ export const organizacionAFormValues = ({
 
 export const invitarFormSchema = z.object({
 	email: z.email("Email no válido").trim(),
+});
+
+export const rolFormSchema = z.object({
+	nombre: z
+		.string()
+		.trim()
+		.min(1, "Obligatorio")
+		.max(64, "Máximo 64 caracteres"),
+	// Salen de las casillas del catálogo; el backend vuelve a validarlos.
+	permisos: z.array(
+		z.custom<PermisoOrganizacion>((v) => typeof v === "string"),
+	),
 });
