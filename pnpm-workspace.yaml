@@ -1,0 +1,9 @@
+packages:
+  - 'backend'
+  - 'frontend'
+allowBuilds:
+  '@prisma/engines': true
+  '@swc/core': false
+  bcrypt: true
+  esbuild: false
+  prisma: true

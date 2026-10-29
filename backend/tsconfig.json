@@ -1,0 +1,38 @@
+{
+	"compilerOptions": {
+		"rootDir": "./",
+		"outDir": "./dist",
+		"target": "ESNext", // Bun brilla con lo último de JS
+		"module": "ESNext", // Cambiamos de CommonJS a ESNext
+		"moduleResolution": "bundler", // La resolución recomendada para Bun
+		"sourceMap": true,
+		"declaration": true,
+		"declarationMap": true,
+		"noUncheckedIndexedAccess": true,
+		"isolatedModules": true,
+		"moduleDetection": "force",
+		"skipLibCheck": true,
+		"strict": true,
+		"esModuleInterop": true,
+
+		"allowJs": true,
+		"types": ["bun"],
+		"lib": ["ESNext"],
+
+		"ignoreDeprecations": "6.0",
+		"paths": {
+			"@/*": ["./src/*"],
+			"@core/*": ["./src/core/*"],
+			"@modules/*": ["./src/modules/*"]
+		}
+	},
+	"include": ["src/**/*"],
+	"exclude": [
+		"node_modules",
+		"docs",
+		"dist",
+		"**/*.spec.ts",
+		"**/*.test.ts",
+		"**/*.e2e.spec.ts"
+	]
+}

@@ -1,0 +1,46 @@
+{
+	"name": "backend",
+	"version": "1.0.0",
+	"main": "src/index.ts",
+	"author": "Victor Raúl",
+	"license": "MIT",
+	"scripts": {
+		"postinstall": "DATABASE_URL=${DATABASE_URL:-postgresql://hexacore:cambia_esta_password@localhost:5433/hexacore_db?schema=public} prisma generate",
+		"start": "bun src/index.ts",
+		"dev": "bun --hot src/index.ts",
+		"test": "bun test --path-ignore-patterns='**/*.e2e.spec.ts'",
+		"test:coverage": "bun test --coverage --path-ignore-patterns='**/*.e2e.spec.ts'",
+		"test:e2e": "bun scripts/test-e2e.ts",
+		"test:watch": "bun test --watch --path-ignore-patterns='**/*.e2e.spec.ts'",
+		"seed": "bun prisma/seed.ts",
+		"seed:demo": "bun prisma/seed-demo.ts",
+		"create:admin": "bun scripts/create-admin.ts",
+		"check:architecture": "depcruise src --config .dependency-cruiser.cjs"
+	},
+	"prisma": {
+		"seed": "bun prisma/seed.ts"
+	},
+	"keywords": [],
+	"description": "",
+	"dependencies": {
+		"@hono/zod-openapi": "1.6.3",
+		"@prisma/adapter-pg": "7.10.1",
+		"@prisma/client": "7.10.1",
+		"@scalar/hono-api-reference": "0.12.13",
+		"bcrypt": "6.0.0",
+		"dotenv": "18.0.8",
+		"hono": "4.13.13",
+		"jsonwebtoken": "9.0.3",
+		"zod": "4.6.7"
+	},
+	"devDependencies": {
+		"@swc/core": "1.16.18",
+		"@types/bcrypt": "6.0.0",
+		"@types/bun": "1.4.3",
+		"@types/jsonwebtoken": "9.0.10",
+		"@types/node": "26.6.5",
+		"dependency-cruiser": "18.7.0",
+		"prisma": "7.10.1",
+		"typescript": "7.0.2"
+	}
+}

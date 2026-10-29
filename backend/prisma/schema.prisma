@@ -1,0 +1,194 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ─────────────────────────────────────────────
+//  1. Entidades principales
+// ─────────────────────────────────────────────
+
+model Usuario {
+  id        Int       @id @default(autoincrement()) @map("usr_id")
+  email     String    @unique @map("usr_email") @db.VarChar(128)
+  nombre    String    @map("usr_nombre") @db.VarChar(255)
+  password  String    @map("usr_password") @db.VarChar(255)
+  isActivo  Boolean   @default(true) @map("is_activo")
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime? @updatedAt @map("updated_at")
+
+  // Seguridad de la cuenta (módulo auth)
+  emailVerificadoEn DateTime? @map("usr_email_verificado_en")
+  intentosFallidos  Int       @default(0) @map("usr_intentos_fallidos")
+  bloqueadoHasta    DateTime? @map("usr_bloqueado_hasta")
+
+  /// Clave del avatar en el almacenamiento de archivos
+  avatar    String?   @map("usr_avatar") @db.VarChar(255)
+  /// Borrado lógico: los repositorios ignoran las filas con fecha
+  deletedAt DateTime? @map("deleted_at")
+
+  // Relaciones N-a-N gestionadas por tablas intermedias explícitas
+  roles            UsuarioRol[]
+  permisosDirectos UsuarioPermiso[]
+  refreshTokens    RefreshToken[]
+  tokensCuenta     TokenCuenta[]
+
+  @@map("usuario")
+}
+
+model Rol {
+  id          Int       @id @default(autoincrement()) @map("rol_id")
+  nombre      String    @unique @map("rol_nombre") @db.VarChar(150) // p. ej. 'ADMIN', 'MOD', 'USUARIO'
+  descripcion String?   @map("rol_descripcion") @db.Text
+  isActivo    Boolean   @default(true) @map("is_activo")
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime? @updatedAt @map("updated_at")
+
+  usuarios UsuarioRol[]
+  permisos RolPermiso[]
+
+  @@map("rol")
+}
+
+/// Permiso atómico: combinación única de recurso + acción.
+/// Ejemplo: recurso="turnos", accion="crear"
+model Permiso {
+  id        Int       @id @default(autoincrement()) @map("per_id")
+  recurso   String    @map("per_recurso") @db.VarChar(100) // p. ej. "turnos", "usuarios"
+  accion    String    @map("per_accion") @db.VarChar(50) // p. ej. "crear", "leer", "actualizar", "eliminar"
+  isActivo  Boolean   @default(true) @map("is_activo")
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime? @updatedAt @map("updated_at")
+
+  roles    RolPermiso[]
+  usuarios UsuarioPermiso[]
+
+  @@unique([recurso, accion])
+  @@map("permiso")
+}
+
+// ─────────────────────────────────────────────
+//  2. Tablas intermedias (N-a-N explícitas)
+// ─────────────────────────────────────────────
+
+/// Asigna roles a usuarios
+model UsuarioRol {
+  usuarioId Int      @map("usrrol_fkusuario")
+  rolId     Int      @map("usrrol_fkrol")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  usuario Usuario @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  rol     Rol     @relation(fields: [rolId], references: [id])
+
+  @@id([usuarioId, rolId])
+  @@map("usuario_rol")
+}
+
+/// Permisos que posee un rol completo
+model RolPermiso {
+  rolId     Int @map("rolper_fkrol")
+  permisoId Int @map("rolper_fkpermiso")
+
+  rol     Rol     @relation(fields: [rolId], references: [id], onDelete: Cascade)
+  permiso Permiso @relation(fields: [permisoId], references: [id], onDelete: Cascade)
+
+  @@id([rolId, permisoId])
+  @@map("rol_permiso")
+}
+
+/// Permisos directos o excepcionales por usuario (pueden conceder O denegar)
+model UsuarioPermiso {
+  usuarioId Int     @map("usrper_fkusuario")
+  permisoId Int     @map("usrper_fkpermiso")
+  /// true = conceder, false = denegar (override sobre el rol)
+  concedido Boolean @default(true) @map("usrper_concedido")
+
+  usuario Usuario @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  permiso Permiso @relation(fields: [permisoId], references: [id], onDelete: Cascade)
+
+  @@id([usuarioId, permisoId])
+  @@map("usuario_permiso")
+}
+
+// ─────────────────────────────────────────────
+//  3. Refresh Tokens
+// ─────────────────────────────────────────────
+
+/// Token de refresco para la rotación segura de sesiones.
+/// Se almacena un hash del token, nunca el token en claro.
+model RefreshToken {
+  id        Int      @id @default(autoincrement()) @map("rft_id")
+  tokenHash String   @unique @map("rft_token_hash") @db.VarChar(512)
+  usuarioId Int      @map("rft_fkusuario")
+  expiraEn  DateTime @map("rft_expira_en")
+  revocado  Boolean  @default(false) @map("rft_revocado")
+  createdAt DateTime @default(now()) @map("rft_created_at")
+
+  usuario Usuario @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+
+  @@index([usuarioId])
+  @@map("refresh_token")
+}
+
+// ─────────────────────────────────────────────
+//  4. Tokens de un solo uso (recuperar contraseña, verificar email)
+// ─────────────────────────────────────────────
+
+/// Se guarda el hash del token, nunca el token en claro.
+model TokenCuenta {
+  id        Int       @id @default(autoincrement()) @map("tkc_id")
+  tokenHash String    @unique @map("tkc_token_hash") @db.VarChar(128)
+  usuarioId Int       @map("tkc_fkusuario")
+  /// "recuperar_password" | "verificar_email"
+  tipo      String    @map("tkc_tipo") @db.VarChar(30)
+  expiraEn  DateTime  @map("tkc_expira_en")
+  usadoEn   DateTime? @map("tkc_usado_en")
+  createdAt DateTime  @default(now()) @map("tkc_created_at")
+
+  usuario Usuario @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+
+  @@index([usuarioId, tipo])
+  @@map("token_cuenta")
+}
+
+// ─────────────────────────────────────────────
+//  5. Outbox de eventos (módulo opcional eventos-outbox)
+// ─────────────────────────────────────────────
+
+/// Eventos de dominio guardados en la misma transacción que los datos; una tarea los entrega.
+model EventoOutbox {
+  id             Int       @id @default(autoincrement()) @map("evo_id")
+  nombre         String    @map("evo_nombre") @db.VarChar(150)
+  datos          Json      @map("evo_datos")
+  ocurridoEn     DateTime  @map("evo_ocurrido_en")
+  requestId      String?   @map("evo_request_id") @db.VarChar(100)
+  usuarioId      Int?      @map("evo_usuario_id")
+  procesadoEn    DateTime? @map("evo_procesado_en")
+  reservadoHasta DateTime? @map("evo_reservado_hasta")
+  intentos       Int       @default(0) @map("evo_intentos")
+  ultimoError    String?   @map("evo_ultimo_error") @db.Text
+
+  @@index([procesadoEn, id])
+  @@map("evento_outbox")
+}
+
+// ─────────────────────────────────────────────
+//  6. Auditoría (módulo opcional auditoria)
+// ─────────────────────────────────────────────
+
+/// Un registro por evento de dominio. Sin FK a usuario: el rastro sobrevive al borrado.
+model Auditoria {
+  id         Int      @id @default(autoincrement()) @map("aud_id")
+  evento     String   @map("aud_evento") @db.VarChar(150)
+  datos      Json     @map("aud_datos")
+  usuarioId  Int?     @map("aud_usuario_id")
+  requestId  String?  @map("aud_request_id") @db.VarChar(100)
+  ocurridoEn DateTime @map("aud_ocurrido_en")
+
+  @@index([ocurridoEn])
+  @@index([evento])
+  @@map("auditoria")
+}
