@@ -78,7 +78,8 @@ frontend/src/
 ├── routes/                         # Enrutamiento tipado basado en archivos (TanStack Router)
 │   ├── __root.tsx                  # Raíz con Toaster de Sonner y Outlet
 │   ├── index.tsx                   # Redirección inteligente
-│   ├── login.tsx                   # Ruta pública de login
+│   ├── login.tsx                   # Ruta pública de login (?error=google)
+│   ├── login_.google.tsx           # Vuelta del login con Google → sesión → /dashboard
 │   ├── registro.tsx                # Ruta pública de registro
 │   ├── recuperar-password.tsx      # Pide el enlace de recuperación
 │   ├── restablecer-password.tsx    # ?token= del correo → nueva contraseña

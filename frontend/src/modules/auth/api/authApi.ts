@@ -21,6 +21,12 @@ export const authApi = {
 		return response.data;
 	},
 
+	// Canjea la cookie del refresh token por una sesión (vuelta del login con Google).
+	async sesion(): Promise<AuthResponse> {
+		const response = await apiClient.post<AuthResponse>("/auth/refresh");
+		return response.data;
+	},
+
 	// Revoca el refresh token de la cookie httpOnly y la borra.
 	async logout(): Promise<{ mensaje: string }> {
 		const response = await apiClient.post<{ mensaje: string }>("/auth/logout");

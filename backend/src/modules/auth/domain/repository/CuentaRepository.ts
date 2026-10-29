@@ -27,6 +27,12 @@ export interface CuentaRepository {
 
 	marcarEmailVerificado(usuarioId: number): Promise<void>;
 
+	/** @returns el ID del usuario (no borrado) vinculado a esa cuenta de Google, o `null`. */
+	buscarUsuarioIdPorGoogleId(googleId: string): Promise<number | null>;
+
+	/** Vincula la cuenta de Google y marca el email como verificado (Google ya lo verificó). */
+	vincularGoogle(usuarioId: number, googleId: string): Promise<void>;
+
 	/** @returns la fecha hasta la que la cuenta está bloqueada, o `null`. */
 	bloqueadoHasta(usuarioId: number): Promise<Date | null>;
 

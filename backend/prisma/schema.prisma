@@ -24,6 +24,8 @@ model Usuario {
   emailVerificadoEn DateTime? @map("usr_email_verificado_en")
   intentosFallidos  Int       @default(0) @map("usr_intentos_fallidos")
   bloqueadoHasta    DateTime? @map("usr_bloqueado_hasta")
+  /// `sub` de Google: identifica la cuenta aunque cambie el email
+  googleId          String?   @unique @map("usr_google_id") @db.VarChar(255)
 
   /// Clave del avatar en el almacenamiento de archivos
   avatar    String?   @map("usr_avatar") @db.VarChar(255)

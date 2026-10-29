@@ -52,6 +52,23 @@ export class PrismaCuentaRepository implements CuentaRepository {
 		});
 	}
 
+	async buscarUsuarioIdPorGoogleId(googleId: string): Promise<number | null> {
+		const usuario = await prisma.usuario.findFirst({
+			where: { googleId, deletedAt: null },
+			select: { id: true },
+		});
+		return usuario?.id ?? null;
+	}
+
+	async vincularGoogle(usuarioId: number, googleId: string): Promise<void> {
+		const usuario = await prisma.usuario.update({
+			where: { id: usuarioId },
+			data: { googleId },
+			select: { emailVerificadoEn: true },
+		});
+		if (!usuario.emailVerificadoEn) await this.marcarEmailVerificado(usuarioId);
+	}
+
 	async bloqueadoHasta(usuarioId: number): Promise<Date | null> {
 		const usuario = await prisma.usuario.findUnique({
 			where: { id: usuarioId },

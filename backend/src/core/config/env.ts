@@ -34,6 +34,9 @@ const EnvSchema = z
 		S3_REGION: z.string().optional(),
 		S3_ACCESS_KEY_ID: z.string().optional(),
 		S3_SECRET_ACCESS_KEY: z.string().optional(),
+		// Sin las dos, el botón de Google vuelve al login con error.
+		GOOGLE_CLIENT_ID: z.string().optional(),
+		GOOGLE_CLIENT_SECRET: z.string().optional(),
 	})
 	.refine(
 		(env) =>
@@ -59,6 +62,8 @@ const envPrev = {
 	S3_REGION: process.env.S3_REGION || undefined,
 	S3_ACCESS_KEY_ID: process.env.S3_ACCESS_KEY_ID || undefined,
 	S3_SECRET_ACCESS_KEY: process.env.S3_SECRET_ACCESS_KEY || undefined,
+	GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID || undefined,
+	GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET || undefined,
 };
 
 export const env = EnvSchema.parse(envPrev);

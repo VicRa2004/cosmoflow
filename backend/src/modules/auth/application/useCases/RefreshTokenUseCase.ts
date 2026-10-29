@@ -1,5 +1,9 @@
 import { BaseError } from "@/core/shared/domain/error/BaseError";
-import type { UsuarioRepository } from "@/core/usuario";
+import {
+	type UsuarioDto,
+	UsuarioMapper,
+	type UsuarioRepository,
+} from "@/core/usuario";
 import type { TokenService } from "../../domain/service/TokenService";
 import type { RefreshTokenRepository } from "../../domain/repository/RefreshTokenRepository";
 import { EmisorSesion } from "../services/EmisorSesion";
@@ -19,9 +23,11 @@ export class RefreshTokenUseCase {
 	 * Implementa "Refresh Token Rotation" — si alguien reutiliza un token
 	 * ya revocado, se asume robo y se revocan TODOS los tokens del usuario.
 	 */
-	async ejecutar(
-		refreshTokenActual: string,
-	): Promise<{ accessToken: string; refreshToken: string }> {
+	async ejecutar(refreshTokenActual: string): Promise<{
+		accessToken: string;
+		refreshToken: string;
+		usuario: UsuarioDto;
+	}> {
 		const tokenHash = this.tokenService.hashearRefreshToken(refreshTokenActual);
 
 		const tokenGuardado =
@@ -56,6 +62,10 @@ export class RefreshTokenUseCase {
 			throw new BaseError("Usuario no encontrado o inactivo", 401);
 		}
 
-		return this.emisorSesion.emitir(usuario);
+		// El usuario va en la respuesta: la SPA lo necesita al volver del login con Google.
+		return {
+			...(await this.emisorSesion.emitir(usuario)),
+			usuario: UsuarioMapper.toDto(usuario),
+		};
 	}
 }

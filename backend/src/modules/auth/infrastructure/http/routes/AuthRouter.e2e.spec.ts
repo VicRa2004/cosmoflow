@@ -36,11 +36,20 @@ describe("Auth (e2e)", () => {
 
 		const rotado = await refresh(cookieVieja);
 		expect(rotado.status).toBe(200);
-		expect((await rotado.json()).accessToken).toBeString();
+		const sesion = await rotado.json();
+		expect(sesion.accessToken).toBeString();
+		expect(sesion.usuario.email).toBe("ana@e2e.dev");
 		const cookieNueva = refreshCookie(rotado);
 
 		expect((await refresh(cookieVieja)).status).toBe(401);
 		expect((await refresh(cookieNueva)).status).toBe(401);
+	});
+
+	it("vuelta de Google sin la cookie de state → login con error", async () => {
+		const res = await api("/api/auth/google/callback?code=x&state=y");
+
+		expect(res.status).toBe(302);
+		expect(res.headers.get("location")).toEndWith("/login?error=google");
 	});
 
 	it("login con contraseña incorrecta → 401", async () => {

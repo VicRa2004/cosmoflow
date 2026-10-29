@@ -6,6 +6,7 @@ import { EmisorCorreosCuenta } from "./application/services/EmisorCorreosCuenta"
 import { EmisorSesion } from "./application/services/EmisorSesion";
 import { CambiarPasswordUseCase } from "./application/useCases/CambiarPasswordUseCase";
 import { CerrarSesionesUseCase } from "./application/useCases/CerrarSesionesUseCase";
+import { LoginGoogleUseCase } from "./application/useCases/LoginGoogleUseCase";
 import { LoginUseCase } from "./application/useCases/LoginUseCase";
 import { LogoutUseCase } from "./application/useCases/LogoutUseCase";
 import { RefreshTokenUseCase } from "./application/useCases/RefreshTokenUseCase";
@@ -15,6 +16,7 @@ import { RestablecerPasswordUseCase } from "./application/useCases/RestablecerPa
 import { SolicitarRecuperacionUseCase } from "./application/useCases/SolicitarRecuperacionUseCase";
 import { VerificarEmailUseCase } from "./application/useCases/VerificarEmailUseCase";
 import { CuentaController } from "./infrastructure/http/controllers/CuentaController";
+import { GoogleController } from "./infrastructure/http/controllers/GoogleController";
 import { LoginController } from "./infrastructure/http/controllers/LoginController";
 import { LogoutController } from "./infrastructure/http/controllers/LogoutController";
 import { RefreshTokenController } from "./infrastructure/http/controllers/RefreshTokenController";
@@ -23,6 +25,7 @@ import { AuthMiddleware } from "./infrastructure/http/middlewares/authMiddleware
 import { AuthRouter } from "./infrastructure/http/routes/AuthRouter";
 import { PrismaCuentaRepository } from "./infrastructure/repository/PrismaCuentaRepository";
 import { PrismaRefreshTokenRepository } from "./infrastructure/repository/PrismaRefreshTokenRepository";
+import { GoogleOAuthService } from "./infrastructure/service/GoogleOAuthService";
 import { JwtService } from "./infrastructure/service/JwtService";
 import { AUTH_TOKENS } from "./infrastructure/tokens";
 
@@ -30,6 +33,14 @@ import { AUTH_TOKENS } from "./infrastructure/tokens";
 const tokenService = new JwtService();
 const refreshTokenRepo = new PrismaRefreshTokenRepository();
 const cuentaRepo = new PrismaCuentaRepository();
+const google =
+	env.GOOGLE_CLIENT_ID && env.GOOGLE_CLIENT_SECRET
+		? new GoogleOAuthService(
+				env.GOOGLE_CLIENT_ID,
+				env.GOOGLE_CLIENT_SECRET,
+				`${env.APP_URL}/api/auth/google/callback`,
+			)
+		: null;
 
 export const authModule: AppModule = {
 	register(container) {
@@ -90,6 +101,19 @@ export const authModule: AppModule = {
 				),
 				cerrarSesiones: new CerrarSesionesUseCase(refreshTokenRepo),
 			}),
+			new GoogleController(
+				google && {
+					google,
+					loginGoogle: new LoginGoogleUseCase(
+						google,
+						usuarios,
+						hasher,
+						cuentaRepo,
+						refreshTokenRepo,
+						sesiones,
+					),
+				},
+			),
 			container.get(AUTH_TOKENS.AuthMiddleware),
 		);
 		app.route("/api/auth", router.router);

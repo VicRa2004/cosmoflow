@@ -1,11 +1,10 @@
-import type { AuthResponse, paths, UsuarioDto } from "@/core/api/schema.gen";
+import type { AuthResponse, UsuarioDto } from "@/core/api/schema.gen";
 
 export type { AuthResponse };
 export type Usuario = UsuarioDto;
 
 // El refresh token vive en una cookie httpOnly que gestiona el backend.
-export type AuthTokens =
-	paths["/api/auth/refresh"]["post"]["responses"][200]["content"]["application/json"];
+export type AuthTokens = Pick<AuthResponse, "accessToken">;
 
 export interface AuthState {
 	usuario: Usuario | null;

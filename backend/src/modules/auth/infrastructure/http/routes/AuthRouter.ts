@@ -5,6 +5,7 @@ import { RegistroController } from "../controllers/RegistroController";
 import { RefreshTokenController } from "../controllers/RefreshTokenController";
 import { LogoutController } from "../controllers/LogoutController";
 import type { CuentaController } from "../controllers/CuentaController";
+import type { GoogleController } from "../controllers/GoogleController";
 import type { AuthMiddleware } from "../middlewares/authMiddleware";
 import { rateLimit } from "@/core/shared/infrastructure/http/rateLimit";
 import {
@@ -44,6 +45,7 @@ export class AuthRouter {
 		private readonly refreshTokenController: RefreshTokenController,
 		private readonly logoutController: LogoutController,
 		private readonly cuentaController: CuentaController,
+		private readonly googleController: GoogleController,
 		private readonly authMiddleware: AuthMiddleware,
 	) {
 		this.router = new OpenAPIHono();
@@ -125,7 +127,7 @@ export class AuthRouter {
 				"Lee el refresh token de la cookie httpOnly `refresh_token`, lo revoca y emite un nuevo access token junto con una cookie nueva (Refresh Token Rotation).",
 			responses: {
 				200: jsonResponse(
-					refreshResponseSchema,
+					authResponseSchema,
 					"Tokens renovados (cookie `refresh_token` renovada)",
 				),
 				400: errorResponse("Cookie `refresh_token` ausente"),
@@ -153,6 +155,42 @@ export class AuthRouter {
 		this.router.post("/logout", this.logoutController.ejecutar);
 
 		this.iniciarRutasCuenta(limiteCorreos, limiteTokens);
+		this.iniciarRutasGoogle(limiteTokens);
+	}
+
+	private iniciarRutasGoogle(limiteTokens: ReturnType<typeof rateLimit>) {
+		const docs = this.router.openAPIRegistry;
+
+		docs.registerPath({
+			method: "get",
+			path: "/google",
+			tags,
+			security,
+			summary: "Iniciar sesión con Google",
+			description:
+				"Navegación del navegador (no fetch): redirige a Google. Sin `GOOGLE_CLIENT_ID`/`GOOGLE_CLIENT_SECRET` vuelve a `/login?error=google`.",
+			responses: { 302: { description: "Redirección a Google" } },
+		});
+		this.router.get("/google", this.googleController.iniciar);
+
+		docs.registerPath({
+			method: "get",
+			path: "/google/callback",
+			tags,
+			security,
+			summary: "Vuelta de Google",
+			description:
+				"Fija la cookie `refresh_token` y redirige a `/login/google`, que obtiene la sesión con `/api/auth/refresh`. Si falla, redirige a `/login?error=google`.",
+			responses: {
+				302: { description: "Redirección al frontend" },
+				429: { description: "Demasiados intentos" },
+			},
+		});
+		this.router.get(
+			"/google/callback",
+			limiteTokens,
+			this.googleController.callback,
+		);
 	}
 
 	private iniciarRutasCuenta(

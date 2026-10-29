@@ -11,7 +11,7 @@ description: "Flujo de autenticación del backend: access token JWT + refresh to
 |--------|------|------|-----------|
 | POST | `/api/auth/login` | `{ email, password }` | `{ accessToken, usuario }` + cookie |
 | POST | `/api/auth/registro` | `{ nombre, email, password }` | `{ accessToken, usuario }` + cookie |
-| POST | `/api/auth/refresh` | — (lee la cookie) | `{ accessToken }` + cookie nueva |
+| POST | `/api/auth/refresh` | — (lee la cookie) | `{ accessToken, usuario }` + cookie nueva |
 | POST | `/api/auth/logout` | — (lee la cookie) | `{ mensaje }` y borra la cookie |
 | POST | `/api/auth/recuperar-password` | `{ email }` | `{ mensaje }` (igual exista o no el email) |
 | POST | `/api/auth/restablecer-password` | `{ token, password }` | `{ mensaje }`; cierra todas las sesiones y desbloquea |
@@ -19,6 +19,25 @@ description: "Flujo de autenticación del backend: access token JWT + refresh to
 | POST | `/api/auth/verificar-email/reenviar` | — (Bearer) | `{ mensaje }` |
 | PUT | `/api/auth/password` | `{ passwordActual, passwordNueva }` (Bearer) | `{ accessToken }` + cookie nueva; revoca el resto de sesiones |
 | POST | `/api/auth/logout-todas` | — (Bearer) | `{ mensaje }`; revoca todos los refresh tokens y borra la cookie |
+| GET | `/api/auth/google` | — (navegación) | `302` a Google (state + PKCE en la cookie `google_oauth`) |
+| GET | `/api/auth/google/callback` | `?code&state` | `302` a `/login/google` + cookie, o a `/login?error=google` |
+
+## Login con Google
+
+- OAuth 2.0 con código + PKCE, sin librerías (`GoogleOAuthService`, puerto
+  `ProveedorGoogle`). Activo solo con `GOOGLE_CLIENT_ID` y `GOOGLE_CLIENT_SECRET`;
+  la URI de redirección es `${APP_URL}/api/auth/google/callback` (en dev pasa por
+  el proxy `/api` de Vite, así la cookie queda en el origen del frontend).
+- La cookie `google_oauth` es `SameSite=Lax`: el callback llega navegando desde
+  Google y una `Strict` no viajaría.
+- `LoginGoogleUseCase` busca por `usuario.usr_google_id` (`sub` de Google) y, si no,
+  por email: vincula la cuenta y marca el email como verificado. Si esa cuenta
+  tenía el email **sin verificar**, anula su contraseña y revoca sus sesiones
+  (pudo crearla otra persona con ese email: pre-secuestro). Sin cuenta, la crea
+  con una contraseña aleatoria (se puede fijar una con «¿Olvidaste tu contraseña?»).
+- El frontend (`routes/login_.google.tsx`) canjea la cookie con `/api/auth/refresh`
+  en `beforeLoad`, una sola vez (un segundo refresh con la misma cookie revocaría
+  la sesión).
 
 El refresh token **nunca** viaja en el body: el servidor lo fija en la cookie
 `refresh_token` (`HttpOnly`, `SameSite=Strict`, `Path=/api/auth`, `Secure` en

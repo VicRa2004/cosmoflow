@@ -630,10 +630,7 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "application/json": {
-                            /** @example eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9... */
-                            accessToken: string;
-                        };
+                        "application/json": components["schemas"]["AuthResponse"];
                     };
                 };
                 /** @description Cookie `refresh_token` ausente */
@@ -1080,6 +1077,87 @@ export interface paths {
                 };
             };
         };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/auth/google": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Iniciar sesión con Google
+         * @description Navegación del navegador (no fetch): redirige a Google. Sin `GOOGLE_CLIENT_ID`/`GOOGLE_CLIENT_SECRET` vuelve a `/login?error=google`.
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Redirección a Google */
+                302: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/auth/google/callback": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Vuelta de Google
+         * @description Fija la cookie `refresh_token` y redirige a `/login/google`, que obtiene la sesión con `/api/auth/refresh`. Si falla, redirige a `/login?error=google`.
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Redirección al frontend */
+                302: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Demasiados intentos */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;

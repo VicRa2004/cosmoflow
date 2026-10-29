@@ -20,6 +20,7 @@ import { Route as AuthenticatedDashboardRouteImport } from './routes/_authentica
 import { Route as AuthenticatedPerfilRouteImport } from './routes/_authenticated/perfil'
 import { Route as AuthenticatedRolesRouteImport } from './routes/_authenticated/roles'
 import { Route as AuthenticatedUsuariosRouteImport } from './routes/_authenticated/usuarios'
+import { Route as LoginGoogleRouteImport } from './routes/login_.google'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -75,6 +76,11 @@ const AuthenticatedUsuariosRoute = AuthenticatedUsuariosRouteImport.update({
   path: '/usuarios',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const LoginGoogleRoute = LoginGoogleRouteImport.update({
+  id: '/login_/google',
+  path: '/login/google',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -87,6 +93,7 @@ export interface FileRoutesByFullPath {
   '/perfil': typeof AuthenticatedPerfilRoute
   '/roles': typeof AuthenticatedRolesRoute
   '/usuarios': typeof AuthenticatedUsuariosRoute
+  '/login/google': typeof LoginGoogleRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -99,6 +106,7 @@ export interface FileRoutesByTo {
   '/perfil': typeof AuthenticatedPerfilRoute
   '/roles': typeof AuthenticatedRolesRoute
   '/usuarios': typeof AuthenticatedUsuariosRoute
+  '/login/google': typeof LoginGoogleRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -113,6 +121,7 @@ export interface FileRoutesById {
   '/_authenticated/perfil': typeof AuthenticatedPerfilRoute
   '/_authenticated/roles': typeof AuthenticatedRolesRoute
   '/_authenticated/usuarios': typeof AuthenticatedUsuariosRoute
+  '/login_/google': typeof LoginGoogleRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -127,6 +136,7 @@ export interface FileRouteTypes {
     | '/perfil'
     | '/roles'
     | '/usuarios'
+    | '/login/google'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -139,6 +149,7 @@ export interface FileRouteTypes {
     | '/perfil'
     | '/roles'
     | '/usuarios'
+    | '/login/google'
   id:
     | '__root__'
     | '/'
@@ -152,6 +163,7 @@ export interface FileRouteTypes {
     | '/_authenticated/perfil'
     | '/_authenticated/roles'
     | '/_authenticated/usuarios'
+    | '/login_/google'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -162,6 +174,7 @@ export interface RootRouteChildren {
   RegistroRoute: typeof RegistroRoute
   RestablecerPasswordRoute: typeof RestablecerPasswordRoute
   VerificarEmailRoute: typeof VerificarEmailRoute
+  LoginGoogleRoute: typeof LoginGoogleRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -243,6 +256,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedUsuariosRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/login_/google': {
+      id: '/login_/google'
+      path: '/login/google'
+      fullPath: '/login/google'
+      preLoaderRoute: typeof LoginGoogleRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -272,6 +292,7 @@ const rootRouteChildren: RootRouteChildren = {
   RegistroRoute: RegistroRoute,
   RestablecerPasswordRoute: RestablecerPasswordRoute,
   VerificarEmailRoute: VerificarEmailRoute,
+  LoginGoogleRoute: LoginGoogleRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

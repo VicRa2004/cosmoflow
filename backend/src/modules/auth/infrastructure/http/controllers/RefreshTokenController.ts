@@ -19,11 +19,11 @@ export class RefreshTokenController extends BaseController {
 			const dto = validate(refreshTokenSchema, {
 				refreshToken: getRefreshTokenCookie(c),
 			});
-			const { refreshToken, accessToken } =
+			const { refreshToken, ...session } =
 				await this.refreshTokenUseCase.ejecutar(dto.refreshToken);
 
 			setRefreshTokenCookie(c, refreshToken);
-			return this.ok(c, { accessToken });
+			return this.ok(c, session);
 		});
 	};
 }
