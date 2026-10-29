@@ -1,3 +1,5 @@
+import { ArrowLeft } from "lucide-react";
+import { Button } from "@/core/components/ui/Button";
 import { EditorMarkdown } from "@/modules/adjuntos/components/EditorMarkdown";
 import { useAppForm } from "@/core/components/form/useAppForm";
 import type { TareaDto } from "../api/tareasApi";
@@ -18,9 +20,11 @@ interface TareaFormProps {
 	/** Sin `inicial` crea; con él, edita. */
 	inicial?: TareaDto;
 	onGuardado: () => void;
+	onVolver: () => void;
 }
 
-export function TareaForm({ inicial, onGuardado }: TareaFormProps) {
+/** Página-documento de una tarea: título grande, propiedades y el editor debajo. */
+export function TareaForm({ inicial, onGuardado, onVolver }: TareaFormProps) {
 	const crear = useCrearTareaMutation();
 	const actualizar = useActualizarTareaMutation();
 
@@ -37,19 +41,25 @@ export function TareaForm({ inicial, onGuardado }: TareaFormProps) {
 
 	return (
 		<form.AppForm>
-			<form.Formulario className="space-y-4">
+			<form.Formulario className="mx-auto max-w-3xl space-y-6">
+				<div className="flex items-center justify-between gap-2">
+					<Button variant="ghost" size="sm" onClick={onVolver}>
+						<ArrowLeft className="h-4 w-4" />
+						Volver
+					</Button>
+					<form.BotonEnviar>{inicial ? "Guardar" : "Crear"}</form.BotonEnviar>
+				</div>
 				<form.AppField name="titulo">
-					{(campo) => <campo.CampoTexto label="Título" />}
-				</form.AppField>
-				<form.AppField name="contenido">
-					{() => (
-						<EditorMarkdown
-							label="Contenido"
-							placeholder="Markdown: - [ ] subtarea, **negrita**…"
+					{(campo) => (
+						<campo.CampoTexto
+							aria-label="Título"
+							placeholder="Sin título"
+							autoFocus={!inicial}
+							className="h-auto border-transparent bg-transparent px-0 py-1 text-3xl font-bold tracking-tight hover:border-transparent focus:border-transparent focus:ring-0"
 						/>
 					)}
 				</form.AppField>
-				<div className="grid gap-4 sm:grid-cols-2">
+				<div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
 					<form.AppField name="estado">
 						{(campo) => (
 							<campo.CampoSelect label="Estado">
@@ -87,9 +97,16 @@ export function TareaForm({ inicial, onGuardado }: TareaFormProps) {
 						/>
 					)}
 				</form.AppField>
-				<div className="flex justify-end">
-					<form.BotonEnviar>{inicial ? "Guardar" : "Crear"}</form.BotonEnviar>
-				</div>
+				<hr className="border-borde" />
+				<form.AppField name="contenido">
+					{() => (
+						<EditorMarkdown
+							label="Contenido"
+							className="-ml-12"
+							placeholder="Escribe o pulsa «/»: lista de tareas, título, imagen…"
+						/>
+					)}
+				</form.AppField>
 			</form.Formulario>
 		</form.AppForm>
 	);

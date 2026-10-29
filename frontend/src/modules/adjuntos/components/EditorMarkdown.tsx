@@ -1,13 +1,10 @@
-import { ImagePlus } from "lucide-react";
-import { type ClipboardEvent, useRef, useState } from "react";
-import { CampoAreaTexto } from "@/core/components/form/campos";
+import { Crepe } from "@milkdown/crepe";
+import "@milkdown/crepe/theme/common/style.css";
+import { useEffect, useRef } from "react";
 import { useFieldContext } from "@/core/components/form/contextos";
-import { Button } from "@/core/components/ui/Button";
 import { cn } from "@/core/utils/cn";
+import { adjuntosApi } from "../api/adjuntosApi";
 import { useSubirAdjuntoMutation } from "../hooks/useSubirAdjuntoMutation";
-import { ContenidoMarkdown } from "./ContenidoMarkdown";
-
-const TIPOS = "image/png,image/jpeg,image/webp";
 
 interface EditorMarkdownProps {
 	label: string;
@@ -16,8 +13,9 @@ interface EditorMarkdownProps {
 }
 
 /**
- * Campo de formulario markdown: escribir o ver la vista previa, e insertar
- * imágenes con el botón o pegándolas. Va dentro de `form.AppField`.
+ * Campo markdown tipo Notion (Milkdown Crepe): `/` abre el menú de bloques, al
+ * seleccionar texto sale la barra de formato e insertar o pegar una imagen la sube
+ * a `/api/adjuntos`. Guarda markdown. Va dentro de `form.AppField`.
  */
 export function EditorMarkdown({
 	label,
@@ -25,98 +23,86 @@ export function EditorMarkdown({
 	className,
 }: EditorMarkdownProps) {
 	const campo = useFieldContext<string>();
-	// Lo que ya tiene contenido se abre para leer; lo vacío, para escribir.
-	const [vista, setVista] = useState<"escribir" | "previa">(
-		campo.state.value ? "previa" : "escribir",
-	);
+	const raiz = useRef<HTMLFieldSetElement>(null);
 	const subir = useSubirAdjuntoMutation();
-	const input = useRef<HTMLInputElement>(null);
+	// Crepe guarda los callbacks al crearse: los refs le dan siempre los actuales.
+	const subirRef = useRef(subir.mutateAsync);
+	subirRef.current = subir.mutateAsync;
+	const cambiarRef = useRef(campo.handleChange);
+	cambiarRef.current = campo.handleChange;
 
-	const insertar = (archivo: File) =>
-		subir.mutate(archivo, {
-			onSuccess: ({ url }) => {
-				// Corchetes fuera del texto alternativo: romperían el enlace.
-				const alt = archivo.name.replace(/\.\w+$/, "").replace(/[[\]]/g, "");
-				const imagen = `![${alt}](${url})\n`;
-				// Con updater: el texto puede cambiar mientras se sube la imagen.
-				campo.handleChange((texto) =>
-					!texto || texto.endsWith("\n")
-						? texto + imagen
-						: `${texto}\n${imagen}`,
-				);
+	// biome-ignore lint/correctness/useExhaustiveDependencies: el valor inicial se lee una vez; después manda el editor
+	useEffect(() => {
+		const crepe = new Crepe({
+			root: raiz.current,
+			defaultValue: campo.state.value,
+			features: { [Crepe.Feature.Latex]: false },
+			featureConfigs: {
+				[Crepe.Feature.Placeholder]: {
+					text: placeholder ?? "Escribe o pulsa «/» para insertar un bloque…",
+				},
+				[Crepe.Feature.ImageBlock]: {
+					onUpload: async (archivo) => (await subirRef.current(archivo)).url,
+					// shortcut: el blob URL no se libera hasta recargar; basta para una sesión de edición.
+					proxyDomURL: async (url) =>
+						url.startsWith("/api/adjuntos/")
+							? URL.createObjectURL(await adjuntosApi.descargar(url))
+							: url,
+					blockUploadButton: "Subir imagen",
+					blockConfirmButton: "Confirmar",
+					blockCaptionPlaceholderText: "Pie de imagen",
+					blockUploadPlaceholderText: "o pega un enlace",
+					inlineUploadPlaceholderText: "o pega un enlace",
+				},
+				[Crepe.Feature.BlockEdit]: {
+					textGroup: {
+						label: "Texto",
+						text: { label: "Texto" },
+						h1: { label: "Título 1" },
+						h2: { label: "Título 2" },
+						h3: { label: "Título 3" },
+						h4: { label: "Título 4" },
+						h5: { label: "Título 5" },
+						h6: { label: "Título 6" },
+						quote: { label: "Cita" },
+						divider: { label: "Separador" },
+					},
+					listGroup: {
+						label: "Listas",
+						bulletList: { label: "Lista" },
+						orderedList: { label: "Lista numerada" },
+						taskList: { label: "Lista de tareas" },
+					},
+					advancedGroup: {
+						label: "Avanzado",
+						image: { label: "Imagen" },
+						codeBlock: { label: "Código" },
+						table: { label: "Tabla" },
+					},
+				},
+				[Crepe.Feature.Toolbar]: {
+					boldLabel: "Negrita",
+					italicLabel: "Cursiva",
+					strikethroughLabel: "Tachado",
+					codeLabel: "Código",
+					linkLabel: "Enlace",
+				},
 			},
 		});
-
-	const pegar = (e: ClipboardEvent) => {
-		const archivo = [...e.clipboardData.files].find((f) =>
-			TIPOS.includes(f.type),
+		crepe.on((api) =>
+			api.markdownUpdated((_ctx, markdown) => cambiarRef.current(markdown)),
 		);
-		if (!archivo) return;
-		e.preventDefault();
-		insertar(archivo);
-	};
+		const creado = crepe.create();
+		return () => {
+			creado.then(() => crepe.destroy());
+		};
+	}, []);
 
 	return (
-		<div className="space-y-1">
-			{vista === "escribir" ? (
-				<div onPaste={pegar}>
-					<CampoAreaTexto
-						label={label}
-						placeholder={placeholder}
-						className={className}
-					/>
-				</div>
-			) : (
-				<div className="space-y-1.5">
-					<span className="block text-[13px] font-medium text-tinta-suave">
-						{label}
-					</span>
-					<ContenidoMarkdown
-						className={cn(
-							"min-h-28 rounded-lg border border-borde px-3.5 py-2",
-							className,
-						)}
-					>
-						{campo.state.value || "*Sin contenido*"}
-					</ContenidoMarkdown>
-				</div>
-			)}
-			<div className="flex items-center justify-between gap-2">
-				<div className="flex gap-1">
-					{(["escribir", "previa"] as const).map((modo) => (
-						<Button
-							key={modo}
-							variant={vista === modo ? "secondary" : "ghost"}
-							size="sm"
-							aria-pressed={vista === modo}
-							onClick={() => setVista(modo)}
-						>
-							{modo === "escribir" ? "Escribir" : "Vista previa"}
-						</Button>
-					))}
-				</div>
-				<input
-					ref={input}
-					type="file"
-					accept={TIPOS}
-					className="hidden"
-					aria-label="Imagen a insertar"
-					onChange={(e) => {
-						const archivo = e.target.files?.[0];
-						e.target.value = "";
-						if (archivo) insertar(archivo);
-					}}
-				/>
-				<Button
-					variant="ghost"
-					size="sm"
-					onClick={() => input.current?.click()}
-					isLoading={subir.isPending}
-				>
-					<ImagePlus className="h-4 w-4" />
-					Insertar imagen
-				</Button>
-			</div>
-		</div>
+		<fieldset
+			ref={raiz}
+			aria-label={label}
+			className={cn("editor-markdown min-w-0", className)}
+		/>
 	);
 }

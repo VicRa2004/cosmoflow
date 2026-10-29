@@ -1,7 +1,6 @@
 import { createFormHook } from "@tanstack/react-form";
 import {
 	BotonEnviar,
-	CampoAreaTexto,
 	CampoCheckbox,
 	CampoSelect,
 	CampoTexto,
@@ -22,6 +21,6 @@ import { fieldContext, formContext } from "./contextos";
 export const { useAppForm } = createFormHook({
 	fieldContext,
 	formContext,
-	fieldComponents: { CampoTexto, CampoAreaTexto, CampoSelect, CampoCheckbox },
+	fieldComponents: { CampoTexto, CampoSelect, CampoCheckbox },
 	formComponents: { Formulario, BotonEnviar },
 });

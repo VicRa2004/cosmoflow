@@ -22,6 +22,11 @@ export const notasApi = {
 		return response.data;
 	},
 
+	async obtenerUno(id: number): Promise<NotaDto> {
+		const response = await apiClient.get<NotaDto>(`/notas/${id}`);
+		return response.data;
+	},
+
 	async crear(datos: CrearNotaInput): Promise<NotaDto> {
 		const response = await apiClient.post<NotaDto>("/notas", datos);
 		return response.data;

@@ -13,4 +13,13 @@ export const adjuntosApi = {
 		});
 		return response.data;
 	},
+
+	/** Adjunto privado (`/api/adjuntos/…`) como blob: un `<img src>` no manda el Bearer. */
+	async descargar(src: string): Promise<Blob> {
+		// El baseURL del cliente ya es `/api`.
+		const response = await apiClient.get<Blob>(src.replace(/^\/api/, ""), {
+			responseType: "blob",
+		});
+		return response.data;
+	},
 };

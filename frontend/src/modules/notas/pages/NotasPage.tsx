@@ -1,17 +1,16 @@
+import { useNavigate } from "@tanstack/react-router";
 import { Plus, Search } from "lucide-react";
 import { useState } from "react";
 import { usePermisos } from "@/core/auth/usePermisos";
 import { Button } from "@/core/components/ui/Button";
 import { EncabezadoPagina } from "@/core/components/ui/EncabezadoPagina";
 import { ConfirmDialog } from "@/core/components/ui/ConfirmDialog";
-import { Dialog } from "@/core/components/ui/Dialog";
 import { Input } from "@/core/components/ui/Input";
 import { Select } from "@/core/components/ui/Select";
 import { DialogoLectura } from "@/modules/adjuntos/components/DialogoLectura";
 import { TagsBadges } from "@/modules/tags/components/TagsBadges";
 import { useTagsDisponibles } from "@/modules/tags/hooks/useTagsDisponibles";
 import type { NotaDto } from "../api/notasApi";
-import { NotaForm } from "../components/NotaForm";
 import { NotasTable } from "../components/NotasTable";
 import { useEliminarNotaMutation } from "../hooks/useNotasMutation";
 import { useNotasQuery } from "../hooks/useNotasQuery";
@@ -22,8 +21,9 @@ export function NotasPage() {
 	const [busqueda, setBusqueda] = useState("");
 	const [tagId, setTagId] = useState("");
 	const { tags } = useTagsDisponibles();
-	/** `null` = cerrado; `"nuevo"` = alta; un DTO = edición. */
-	const [editando, setEditando] = useState<NotaDto | "nuevo" | null>(null);
+	const navigate = useNavigate();
+	const editar = (nota: NotaDto) =>
+		navigate({ to: "/notas/$id", params: { id: String(nota.id) } });
 	const [leyendo, setLeyendo] = useState<NotaDto | null>(null);
 	const [eliminando, setEliminando] = useState<NotaDto | null>(null);
 	const eliminar = useEliminarNotaMutation();
@@ -70,7 +70,7 @@ export function NotasPage() {
 					<Search className="pointer-events-none absolute top-2.5 left-3 h-4 w-4 text-tinta-tenue" />
 				</div>
 				{puede("notas:crear") && (
-					<Button onClick={() => setEditando("nuevo")}>
+					<Button onClick={() => navigate({ to: "/notas/nueva" })}>
 						<Plus className="h-4 w-4" />
 						Nueva
 					</Button>
@@ -83,7 +83,7 @@ export function NotasPage() {
 				error={error}
 				onCambioPagina={setPagina}
 				onAbrir={setLeyendo}
-				onEditar={setEditando}
+				onEditar={editar}
 				onEliminar={setEliminando}
 			/>
 
@@ -98,27 +98,10 @@ export function NotasPage() {
 				}
 				onEditar={
 					leyendo && puede("notas:actualizar")
-						? () => {
-								setEditando(leyendo);
-								setLeyendo(null);
-							}
+						? () => editar(leyendo)
 						: undefined
 				}
 			/>
-
-			<Dialog
-				abierto={editando !== null}
-				onCerrar={() => setEditando(null)}
-				titulo={editando === "nuevo" ? "Nueva nota" : "Editar nota"}
-			>
-				{editando !== null && (
-					<NotaForm
-						key={editando === "nuevo" ? "nuevo" : editando.id}
-						inicial={editando === "nuevo" ? undefined : editando}
-						onGuardado={() => setEditando(null)}
-					/>
-				)}
-			</Dialog>
 
 			<ConfirmDialog
 				abierto={eliminando !== null}

@@ -17,13 +17,17 @@ import { Route as RegistroRouteImport } from './routes/registro'
 import { Route as RestablecerPasswordRouteImport } from './routes/restablecer-password'
 import { Route as VerificarEmailRouteImport } from './routes/verificar-email'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
-import { Route as AuthenticatedNotasRouteImport } from './routes/_authenticated/notas'
 import { Route as AuthenticatedPerfilRouteImport } from './routes/_authenticated/perfil'
 import { Route as AuthenticatedRolesRouteImport } from './routes/_authenticated/roles'
 import { Route as AuthenticatedTagsRouteImport } from './routes/_authenticated/tags'
-import { Route as AuthenticatedTareasRouteImport } from './routes/_authenticated/tareas'
 import { Route as AuthenticatedUsuariosRouteImport } from './routes/_authenticated/usuarios'
 import { Route as LoginGoogleRouteImport } from './routes/login_.google'
+import { Route as AuthenticatedNotasIndexRouteImport } from './routes/_authenticated/notas/index'
+import { Route as AuthenticatedNotasIdRouteImport } from './routes/_authenticated/notas/$id'
+import { Route as AuthenticatedNotasNuevaRouteImport } from './routes/_authenticated/notas/nueva'
+import { Route as AuthenticatedTareasIndexRouteImport } from './routes/_authenticated/tareas/index'
+import { Route as AuthenticatedTareasIdRouteImport } from './routes/_authenticated/tareas/$id'
+import { Route as AuthenticatedTareasNuevaRouteImport } from './routes/_authenticated/tareas/nueva'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -64,11 +68,6 @@ const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
   path: '/dashboard',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
-const AuthenticatedNotasRoute = AuthenticatedNotasRouteImport.update({
-  id: '/notas',
-  path: '/notas',
-  getParentRoute: () => AuthenticatedRoute,
-} as any)
 const AuthenticatedPerfilRoute = AuthenticatedPerfilRouteImport.update({
   id: '/perfil',
   path: '/perfil',
@@ -84,11 +83,6 @@ const AuthenticatedTagsRoute = AuthenticatedTagsRouteImport.update({
   path: '/tags',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
-const AuthenticatedTareasRoute = AuthenticatedTareasRouteImport.update({
-  id: '/tareas',
-  path: '/tareas',
-  getParentRoute: () => AuthenticatedRoute,
-} as any)
 const AuthenticatedUsuariosRoute = AuthenticatedUsuariosRouteImport.update({
   id: '/usuarios',
   path: '/usuarios',
@@ -99,6 +93,38 @@ const LoginGoogleRoute = LoginGoogleRouteImport.update({
   path: '/login/google',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedNotasIndexRoute = AuthenticatedNotasIndexRouteImport.update({
+  id: '/notas/',
+  path: '/notas/',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedNotasIdRoute = AuthenticatedNotasIdRouteImport.update({
+  id: '/notas/$id',
+  path: '/notas/$id',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedNotasNuevaRoute = AuthenticatedNotasNuevaRouteImport.update({
+  id: '/notas/nueva',
+  path: '/notas/nueva',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedTareasIndexRoute =
+  AuthenticatedTareasIndexRouteImport.update({
+    id: '/tareas/',
+    path: '/tareas/',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedTareasIdRoute = AuthenticatedTareasIdRouteImport.update({
+  id: '/tareas/$id',
+  path: '/tareas/$id',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedTareasNuevaRoute =
+  AuthenticatedTareasNuevaRouteImport.update({
+    id: '/tareas/nueva',
+    path: '/tareas/nueva',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -108,13 +134,17 @@ export interface FileRoutesByFullPath {
   '/restablecer-password': typeof RestablecerPasswordRoute
   '/verificar-email': typeof VerificarEmailRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
-  '/notas': typeof AuthenticatedNotasRoute
   '/perfil': typeof AuthenticatedPerfilRoute
   '/roles': typeof AuthenticatedRolesRoute
   '/tags': typeof AuthenticatedTagsRoute
-  '/tareas': typeof AuthenticatedTareasRoute
   '/usuarios': typeof AuthenticatedUsuariosRoute
   '/login/google': typeof LoginGoogleRoute
+  '/notas/$id': typeof AuthenticatedNotasIdRoute
+  '/notas/nueva': typeof AuthenticatedNotasNuevaRoute
+  '/tareas/$id': typeof AuthenticatedTareasIdRoute
+  '/tareas/nueva': typeof AuthenticatedTareasNuevaRoute
+  '/notas/': typeof AuthenticatedNotasIndexRoute
+  '/tareas/': typeof AuthenticatedTareasIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -124,13 +154,17 @@ export interface FileRoutesByTo {
   '/restablecer-password': typeof RestablecerPasswordRoute
   '/verificar-email': typeof VerificarEmailRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
-  '/notas': typeof AuthenticatedNotasRoute
   '/perfil': typeof AuthenticatedPerfilRoute
   '/roles': typeof AuthenticatedRolesRoute
   '/tags': typeof AuthenticatedTagsRoute
-  '/tareas': typeof AuthenticatedTareasRoute
   '/usuarios': typeof AuthenticatedUsuariosRoute
   '/login/google': typeof LoginGoogleRoute
+  '/notas/$id': typeof AuthenticatedNotasIdRoute
+  '/notas/nueva': typeof AuthenticatedNotasNuevaRoute
+  '/tareas/$id': typeof AuthenticatedTareasIdRoute
+  '/tareas/nueva': typeof AuthenticatedTareasNuevaRoute
+  '/notas': typeof AuthenticatedNotasIndexRoute
+  '/tareas': typeof AuthenticatedTareasIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -142,13 +176,17 @@ export interface FileRoutesById {
   '/restablecer-password': typeof RestablecerPasswordRoute
   '/verificar-email': typeof VerificarEmailRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
-  '/_authenticated/notas': typeof AuthenticatedNotasRoute
   '/_authenticated/perfil': typeof AuthenticatedPerfilRoute
   '/_authenticated/roles': typeof AuthenticatedRolesRoute
   '/_authenticated/tags': typeof AuthenticatedTagsRoute
-  '/_authenticated/tareas': typeof AuthenticatedTareasRoute
   '/_authenticated/usuarios': typeof AuthenticatedUsuariosRoute
   '/login_/google': typeof LoginGoogleRoute
+  '/_authenticated/notas/$id': typeof AuthenticatedNotasIdRoute
+  '/_authenticated/notas/nueva': typeof AuthenticatedNotasNuevaRoute
+  '/_authenticated/tareas/$id': typeof AuthenticatedTareasIdRoute
+  '/_authenticated/tareas/nueva': typeof AuthenticatedTareasNuevaRoute
+  '/_authenticated/notas/': typeof AuthenticatedNotasIndexRoute
+  '/_authenticated/tareas/': typeof AuthenticatedTareasIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -160,13 +198,17 @@ export interface FileRouteTypes {
     | '/restablecer-password'
     | '/verificar-email'
     | '/dashboard'
-    | '/notas'
     | '/perfil'
     | '/roles'
     | '/tags'
-    | '/tareas'
     | '/usuarios'
     | '/login/google'
+    | '/notas/$id'
+    | '/notas/nueva'
+    | '/tareas/$id'
+    | '/tareas/nueva'
+    | '/notas/'
+    | '/tareas/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -176,13 +218,17 @@ export interface FileRouteTypes {
     | '/restablecer-password'
     | '/verificar-email'
     | '/dashboard'
-    | '/notas'
     | '/perfil'
     | '/roles'
     | '/tags'
-    | '/tareas'
     | '/usuarios'
     | '/login/google'
+    | '/notas/$id'
+    | '/notas/nueva'
+    | '/tareas/$id'
+    | '/tareas/nueva'
+    | '/notas'
+    | '/tareas'
   id:
     | '__root__'
     | '/'
@@ -193,13 +239,17 @@ export interface FileRouteTypes {
     | '/restablecer-password'
     | '/verificar-email'
     | '/_authenticated/dashboard'
-    | '/_authenticated/notas'
     | '/_authenticated/perfil'
     | '/_authenticated/roles'
     | '/_authenticated/tags'
-    | '/_authenticated/tareas'
     | '/_authenticated/usuarios'
     | '/login_/google'
+    | '/_authenticated/notas/$id'
+    | '/_authenticated/notas/nueva'
+    | '/_authenticated/tareas/$id'
+    | '/_authenticated/tareas/nueva'
+    | '/_authenticated/notas/'
+    | '/_authenticated/tareas/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -271,13 +321,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDashboardRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
-    '/_authenticated/notas': {
-      id: '/_authenticated/notas'
-      path: '/notas'
-      fullPath: '/notas'
-      preLoaderRoute: typeof AuthenticatedNotasRouteImport
-      parentRoute: typeof AuthenticatedRoute
-    }
     '/_authenticated/perfil': {
       id: '/_authenticated/perfil'
       path: '/perfil'
@@ -299,13 +342,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedTagsRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
-    '/_authenticated/tareas': {
-      id: '/_authenticated/tareas'
-      path: '/tareas'
-      fullPath: '/tareas'
-      preLoaderRoute: typeof AuthenticatedTareasRouteImport
-      parentRoute: typeof AuthenticatedRoute
-    }
     '/_authenticated/usuarios': {
       id: '/_authenticated/usuarios'
       path: '/usuarios'
@@ -320,27 +356,77 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LoginGoogleRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/notas/': {
+      id: '/_authenticated/notas/'
+      path: '/notas'
+      fullPath: '/notas/'
+      preLoaderRoute: typeof AuthenticatedNotasIndexRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/notas/$id': {
+      id: '/_authenticated/notas/$id'
+      path: '/notas/$id'
+      fullPath: '/notas/$id'
+      preLoaderRoute: typeof AuthenticatedNotasIdRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/notas/nueva': {
+      id: '/_authenticated/notas/nueva'
+      path: '/notas/nueva'
+      fullPath: '/notas/nueva'
+      preLoaderRoute: typeof AuthenticatedNotasNuevaRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/tareas/': {
+      id: '/_authenticated/tareas/'
+      path: '/tareas'
+      fullPath: '/tareas/'
+      preLoaderRoute: typeof AuthenticatedTareasIndexRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/tareas/$id': {
+      id: '/_authenticated/tareas/$id'
+      path: '/tareas/$id'
+      fullPath: '/tareas/$id'
+      preLoaderRoute: typeof AuthenticatedTareasIdRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/tareas/nueva': {
+      id: '/_authenticated/tareas/nueva'
+      path: '/tareas/nueva'
+      fullPath: '/tareas/nueva'
+      preLoaderRoute: typeof AuthenticatedTareasNuevaRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
   }
 }
 
 interface AuthenticatedRouteChildren {
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
-  AuthenticatedNotasRoute: typeof AuthenticatedNotasRoute
   AuthenticatedPerfilRoute: typeof AuthenticatedPerfilRoute
   AuthenticatedRolesRoute: typeof AuthenticatedRolesRoute
   AuthenticatedTagsRoute: typeof AuthenticatedTagsRoute
-  AuthenticatedTareasRoute: typeof AuthenticatedTareasRoute
   AuthenticatedUsuariosRoute: typeof AuthenticatedUsuariosRoute
+  AuthenticatedNotasIdRoute: typeof AuthenticatedNotasIdRoute
+  AuthenticatedNotasNuevaRoute: typeof AuthenticatedNotasNuevaRoute
+  AuthenticatedTareasIdRoute: typeof AuthenticatedTareasIdRoute
+  AuthenticatedTareasNuevaRoute: typeof AuthenticatedTareasNuevaRoute
+  AuthenticatedNotasIndexRoute: typeof AuthenticatedNotasIndexRoute
+  AuthenticatedTareasIndexRoute: typeof AuthenticatedTareasIndexRoute
 }
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
-  AuthenticatedNotasRoute: AuthenticatedNotasRoute,
   AuthenticatedPerfilRoute: AuthenticatedPerfilRoute,
   AuthenticatedRolesRoute: AuthenticatedRolesRoute,
   AuthenticatedTagsRoute: AuthenticatedTagsRoute,
-  AuthenticatedTareasRoute: AuthenticatedTareasRoute,
   AuthenticatedUsuariosRoute: AuthenticatedUsuariosRoute,
+  AuthenticatedNotasIdRoute: AuthenticatedNotasIdRoute,
+  AuthenticatedNotasNuevaRoute: AuthenticatedNotasNuevaRoute,
+  AuthenticatedTareasIdRoute: AuthenticatedTareasIdRoute,
+  AuthenticatedTareasNuevaRoute: AuthenticatedTareasNuevaRoute,
+  AuthenticatedNotasIndexRoute: AuthenticatedNotasIndexRoute,
+  AuthenticatedTareasIndexRoute: AuthenticatedTareasIndexRoute,
 }
 
 const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(

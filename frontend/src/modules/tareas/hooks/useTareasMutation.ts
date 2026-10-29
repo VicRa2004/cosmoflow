@@ -8,7 +8,7 @@ const onError = (error: unknown) => toast.error(getErrorMessage(error));
 
 function useInvalidar() {
 	const queryClient = useQueryClient();
-	return () => queryClient.invalidateQueries({ queryKey: tareasKeys.lists() });
+	return () => queryClient.invalidateQueries({ queryKey: tareasKeys.all });
 }
 
 export function useCrearTareaMutation() {

@@ -69,9 +69,9 @@ frontend/src/
 │   │   ├── components/             # RolCard, CrearRolForm, PermisosChecklist, AsignacionUsuarioPanel
 │   │   └── pages/                  # RolesPage.tsx
 │   │
-│   ├── adjuntos/                   # Imágenes y markdown: EditorMarkdown (escribir/vista previa, subir y pegar imágenes), ContenidoMarkdown y DialogoLectura (lectura de tareas y notas)
-│   ├── notas/                      # Notas personales: búsqueda en título y contenido, filtro por tag
-│   ├── tareas/                     # Tareas personales y PendientesPage (portada)
+│   ├── adjuntos/                   # Imágenes y markdown: EditorMarkdown (WYSIWYG tipo Notion con Milkdown Crepe: menú «/», subir y pegar imágenes), ContenidoMarkdown y DialogoLectura (lectura de tareas y notas)
+│   ├── notas/                      # Notas personales: búsqueda en título y contenido, filtro por tag; alta y edición a página completa (NotaEditorPage)
+│   ├── tareas/                     # Tareas personales y PendientesPage (portada); alta y edición a página completa (TareaEditorPage)
 │   ├── tags/                       # Tags personales; SelectorTags, TagsBadges y useTagsDisponibles los usan tareas y notas
 │   │
 │   └── usuarios/                      # Módulo de Usuarios
@@ -94,8 +94,8 @@ frontend/src/
 │       ├── dashboard.tsx           # Vista /dashboard: pendientes por vencimiento (RN-43)
 │       ├── usuarios.tsx               # Vista /usuarios
 │       ├── roles.tsx               # Vista /roles
-│       ├── notas.tsx               # Vista /notas
-│       ├── tareas.tsx              # Vista /tareas
+│       ├── notas/                  # /notas (index), /notas/nueva y /notas/$id (editor)
+│       ├── tareas/                 # /tareas (index), /tareas/nueva y /tareas/$id (editor)
 │       ├── tags.tsx                # Vista /tags (tags personales)
 │       └── perfil.tsx              # Vista /perfil
 │
@@ -155,7 +155,7 @@ Viven en `frontend/.agents/skills/` (TanStack Query/Router/Form/Table, Tailwind 
 - **Acciones de fila y borrados:** las acciones de una fila van en `AccionesFila` (de `Table.tsx`; aparecen con hover/foco, siempre en táctil). Todo botón que inicia un borrado usa `variant="dangerGhost"`; `danger` (rose sólido) solo confirma en `ConfirmDialog`.
 
 ### 5. Layout, navegación y permisos
-- **Shell:** `MainLayout` = `Sidebar` (colapsable a iconos en escritorio, se recuerda en `localStorage`; cajón `<dialog>` en móvil) + `Navbar` (migas grupo › sección, `SelectorTema` y `MenuUsuario` con perfil y cerrar sesión, un `popover` nativo).
+- **Shell:** `MainLayout` = `Sidebar` (`fixed`, no se desplaza con la página; colapsable a iconos en escritorio, se recuerda en `localStorage`; cajón `<dialog>` en móvil) + `Navbar` (migas grupo › sección, `SelectorTema` y `MenuUsuario` con perfil y cerrar sesión, un `popover` nativo).
 - **Menú:** un módulo nuevo añade su enlace en `core/components/layout/navegacion.ts` (grupo, ruta, icono Lucide y `permiso` `recurso:leer`). Los grupos sin enlaces visibles no se muestran.
 - **Ocultar lo que no se puede usar:** `const { puede } = usePermisos()` (`core/auth/usePermisos.ts`, lee `GET /api/permisos/mios`) y `{puede("tareas:crear") && <Button …/>}`. Mientras carga responde `false`; sin el módulo `autorizacion` (404) todo está permitido. Es solo interfaz: la seguridad la pone el backend (403).
 - **Cabecera de página:** `EncabezadoPagina` (título, descripción y acciones/filtros a la derecha) en lugar de `<h1>` suelto. Sin icono decorativo ni texto encima del título.

@@ -192,3 +192,34 @@
 		@apply border-borde;
 	}
 }
+
+/* Editor de tareas y notas (Milkdown Crepe, `EditorMarkdown`): su tema sale de los tokens. */
+.editor-markdown .milkdown {
+	--crepe-color-background: var(--fondo);
+	--crepe-color-on-background: var(--tinta);
+	--crepe-color-surface: var(--superficie);
+	--crepe-color-surface-low: var(--elevada);
+	--crepe-color-on-surface: var(--tinta);
+	--crepe-color-on-surface-variant: var(--tinta-tenue);
+	--crepe-color-outline: var(--borde-fuerte);
+	--crepe-color-primary: var(--color-indigo-500);
+	--crepe-color-secondary: var(--elevada);
+	--crepe-color-on-secondary: var(--tinta);
+	--crepe-color-inverse: var(--tinta);
+	--crepe-color-on-inverse: var(--fondo);
+	--crepe-color-inline-code: var(--tinta);
+	--crepe-color-error: var(--color-rose-500);
+	--crepe-color-hover: var(--elevada);
+	--crepe-color-selected: var(--borde);
+	--crepe-color-inline-area: var(--elevada);
+	--crepe-base-font-size: 15px;
+	--crepe-font-title: var(--font-sans);
+	--crepe-font-default: var(--font-sans);
+	--crepe-font-code: var(--font-mono);
+	--crepe-shadow-1: var(--sombra-flotante);
+	--crepe-shadow-2: var(--sombra-flotante);
+}
+/* El hueco izquierdo es para el asa de bloque (+ y arrastrar). */
+.editor-markdown .milkdown .ProseMirror {
+	padding: 0.25rem 0 6rem 3rem;
+}

@@ -1,3 +1,4 @@
+import { useNavigate } from "@tanstack/react-router";
 import { Circle, CircleCheck, ListTodo, Plus } from "lucide-react";
 import { useState } from "react";
 import { useAuthStore } from "@/core/auth/store";
@@ -10,7 +11,6 @@ import { type Columna, Tabla } from "@/core/components/ui/Table";
 import type { TareaDto } from "../api/tareasApi";
 import { TagsBadges } from "@/modules/tags/components/TagsBadges";
 import { VencimientoTarea } from "../components/celdas";
-import { TareaDialog } from "../components/TareaDialog";
 import { TareaLectura } from "../components/TareaLectura";
 import { useActualizarTareaMutation } from "../hooks/useTareasMutation";
 import { usePendientesQuery } from "../hooks/useTareasQuery";
@@ -21,7 +21,7 @@ export function PendientesPage() {
 	const nombre = useAuthStore((state) => state.usuario?.nombre);
 	const { puede } = usePermisos();
 	const [pagina, setPagina] = useState(1);
-	const [editando, setEditando] = useState<TareaDto | "nuevo" | null>(null);
+	const navigate = useNavigate();
 	const [leyendo, setLeyendo] = useState<TareaDto | null>(null);
 	const { data, isLoading, error } = usePendientesQuery(pagina);
 	const actualizar = useActualizarTareaMutation();
@@ -100,7 +100,7 @@ export function PendientesPage() {
 				}
 			>
 				{puede("tareas:crear") && (
-					<Button onClick={() => setEditando("nuevo")}>
+					<Button onClick={() => navigate({ to: "/tareas/nueva" })}>
 						<Plus className="h-4 w-4" />
 						Nueva tarea
 					</Button>
@@ -127,12 +127,10 @@ export function PendientesPage() {
 			<TareaLectura
 				tarea={leyendo}
 				onCerrar={() => setLeyendo(null)}
-				onEditar={(tarea) => {
-					setLeyendo(null);
-					setEditando(tarea);
-				}}
+				onEditar={(tarea) =>
+					navigate({ to: "/tareas/$id", params: { id: String(tarea.id) } })
+				}
 			/>
-			<TareaDialog editando={editando} onCerrar={() => setEditando(null)} />
 		</div>
 	);
 }

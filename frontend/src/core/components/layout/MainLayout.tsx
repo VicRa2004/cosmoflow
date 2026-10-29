@@ -28,10 +28,10 @@ export function MainLayout({ children }: { children: ReactNode }) {
 	const cerrarCajon = () => cajon.current?.close();
 
 	return (
-		<div className="flex min-h-screen bg-fondo text-tinta">
+		<div className="min-h-screen bg-fondo text-tinta">
 			<aside
 				className={cn(
-					"sticky top-0 hidden h-screen shrink-0 bg-lateral transition-[width] duration-200 ease-out motion-reduce:transition-none md:block",
+					"fixed inset-y-0 left-0 z-40 hidden bg-lateral transition-[width] duration-200 ease-out motion-reduce:transition-none md:block",
 					colapsado ? "w-14" : "w-60",
 				)}
 			>
@@ -52,7 +52,13 @@ export function MainLayout({ children }: { children: ReactNode }) {
 				<Sidebar onNavegar={cerrarCajon} />
 			</dialog>
 
-			<div className="flex min-w-0 flex-1 flex-col">
+			{/* `fixed` en vez de `sticky`: el menú no se mueve aunque la página acabe de desplazarse. */}
+			<div
+				className={cn(
+					"flex min-h-screen min-w-0 flex-col transition-[padding] duration-200 ease-out motion-reduce:transition-none",
+					colapsado ? "md:pl-14" : "md:pl-60",
+				)}
+			>
 				<Navbar onAbrirMenu={() => cajon.current?.showModal()} />
 				<main className="mx-auto w-full max-w-6xl flex-1 px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
 					{children}

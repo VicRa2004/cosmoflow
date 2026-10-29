@@ -8,7 +8,7 @@ const onError = (error: unknown) => toast.error(getErrorMessage(error));
 
 function useInvalidar() {
 	const queryClient = useQueryClient();
-	return () => queryClient.invalidateQueries({ queryKey: notasKeys.lists() });
+	return () => queryClient.invalidateQueries({ queryKey: notasKeys.all });
 }
 
 export function useCrearNotaMutation() {

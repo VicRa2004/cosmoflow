@@ -1,5 +1,5 @@
 import { type ComponentPropsWithoutRef, useEffect, useState } from "react";
-import { apiClient } from "@/core/api/client";
+import { adjuntosApi } from "../api/adjuntosApi";
 
 /**
  * `<img>` de un adjunto privado: el navegador no manda el Bearer en un `<img src>`,
@@ -17,10 +17,9 @@ export function ImagenAdjunto({
 		let blobUrl: string | undefined;
 		let cancelado = false;
 		setError(false);
-		// El baseURL del cliente ya es `/api`.
-		apiClient
-			.get<Blob>(src.replace(/^\/api/, ""), { responseType: "blob" })
-			.then(({ data }) => {
+		adjuntosApi
+			.descargar(src)
+			.then((data) => {
 				if (cancelado) return;
 				blobUrl = URL.createObjectURL(data);
 				setUrl(blobUrl);

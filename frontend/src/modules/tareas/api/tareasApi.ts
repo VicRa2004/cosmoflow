@@ -35,6 +35,11 @@ export const tareasApi = {
 		return response.data;
 	},
 
+	async obtenerUno(id: number): Promise<TareaDto> {
+		const response = await apiClient.get<TareaDto>(`/tareas/${id}`);
+		return response.data;
+	},
+
 	async crear(datos: CrearTareaInput): Promise<TareaDto> {
 		const response = await apiClient.post<TareaDto>("/tareas", datos);
 		return response.data;

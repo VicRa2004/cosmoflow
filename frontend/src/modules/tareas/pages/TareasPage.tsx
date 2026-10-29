@@ -1,3 +1,4 @@
+import { useNavigate } from "@tanstack/react-router";
 import { Plus, Search } from "lucide-react";
 import { useState } from "react";
 import { usePermisos } from "@/core/auth/usePermisos";
@@ -7,7 +8,6 @@ import { ConfirmDialog } from "@/core/components/ui/ConfirmDialog";
 import { Input } from "@/core/components/ui/Input";
 import { Select } from "@/core/components/ui/Select";
 import type { EstadoTarea, TareaDto } from "../api/tareasApi";
-import { TareaDialog } from "../components/TareaDialog";
 import { TareaLectura } from "../components/TareaLectura";
 import { TareasTable } from "../components/TareasTable";
 import { useEliminarTareaMutation } from "../hooks/useTareasMutation";
@@ -22,8 +22,9 @@ export function TareasPage() {
 	const [estado, setEstado] = useState<EstadoTarea | "">("");
 	const [tagId, setTagId] = useState("");
 	const { tags } = useTagsDisponibles();
-	/** `null` = cerrado; `"nuevo"` = alta; un DTO = edición. */
-	const [editando, setEditando] = useState<TareaDto | "nuevo" | null>(null);
+	const navigate = useNavigate();
+	const editar = (tarea: TareaDto) =>
+		navigate({ to: "/tareas/$id", params: { id: String(tarea.id) } });
 	const [leyendo, setLeyendo] = useState<TareaDto | null>(null);
 	const [eliminando, setEliminando] = useState<TareaDto | null>(null);
 	const eliminar = useEliminarTareaMutation();
@@ -88,7 +89,7 @@ export function TareasPage() {
 					<Search className="pointer-events-none absolute top-2.5 left-3 h-4 w-4 text-tinta-tenue" />
 				</div>
 				{puede("tareas:crear") && (
-					<Button onClick={() => setEditando("nuevo")}>
+					<Button onClick={() => navigate({ to: "/tareas/nueva" })}>
 						<Plus className="h-4 w-4" />
 						Nueva
 					</Button>
@@ -101,19 +102,15 @@ export function TareasPage() {
 				error={error}
 				onCambioPagina={setPagina}
 				onAbrir={setLeyendo}
-				onEditar={setEditando}
+				onEditar={editar}
 				onEliminar={setEliminando}
 			/>
 
 			<TareaLectura
 				tarea={leyendo}
 				onCerrar={() => setLeyendo(null)}
-				onEditar={(tarea) => {
-					setLeyendo(null);
-					setEditando(tarea);
-				}}
+				onEditar={editar}
 			/>
-			<TareaDialog editando={editando} onCerrar={() => setEditando(null)} />
 
 			<ConfirmDialog
 				abierto={eliminando !== null}
