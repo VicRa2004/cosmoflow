@@ -69,7 +69,7 @@ frontend/src/
 │   │   ├── components/             # RolCard, CrearRolForm, PermisosChecklist, AsignacionUsuarioPanel
 │   │   └── pages/                  # RolesPage.tsx
 │   │
-│   ├── adjuntos/                   # Imágenes de tareas y notas: BotonInsertarImagen sube y añade el markdown
+│   ├── adjuntos/                   # Imágenes y markdown: EditorMarkdown (escribir/vista previa, subir y pegar imágenes) y ContenidoMarkdown
 │   ├── notas/                      # Notas personales: búsqueda en título y contenido, filtro por tag
 │   ├── tareas/                     # Tareas personales y PendientesPage (portada)
 │   ├── tags/                       # Tags personales; SelectorTags, TagsBadges y useTagsDisponibles los usan tareas y notas

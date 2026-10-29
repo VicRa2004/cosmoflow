@@ -1,4 +1,4 @@
-import { BotonInsertarImagen } from "@/modules/adjuntos/components/BotonInsertarImagen";
+import { EditorMarkdown } from "@/modules/adjuntos/components/EditorMarkdown";
 import { useAppForm } from "@/core/components/form/useAppForm";
 import type { TareaDto } from "../api/tareasApi";
 import {
@@ -42,14 +42,11 @@ export function TareaForm({ inicial, onGuardado }: TareaFormProps) {
 					{(campo) => <campo.CampoTexto label="Título" />}
 				</form.AppField>
 				<form.AppField name="contenido">
-					{(campo) => (
-						<div className="space-y-1">
-							<campo.CampoAreaTexto
-								label="Contenido"
-								placeholder="Markdown: - [ ] subtarea, **negrita**…"
-							/>
-							<BotonInsertarImagen onChange={campo.handleChange} />
-						</div>
+					{() => (
+						<EditorMarkdown
+							label="Contenido"
+							placeholder="Markdown: - [ ] subtarea, **negrita**…"
+						/>
 					)}
 				</form.AppField>
 				<div className="grid gap-4 sm:grid-cols-2">

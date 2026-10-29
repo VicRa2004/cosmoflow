@@ -1,4 +1,4 @@
-import { BotonInsertarImagen } from "@/modules/adjuntos/components/BotonInsertarImagen";
+import { EditorMarkdown } from "@/modules/adjuntos/components/EditorMarkdown";
 import { SelectorTags } from "@/modules/tags/components/SelectorTags";
 import { useAppForm } from "@/core/components/form/useAppForm";
 import type { NotaDto } from "../api/notasApi";
@@ -40,15 +40,12 @@ export function NotaForm({ inicial, onGuardado }: NotaFormProps) {
 					{(campo) => <campo.CampoTexto label="Título" />}
 				</form.AppField>
 				<form.AppField name="contenido">
-					{(campo) => (
-						<div className="space-y-1">
-							<campo.CampoAreaTexto
-								label="Contenido"
-								placeholder="Markdown: ## título, - lista, **negrita**…"
-								className="min-h-60"
-							/>
-							<BotonInsertarImagen onChange={campo.handleChange} />
-						</div>
+					{() => (
+						<EditorMarkdown
+							label="Contenido"
+							placeholder="Markdown: ## título, - lista, **negrita**…"
+							className="min-h-60"
+						/>
 					)}
 				</form.AppField>
 				<form.AppField name="tagIds">

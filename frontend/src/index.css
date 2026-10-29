@@ -74,3 +74,69 @@
 			Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
 	}
 }
+
+/* Contenido markdown de tareas y notas (`ContenidoMarkdown`). */
+@layer components {
+	.markdown {
+		@apply space-y-3 text-sm leading-relaxed text-tinta-suave;
+		overflow-wrap: anywhere;
+	}
+	.markdown :is(h1, h2, h3, h4) {
+		@apply font-semibold text-tinta;
+	}
+	.markdown h1 {
+		@apply text-xl;
+	}
+	.markdown h2 {
+		@apply text-lg;
+	}
+	.markdown h3 {
+		@apply text-base;
+	}
+	/* Al tomar notas, un salto de línea es un salto de línea. */
+	.markdown p {
+		white-space: pre-line;
+	}
+	.markdown ul {
+		@apply list-disc space-y-1 pl-5;
+	}
+	.markdown ol {
+		@apply list-decimal space-y-1 pl-5;
+	}
+	.markdown li:has(> input[type="checkbox"]) {
+		@apply -ml-5 list-none;
+	}
+	.markdown input[type="checkbox"] {
+		@apply mr-1.5 align-middle accent-indigo-500;
+	}
+	.markdown a {
+		@apply text-indigo-500 underline underline-offset-2;
+	}
+	.markdown strong {
+		@apply font-semibold text-tinta;
+	}
+	.markdown blockquote {
+		@apply border-l-2 border-borde-fuerte pl-3 italic;
+	}
+	.markdown code {
+		@apply rounded bg-elevada px-1 py-0.5 font-mono text-xs;
+	}
+	.markdown pre {
+		@apply overflow-x-auto rounded-lg bg-elevada p-3;
+	}
+	.markdown pre code {
+		@apply bg-transparent p-0;
+	}
+	.markdown img {
+		@apply max-h-96 max-w-full rounded-lg;
+	}
+	.markdown table {
+		@apply w-full border-collapse text-left;
+	}
+	.markdown :is(th, td) {
+		@apply border border-borde px-2 py-1;
+	}
+	.markdown hr {
+		@apply border-borde;
+	}
+}

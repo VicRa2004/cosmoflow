@@ -42,7 +42,7 @@ export function CampoTexto(props: Omit<InputProps, Cableado>) {
 	);
 }
 
-/** Texto de varias líneas (contenido markdown hasta que haya editor). */
+/** Texto de varias líneas (lo usa `EditorMarkdown` de `adjuntos`). */
 export function CampoAreaTexto({
 	label,
 	className,
