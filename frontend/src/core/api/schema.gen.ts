@@ -2471,7 +2471,7 @@ export interface paths {
                 };
             };
             responses: {
-                /** @description Tarea creado */
+                /** @description Tarea creada */
                 201: {
                     headers: {
                         [name: string]: unknown;
@@ -2611,7 +2611,7 @@ export interface paths {
             };
             requestBody?: never;
             responses: {
-                /** @description Tarea encontrado */
+                /** @description Tarea encontrada */
                 200: {
                     headers: {
                         [name: string]: unknown;
@@ -2683,7 +2683,7 @@ export interface paths {
                 };
             };
             responses: {
-                /** @description Tarea actualizado */
+                /** @description Tarea actualizada */
                 200: {
                     headers: {
                         [name: string]: unknown;
@@ -2743,7 +2743,7 @@ export interface paths {
             };
             requestBody?: never;
             responses: {
-                /** @description Tarea eliminado */
+                /** @description Tarea eliminada */
                 204: {
                     headers: {
                         [name: string]: unknown;
@@ -2871,7 +2871,7 @@ export interface paths {
                 };
             };
             responses: {
-                /** @description Nota creado */
+                /** @description Nota creada */
                 201: {
                     headers: {
                         [name: string]: unknown;
@@ -2934,7 +2934,7 @@ export interface paths {
             };
             requestBody?: never;
             responses: {
-                /** @description Nota encontrado */
+                /** @description Nota encontrada */
                 200: {
                     headers: {
                         [name: string]: unknown;
@@ -2992,7 +2992,7 @@ export interface paths {
                 };
             };
             responses: {
-                /** @description Nota actualizado */
+                /** @description Nota actualizada */
                 200: {
                     headers: {
                         [name: string]: unknown;
@@ -3052,7 +3052,7 @@ export interface paths {
             };
             requestBody?: never;
             responses: {
-                /** @description Nota eliminado */
+                /** @description Nota eliminada */
                 204: {
                     headers: {
                         [name: string]: unknown;
@@ -3088,6 +3088,150 @@ export interface paths {
                 };
             };
         };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/adjuntos": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Subir una imagen (multipart, campo «archivo», máx. 5 MB) */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "multipart/form-data": {
+                        /** Format: binary */
+                        archivo: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Imagen guardada */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["AdjuntoDto"];
+                    };
+                };
+                /** @description Archivo ausente o no es PNG, JPEG ni WebP */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description No autenticado */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Permiso denegado (requiere adjuntos:crear) */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description El archivo supera los 5 MB */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/adjuntos/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Imagen de un adjunto propio */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Imagen PNG, JPEG o WebP */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "image/*": string;
+                    };
+                };
+                /** @description No autenticado */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Permiso denegado (requiere adjuntos:leer) */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description El adjunto no existe o es de otro usuario */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
         options?: never;
         head?: never;
         patch?: never;
@@ -3233,6 +3377,16 @@ export interface components {
              */
             updatedAt: string;
         };
+        AdjuntoDto: {
+            /** @example 12 */
+            id: number;
+            /** @example /api/adjuntos/12 */
+            url: string;
+            /** @example image/png */
+            tipo: string;
+            /** @example 48213 */
+            bytes: number;
+        };
     };
     responses: never;
     parameters: never;
@@ -3250,5 +3404,6 @@ export type RegistroAuditoria = components['schemas']['RegistroAuditoria'];
 export type TagDto = components['schemas']['TagDto'];
 export type TareaDto = components['schemas']['TareaDto'];
 export type NotaDto = components['schemas']['NotaDto'];
+export type AdjuntoDto = components['schemas']['AdjuntoDto'];
 export type $defs = Record<string, never>;
 export type operations = Record<string, never>;

@@ -1,3 +1,4 @@
+import { BotonInsertarImagen } from "@/modules/adjuntos/components/BotonInsertarImagen";
 import { useAppForm } from "@/core/components/form/useAppForm";
 import type { TareaDto } from "../api/tareasApi";
 import {
@@ -42,10 +43,13 @@ export function TareaForm({ inicial, onGuardado }: TareaFormProps) {
 				</form.AppField>
 				<form.AppField name="contenido">
 					{(campo) => (
-						<campo.CampoAreaTexto
-							label="Contenido"
-							placeholder="Markdown: - [ ] subtarea, **negrita**…"
-						/>
+						<div className="space-y-1">
+							<campo.CampoAreaTexto
+								label="Contenido"
+								placeholder="Markdown: - [ ] subtarea, **negrita**…"
+							/>
+							<BotonInsertarImagen onChange={campo.handleChange} />
+						</div>
 					)}
 				</form.AppField>
 				<div className="grid gap-4 sm:grid-cols-2">

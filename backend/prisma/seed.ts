@@ -6,12 +6,17 @@
 import { prisma } from "../src/core/config/prisma";
 
 // Recursos personales: cada usuario solo opera sobre los suyos (lo filtra el repositorio).
-const CRUD_PERSONAL = ["tags", "tareas", "notas"].flatMap((recurso) =>
-	["crear", "leer", "actualizar", "eliminar"].map((accion) => ({
-		recurso,
-		accion,
-	})),
-);
+const PERMISOS_PERSONALES = ["tags", "tareas", "notas"]
+	.flatMap((recurso) =>
+		["crear", "leer", "actualizar", "eliminar"].map((accion) => ({
+			recurso,
+			accion,
+		})),
+	)
+	.concat(
+		// Las imágenes no se editan ni se borran a mano.
+		["crear", "leer"].map((accion) => ({ recurso: "adjuntos", accion })),
+	);
 
 export async function sembrarCatalogo() {
 	console.log("🌱 Iniciando el proceso de seed...");
@@ -49,7 +54,7 @@ export async function sembrarCatalogo() {
 		{ recurso: "asignaciones", accion: "leer" },
 		{ recurso: "asignaciones", accion: "actualizar" },
 		{ recurso: "auditoria", accion: "leer" },
-		...CRUD_PERSONAL,
+		...PERMISOS_PERSONALES,
 	];
 
 	for (const p of datosPermisos) {
@@ -72,7 +77,10 @@ export async function sembrarCatalogo() {
 				{ recurso: "usuarios", accion: "leer" },
 				{ recurso: "usuarios", accion: "actualizar" },
 			],
-			USUARIO: [{ recurso: "usuarios", accion: "leer" }, ...CRUD_PERSONAL],
+			USUARIO: [
+				{ recurso: "usuarios", accion: "leer" },
+				...PERMISOS_PERSONALES,
+			],
 		};
 
 	for (const [nombreRol, permisos] of Object.entries(permisosPorRol)) {

@@ -38,6 +38,12 @@ const Repo = `${N}Repository`;
 const femenino = esFemenino(n, args);
 const noEncontrado = concordar("no encontrado", femenino); // no encontrada
 const NoEncontrado = concordar("NoEncontrado", femenino); // TareaNoEncontradaError
+const [creado, encontrado, actualizado, eliminado] = [
+	"creado",
+	"encontrado",
+	"actualizado",
+	"eliminado",
+].map((p) => concordar(p, femenino));
 
 // ── Plantillas ───────────────────────────────────────────────────────────────
 const files: Record<string, string> = {
@@ -569,7 +575,7 @@ export class ${N}Router {
 				},
 			},
 			responses: {
-				201: jsonResponse(${n}DtoSchema, "${N} creado"),
+				201: jsonResponse(${n}DtoSchema, "${N} ${creado}"),
 				400: errorResponse("Validación fallida"),
 				...protectedErrorResponses(\`\${recurso}:crear\`),
 			},
@@ -599,7 +605,7 @@ export class ${N}Router {
 			summary: "Obtener ${n} por ID",
 			request: { params: ${n}IdSchema },
 			responses: {
-				200: jsonResponse(${n}DtoSchema, "${N} encontrado"),
+				200: jsonResponse(${n}DtoSchema, "${N} ${encontrado}"),
 				...protectedErrorResponses(\`\${recurso}:leer\`),
 				404: errorResponse("${N} ${noEncontrado}"),
 			},
@@ -620,7 +626,7 @@ export class ${N}Router {
 				},
 			},
 			responses: {
-				200: jsonResponse(${n}DtoSchema, "${N} actualizado"),
+				200: jsonResponse(${n}DtoSchema, "${N} ${actualizado}"),
 				400: errorResponse("Validación fallida"),
 				...protectedErrorResponses(\`\${recurso}:actualizar\`),
 				404: errorResponse("${N} ${noEncontrado}"),
@@ -636,7 +642,7 @@ export class ${N}Router {
 			summary: "Eliminar ${n}",
 			request: { params: ${n}IdSchema },
 			responses: {
-				204: { description: "${N} eliminado" },
+				204: { description: "${N} ${eliminado}" },
 				...protectedErrorResponses(\`\${recurso}:eliminar\`),
 				404: errorResponse("${N} ${noEncontrado}"),
 			},

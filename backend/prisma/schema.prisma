@@ -40,6 +40,7 @@ model Usuario {
   tags             Tag[]
   tareas           Tarea[]
   notas            Nota[]
+  adjuntos         Adjunto[]
 
   @@map("usuario")
 }
@@ -301,4 +302,20 @@ model NotaTag {
   @@id([notaId, tagId])
   @@index([tagId])
   @@map("nota_tag")
+}
+
+/// Imagen subida por un usuario para sus tareas y notas (el markdown la enlaza
+/// por URL). El archivo vive en el `Almacenamiento`, no en la base de datos.
+model Adjunto {
+  id        Int      @id @default(autoincrement()) @map("adj_id")
+  usuarioId Int      @map("adj_fkusuario")
+  clave     String   @unique @map("adj_clave") @db.VarChar(255)
+  tipo      String   @map("adj_tipo") @db.VarChar(64)
+  bytes     Int      @map("adj_bytes")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  usuario Usuario @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+
+  @@index([usuarioId])
+  @@map("adjunto")
 }

@@ -45,7 +45,7 @@ export class TareaRouter {
 				},
 			},
 			responses: {
-				201: jsonResponse(tareaDtoSchema, "Tarea creado"),
+				201: jsonResponse(tareaDtoSchema, "Tarea creada"),
 				400: errorResponse(
 					"Validación fallida, fechas incoherentes o tags ajenos",
 				),
@@ -103,7 +103,7 @@ export class TareaRouter {
 			summary: "Obtener tarea por ID",
 			request: { params: tareaIdSchema },
 			responses: {
-				200: jsonResponse(tareaDtoSchema, "Tarea encontrado"),
+				200: jsonResponse(tareaDtoSchema, "Tarea encontrada"),
 				...protectedErrorResponses(`${recurso}:leer`),
 				404: errorResponse("Tarea no encontrada"),
 			},
@@ -128,7 +128,7 @@ export class TareaRouter {
 				},
 			},
 			responses: {
-				200: jsonResponse(tareaDtoSchema, "Tarea actualizado"),
+				200: jsonResponse(tareaDtoSchema, "Tarea actualizada"),
 				400: errorResponse(
 					"Validación fallida, fechas incoherentes o tags ajenos",
 				),
@@ -150,7 +150,7 @@ export class TareaRouter {
 			summary: "Eliminar tarea",
 			request: { params: tareaIdSchema },
 			responses: {
-				204: { description: "Tarea eliminado" },
+				204: { description: "Tarea eliminada" },
 				...protectedErrorResponses(`${recurso}:eliminar`),
 				404: errorResponse("Tarea no encontrada"),
 			},

@@ -44,7 +44,7 @@ export class NotaRouter {
 				},
 			},
 			responses: {
-				201: jsonResponse(notaDtoSchema, "Nota creado"),
+				201: jsonResponse(notaDtoSchema, "Nota creada"),
 				400: errorResponse("Validación fallida o tags ajenos"),
 				...protectedErrorResponses(`${recurso}:crear`),
 			},
@@ -78,7 +78,7 @@ export class NotaRouter {
 			summary: "Obtener nota por ID",
 			request: { params: notaIdSchema },
 			responses: {
-				200: jsonResponse(notaDtoSchema, "Nota encontrado"),
+				200: jsonResponse(notaDtoSchema, "Nota encontrada"),
 				...protectedErrorResponses(`${recurso}:leer`),
 				404: errorResponse("Nota no encontrada"),
 			},
@@ -103,7 +103,7 @@ export class NotaRouter {
 				},
 			},
 			responses: {
-				200: jsonResponse(notaDtoSchema, "Nota actualizado"),
+				200: jsonResponse(notaDtoSchema, "Nota actualizada"),
 				400: errorResponse("Validación fallida o tags ajenos"),
 				...protectedErrorResponses(`${recurso}:actualizar`),
 				404: errorResponse("Nota no encontrada"),
@@ -123,7 +123,7 @@ export class NotaRouter {
 			summary: "Eliminar nota",
 			request: { params: notaIdSchema },
 			responses: {
-				204: { description: "Nota eliminado" },
+				204: { description: "Nota eliminada" },
 				...protectedErrorResponses(`${recurso}:eliminar`),
 				404: errorResponse("Nota no encontrada"),
 			},
