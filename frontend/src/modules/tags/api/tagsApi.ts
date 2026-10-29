@@ -15,23 +15,39 @@ export interface ObtenerTagsParams {
 	nombre?: string;
 }
 
+/** Sin `organizacionId`, los tags personales; con él, los de esa organización (RN-60). */
+const base = (organizacionId?: number) =>
+	organizacionId ? `/organizaciones/${organizacionId}/tags` : "/tags";
+
 export const tagsApi = {
-	async obtenerTodos(params: ObtenerTagsParams = {}): Promise<TagsPagina> {
-		const response = await apiClient.get<TagsPagina>("/tags", { params });
+	async obtenerTodos(
+		params: ObtenerTagsParams = {},
+		organizacionId?: number,
+	): Promise<TagsPagina> {
+		const response = await apiClient.get<TagsPagina>(base(organizacionId), {
+			params,
+		});
 		return response.data;
 	},
 
-	async crear(datos: CrearTagInput): Promise<TagDto> {
-		const response = await apiClient.post<TagDto>("/tags", datos);
+	async crear(datos: CrearTagInput, organizacionId?: number): Promise<TagDto> {
+		const response = await apiClient.post<TagDto>(base(organizacionId), datos);
 		return response.data;
 	},
 
-	async actualizar(id: number, datos: ActualizarTagInput): Promise<TagDto> {
-		const response = await apiClient.put<TagDto>(`/tags/${id}`, datos);
+	async actualizar(
+		id: number,
+		datos: ActualizarTagInput,
+		organizacionId?: number,
+	): Promise<TagDto> {
+		const response = await apiClient.put<TagDto>(
+			`${base(organizacionId)}/${id}`,
+			datos,
+		);
 		return response.data;
 	},
 
-	async eliminar(id: number): Promise<void> {
-		await apiClient.delete(`/tags/${id}`);
+	async eliminar(id: number, organizacionId?: number): Promise<void> {
+		await apiClient.delete(`${base(organizacionId)}/${id}`);
 	},
 };

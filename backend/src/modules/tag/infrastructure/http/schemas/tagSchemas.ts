@@ -10,12 +10,17 @@ export const crearTagSchema = z.object({ nombre });
 
 export const actualizarTagSchema = z.object({ nombre: nombre.optional() });
 
-export const tagIdSchema = z.object({
-	id: z
-		.string()
-		.regex(/^\d+$/, "El ID debe ser un número válido")
-		.transform(Number),
-});
+const idParam = z
+	.string()
+	.regex(/^\d+$/, "El ID debe ser un número válido")
+	.transform(Number);
+
+export const tagIdSchema = z.object({ id: idParam });
+
+/** Montado en `/api/organizaciones/{organizacionId}/tags` llega el id; en `/api/tags`, no. */
+export const ambitoTagSchema = z.object({ organizacionId: idParam.optional() });
+
+export const organizacionIdParamSchema = z.object({ organizacionId: idParam });
 
 export const obtenerTagsSchema = z.object({
 	pagina: z.string().regex(/^\d+$/).transform(Number).optional().default(1),

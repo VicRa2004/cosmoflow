@@ -17,6 +17,7 @@ import { AvatarOrganizacionControles } from "../components/AvatarOrganizacionCon
 import { InvitacionesCard } from "../components/InvitacionesCard";
 import { MiembrosCard } from "../components/MiembrosCard";
 import { RolesCard } from "../components/RolesCard";
+import { TagsOrganizacionCard } from "../components/TagsOrganizacionCard";
 import { puedeEn } from "../utils/permisos";
 import { OrganizacionForm } from "../components/OrganizacionForm";
 import { useEliminarOrganizacionMutation } from "../hooks/useOrganizacionesMutation";
@@ -83,6 +84,11 @@ export function OrganizacionPage({ id }: { id: number }) {
 			{puedeEn(data, "roles:gestionar") && (
 				<RolesCard organizacionId={data.id} />
 			)}
+
+			<TagsOrganizacionCard
+				organizacionId={data.id}
+				puedeGestionar={puedeEn(data, "tags:gestionar")}
+			/>
 
 			{data.isAdmin && (
 				<Card>

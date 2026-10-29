@@ -13,12 +13,14 @@ import {
 interface TagFormProps {
 	/** Sin `inicial` crea; con él, edita. */
 	inicial?: TagDto;
+	/** Sin él, tag personal. */
+	organizacionId?: number;
 	onGuardado: () => void;
 }
 
-export function TagForm({ inicial, onGuardado }: TagFormProps) {
-	const crear = useCrearTagMutation();
-	const actualizar = useActualizarTagMutation();
+export function TagForm({ inicial, organizacionId, onGuardado }: TagFormProps) {
+	const crear = useCrearTagMutation(organizacionId);
+	const actualizar = useActualizarTagMutation(organizacionId);
 
 	const form = useAppForm({
 		defaultValues: inicial ? tagAFormValues(inicial) : tagFormVacio,

@@ -1,25 +1,31 @@
+import type { AccesoOrganizacion } from "@/modules/organizacion";
 import { TagDuplicadoError } from "../../domain/error/TagDuplicadoError";
 import { TagNoEncontradoError } from "../../domain/error/TagNoEncontradoError";
 import type { TagRepository } from "../../domain/repository/TagRepository";
 import type { ActualizarTagDto } from "../dtos/ActualizarTagDto";
 import type { TagDto } from "../dtos/TagDto";
 import { TagMapper } from "../mappers/TagMapper";
+import { type AmbitoTag, resolverDueno } from "../resolverDueno";
 
 export class ActualizarTagUseCase {
-	constructor(private readonly tagRepository: TagRepository) {}
+	constructor(
+		private readonly tagRepository: TagRepository,
+		private readonly acceso: AccesoOrganizacion,
+	) {}
 
 	async ejecutar(
-		usuarioId: number,
+		ambito: AmbitoTag,
 		id: number,
 		dto: ActualizarTagDto,
 	): Promise<TagDto> {
-		const tag = await this.tagRepository.buscarPorId(usuarioId, id);
+		const dueno = await resolverDueno(this.acceso, ambito, true);
+		const tag = await this.tagRepository.buscarPorId(dueno, id);
 		if (!tag) {
 			throw new TagNoEncontradoError();
 		}
 		if (dto.nombre !== undefined) {
 			const mismoNombre = await this.tagRepository.buscarPorNombre(
-				usuarioId,
+				dueno,
 				dto.nombre,
 			);
 			if (mismoNombre && mismoNombre.getId() !== id) {

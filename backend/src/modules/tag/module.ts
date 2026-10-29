@@ -1,6 +1,7 @@
 import type { AppModule } from "@/core/shared/infrastructure/di/AppModule";
 import { TOKENS } from "@/core/shared/infrastructure/di/tokens";
 import { AUTH_TOKENS } from "@/modules/auth";
+import { ORGANIZACION_TOKENS } from "@/modules/organizacion";
 import { ActualizarTagUseCase } from "./application/useCases/ActualizarTagUseCase";
 import { CrearTagUseCase } from "./application/useCases/CrearTagUseCase";
 import { EliminarTagUseCase } from "./application/useCases/EliminarTagUseCase";
@@ -13,17 +14,20 @@ import { PrismaTagRepository } from "./infrastructure/repository/PrismaTagReposi
 export const tagModule: AppModule = {
 	mount(app, container) {
 		const repo = new PrismaTagRepository();
-		const router = new TagRouter(
-			container.get(AUTH_TOKENS.AuthMiddleware),
-			container.get(TOKENS.PermisoGuard),
-			new TagController({
-				crear: new CrearTagUseCase(repo),
-				obtenerTodos: new ObtenerTagsUseCase(repo),
-				obtenerUno: new ObtenerTagUseCase(repo),
-				actualizar: new ActualizarTagUseCase(repo),
-				eliminar: new EliminarTagUseCase(repo),
-			}),
+		const acceso = container.get(ORGANIZACION_TOKENS.AccesoOrganizacion);
+		const controller = new TagController({
+			crear: new CrearTagUseCase(repo, acceso),
+			obtenerTodos: new ObtenerTagsUseCase(repo, acceso),
+			obtenerUno: new ObtenerTagUseCase(repo, acceso),
+			actualizar: new ActualizarTagUseCase(repo, acceso),
+			eliminar: new EliminarTagUseCase(repo, acceso),
+		});
+		const auth = container.get(AUTH_TOKENS.AuthMiddleware);
+		const guard = container.get(TOKENS.PermisoGuard);
+		app.route("/api/tags", new TagRouter(auth, guard, controller).router);
+		app.route(
+			"/api/organizaciones/:organizacionId/tags",
+			new TagRouter(auth, guard, controller, true).router,
 		);
-		app.route("/api/tags", router.router);
 	},
 };

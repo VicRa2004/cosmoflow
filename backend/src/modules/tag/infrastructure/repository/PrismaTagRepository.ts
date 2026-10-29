@@ -4,25 +4,36 @@ import type {
 	TagFiltros,
 	TagRepository,
 } from "../../domain/repository/TagRepository";
-import { Tag } from "../../domain/Tag";
+import { type DuenoTag, Tag } from "../../domain/Tag";
 
 interface PrismaTagRecord {
 	id: number;
-	usuarioId: number;
+	usuarioId: number | null;
+	organizacionId: number | null;
 	nombre: string;
 }
 
+/** El `where` del dueño. El CHECK `tag_un_solo_dueno` garantiza que el otro es null. */
+const deDueno = (dueno: DuenoTag) =>
+	"usuarioId" in dueno
+		? { usuarioId: dueno.usuarioId }
+		: { organizacionId: dueno.organizacionId };
+
 export class PrismaTagRepository implements TagRepository {
 	private toDomain(raw: PrismaTagRecord): Tag {
-		return Tag.reconstituir(raw.id, raw.usuarioId, raw.nombre);
+		const dueno: DuenoTag =
+			raw.organizacionId !== null
+				? { organizacionId: raw.organizacionId }
+				: { usuarioId: raw.usuarioId as number };
+		return Tag.reconstituir(raw.id, dueno, raw.nombre);
 	}
 
 	async buscar(
-		usuarioId: number,
+		dueno: DuenoTag,
 		{ pagina, limite, nombre }: TagFiltros,
 	): Promise<Paginacion<Tag>> {
 		const where = {
-			usuarioId,
+			...deDueno(dueno),
 			deletedAt: null,
 			...(nombre && {
 				nombre: { contains: nombre, mode: "insensitive" as const },
@@ -47,20 +58,17 @@ export class PrismaTagRepository implements TagRepository {
 		};
 	}
 
-	async buscarPorId(usuarioId: number, id: number): Promise<Tag | null> {
+	async buscarPorId(dueno: DuenoTag, id: number): Promise<Tag | null> {
 		const registro = await prisma.tag.findFirst({
-			where: { id, usuarioId, deletedAt: null },
+			where: { id, ...deDueno(dueno), deletedAt: null },
 		});
 		return registro ? this.toDomain(registro) : null;
 	}
 
-	async buscarPorNombre(
-		usuarioId: number,
-		nombre: string,
-	): Promise<Tag | null> {
+	async buscarPorNombre(dueno: DuenoTag, nombre: string): Promise<Tag | null> {
 		const registro = await prisma.tag.findFirst({
 			where: {
-				usuarioId,
+				...deDueno(dueno),
 				deletedAt: null,
 				nombre: { equals: nombre, mode: "insensitive" },
 			},
@@ -70,7 +78,7 @@ export class PrismaTagRepository implements TagRepository {
 
 	async crear(data: Tag): Promise<Tag> {
 		const registro = await prisma.tag.create({
-			data: { usuarioId: data.getUsuarioId(), nombre: data.getNombre() },
+			data: { ...deDueno(data.getDueno()), nombre: data.getNombre() },
 		});
 		return this.toDomain(registro);
 	}

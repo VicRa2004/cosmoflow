@@ -201,22 +201,26 @@ model Auditoria {
 }
 
 // Generado por gen:module: ajustar campos y @map a las convenciones de la tabla.
-/// Tag personal (RN-60): etiqueta las notas y tareas de su dueño.
+/// Tag de un usuario (sus notas y tareas personales) o de una organización (sus
+/// equipos, proyectos y tareas), nunca de los dos: lo impone un CHECK (RN-60).
 model Tag {
-  id        Int       @id @default(autoincrement()) @map("tag_id")
-  usuarioId Int       @map("tag_fkusuario")
-  nombre    String    @map("tag_nombre") @db.VarChar(64)
-  createdAt DateTime  @default(now()) @map("created_at")
-  updatedAt DateTime? @updatedAt @map("updated_at")
+  id             Int       @id @default(autoincrement()) @map("tag_id")
+  usuarioId      Int?      @map("tag_fkusuario")
+  organizacionId Int?      @map("tag_fkorganizacion")
+  nombre         String    @map("tag_nombre") @db.VarChar(64)
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime? @updatedAt @map("updated_at")
   /// Borrado lógico (RN-91). El nombre único por usuario lo valida la aplicación
   /// ignorando los borrados (Prisma no admite índices únicos parciales).
-  deletedAt DateTime? @map("deleted_at")
+  deletedAt      DateTime? @map("deleted_at")
 
-  usuario Usuario    @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
-  tareas  TareaTag[]
-  notas   NotaTag[]
+  usuario      Usuario?      @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  organizacion Organizacion? @relation(fields: [organizacionId], references: [id], onDelete: Cascade)
+  tareas       TareaTag[]
+  notas        NotaTag[]
 
   @@index([usuarioId])
+  @@index([organizacionId])
   @@map("tag")
 }
 
@@ -338,6 +342,7 @@ model Organizacion {
   miembros     MiembroOrganizacion[]
   invitaciones Invitacion[]
   roles        RolOrganizacion[]
+  tags         Tag[]
 
   @@map("organizacion")
 }

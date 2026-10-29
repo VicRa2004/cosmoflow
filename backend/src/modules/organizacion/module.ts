@@ -2,6 +2,7 @@ import { env } from "@/core/config/env";
 import type { AppModule } from "@/core/shared/infrastructure/di/AppModule";
 import { TOKENS } from "@/core/shared/infrastructure/di/tokens";
 import { AUTH_TOKENS } from "@/modules/auth";
+import { AccesoOrganizacionService } from "./application/services/AccesoOrganizacionService";
 import { EmisorInvitaciones } from "./application/services/EmisorInvitaciones";
 import { ActualizarRolUseCase } from "./application/useCases/ActualizarRolUseCase";
 import { AsignarRolesUseCase } from "./application/useCases/AsignarRolesUseCase";
@@ -26,6 +27,7 @@ import { InvitacionController } from "./infrastructure/http/controllers/Invitaci
 import { RespuestaInvitacionController } from "./infrastructure/http/controllers/RespuestaInvitacionController";
 import { InvitacionRouter } from "./infrastructure/http/routes/InvitacionRouter";
 import { RespuestaInvitacionRouter } from "./infrastructure/http/routes/RespuestaInvitacionRouter";
+import { ORGANIZACION_TOKENS } from "./infrastructure/tokens";
 import { PrismaInvitacionRepository } from "./infrastructure/repository/PrismaInvitacionRepository";
 import { CambiarAvatarOrganizacionUseCase } from "./application/useCases/CambiarAvatarOrganizacionUseCase";
 import { ObtenerAvatarOrganizacionUseCase } from "./application/useCases/ObtenerAvatarOrganizacionUseCase";
@@ -40,6 +42,12 @@ import { OrganizacionRouter } from "./infrastructure/http/routes/OrganizacionRou
 import { PrismaOrganizacionRepository } from "./infrastructure/repository/PrismaOrganizacionRepository";
 
 export const organizacionModule: AppModule = {
+	register(container) {
+		container.set(
+			ORGANIZACION_TOKENS.AccesoOrganizacion,
+			() => new AccesoOrganizacionService(new PrismaOrganizacionRepository()),
+		);
+	},
 	mount(app, container) {
 		const repo = new PrismaOrganizacionRepository();
 		const almacenamiento = container.get(TOKENS.Almacenamiento);

@@ -8,13 +8,15 @@ import {
 	actualizarTagSchema,
 	crearTagSchema,
 	obtenerTagsSchema,
+	ambitoTagSchema,
 	tagIdSchema,
 } from "../schemas/tagSchemas";
 import { BaseController } from "@/core/shared/infrastructure/http/base.controller";
 import { validate } from "@/core/shared/infrastructure/libs/validate";
 import type { AuthEnv } from "@/modules/auth";
+import type { AmbitoTag } from "../../../application/resolverDueno";
 
-/** Cada handler opera sobre los tags del usuario autenticado. */
+/** Tags del usuario autenticado o, si la ruta trae `organizacionId`, de esa organización. */
 export class TagController extends BaseController {
 	// Objeto con nombres y no posicional: varios casos de uso tienen la misma forma (`ejecutar(id)`).
 	constructor(
@@ -29,12 +31,17 @@ export class TagController extends BaseController {
 		super();
 	}
 
+	private ambito(c: Context<AuthEnv>): AmbitoTag {
+		const { organizacionId } = validate(ambitoTagSchema, c.req.param());
+		return { usuarioId: c.get("usuario").id, organizacionId };
+	}
+
 	crear = (c: Context<AuthEnv>): Promise<Response> =>
 		this.executeSafely(c, async () => {
 			const dto = validate(crearTagSchema, await c.req.json());
 			return this.created(
 				c,
-				await this.useCases.crear.ejecutar(c.get("usuario").id, dto),
+				await this.useCases.crear.ejecutar(this.ambito(c), dto),
 			);
 		});
 
@@ -43,7 +50,7 @@ export class TagController extends BaseController {
 			const dto = validate(obtenerTagsSchema, c.req.query());
 			return this.ok(
 				c,
-				await this.useCases.obtenerTodos.ejecutar(c.get("usuario").id, dto),
+				await this.useCases.obtenerTodos.ejecutar(this.ambito(c), dto),
 			);
 		});
 
@@ -52,7 +59,7 @@ export class TagController extends BaseController {
 			const { id } = validate(tagIdSchema, c.req.param());
 			return this.ok(
 				c,
-				await this.useCases.obtenerUno.ejecutar(c.get("usuario").id, id),
+				await this.useCases.obtenerUno.ejecutar(this.ambito(c), id),
 			);
 		});
 
@@ -62,14 +69,14 @@ export class TagController extends BaseController {
 			const dto = validate(actualizarTagSchema, await c.req.json());
 			return this.ok(
 				c,
-				await this.useCases.actualizar.ejecutar(c.get("usuario").id, id, dto),
+				await this.useCases.actualizar.ejecutar(this.ambito(c), id, dto),
 			);
 		});
 
 	eliminar = (c: Context<AuthEnv>): Promise<Response> =>
 		this.executeSafely(c, async () => {
 			const { id } = validate(tagIdSchema, c.req.param());
-			await this.useCases.eliminar.ejecutar(c.get("usuario").id, id);
+			await this.useCases.eliminar.ejecutar(this.ambito(c), id);
 			return c.body(null, 204);
 		});
 }

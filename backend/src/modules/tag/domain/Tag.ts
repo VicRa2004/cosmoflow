@@ -1,31 +1,29 @@
 import { Entity } from "@/core/shared/domain/Entity";
 import { EntityId } from "@/core/shared/domain/EntityId";
 
-/** Tag personal (RN-60): solo lo ve y usa su dueño. */
+/** De quién es un tag (RN-60): de un usuario o de una organización, nunca de los dos. */
+export type DuenoTag = { usuarioId: number } | { organizacionId: number };
+
+/** Etiqueta reutilizable; solo la ve y usa su dueño. */
 export class Tag extends Entity {
-	private readonly usuarioId: number;
-	private nombre: string;
-
-	private constructor(id: EntityId, usuarioId: number, nombre: string) {
+	private constructor(
+		id: EntityId,
+		private readonly dueno: DuenoTag,
+		private nombre: string,
+	) {
 		super(id);
-		this.usuarioId = usuarioId;
-		this.nombre = nombre;
 	}
 
-	public static crear(usuarioId: number, nombre: string): Tag {
-		return new Tag(new EntityId(), usuarioId, nombre);
+	public static crear(dueno: DuenoTag, nombre: string): Tag {
+		return new Tag(new EntityId(), dueno, nombre);
 	}
 
-	public static reconstituir(
-		id: number,
-		usuarioId: number,
-		nombre: string,
-	): Tag {
-		return new Tag(new EntityId(id), usuarioId, nombre);
+	public static reconstituir(id: number, dueno: DuenoTag, nombre: string): Tag {
+		return new Tag(new EntityId(id), dueno, nombre);
 	}
 
-	getUsuarioId() {
-		return this.usuarioId;
+	getDueno() {
+		return this.dueno;
 	}
 
 	getNombre() {

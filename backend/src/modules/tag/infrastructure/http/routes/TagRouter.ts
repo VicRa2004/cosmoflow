@@ -11,12 +11,12 @@ import {
 	actualizarTagSchema,
 	crearTagSchema,
 	obtenerTagsSchema,
+	organizacionIdParamSchema,
 	tagDtoSchema,
 	tagIdSchema,
 	tagPaginaSchema,
 } from "../schemas/tagSchemas";
 
-const tags = ["Tags"];
 const security = [{ bearerAuth: [] }];
 const recurso = "tags";
 
@@ -27,8 +27,15 @@ export class TagRouter {
 		authMiddleware: AuthMiddleware,
 		guard: PermisoGuard,
 		controller: TagController,
+		/** Montado en `/api/organizaciones/{organizacionId}/tags` (RN-60). */
+		enOrganizacion = false,
 	) {
 		const docs = this.router.openAPIRegistry;
+		const tags = [enOrganizacion ? "Tags de organización" : "Tags"];
+		const paramsRaiz = enOrganizacion ? organizacionIdParamSchema : undefined;
+		const paramsId = enOrganizacion
+			? tagIdSchema.extend(organizacionIdParamSchema.shape)
+			: tagIdSchema;
 		this.router.use(authMiddleware.handle);
 
 		docs.registerPath({
@@ -38,6 +45,7 @@ export class TagRouter {
 			security,
 			summary: "Crear tag",
 			request: {
+				params: paramsRaiz,
 				body: {
 					required: true,
 					content: { "application/json": { schema: crearTagSchema } },
@@ -47,7 +55,7 @@ export class TagRouter {
 				201: jsonResponse(tagDtoSchema, "Tag creado"),
 				400: errorResponse("Validación fallida"),
 				...protectedErrorResponses(`${recurso}:crear`),
-				409: errorResponse("Ya tienes un tag con ese nombre"),
+				409: errorResponse("Ya hay un tag con ese nombre"),
 			},
 		});
 		this.router.post("/", guard.handle(recurso, "crear"), controller.crear);
@@ -58,7 +66,7 @@ export class TagRouter {
 			tags,
 			security,
 			summary: "Listar tags (paginado)",
-			request: { query: obtenerTagsSchema },
+			request: { params: paramsRaiz, query: obtenerTagsSchema },
 			responses: {
 				200: jsonResponse(tagPaginaSchema, "Lista paginada"),
 				400: errorResponse("Parámetros inválidos"),
@@ -77,7 +85,7 @@ export class TagRouter {
 			tags,
 			security,
 			summary: "Obtener tag por ID",
-			request: { params: tagIdSchema },
+			request: { params: paramsId },
 			responses: {
 				200: jsonResponse(tagDtoSchema, "Tag encontrado"),
 				...protectedErrorResponses(`${recurso}:leer`),
@@ -97,7 +105,7 @@ export class TagRouter {
 			security,
 			summary: "Actualizar tag",
 			request: {
-				params: tagIdSchema,
+				params: paramsId,
 				body: {
 					required: true,
 					content: { "application/json": { schema: actualizarTagSchema } },
@@ -108,7 +116,7 @@ export class TagRouter {
 				400: errorResponse("Validación fallida"),
 				...protectedErrorResponses(`${recurso}:actualizar`),
 				404: errorResponse("Tag no encontrado"),
-				409: errorResponse("Ya tienes un tag con ese nombre"),
+				409: errorResponse("Ya hay un tag con ese nombre"),
 			},
 		});
 		this.router.put(
@@ -123,7 +131,7 @@ export class TagRouter {
 			tags,
 			security,
 			summary: "Eliminar tag",
-			request: { params: tagIdSchema },
+			request: { params: paramsId },
 			responses: {
 				204: { description: "Tag eliminado" },
 				...protectedErrorResponses(`${recurso}:eliminar`),
