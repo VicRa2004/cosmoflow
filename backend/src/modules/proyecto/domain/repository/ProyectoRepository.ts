@@ -6,6 +6,10 @@ export interface ProyectoRepository {
 		filtro: { estado?: EstadoProyecto },
 	): Promise<Proyecto[]>;
 	buscarPorId(organizacionId: number, id: number): Promise<Proyecto | null>;
+	/** Sin acotar a una organización: solo para resolver el contexto de una tarea. */
+	buscarSoloPorId(id: number): Promise<Proyecto | null>;
+	/** Miembros de sus equipos más los integrantes sueltos, sin repetir. */
+	miembrosDe(proyecto: Proyecto): Promise<number[]>;
 	crear(proyecto: Proyecto): Promise<Proyecto>;
 	actualizar(proyecto: Proyecto): Promise<Proyecto>;
 	eliminar(organizacionId: number, id: number): Promise<void>;

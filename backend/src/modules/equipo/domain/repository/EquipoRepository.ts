@@ -3,6 +3,8 @@ import type { Equipo } from "../Equipo";
 export interface EquipoRepository {
 	buscar(organizacionId: number, filtro: { tagId?: number }): Promise<Equipo[]>;
 	buscarPorId(organizacionId: number, id: number): Promise<Equipo | null>;
+	/** Sin acotar a una organización: solo para resolver el contexto de una tarea. */
+	buscarSoloPorId(id: number): Promise<Equipo | null>;
 	crear(equipo: Equipo): Promise<Equipo>;
 	actualizar(equipo: Equipo): Promise<Equipo>;
 	eliminar(organizacionId: number, id: number): Promise<void>;

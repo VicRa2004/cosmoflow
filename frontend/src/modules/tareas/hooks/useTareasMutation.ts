@@ -1,7 +1,11 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/core/api/client";
-import { type ActualizarTareaInput, tareasApi } from "../api/tareasApi";
+import {
+	type ActualizarTareaInput,
+	type DestinoTarea,
+	tareasApi,
+} from "../api/tareasApi";
 import { tareasKeys } from "./useTareasQuery";
 
 const onError = (error: unknown) => toast.error(getErrorMessage(error));
@@ -42,6 +46,19 @@ export function useEliminarTareaMutation() {
 		mutationFn: tareasApi.eliminar,
 		onSuccess: () => {
 			toast.success("Tarea eliminada");
+			return invalidar();
+		},
+		onError,
+	});
+}
+
+export function useMoverTareaMutation() {
+	const invalidar = useInvalidar();
+	return useMutation({
+		mutationFn: ({ id, destino }: { id: number; destino: DestinoTarea }) =>
+			tareasApi.mover(id, destino),
+		onSuccess: () => {
+			toast.success("Tarea movida");
 			return invalidar();
 		},
 		onError,

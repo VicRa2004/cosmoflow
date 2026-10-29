@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 
 interface EncabezadoPaginaProps {
-	titulo: string;
+	titulo: ReactNode;
 	descripcion?: ReactNode;
 	/** Acciones y filtros de la página, alineados a la derecha. */
 	children?: ReactNode;

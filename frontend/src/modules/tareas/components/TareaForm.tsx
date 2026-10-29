@@ -1,8 +1,11 @@
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, FolderInput } from "lucide-react";
+import { useState } from "react";
 import { Button } from "@/core/components/ui/Button";
 import { EditorMarkdown } from "@/modules/adjuntos/components/EditorMarkdown";
 import { useAppForm } from "@/core/components/form/useAppForm";
 import type { TareaDto } from "../api/tareasApi";
+import { CampoResponsables } from "./CampoResponsables";
+import { MoverTareaDialog } from "./MoverTareaDialog";
 import {
 	useActualizarTareaMutation,
 	useCrearTareaMutation,
@@ -13,28 +16,62 @@ import {
 	tareaAFormValues,
 	tareaFormSchema,
 	tareaFormVacio,
+	type ContextoTareaSearch,
 } from "../schemas/tareaSchemas";
 import { SelectorTags } from "@/modules/tags/components/SelectorTags";
 
 interface TareaFormProps {
 	/** Sin `inicial` crea; con él, edita. */
 	inicial?: TareaDto;
+	/** Al crear: equipo o proyecto donde va (sin él, personal). */
+	contexto?: ContextoTareaSearch;
 	onGuardado: () => void;
 	onVolver: () => void;
 }
 
+const mismos = (a: number[], b: number[]) =>
+	a.length === b.length && a.every((id) => b.includes(id));
+
 /** Página-documento de una tarea: título grande, propiedades y el editor debajo. */
-export function TareaForm({ inicial, onGuardado, onVolver }: TareaFormProps) {
+export function TareaForm({
+	inicial,
+	contexto,
+	onGuardado,
+	onVolver,
+}: TareaFormProps) {
 	const crear = useCrearTareaMutation();
 	const actualizar = useActualizarTareaMutation();
+	const [moviendo, setMoviendo] = useState(false);
+	const equipoId = inicial ? inicial.equipoId : contexto?.equipoId;
+	const proyectoId = inicial ? inicial.proyectoId : contexto?.proyectoId;
+	const organizacionId =
+		(inicial ? inicial.organizacionId : contexto?.organizacionId) ?? null;
+	const compartida = organizacionId !== null && Boolean(equipoId || proyectoId);
 
 	const form = useAppForm({
 		defaultValues: inicial ? tareaAFormValues(inicial) : tareaFormVacio,
 		validators: { onSubmit: tareaFormSchema },
 		onSubmit: async ({ value }) => {
-			const datos = tareaFormSchema.parse(value);
-			if (inicial) await actualizar.mutateAsync({ id: inicial.id, datos });
-			else await crear.mutateAsync(datos);
+			const { responsableIds, ...datos } = tareaFormSchema.parse(value);
+			if (inicial) {
+				// Solo si cambian: sin ser líder ni delegado, enviarlos daría 403 (RN-22).
+				const asignar = !mismos(responsableIds, inicial.responsableIds);
+				await actualizar.mutateAsync({
+					id: inicial.id,
+					datos: asignar ? { ...datos, responsableIds } : datos,
+				});
+			} else {
+				await crear.mutateAsync(
+					compartida
+						? {
+								...datos,
+								equipoId: equipoId ?? undefined,
+								proyectoId: proyectoId ?? undefined,
+								responsableIds,
+							}
+						: datos,
+				);
+			}
 			onGuardado();
 		},
 	});
@@ -47,7 +84,19 @@ export function TareaForm({ inicial, onGuardado, onVolver }: TareaFormProps) {
 						<ArrowLeft className="h-4 w-4" />
 						Volver
 					</Button>
-					<form.BotonEnviar>{inicial ? "Guardar" : "Crear"}</form.BotonEnviar>
+					<div className="flex items-center gap-2">
+						{inicial && inicial.organizacionId === null && (
+							<Button
+								variant="secondary"
+								size="sm"
+								onClick={() => setMoviendo(true)}
+							>
+								<FolderInput className="h-4 w-4" />
+								Mover a equipo o proyecto
+							</Button>
+						)}
+						<form.BotonEnviar>{inicial ? "Guardar" : "Crear"}</form.BotonEnviar>
+					</div>
 				</div>
 				<form.AppField name="titulo">
 					{(campo) => (
@@ -94,9 +143,23 @@ export function TareaForm({ inicial, onGuardado, onVolver }: TareaFormProps) {
 						<SelectorTags
 							valor={campo.state.value}
 							onChange={campo.handleChange}
+							organizacionId={organizacionId}
 						/>
 					)}
 				</form.AppField>
+				{compartida && organizacionId !== null && (
+					<form.Field name="responsableIds">
+						{(campo) => (
+							<CampoResponsables
+								organizacionId={organizacionId}
+								equipoId={equipoId}
+								proyectoId={proyectoId}
+								valor={campo.state.value}
+								onChange={campo.handleChange}
+							/>
+						)}
+					</form.Field>
+				)}
 				<hr className="border-borde" />
 				<form.AppField name="contenido">
 					{() => (
@@ -108,6 +171,14 @@ export function TareaForm({ inicial, onGuardado, onVolver }: TareaFormProps) {
 					)}
 				</form.AppField>
 			</form.Formulario>
+			{inicial && (
+				<MoverTareaDialog
+					tarea={inicial}
+					abierto={moviendo}
+					onCerrar={() => setMoviendo(false)}
+					onMovida={onVolver}
+				/>
+			)}
 		</form.AppForm>
 	);
 }

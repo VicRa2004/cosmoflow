@@ -10,6 +10,7 @@ import { TareaController } from "../controllers/TareaController";
 import {
 	actualizarTareaSchema,
 	crearTareaSchema,
+	moverTareaSchema,
 	obtenerTareasSchema,
 	paginacionSchema,
 	tareaDtoSchema,
@@ -37,7 +38,7 @@ export class TareaRouter {
 			path: "/",
 			tags,
 			security,
-			summary: "Crear tarea",
+			summary: "Crear tarea personal, o en un equipo o proyecto (RN-22)",
 			request: {
 				body: {
 					required: true,
@@ -50,6 +51,10 @@ export class TareaRouter {
 					"Validación fallida, fechas incoherentes o tags ajenos",
 				),
 				...protectedErrorResponses(`${recurso}:crear`),
+				403: errorResponse(
+					"En un equipo con líder, sin ser líder ni delegado (RN-22)",
+				),
+				404: errorResponse("Equipo o proyecto no encontrado"),
 			},
 		});
 		this.router.post("/", guard.handle(recurso, "crear"), controller.crear);
@@ -133,6 +138,9 @@ export class TareaRouter {
 					"Validación fallida, fechas incoherentes o tags ajenos",
 				),
 				...protectedErrorResponses(`${recurso}:actualizar`),
+				403: errorResponse(
+					"Cambiar responsables en un equipo con líder sin ser líder ni delegado (RN-22)",
+				),
 				404: errorResponse("Tarea no encontrada"),
 			},
 		});
@@ -152,6 +160,7 @@ export class TareaRouter {
 			responses: {
 				204: { description: "Tarea eliminada" },
 				...protectedErrorResponses(`${recurso}:eliminar`),
+				403: errorResponse("Sin permiso para eliminar tareas ahí (RN-22)"),
 				404: errorResponse("Tarea no encontrada"),
 			},
 		});
@@ -159,6 +168,36 @@ export class TareaRouter {
 			"/:id",
 			guard.handle(recurso, "eliminar"),
 			controller.eliminar,
+		);
+
+		docs.registerPath({
+			method: "post",
+			path: "/{id}/mover",
+			tags,
+			security,
+			summary:
+				"Mover una tarea personal a un equipo o proyecto (RN-45, sin vuelta atrás)",
+			request: {
+				params: tareaIdSchema,
+				body: {
+					required: true,
+					content: { "application/json": { schema: moverTareaSchema } },
+				},
+			},
+			responses: {
+				200: jsonResponse(tareaDtoSchema, "Tarea movida"),
+				400: errorResponse("Ya es de un equipo o proyecto"),
+				...protectedErrorResponses(`${recurso}:actualizar`),
+				403: errorResponse(
+					"Sin permiso para crear tareas en el destino (RN-22)",
+				),
+				404: errorResponse("Tarea, equipo o proyecto no encontrado"),
+			},
+		});
+		this.router.post(
+			"/:id/mover",
+			guard.handle(recurso, "actualizar"),
+			controller.mover,
 		);
 	}
 }

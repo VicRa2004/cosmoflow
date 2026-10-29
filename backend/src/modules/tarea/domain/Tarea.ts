@@ -22,26 +22,70 @@ export interface DatosTarea {
 	/** Día `YYYY-MM-DD` (sin hora: no depende de la zona horaria) o `null`. */
 	fechaInicio: string | null;
 	fechaVencimiento: string | null;
-	/** Tags personales del dueño (RN-60). */
+	/** Personal: tags del dueño; compartida: de la organización (RN-60). */
 	tagIds: number[];
 }
 
-/** Tarea personal (RN-40): de su dueño, sin equipo ni proyecto. */
+/** Equipo o proyecto destino de una tarea compartida, nunca los dos. */
+export type DestinoTarea = { equipoId: number } | { proyectoId: number };
+
+export interface UbicacionTarea {
+	organizacionId: number | null;
+	equipoId: number | null;
+	proyectoId: number | null;
+}
+
+const PERSONAL: UbicacionTarea = {
+	organizacionId: null,
+	equipoId: null,
+	proyectoId: null,
+};
+
+/**
+ * Personal (RN-40: de su dueño) o compartida en un equipo o proyecto, con
+ * responsables (RN-44). Solo se mueve de personal a compartida (RN-45).
+ */
 export class Tarea extends Entity {
 	private readonly usuarioId: number;
 	private datos: DatosTarea;
+	private ubicacion: UbicacionTarea;
+	private responsableIds: number[];
 
-	private constructor(id: EntityId, usuarioId: number, datos: DatosTarea) {
+	private constructor(
+		id: EntityId,
+		usuarioId: number,
+		datos: DatosTarea,
+		ubicacion: UbicacionTarea,
+		responsableIds: number[],
+	) {
 		super(id);
 		this.usuarioId = usuarioId;
 		this.datos = Tarea.validar(datos);
+		this.ubicacion = ubicacion;
+		this.responsableIds = responsableIds;
 	}
 
+	/** Sin `en`, personal; con él, compartida en ese equipo o proyecto. */
 	public static crear(
 		usuarioId: number,
 		datos: Partial<DatosTarea> & { titulo: string },
+		en?: { organizacionId: number } & DestinoTarea,
 	): Tarea {
-		return new Tarea(new EntityId(), usuarioId, {
+		const tarea = new Tarea(
+			new EntityId(),
+			usuarioId,
+			Tarea.porDefecto(datos),
+			PERSONAL,
+			[],
+		);
+		if (en) tarea.ubicacion = Tarea.ubicar(en);
+		return tarea;
+	}
+
+	private static porDefecto(
+		datos: Partial<DatosTarea> & { titulo: string },
+	): DatosTarea {
+		return {
 			contenido: "",
 			estado: "pendiente",
 			prioridad: "media",
@@ -50,19 +94,70 @@ export class Tarea extends Entity {
 			tagIds: [],
 			...sinIndefinidos(datos),
 			titulo: datos.titulo,
-		});
+		};
+	}
+
+	private static ubicar({
+		organizacionId,
+		...destino
+	}: { organizacionId: number } & DestinoTarea): UbicacionTarea {
+		return {
+			organizacionId,
+			equipoId: "equipoId" in destino ? destino.equipoId : null,
+			proyectoId: "proyectoId" in destino ? destino.proyectoId : null,
+		};
 	}
 
 	public static reconstituir(
 		id: number,
 		usuarioId: number,
 		datos: DatosTarea,
+		ubicacion: UbicacionTarea = PERSONAL,
+		responsableIds: number[] = [],
 	): Tarea {
-		return new Tarea(new EntityId(id), usuarioId, datos);
+		return new Tarea(
+			new EntityId(id),
+			usuarioId,
+			datos,
+			ubicacion,
+			responsableIds,
+		);
 	}
 
+	/** Quien la creó; en las personales, su dueño. */
 	getUsuarioId() {
 		return this.usuarioId;
+	}
+
+	getUbicacion(): UbicacionTarea {
+		return { ...this.ubicacion };
+	}
+
+	getResponsableIds(): readonly number[] {
+		return this.responsableIds;
+	}
+
+	esPersonal(): boolean {
+		return this.ubicacion.organizacionId === null;
+	}
+
+	/** RN-45: solo de personal a equipo o proyecto. Sus tags personales no viajan. */
+	public mover(destino: { organizacionId: number } & DestinoTarea): void {
+		if (!this.esPersonal()) {
+			throw new TareaInvalidaError(
+				"Una tarea de equipo o proyecto no se puede mover",
+			);
+		}
+		this.ubicacion = Tarea.ubicar(destino);
+		this.datos = { ...this.datos, tagIds: [] };
+	}
+
+	/** RN-44: varios responsables; las personales no tienen. */
+	public asignar(responsableIds: number[]): void {
+		if (this.esPersonal() && responsableIds.length > 0) {
+			throw new TareaInvalidaError("Una tarea personal no tiene responsables");
+		}
+		this.responsableIds = [...new Set(responsableIds)];
 	}
 
 	getDatos(): DatosTarea {

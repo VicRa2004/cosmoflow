@@ -10,26 +10,36 @@ export interface TareaFiltros {
 	tagId?: number;
 }
 
+/** Las personales de un usuario, o las de un equipo o proyecto. */
+export type AmbitoTareas =
+	| { usuarioId: number }
+	| { equipoId: number }
+	| { proyectoId: number };
+
 /**
- * Todas las lecturas van acotadas al dueño (`usuarioId`) e ignoran las borradas:
- * la tarea de otro usuario no existe para quien la pide (404).
+ * Las lecturas ignoran las borradas. Quién puede ver cada tarea lo decide la
+ * aplicación (`buscarTareaVisible`): aquí no hay filtro por usuario en `buscarPorId`.
  */
 export interface TareaRepository {
 	buscar: (
-		usuarioId: number,
+		ambito: AmbitoTareas,
 		filtros: TareaFiltros,
 	) => Promise<Paginacion<Tarea>>;
 	/**
-	 * Pendientes y en progreso (RN-43): vencimiento más próximo primero, sin fecha
-	 * al final; a igual fecha, más prioridad primero.
+	 * Pendientes y en progreso (RN-43) personales del usuario o en las que es
+	 * responsable: vencimiento más próximo primero, sin fecha al final; a igual
+	 * fecha, más prioridad primero.
 	 */
 	buscarPendientes: (
 		usuarioId: number,
 		paginacion: { pagina: number; limite: number },
 	) => Promise<Paginacion<Tarea>>;
-	buscarPorId: (usuarioId: number, id: number) => Promise<Tarea | null>;
-	/** `true` si todos son tags vivos (no borrados) del usuario. */
-	sonTagsPropios: (usuarioId: number, tagIds: number[]) => Promise<boolean>;
+	buscarPorId: (id: number) => Promise<Tarea | null>;
+	/** `true` si todos son tags vivos (no borrados) de ese dueño. */
+	sonTagsDe: (
+		dueno: { usuarioId: number } | { organizacionId: number },
+		tagIds: number[],
+	) => Promise<boolean>;
 	crear: (data: Tarea) => Promise<Tarea>;
 	actualizar: (data: Tarea) => Promise<Tarea>;
 	/** Borrado lógico (`deletedAt`). */

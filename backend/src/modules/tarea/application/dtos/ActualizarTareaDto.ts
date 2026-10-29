@@ -1,3 +1,3 @@
-import type { CrearTareaDto } from "./CrearTareaDto";
+import type { CamposTareaDto } from "./CrearTareaDto";
 
-export type ActualizarTareaDto = Partial<CrearTareaDto>;
+export type ActualizarTareaDto = Partial<CamposTareaDto>;

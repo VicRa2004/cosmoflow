@@ -2759,6 +2759,8 @@ export interface paths {
                     busqueda?: string;
                     estado?: "pendiente" | "en_progreso" | "completada" | "cancelada";
                     tagId?: string;
+                    equipoId?: string;
+                    proyectoId?: string;
                 };
                 header?: never;
                 path?: never;
@@ -2813,7 +2815,7 @@ export interface paths {
             };
         };
         put?: never;
-        /** Crear tarea */
+        /** Crear tarea personal, o en un equipo o proyecto (RN-22) */
         post: {
             parameters: {
                 query?: never;
@@ -2841,6 +2843,9 @@ export interface paths {
                          */
                         fechaVencimiento?: string | null;
                         tagIds?: number[];
+                        responsableIds?: number[];
+                        equipoId?: number;
+                        proyectoId?: number;
                     };
                 };
             };
@@ -2872,8 +2877,17 @@ export interface paths {
                         "application/json": components["schemas"]["ErrorResponse"];
                     };
                 };
-                /** @description Permiso denegado (requiere tareas:crear) */
+                /** @description En un equipo con líder, sin ser líder ni delegado (RN-22) */
                 403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Equipo o proyecto no encontrado */
+                404: {
                     headers: {
                         [name: string]: unknown;
                     };
@@ -3053,6 +3067,7 @@ export interface paths {
                          */
                         fechaVencimiento?: string | null;
                         tagIds?: number[];
+                        responsableIds?: number[];
                     };
                 };
             };
@@ -3084,7 +3099,7 @@ export interface paths {
                         "application/json": components["schemas"]["ErrorResponse"];
                     };
                 };
-                /** @description Permiso denegado (requiere tareas:actualizar) */
+                /** @description Cambiar responsables en un equipo con líder sin ser líder ni delegado (RN-22) */
                 403: {
                     headers: {
                         [name: string]: unknown;
@@ -3133,7 +3148,7 @@ export interface paths {
                         "application/json": components["schemas"]["ErrorResponse"];
                     };
                 };
-                /** @description Permiso denegado (requiere tareas:eliminar) */
+                /** @description Sin permiso para eliminar tareas ahí (RN-22) */
                 403: {
                     headers: {
                         [name: string]: unknown;
@@ -3153,6 +3168,88 @@ export interface paths {
                 };
             };
         };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/tareas/{id}/mover": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Mover una tarea personal a un equipo o proyecto (RN-45, sin vuelta atrás) */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        equipoId: number;
+                    } | {
+                        proyectoId: number;
+                    };
+                };
+            };
+            responses: {
+                /** @description Tarea movida */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["TareaDto"];
+                    };
+                };
+                /** @description Ya es de un equipo o proyecto */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description No autenticado */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Sin permiso para crear tareas en el destino (RN-22) */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Tarea, equipo o proyecto no encontrado */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
         options?: never;
         head?: never;
         patch?: never;
@@ -6176,6 +6273,10 @@ export interface components {
              */
             fechaVencimiento: string | null;
             tagIds: number[];
+            organizacionId: number | null;
+            equipoId: number | null;
+            proyectoId: number | null;
+            responsableIds: number[];
         };
         NotaDto: {
             /** @example 1 */

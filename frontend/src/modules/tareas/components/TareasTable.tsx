@@ -70,7 +70,9 @@ export function TareasTable({
 		},
 		{
 			cabecera: "Tags",
-			celda: (fila) => <TagsBadges tagIds={fila.tagIds} />,
+			celda: (fila) => (
+				<TagsBadges tagIds={fila.tagIds} organizacionId={fila.organizacionId} />
+			),
 		},
 		{
 			cabecera: <span className="sr-only">Acciones</span>,

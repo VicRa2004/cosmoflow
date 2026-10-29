@@ -39,7 +39,10 @@ export function TareaLectura({ tarea, onCerrar, onEditar }: TareaLecturaProps) {
 							<>
 								<dt className="text-tinta-tenue">Tags</dt>
 								<dd>
-									<TagsBadges tagIds={tarea.tagIds} />
+									<TagsBadges
+										tagIds={tarea.tagIds}
+										organizacionId={tarea.organizacionId}
+									/>
 								</dd>
 							</>
 						)}

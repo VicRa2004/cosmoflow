@@ -1,4 +1,5 @@
-import { Pencil, Plus, Trash2, UserCog } from "lucide-react";
+import { ListTodo, Pencil, Plus, Trash2, UserCog } from "lucide-react";
+import { useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { useAuthStore } from "@/core/auth/store";
 import { Badge } from "@/core/components/ui/Badge";
@@ -30,6 +31,7 @@ export function EquiposCard({
 	organizacion: OrganizacionDto;
 }) {
 	const organizacionId = organizacion.id;
+	const navigate = useNavigate();
 	const yo = useAuthStore((state) => state.usuario?.id);
 	const [tagId, setTagId] = useState<number>();
 	const { data: equipos } = useEquiposQuery(organizacionId, tagId);
@@ -104,6 +106,20 @@ export function EquiposCard({
 									</p>
 									<p className="truncate text-xs text-tinta-tenue">
 										{equipo.miembros.length} miembros
+										<Button
+											variant="ghost"
+											size="sm"
+											aria-label={`Tareas de ${equipo.nombre}`}
+											title="Tareas"
+											onClick={() =>
+												navigate({
+													to: "/tareas",
+													search: { organizacionId, equipoId: equipo.id },
+												})
+											}
+										>
+											<ListTodo className="h-4 w-4" />
+										</Button>
 										{equipo.liderId !== null &&
 											` · Líder: ${nombreMiembro.get(equipo.liderId) ?? "—"}`}
 									</p>

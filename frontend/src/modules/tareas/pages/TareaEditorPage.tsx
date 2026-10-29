@@ -2,9 +2,16 @@ import { useCanGoBack, useNavigate, useRouter } from "@tanstack/react-router";
 import { Spinner } from "@/core/components/ui/Spinner";
 import { TareaForm } from "../components/TareaForm";
 import { useTareaQuery } from "../hooks/useTareasQuery";
+import type { ContextoTareaSearch } from "../schemas/tareaSchemas";
 
-/** Alta (sin `id`) o edición de una tarea a página completa. */
-export function TareaEditorPage({ id }: { id?: number }) {
+/** Alta (sin `id`, en `contexto` si viene) o edición de una tarea a página completa. */
+export function TareaEditorPage({
+	id,
+	contexto,
+}: {
+	id?: number;
+	contexto?: ContextoTareaSearch;
+}) {
 	const router = useRouter();
 	const navigate = useNavigate();
 	const puedeVolver = useCanGoBack();
@@ -25,6 +32,7 @@ export function TareaEditorPage({ id }: { id?: number }) {
 		<TareaForm
 			key={id ?? "nueva"}
 			inicial={data}
+			contexto={contexto}
 			onGuardado={volver}
 			onVolver={volver}
 		/>

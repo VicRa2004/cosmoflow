@@ -23,6 +23,20 @@ const prioridades = Object.keys(ETIQUETAS_PRIORIDAD) as [
 	...PrioridadTarea[],
 ];
 
+const idSearch = z.coerce.number().int().positive().optional().catch(undefined);
+
+/**
+ * `?organizacionId=&equipoId=` o `&proyectoId=`: tareas de ese equipo o proyecto
+ * (lista y alta). La organización sirve para sus tags y miembros.
+ */
+export const contextoTareaSearch = z.object({
+	organizacionId: idSearch,
+	equipoId: idSearch,
+	proyectoId: idSearch,
+});
+
+export type ContextoTareaSearch = z.infer<typeof contextoTareaSearch>;
+
 /** `<input type="date">` da "" o `AAAA-MM-DD`; "" vacía la fecha. */
 const dia = z.string().transform((v) => v || null);
 
@@ -36,6 +50,7 @@ export const tareaFormSchema = z
 		fechaInicio: dia,
 		fechaVencimiento: dia,
 		tagIds: z.array(z.number()),
+		responsableIds: z.array(z.number()),
 	})
 	.refine(
 		(t) =>
@@ -58,6 +73,7 @@ export const tareaFormVacio: TareaFormValues = {
 	fechaInicio: "",
 	fechaVencimiento: "",
 	tagIds: [],
+	responsableIds: [],
 };
 
 export const tareaAFormValues = (dto: TareaDto): TareaFormValues => ({
@@ -68,4 +84,5 @@ export const tareaAFormValues = (dto: TareaDto): TareaFormValues => ({
 	fechaInicio: dto.fechaInicio ?? "",
 	fechaVencimiento: dto.fechaVencimiento ?? "",
 	tagIds: dto.tagIds,
+	responsableIds: dto.responsableIds,
 });

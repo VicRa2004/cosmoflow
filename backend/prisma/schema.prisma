@@ -259,11 +259,40 @@ model Tarea {
   /// Borrado lógico (RN-91)
   deletedAt        DateTime?      @map("deleted_at")
 
-  usuario Usuario    @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
-  tags    TareaTag[]
+  /// Tarea compartida (RN-40): de un equipo o de un proyecto, nunca de los dos.
+  /// Sin ellos es personal. CHECK de exclusividad en la migración.
+  organizacionId   Int?           @map("tar_fkorganizacion")
+  equipoId         Int?           @map("tar_fkequipo")
+  proyectoId       Int?           @map("tar_fkproyecto")
 
+  /// Quien la creó; en las personales, su dueño
+  usuario      Usuario            @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  equipo       Equipo?            @relation(fields: [organizacionId, equipoId], references: [organizacionId, id], onDelete: Cascade)
+  proyecto     Proyecto?          @relation(fields: [organizacionId, proyectoId], references: [organizacionId, id], onDelete: Cascade)
+  tags         TareaTag[]
+  responsables TareaResponsable[]
+
+  /// Destino de la FK compuesta de `TareaResponsable`
+  @@unique([organizacionId, id])
   @@index([usuarioId, estado])
+  @@index([equipoId])
+  @@index([proyectoId])
   @@map("tarea")
+}
+
+/// RN-44. FK a `MiembroOrganizacion`: salir de la organización lo quita como
+/// responsable (decisión 20); las personales no pueden tenerlos (organización nula).
+model TareaResponsable {
+  organizacionId Int @map("tre_fkorganizacion")
+  tareaId        Int @map("tre_fktarea")
+  usuarioId      Int @map("tre_fkusuario")
+
+  tarea   Tarea               @relation(fields: [organizacionId, tareaId], references: [organizacionId, id], onDelete: Cascade)
+  miembro MiembroOrganizacion @relation(fields: [organizacionId, usuarioId], references: [organizacionId, usuarioId], onDelete: Cascade)
+
+  @@id([tareaId, usuarioId])
+  @@index([organizacionId, usuarioId])
+  @@map("tarea_responsable")
 }
 
 model TareaTag {
@@ -363,6 +392,7 @@ model MiembroOrganizacion {
   roles        MiembroRolOrganizacion[]
   equipos      MiembroEquipo[]
   proyectos    IntegranteProyecto[]
+  tareas       TareaResponsable[]
 
   @@id([organizacionId, usuarioId])
   @@index([usuarioId])
@@ -451,6 +481,7 @@ model Equipo {
   miembros     MiembroEquipo[]
   tags         EquipoTag[]
   proyectos    ProyectoEquipo[]
+  tareas       Tarea[]
 
   /// Destino de las FK compuestas de `MiembroEquipo` y `ProyectoEquipo`
   @@unique([organizacionId, id])
@@ -513,6 +544,7 @@ model Proyecto {
   organizacion Organizacion         @relation(fields: [organizacionId], references: [id], onDelete: Cascade)
   equipos      ProyectoEquipo[]
   integrantes  IntegranteProyecto[]
+  tareas       Tarea[]
 
   /// Destino de las FK compuestas de `ProyectoEquipo` e `IntegranteProyecto`
   @@unique([organizacionId, id])

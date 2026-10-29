@@ -82,7 +82,9 @@ export function PendientesPage() {
 		},
 		{
 			cabecera: "Tags",
-			celda: (fila) => <TagsBadges tagIds={fila.tagIds} />,
+			celda: (fila) => (
+				<TagsBadges tagIds={fila.tagIds} organizacionId={fila.organizacionId} />
+			),
 		},
 	];
 

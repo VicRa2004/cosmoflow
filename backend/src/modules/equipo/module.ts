@@ -2,6 +2,7 @@ import type { AppModule } from "@/core/shared/infrastructure/di/AppModule";
 import { TOKENS } from "@/core/shared/infrastructure/di/tokens";
 import { AUTH_TOKENS } from "@/modules/auth";
 import { ORGANIZACION_TOKENS } from "@/modules/organizacion";
+import { TareasEquipoService } from "./application/services/TareasEquipoService";
 import { SalidaMiembroEquipos } from "./application/services/SalidaMiembroEquipos";
 import { ActualizarEquipoUseCase } from "./application/useCases/ActualizarEquipoUseCase";
 import { CambiarDelegadosUseCase } from "./application/useCases/CambiarDelegadosUseCase";
@@ -20,6 +21,10 @@ export const equipoModule: AppModule = {
 		container.set(
 			ORGANIZACION_TOKENS.SalidaMiembro,
 			() => new SalidaMiembroEquipos(new PrismaEquipoRepository()),
+		);
+		container.set(
+			EQUIPO_TOKENS.TareasEquipo,
+			() => new TareasEquipoService(new PrismaEquipoRepository()),
 		);
 		container.set(EQUIPO_TOKENS.BajaEquipo, () => ({
 			comprobar: async () => {},

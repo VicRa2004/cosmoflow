@@ -71,6 +71,27 @@ export class PrismaProyectoRepository implements ProyectoRepository {
 		return registro ? this.toDomain(registro) : null;
 	}
 
+	async buscarSoloPorId(id: number) {
+		const registro = await prisma.proyecto.findFirst({
+			where: { id, deletedAt: null },
+			include,
+		});
+		return registro ? this.toDomain(registro) : null;
+	}
+
+	async miembrosDe(proyecto: Proyecto): Promise<number[]> {
+		const deEquipos = await prisma.miembroEquipo.findMany({
+			where: { equipoId: { in: [...proyecto.getEquipoIds()] } },
+			select: { usuarioId: true },
+		});
+		return [
+			...new Set([
+				...deEquipos.map((m) => m.usuarioId),
+				...proyecto.getIntegranteIds(),
+			]),
+		];
+	}
+
 	async crear(proyecto: Proyecto): Promise<Proyecto> {
 		const registro = await prisma.proyecto.create({
 			data: {

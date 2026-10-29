@@ -1,29 +1,37 @@
-import { TagsAjenosError } from "../../domain/error/TagsAjenosError";
-import { TareaNoEncontradaError } from "../../domain/error/TareaNoEncontradaError";
+import { SinPermisoTareasError } from "../../domain/error/SinPermisoTareasError";
 import type { TareaRepository } from "../../domain/repository/TareaRepository";
 import type { ActualizarTareaDto } from "../dtos/ActualizarTareaDto";
 import type { TareaDto } from "../dtos/TareaDto";
 import { TareaMapper } from "../mappers/TareaMapper";
+import type { ContextosTarea } from "../services/ContextosTarea";
+import { buscarTareaVisible } from "./buscarTareaVisible";
+import { validarTarea } from "./validarTarea";
 
+/** Quien la ve la edita; cambiar responsables exige poder crear tareas ahí (RN-22). */
 export class ActualizarTareaUseCase {
-	constructor(private readonly tareaRepository: TareaRepository) {}
+	constructor(
+		private readonly tareaRepository: TareaRepository,
+		private readonly contextos: ContextosTarea,
+	) {}
 
 	async ejecutar(
 		usuarioId: number,
 		id: number,
 		dto: ActualizarTareaDto,
 	): Promise<TareaDto> {
-		const tarea = await this.tareaRepository.buscarPorId(usuarioId, id);
-		if (!tarea) {
-			throw new TareaNoEncontradaError();
+		const { tarea, contexto } = await buscarTareaVisible(
+			this.tareaRepository,
+			this.contextos,
+			usuarioId,
+			id,
+		);
+		const { responsableIds, ...campos } = dto;
+		if (responsableIds !== undefined) {
+			if (contexto && !contexto.puedeCrear) throw new SinPermisoTareasError();
+			tarea.asignar(responsableIds);
 		}
-		if (
-			dto.tagIds?.length &&
-			!(await this.tareaRepository.sonTagsPropios(usuarioId, dto.tagIds))
-		) {
-			throw new TagsAjenosError();
-		}
-		tarea.actualizar(dto);
+		tarea.actualizar(campos);
+		await validarTarea(this.tareaRepository, tarea, contexto);
 		return TareaMapper.toDto(await this.tareaRepository.actualizar(tarea));
 	}
 }

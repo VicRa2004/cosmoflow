@@ -18,7 +18,13 @@ export interface ObtenerTareasParams {
 	busqueda?: string;
 	estado?: EstadoTarea;
 	tagId?: number;
+	/** Sin equipo ni proyecto, las personales. */
+	equipoId?: number;
+	proyectoId?: number;
 }
+
+/** RN-45: de personal a un equipo o a un proyecto. */
+export type DestinoTarea = { equipoId: number } | { proyectoId: number };
 
 export const tareasApi = {
 	async obtenerTodos(params: ObtenerTareasParams = {}): Promise<TareasPagina> {
@@ -47,6 +53,14 @@ export const tareasApi = {
 
 	async actualizar(id: number, datos: ActualizarTareaInput): Promise<TareaDto> {
 		const response = await apiClient.put<TareaDto>(`/tareas/${id}`, datos);
+		return response.data;
+	},
+
+	async mover(id: number, destino: DestinoTarea): Promise<TareaDto> {
+		const response = await apiClient.post<TareaDto>(
+			`/tareas/${id}/mover`,
+			destino,
+		);
 		return response.data;
 	},
 

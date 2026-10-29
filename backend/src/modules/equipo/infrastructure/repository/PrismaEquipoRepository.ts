@@ -76,6 +76,14 @@ export class PrismaEquipoRepository implements EquipoRepository {
 		return registro ? this.toDomain(registro) : null;
 	}
 
+	async buscarSoloPorId(id: number) {
+		const registro = await prisma.equipo.findFirst({
+			where: { id, deletedAt: null },
+			include,
+		});
+		return registro ? this.toDomain(registro) : null;
+	}
+
 	async crear(equipo: Equipo): Promise<Equipo> {
 		const registro = await prisma.equipo.create({
 			data: {

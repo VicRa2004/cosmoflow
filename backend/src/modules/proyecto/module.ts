@@ -3,6 +3,8 @@ import { TOKENS } from "@/core/shared/infrastructure/di/tokens";
 import { AUTH_TOKENS } from "@/modules/auth";
 import { EQUIPO_TOKENS } from "@/modules/equipo";
 import { ORGANIZACION_TOKENS } from "@/modules/organizacion";
+import { TareasProyectoService } from "./application/services/TareasProyectoService";
+import { PROYECTO_TOKENS } from "./infrastructure/tokens";
 import { BajaEquipoProyectos } from "./application/services/BajaEquipoProyectos";
 import { ActualizarProyectoUseCase } from "./application/useCases/ActualizarProyectoUseCase";
 import { CrearProyectoUseCase } from "./application/useCases/CrearProyectoUseCase";
@@ -19,6 +21,10 @@ export const proyectoModule: AppModule = {
 		container.set(
 			EQUIPO_TOKENS.BajaEquipo,
 			() => new BajaEquipoProyectos(new PrismaProyectoRepository()),
+		);
+		container.set(
+			PROYECTO_TOKENS.TareasProyecto,
+			() => new TareasProyectoService(new PrismaProyectoRepository()),
 		);
 	},
 	mount(app, container) {

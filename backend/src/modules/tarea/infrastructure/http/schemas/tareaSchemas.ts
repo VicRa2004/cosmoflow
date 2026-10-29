@@ -18,11 +18,30 @@ const campos = {
 	fechaInicio: dia.optional(),
 	fechaVencimiento: dia.optional(),
 	tagIds: z.array(z.number().int().positive()).max(50).optional(),
+	/** Solo en las de equipo o proyecto (RN-44). */
+	responsableIds: z.array(z.number().int().positive()).max(50).optional(),
 };
 
-export const crearTareaSchema = z.object(campos);
+const id = z.number().int().positive();
+const unSoloDestino = {
+	message: "Una tarea es de un equipo o de un proyecto, no de los dos",
+	path: ["proyectoId"],
+};
+const sinDosDestinos = (v: { equipoId?: unknown; proyectoId?: unknown }) =>
+	v.equipoId === undefined || v.proyectoId === undefined;
+
+/** Sin `equipoId` ni `proyectoId`, personal. */
+export const crearTareaSchema = z
+	.object({ ...campos, equipoId: id.optional(), proyectoId: id.optional() })
+	.refine(sinDosDestinos, unSoloDestino);
 
 export const actualizarTareaSchema = z.object(campos).partial();
+
+/** RN-45: de personal a un equipo o a un proyecto. */
+export const moverTareaSchema = z.union([
+	z.object({ equipoId: id }).strict(),
+	z.object({ proyectoId: id }).strict(),
+]);
 
 export const tareaIdSchema = z.object({
 	id: z
@@ -38,11 +57,16 @@ export const paginacionSchema = z.object({
 	limite: numero.optional().default(10),
 });
 
-export const obtenerTareasSchema = paginacionSchema.extend({
-	busqueda: z.string().trim().min(1).max(128).optional(),
-	estado: z.enum(ESTADOS_TAREA).optional(),
-	tagId: numero.optional(),
-});
+/** Sin `equipoId` ni `proyectoId`, las personales. */
+export const obtenerTareasSchema = paginacionSchema
+	.extend({
+		busqueda: z.string().trim().min(1).max(128).optional(),
+		estado: z.enum(ESTADOS_TAREA).optional(),
+		tagId: numero.optional(),
+		equipoId: numero.optional(),
+		proyectoId: numero.optional(),
+	})
+	.refine(sinDosDestinos, unSoloDestino);
 
 // ── Respuestas (sólo documentación OpenAPI) ──────────────────────────────────
 
@@ -56,6 +80,10 @@ export const tareaDtoSchema = z
 		fechaInicio: dia,
 		fechaVencimiento: dia,
 		tagIds: z.array(z.number().int()),
+		organizacionId: z.number().int().nullable(),
+		equipoId: z.number().int().nullable(),
+		proyectoId: z.number().int().nullable(),
+		responsableIds: z.array(z.number().int()),
 	})
 	.openapi("TareaDto");
 

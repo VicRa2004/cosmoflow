@@ -5,9 +5,11 @@ import type { EliminarTareaUseCase } from "../../../application/useCases/Elimina
 import type { ObtenerTareaUseCase } from "../../../application/useCases/ObtenerTareaUseCase";
 import type { ObtenerPendientesUseCase } from "../../../application/useCases/ObtenerPendientesUseCase";
 import type { ObtenerTareasUseCase } from "../../../application/useCases/ObtenerTareasUseCase";
+import type { MoverTareaUseCase } from "../../../application/useCases/MoverTareaUseCase";
 import {
 	actualizarTareaSchema,
 	crearTareaSchema,
+	moverTareaSchema,
 	obtenerTareasSchema,
 	paginacionSchema,
 	tareaIdSchema,
@@ -16,7 +18,7 @@ import { BaseController } from "@/core/shared/infrastructure/http/base.controlle
 import { validate } from "@/core/shared/infrastructure/libs/validate";
 import type { AuthEnv } from "@/modules/auth";
 
-/** Cada handler opera sobre las tareas del usuario autenticado. */
+/** Tareas personales del usuario autenticado y las de sus equipos y proyectos. */
 export class TareaController extends BaseController {
 	// Objeto con nombres y no posicional: varios casos de uso tienen la misma forma (`ejecutar(id)`).
 	constructor(
@@ -27,6 +29,7 @@ export class TareaController extends BaseController {
 			obtenerUno: ObtenerTareaUseCase;
 			actualizar: ActualizarTareaUseCase;
 			eliminar: EliminarTareaUseCase;
+			mover: MoverTareaUseCase;
 		},
 	) {
 		super();
@@ -86,5 +89,15 @@ export class TareaController extends BaseController {
 			const { id } = validate(tareaIdSchema, c.req.param());
 			await this.useCases.eliminar.ejecutar(c.get("usuario").id, id);
 			return c.body(null, 204);
+		});
+
+	mover = (c: Context<AuthEnv>): Promise<Response> =>
+		this.executeSafely(c, async () => {
+			const { id } = validate(tareaIdSchema, c.req.param());
+			const destino = validate(moverTareaSchema, await c.req.json());
+			return this.ok(
+				c,
+				await this.useCases.mover.ejecutar(c.get("usuario").id, id, destino),
+			);
 		});
 }

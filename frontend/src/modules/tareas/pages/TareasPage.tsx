@@ -13,15 +13,43 @@ import { TareasTable } from "../components/TareasTable";
 import { useEliminarTareaMutation } from "../hooks/useTareasMutation";
 import { useTagsDisponibles } from "@/modules/tags/hooks/useTagsDisponibles";
 import { useTareasQuery } from "../hooks/useTareasQuery";
-import { ETIQUETAS_ESTADO } from "../schemas/tareaSchemas";
+import {
+	type ContextoTareaSearch,
+	ETIQUETAS_ESTADO,
+} from "../schemas/tareaSchemas";
+import { useEquiposQuery } from "@/modules/equipos/hooks/useEquipos";
+import { useProyectosQuery } from "@/modules/proyectos/hooks/useProyectos";
 
-export function TareasPage() {
+/** «Tareas · Plataforma»: nombre del equipo o proyecto de la lista. */
+function TituloContexto({
+	organizacionId,
+	equipoId,
+	proyectoId,
+}: Required<Pick<ContextoTareaSearch, "organizacionId">> &
+	ContextoTareaSearch) {
+	const { data: equipos } = useEquiposQuery(organizacionId);
+	const { data: proyectos } = useProyectosQuery(organizacionId);
+	const nombre = equipoId
+		? equipos?.find((e) => e.id === equipoId)?.nombre
+		: proyectos?.find((p) => p.id === proyectoId)?.nombre;
+	return <>Tareas · {nombre ?? "…"}</>;
+}
+
+/** Sin `contexto`, las personales; con él, las de ese equipo o proyecto. */
+export function TareasPage({
+	contexto = {},
+}: {
+	contexto?: ContextoTareaSearch;
+}) {
+	const { organizacionId, equipoId, proyectoId } = contexto;
+	const enContexto =
+		organizacionId !== undefined && Boolean(equipoId || proyectoId);
 	const { puede } = usePermisos();
 	const [pagina, setPagina] = useState(1);
 	const [busqueda, setBusqueda] = useState("");
 	const [estado, setEstado] = useState<EstadoTarea | "">("");
 	const [tagId, setTagId] = useState("");
-	const { tags } = useTagsDisponibles();
+	const { tags } = useTagsDisponibles(enContexto ? organizacionId : undefined);
 	const navigate = useNavigate();
 	const editar = (tarea: TareaDto) =>
 		navigate({ to: "/tareas/$id", params: { id: String(tarea.id) } });
@@ -34,11 +62,24 @@ export function TareasPage() {
 		busqueda: busqueda.trim() || undefined,
 		estado: estado || undefined,
 		tagId: tagId ? Number(tagId) : undefined,
+		...(enContexto && { equipoId, proyectoId }),
 	});
 
 	return (
 		<div className="space-y-6">
-			<EncabezadoPagina titulo="Tareas">
+			<EncabezadoPagina
+				titulo={
+					enContexto && organizacionId ? (
+						<TituloContexto
+							organizacionId={organizacionId}
+							equipoId={equipoId}
+							proyectoId={proyectoId}
+						/>
+					) : (
+						"Tareas"
+					)
+				}
+			>
 				<div className="w-full sm:w-44">
 					<Select
 						aria-label="Filtrar por estado"
@@ -89,7 +130,14 @@ export function TareasPage() {
 					<Search className="pointer-events-none absolute top-2.5 left-3 h-4 w-4 text-tinta-tenue" />
 				</div>
 				{puede("tareas:crear") && (
-					<Button onClick={() => navigate({ to: "/tareas/nueva" })}>
+					<Button
+						onClick={() =>
+							navigate({
+								to: "/tareas/nueva",
+								search: enContexto ? contexto : {},
+							})
+						}
+					>
 						<Plus className="h-4 w-4" />
 						Nueva
 					</Button>

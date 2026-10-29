@@ -1,4 +1,5 @@
-import { Pencil, Plus, Trash2 } from "lucide-react";
+import { ListTodo, Pencil, Plus, Trash2 } from "lucide-react";
+import { useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { Badge, type BadgeProps } from "@/core/components/ui/Badge";
 import { Button } from "@/core/components/ui/Button";
@@ -34,6 +35,7 @@ export function ProyectosCard({
 	organizacion: OrganizacionDto;
 }) {
 	const organizacionId = organizacion.id;
+	const navigate = useNavigate();
 	const [estado, setEstado] = useState<EstadoProyecto>();
 	const { data: proyectos } = useProyectosQuery(organizacionId, estado);
 	const { data: equipos = [] } = useEquiposQuery(organizacionId);
@@ -105,6 +107,20 @@ export function ProyectosCard({
 											` · ${proyecto.integranteIds.length} sueltos`}
 									</p>
 								</div>
+								<Button
+									variant="ghost"
+									size="sm"
+									aria-label={`Tareas de ${proyecto.nombre}`}
+									title="Tareas"
+									onClick={() =>
+										navigate({
+											to: "/tareas",
+											search: { organizacionId, proyectoId: proyecto.id },
+										})
+									}
+								>
+									<ListTodo className="h-4 w-4" />
+								</Button>
 								{puedeEn(organizacion, "proyectos:editar") && (
 									<Button
 										variant="ghost"
