@@ -3,7 +3,7 @@ import { ObtenerTagsUseCase } from "./ObtenerTagsUseCase";
 import { Tag } from "../../domain/Tag";
 
 /** Los tags personales no consultan la organización. */
-const acceso = { exigir: mock(async () => {}) };
+const acceso = { exigir: mock(async () => []) };
 
 describe("ObtenerTagsUseCase", () => {
 	it("debería devolver la página mapeada a DTOs", async () => {

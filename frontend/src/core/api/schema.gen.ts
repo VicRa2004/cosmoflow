@@ -4230,7 +4230,7 @@ export interface paths {
                         "application/json": components["schemas"]["ErrorResponse"];
                     };
                 };
-                /** @description El admin debe delegar antes de salir (RN-16) */
+                /** @description El admin debe delegar antes de salir (RN-16), o un equipo se quedaría con menos de 2 miembros (RN-26) */
                 409: {
                     headers: {
                         [name: string]: unknown;
@@ -5321,6 +5321,410 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/organizaciones/{organizacionId}/equipos": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Equipos de la organización (cualquier miembro) */
+        get: {
+            parameters: {
+                query?: {
+                    tagId?: string;
+                };
+                header?: never;
+                path: {
+                    organizacionId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Equipos */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["EquipoDto"][];
+                    };
+                };
+                /** @description No autenticado */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Permiso denegado (requiere organizaciones:leer) */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Organización no encontrada */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        /** Crear equipo (equipos:crear) */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    organizacionId: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        nombre: string;
+                        /** @default  */
+                        descripcion?: string;
+                        color: string;
+                        /** @default null */
+                        liderId?: number | null;
+                        miembroIds: number[];
+                        /** @default [] */
+                        tagIds?: number[];
+                    };
+                };
+            };
+            responses: {
+                /** @description Equipo creado */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["EquipoDto"];
+                    };
+                };
+                /** @description Validación fallida o menos de 2 miembros */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description No autenticado */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Sin el permiso equipos:crear */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Organización o equipo no encontrado */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/organizaciones/{organizacionId}/equipos/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Obtener equipo */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    organizacionId: string;
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Equipo */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["EquipoDto"];
+                    };
+                };
+                /** @description No autenticado */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Permiso denegado (requiere organizaciones:leer) */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Organización o equipo no encontrado */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        /** Editar datos, miembros, líder y tags (equipos:editar) */
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    organizacionId: string;
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        nombre?: string;
+                        descripcion?: string;
+                        color?: string;
+                        liderId?: number | null;
+                        miembroIds?: number[];
+                        tagIds?: number[];
+                    };
+                };
+            };
+            responses: {
+                /** @description Equipo actualizado */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["EquipoDto"];
+                    };
+                };
+                /** @description Validación fallida o menos de 2 miembros */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description No autenticado */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Sin el permiso equipos:editar */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Organización o equipo no encontrado */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        /** Eliminar equipo (equipos:eliminar) */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    organizacionId: string;
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Equipo eliminado */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description No autenticado */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Sin el permiso equipos:eliminar */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Organización o equipo no encontrado */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/organizaciones/{organizacionId}/equipos/{id}/delegados": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Elegir quién crea y asigna tareas (líder o equipos:editar, RN-22) */
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    organizacionId: string;
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        usuarioIds: number[];
+                    };
+                };
+            };
+            responses: {
+                /** @description Delegados guardados */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["EquipoDto"];
+                    };
+                };
+                /** @description Algún delegado no es miembro del equipo */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description No autenticado */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Sin el permiso equipos:editar ni ser el líder */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Organización o equipo no encontrado */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -5552,6 +5956,23 @@ export interface components {
             /** @example 1 */
             organizacionId: number;
         };
+        EquipoDto: {
+            /** @example 1 */
+            id: number;
+            /** @example Plataforma */
+            nombre: string;
+            /** @example  */
+            descripcion: string;
+            /** @example #6366f1 */
+            color: string;
+            /** @example 3 */
+            liderId: number | null;
+            miembros: {
+                usuarioId: number;
+                puedeCrearTareas: boolean;
+            }[];
+            tagIds: number[];
+        };
     };
     responses: never;
     parameters: never;
@@ -5578,5 +5999,6 @@ export type RolOrganizacionDto = components['schemas']['RolOrganizacionDto'];
 export type InvitacionDto = components['schemas']['InvitacionDto'];
 export type InvitacionRecibidaDto = components['schemas']['InvitacionRecibidaDto'];
 export type RespuestaInvitacionDto = components['schemas']['RespuestaInvitacionDto'];
+export type EquipoDto = components['schemas']['EquipoDto'];
 export type $defs = Record<string, never>;
 export type operations = Record<string, never>;

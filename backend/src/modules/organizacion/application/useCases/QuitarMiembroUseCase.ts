@@ -8,16 +8,18 @@ import { SinPermisoOrganizacionError } from "../../domain/error/SinPermisoOrgani
 import { permisosEfectivos } from "../../domain/permisosOrganizacion";
 import { MiembroQuitadoEvent } from "../../domain/event/MiembroQuitadoEvent";
 import type { OrganizacionRepository } from "../../domain/repository/OrganizacionRepository";
+import type { SalidaMiembro } from "../../domain/SalidaMiembro";
 
 /**
  * Con `objetivoId` = quien pide, sale de la organización; si no, lo expulsa quien tenga
  * `miembros:expulsar` (el admin siempre). Al admin no se le expulsa.
  * El admin no puede salir sin delegar antes (RN-16): así nunca se queda sin admin
- * ni sin miembros (RN-10).
+ * ni sin miembros (RN-10). Otros módulos pueden bloquearlo (`SalidaMiembro`, RN-26).
  */
 export class QuitarMiembroUseCase {
 	constructor(
 		private readonly organizacionRepository: OrganizacionRepository,
+		private readonly salida: SalidaMiembro,
 		private readonly eventBus: EventBus,
 		private readonly uow: UnitOfWork,
 	) {}
@@ -48,6 +50,7 @@ export class QuitarMiembroUseCase {
 		}
 
 		await this.uow.ejecutar(async () => {
+			await this.salida.comprobar(organizacionId, objetivoId);
 			await this.organizacionRepository.quitarMiembro(
 				organizacionId,
 				objetivoId,

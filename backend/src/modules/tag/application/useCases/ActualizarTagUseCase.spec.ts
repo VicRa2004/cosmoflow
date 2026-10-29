@@ -5,7 +5,7 @@ import { Tag } from "../../domain/Tag";
 import { ActualizarTagUseCase } from "./ActualizarTagUseCase";
 
 /** Los tags personales no consultan la organización. */
-const acceso = { exigir: mock(async () => {}) };
+const acceso = { exigir: mock(async () => []) };
 
 const USUARIO = 7;
 

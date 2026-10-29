@@ -12,6 +12,7 @@ import {
 } from "@/core/components/ui/Card";
 import { ConfirmDialog } from "@/core/components/ui/ConfirmDialog";
 import { Spinner } from "@/core/components/ui/Spinner";
+import { EquiposCard } from "@/modules/equipos/components/EquiposCard";
 import { AvatarOrganizacion } from "../components/AvatarOrganizacion";
 import { AvatarOrganizacionControles } from "../components/AvatarOrganizacionControles";
 import { InvitacionesCard } from "../components/InvitacionesCard";
@@ -57,6 +58,8 @@ export function OrganizacionPage({ id }: { id: number }) {
 			</header>
 
 			<MiembrosCard organizacion={data} />
+
+			<EquiposCard organizacion={data} />
 
 			{puedeEn(data, "organizacion:editar") && (
 				<Card>

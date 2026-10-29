@@ -4,7 +4,7 @@ import { Tag } from "../../domain/Tag";
 import { CrearTagUseCase } from "./CrearTagUseCase";
 
 /** Los tags personales no consultan la organización. */
-const acceso = { exigir: mock(async () => {}) };
+const acceso = { exigir: mock(async () => []) };
 
 const USUARIO = 7;
 

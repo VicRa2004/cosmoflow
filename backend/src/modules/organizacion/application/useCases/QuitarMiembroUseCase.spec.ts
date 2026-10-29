@@ -32,10 +32,12 @@ const preparar = () => {
 	};
 	const eventBus = { publish: mock(async () => {}), publishAll: mock() };
 	const uow = { ejecutar: <T>(fn: () => Promise<T>) => fn() };
+	const salida = { comprobar: mock(async () => {}) };
 	return {
 		repo,
 		eventBus,
-		useCase: new QuitarMiembroUseCase(repo as never, eventBus, uow),
+		salida,
+		useCase: new QuitarMiembroUseCase(repo as never, salida, eventBus, uow),
 	};
 };
 
@@ -49,6 +51,17 @@ describe("QuitarMiembroUseCase", () => {
 				data: { organizacionId: 10, usuarioId: BETO, expulsado: false },
 			}),
 		);
+	});
+
+	it("si otro módulo bloquea la salida (RN-26), no se quita", async () => {
+		const { useCase, repo, salida } = preparar();
+		salida.comprobar.mockImplementationOnce(async () => {
+			throw new Error("equipo al mínimo");
+		});
+		expect(useCase.ejecutar(BETO, 10, BETO)).rejects.toThrow(
+			"equipo al mínimo",
+		);
+		expect(repo.quitarMiembro).not.toHaveBeenCalled();
 	});
 
 	it("el admin expulsa a un miembro", async () => {

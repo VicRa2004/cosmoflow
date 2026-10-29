@@ -218,6 +218,7 @@ model Tag {
   organizacion Organizacion? @relation(fields: [organizacionId], references: [id], onDelete: Cascade)
   tareas       TareaTag[]
   notas        NotaTag[]
+  equipos      EquipoTag[]
 
   @@index([usuarioId])
   @@index([organizacionId])
@@ -343,6 +344,7 @@ model Organizacion {
   invitaciones Invitacion[]
   roles        RolOrganizacion[]
   tags         Tag[]
+  equipos      Equipo[]
 
   @@map("organizacion")
 }
@@ -358,6 +360,7 @@ model MiembroOrganizacion {
   organizacion Organizacion             @relation(fields: [organizacionId], references: [id], onDelete: Cascade)
   usuario      Usuario                  @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
   roles        MiembroRolOrganizacion[]
+  equipos      MiembroEquipo[]
 
   @@id([organizacionId, usuarioId])
   @@index([usuarioId])
@@ -427,4 +430,59 @@ model MiembroRolOrganizacion {
   @@id([organizacionId, usuarioId, rolId])
   @@index([organizacionId, rolId])
   @@map("miembro_rol_organizacion")
+}
+
+/// Grupo dentro de una organización (RN-20).
+model Equipo {
+  id             Int       @id @default(autoincrement()) @map("eq_id")
+  organizacionId Int       @map("eq_fkorganizacion")
+  nombre         String    @map("eq_nombre") @db.VarChar(100)
+  descripcion    String    @default("") @map("eq_descripcion") @db.VarChar(500)
+  /// Hex `#rrggbb` (RN-25)
+  color          String    @map("eq_color") @db.VarChar(7)
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime? @updatedAt @map("updated_at")
+  /// Borrado lógico (RN-91)
+  deletedAt      DateTime? @map("deleted_at")
+
+  organizacion Organizacion    @relation(fields: [organizacionId], references: [id], onDelete: Cascade)
+  miembros     MiembroEquipo[]
+  tags         EquipoTag[]
+
+  /// Destino de la FK compuesta de `MiembroEquipo`
+  @@unique([organizacionId, id])
+  @@index([organizacionId])
+  @@map("equipo")
+}
+
+/// FK compuesta a `MiembroOrganizacion`: solo miembros de la organización, y salir de
+/// ella los quita del equipo. Un solo líder por equipo (índice parcial en la migración).
+model MiembroEquipo {
+  organizacionId   Int     @map("meq_fkorganizacion")
+  equipoId         Int     @map("meq_fkequipo")
+  usuarioId        Int     @map("meq_fkusuario")
+  /// RN-21
+  isLider          Boolean @default(false) @map("meq_is_lider")
+  /// Delegado del líder (RN-22)
+  puedeCrearTareas Boolean @default(false) @map("meq_puede_crear_tareas")
+
+  equipo  Equipo              @relation(fields: [organizacionId, equipoId], references: [organizacionId, id], onDelete: Cascade)
+  miembro MiembroOrganizacion @relation(fields: [organizacionId, usuarioId], references: [organizacionId, usuarioId], onDelete: Cascade)
+
+  @@id([equipoId, usuarioId])
+  @@index([organizacionId, usuarioId])
+  @@map("miembro_equipo")
+}
+
+/// RN-24. Que el tag sea de la misma organización lo valida la aplicación.
+model EquipoTag {
+  equipoId Int @map("eqt_fkequipo")
+  tagId    Int @map("eqt_fktag")
+
+  equipo Equipo @relation(fields: [equipoId], references: [id], onDelete: Cascade)
+  tag    Tag    @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([equipoId, tagId])
+  @@index([tagId])
+  @@map("equipo_tag")
 }

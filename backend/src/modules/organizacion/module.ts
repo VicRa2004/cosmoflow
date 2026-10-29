@@ -47,6 +47,9 @@ export const organizacionModule: AppModule = {
 			ORGANIZACION_TOKENS.AccesoOrganizacion,
 			() => new AccesoOrganizacionService(new PrismaOrganizacionRepository()),
 		);
+		container.set(ORGANIZACION_TOKENS.SalidaMiembro, () => ({
+			comprobar: async () => {},
+		}));
 	},
 	mount(app, container) {
 		const repo = new PrismaOrganizacionRepository();
@@ -79,7 +82,12 @@ export const organizacionModule: AppModule = {
 				guard,
 				new MiembroController({
 					obtenerTodos: new ObtenerMiembrosUseCase(repo),
-					quitar: new QuitarMiembroUseCase(repo, eventBus, uow),
+					quitar: new QuitarMiembroUseCase(
+						repo,
+						container.get(ORGANIZACION_TOKENS.SalidaMiembro),
+						eventBus,
+						uow,
+					),
 					delegar: new DelegarAdministracionUseCase(repo, eventBus, uow),
 				}),
 			).router,

@@ -65,7 +65,9 @@ export class MiembroRouter {
 					"Sin el permiso miembros:expulsar, o el objetivo es el admin",
 				),
 				404: errorResponse("Organización o miembro no encontrados"),
-				409: errorResponse("El admin debe delegar antes de salir (RN-16)"),
+				409: errorResponse(
+					"El admin debe delegar antes de salir (RN-16), o un equipo se quedaría con menos de 2 miembros (RN-26)",
+				),
 			},
 		});
 		this.router.delete(

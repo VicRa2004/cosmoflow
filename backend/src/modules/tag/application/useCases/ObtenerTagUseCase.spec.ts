@@ -4,7 +4,7 @@ import { Tag } from "../../domain/Tag";
 import { TagNoEncontradoError } from "../../domain/error/TagNoEncontradoError";
 
 /** Los tags personales no consultan la organización. */
-const acceso = { exigir: mock(async () => {}) };
+const acceso = { exigir: mock(async () => []) };
 
 describe("ObtenerTagUseCase", () => {
 	it("debería devolver el DTO si existe", async () => {

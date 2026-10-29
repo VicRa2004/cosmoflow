@@ -7,11 +7,11 @@ import type { PermisoOrganizacion } from "./permisosOrganizacion";
 export interface AccesoOrganizacion {
 	/**
 	 * 404 si no es miembro (no se revela que la organización existe); con `permiso`,
-	 * además 403 si no lo tiene. El admin los tiene todos.
+	 * además 403 si no lo tiene. El admin los tiene todos. Devuelve sus permisos efectivos.
 	 */
 	exigir: (
 		usuarioId: number,
 		organizacionId: number,
 		permiso?: PermisoOrganizacion,
-	) => Promise<void>;
+	) => Promise<PermisoOrganizacion[]>;
 }
