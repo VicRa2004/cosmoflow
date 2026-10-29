@@ -3,6 +3,7 @@
 // Uso: bun scripts/gen-module.ts <nombre> [--root <dir-backend>]
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
+import { concordar, esFemenino, plural } from "./nombres";
 
 const args = process.argv.slice(2);
 const rootFlag = args.indexOf("--root");
@@ -29,13 +30,14 @@ if (existsSync(moduleDir)) {
 // ── Variantes del nombre ─────────────────────────────────────────────────────
 const n = nombre; // producto
 const N = n[0]?.toUpperCase() + n.slice(1); // Producto
-// shortcut: plural ingenuo (+s tras vocal, +es tras consonante); renombrar a mano si es irregular.
-const plural = (s: string) => (/[aeiou]$/i.test(s) ? `${s}s` : `${s}es`);
 const ns = plural(n); // productos
 const Ns = plural(N); // Productos
 const snake = n.replace(/[A-Z]/g, (c) => `_${c.toLowerCase()}`); // orden_compra
 const kebabs = plural(snake.replaceAll("_", "-")); // orden-compras → URL y recurso
 const Repo = `${N}Repository`;
+const femenino = esFemenino(n, args);
+const noEncontrado = concordar("no encontrado", femenino); // no encontrada
+const NoEncontrado = concordar("NoEncontrado", femenino); // TareaNoEncontradaError
 
 // ── Plantillas ───────────────────────────────────────────────────────────────
 const files: Record<string, string> = {
@@ -68,11 +70,11 @@ export class ${N} extends Entity {
 }
 `,
 
-	[`domain/error/${N}NoEncontradoError.ts`]: `import { BaseError } from "@/core/shared/domain/error/BaseError";
+	[`domain/error/${N}${NoEncontrado}Error.ts`]: `import { BaseError } from "@/core/shared/domain/error/BaseError";
 
-export class ${N}NoEncontradoError extends BaseError {
+export class ${N}${NoEncontrado}Error extends BaseError {
 	constructor() {
-		super("${N} no encontrado", 404);
+		super("${N} ${noEncontrado}", 404);
 	}
 }
 `,
@@ -167,7 +169,7 @@ export class Obtener${Ns}UseCase {
 }
 `,
 
-	[`application/useCases/Obtener${N}UseCase.ts`]: `import { ${N}NoEncontradoError } from "../../domain/error/${N}NoEncontradoError";
+	[`application/useCases/Obtener${N}UseCase.ts`]: `import { ${N}${NoEncontrado}Error } from "../../domain/error/${N}${NoEncontrado}Error";
 import type { ${Repo} } from "../../domain/repository/${Repo}";
 import type { ${N}Dto } from "../dtos/${N}Dto";
 import { ${N}Mapper } from "../mappers/${N}Mapper";
@@ -180,14 +182,14 @@ export class Obtener${N}UseCase {
 	async ejecutar(id: number): Promise<${N}Dto> {
 		const ${n} = await this.${n}Repository.buscarPorId(id);
 		if (!${n}) {
-			throw new ${N}NoEncontradoError();
+			throw new ${N}${NoEncontrado}Error();
 		}
 		return ${N}Mapper.toDto(${n});
 	}
 }
 `,
 
-	[`application/useCases/Actualizar${N}UseCase.ts`]: `import { ${N}NoEncontradoError } from "../../domain/error/${N}NoEncontradoError";
+	[`application/useCases/Actualizar${N}UseCase.ts`]: `import { ${N}${NoEncontrado}Error } from "../../domain/error/${N}${NoEncontrado}Error";
 import type { ${Repo} } from "../../domain/repository/${Repo}";
 import type { Actualizar${N}Dto } from "../dtos/Actualizar${N}Dto";
 import type { ${N}Dto } from "../dtos/${N}Dto";
@@ -201,7 +203,7 @@ export class Actualizar${N}UseCase {
 	async ejecutar(id: number, dto: Actualizar${N}Dto): Promise<${N}Dto> {
 		const ${n} = await this.${n}Repository.buscarPorId(id);
 		if (!${n}) {
-			throw new ${N}NoEncontradoError();
+			throw new ${N}${NoEncontrado}Error();
 		}
 		${n}.actualizar(dto);
 		return ${N}Mapper.toDto(await this.${n}Repository.actualizar(${n}));
@@ -209,7 +211,7 @@ export class Actualizar${N}UseCase {
 }
 `,
 
-	[`application/useCases/Eliminar${N}UseCase.ts`]: `import { ${N}NoEncontradoError } from "../../domain/error/${N}NoEncontradoError";
+	[`application/useCases/Eliminar${N}UseCase.ts`]: `import { ${N}${NoEncontrado}Error } from "../../domain/error/${N}${NoEncontrado}Error";
 import type { ${Repo} } from "../../domain/repository/${Repo}";
 
 export class Eliminar${N}UseCase {
@@ -220,7 +222,7 @@ export class Eliminar${N}UseCase {
 	async ejecutar(id: number): Promise<void> {
 		const ${n} = await this.${n}Repository.buscarPorId(id);
 		if (!${n}) {
-			throw new ${N}NoEncontradoError();
+			throw new ${N}${NoEncontrado}Error();
 		}
 		await this.${n}Repository.eliminar(id);
 	}
@@ -274,7 +276,7 @@ describe("Obtener${Ns}UseCase", () => {
 	[`application/useCases/Obtener${N}UseCase.spec.ts`]: `import { describe, expect, it, mock } from "bun:test";
 import { Obtener${N}UseCase } from "./Obtener${N}UseCase";
 import { ${N} } from "../../domain/${N}";
-import { ${N}NoEncontradoError } from "../../domain/error/${N}NoEncontradoError";
+import { ${N}${NoEncontrado}Error } from "../../domain/error/${N}${NoEncontrado}Error";
 
 describe("Obtener${N}UseCase", () => {
 	it("debería devolver el DTO si existe", async () => {
@@ -284,11 +286,11 @@ describe("Obtener${N}UseCase", () => {
 		expect(await useCase.ejecutar(1)).toEqual({ id: 1, nombre: "Ejemplo" });
 	});
 
-	it("debería lanzar ${N}NoEncontradoError si no existe", async () => {
+	it("debería lanzar ${N}${NoEncontrado}Error si no existe", async () => {
 		const repo = { buscarPorId: mock(async () => null) };
 		const useCase = new Obtener${N}UseCase(repo as never);
 
-		expect(useCase.ejecutar(999)).rejects.toThrow(${N}NoEncontradoError);
+		expect(useCase.ejecutar(999)).rejects.toThrow(${N}${NoEncontrado}Error);
 	});
 });
 `,
@@ -296,7 +298,7 @@ describe("Obtener${N}UseCase", () => {
 	[`application/useCases/Actualizar${N}UseCase.spec.ts`]: `import { describe, expect, it, mock } from "bun:test";
 import { Actualizar${N}UseCase } from "./Actualizar${N}UseCase";
 import { ${N} } from "../../domain/${N}";
-import { ${N}NoEncontradoError } from "../../domain/error/${N}NoEncontradoError";
+import { ${N}${NoEncontrado}Error } from "../../domain/error/${N}${NoEncontrado}Error";
 
 describe("Actualizar${N}UseCase", () => {
 	it("debería actualizar si existe", async () => {
@@ -312,12 +314,12 @@ describe("Actualizar${N}UseCase", () => {
 		});
 	});
 
-	it("debería lanzar ${N}NoEncontradoError si no existe", async () => {
+	it("debería lanzar ${N}${NoEncontrado}Error si no existe", async () => {
 		const repo = { buscarPorId: mock(async () => null), actualizar: mock() };
 		const useCase = new Actualizar${N}UseCase(repo as never);
 
 		expect(useCase.ejecutar(999, { nombre: "Nuevo" })).rejects.toThrow(
-			${N}NoEncontradoError,
+			${N}${NoEncontrado}Error,
 		);
 		expect(repo.actualizar).not.toHaveBeenCalled();
 	});
@@ -327,7 +329,7 @@ describe("Actualizar${N}UseCase", () => {
 	[`application/useCases/Eliminar${N}UseCase.spec.ts`]: `import { describe, expect, it, mock } from "bun:test";
 import { Eliminar${N}UseCase } from "./Eliminar${N}UseCase";
 import { ${N} } from "../../domain/${N}";
-import { ${N}NoEncontradoError } from "../../domain/error/${N}NoEncontradoError";
+import { ${N}${NoEncontrado}Error } from "../../domain/error/${N}${NoEncontrado}Error";
 
 describe("Eliminar${N}UseCase", () => {
 	it("debería borrar si existe", async () => {
@@ -342,11 +344,11 @@ describe("Eliminar${N}UseCase", () => {
 		expect(repo.eliminar).toHaveBeenCalledWith(1);
 	});
 
-	it("debería lanzar ${N}NoEncontradoError si no existe", async () => {
+	it("debería lanzar ${N}${NoEncontrado}Error si no existe", async () => {
 		const repo = { buscarPorId: mock(async () => null), eliminar: mock() };
 		const useCase = new Eliminar${N}UseCase(repo as never);
 
-		expect(useCase.ejecutar(999)).rejects.toThrow(${N}NoEncontradoError);
+		expect(useCase.ejecutar(999)).rejects.toThrow(${N}${NoEncontrado}Error);
 		expect(repo.eliminar).not.toHaveBeenCalled();
 	});
 });
@@ -599,7 +601,7 @@ export class ${N}Router {
 			responses: {
 				200: jsonResponse(${n}DtoSchema, "${N} encontrado"),
 				...protectedErrorResponses(\`\${recurso}:leer\`),
-				404: errorResponse("${N} no encontrado"),
+				404: errorResponse("${N} ${noEncontrado}"),
 			},
 		});
 		this.router.get("/:id", guard.handle(recurso, "leer"), controller.obtenerUno);
@@ -621,7 +623,7 @@ export class ${N}Router {
 				200: jsonResponse(${n}DtoSchema, "${N} actualizado"),
 				400: errorResponse("Validación fallida"),
 				...protectedErrorResponses(\`\${recurso}:actualizar\`),
-				404: errorResponse("${N} no encontrado"),
+				404: errorResponse("${N} ${noEncontrado}"),
 			},
 		});
 		this.router.put("/:id", guard.handle(recurso, "actualizar"), controller.actualizar);
@@ -636,7 +638,7 @@ export class ${N}Router {
 			responses: {
 				204: { description: "${N} eliminado" },
 				...protectedErrorResponses(\`\${recurso}:eliminar\`),
-				404: errorResponse("${N} no encontrado"),
+				404: errorResponse("${N} ${noEncontrado}"),
 			},
 		});
 		this.router.delete("/:id", guard.handle(recurso, "eliminar"), controller.eliminar);

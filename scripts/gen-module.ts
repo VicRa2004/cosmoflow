@@ -1,6 +1,7 @@
 // Crea un módulo CRUD completo: backend (hexagonal + modelo Prisma), contrato
 // OpenAPI regenerado y frontend (api, hooks, formulario, tabla, página y ruta).
 // Uso: pnpm gen:module <nombre>   ·   solo backend: --solo-backend
+// Género de los textos («Nota creada»): se deduce; forzar con --femenino / --masculino.
 import { join } from "node:path";
 
 const args = process.argv.slice(2);
@@ -19,5 +20,6 @@ const run = (cmd: string[], cwd = root) => {
 run(["bun", "scripts/gen-module.ts", ...args], join(root, "backend"));
 if (nombre && !args.includes("--solo-backend")) {
 	run(["pnpm", "gen:api"]);
-	run(["bun", "scripts/gen-module-web.ts", nombre]);
+	const genero = args.filter((a) => a === "--femenino" || a === "--masculino");
+	run(["bun", "scripts/gen-module-web.ts", nombre, ...genero]);
 }

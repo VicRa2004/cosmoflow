@@ -3,6 +3,7 @@
 // Uso: bun scripts/gen-module-web.ts <nombre> [--root <dir-frontend>] [--openapi <spec.json>]
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
+import { concordar, esFemenino, plural } from "../backend/scripts/nombres";
 
 const args = process.argv.slice(2);
 const flag = (name: string, fallback: string) => {
@@ -31,9 +32,10 @@ if (!nombre || !/^[a-z][a-zA-Z0-9]*$/.test(nombre)) {
 }
 const n = nombre as string;
 
-// ── Nombres: misma regla que backend/scripts/gen-module.ts ──────────────────
+// ── Nombres: mismas reglas que el backend (backend/scripts/nombres.ts) ──────
 const N = n[0]?.toUpperCase() + n.slice(1);
-const plural = (s: string) => (/[aeiou]$/i.test(s) ? `${s}s` : `${s}es`);
+const femenino = esFemenino(n, args);
+const o = (texto: string) => concordar(texto, femenino);
 const ns = plural(n);
 const Ns = plural(N);
 const kebabs = plural(n.replace(/[A-Z]/g, (c) => `-${c.toLowerCase()}`));
@@ -289,7 +291,7 @@ export function useCrear${N}Mutation() {
 	return useMutation({
 		mutationFn: ${ns}Api.crear,
 		onSuccess: () => {
-			toast.success("${humano(n)} creado");
+			toast.success("${humano(n)} ${o("creado")}");
 			return invalidar();
 		},
 		onError,
@@ -302,7 +304,7 @@ export function useActualizar${N}Mutation() {
 		mutationFn: ({ id, datos }: { id: number; datos: Actualizar${N}Input }) =>
 			${ns}Api.actualizar(id, datos),
 		onSuccess: () => {
-			toast.success("${humano(n)} guardado");
+			toast.success("${humano(n)} ${o("guardado")}");
 			return invalidar();
 		},
 		onError,
@@ -314,7 +316,7 @@ export function useEliminar${N}Mutation() {
 	return useMutation({
 		mutationFn: ${ns}Api.eliminar,
 		onSuccess: () => {
-			toast.success("${humano(n)} eliminado");
+			toast.success("${humano(n)} ${o("eliminado")}");
 			return invalidar();
 		},
 		onError,
@@ -510,7 +512,7 @@ export function ${Ns}Page() {
 				}
 					<Button onClick={() => setEditando("nuevo")}>
 						<Plus className="h-4 w-4" />
-						Nuevo
+						${o("Nuevo")}
 					</Button>
 				</div>
 			</div>
@@ -527,7 +529,7 @@ export function ${Ns}Page() {
 			<Dialog
 				abierto={editando !== null}
 				onCerrar={() => setEditando(null)}
-				titulo={editando === "nuevo" ? "Nuevo ${humano(n).toLowerCase()}" : "Editar ${humano(n).toLowerCase()}"}
+				titulo={editando === "nuevo" ? "${o("Nuevo")} ${humano(n).toLowerCase()}" : "Editar ${humano(n).toLowerCase()}"}
 			>
 				{editando !== null && (
 					<${N}Form
