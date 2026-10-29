@@ -19,6 +19,7 @@ import { Route as VerificarEmailRouteImport } from './routes/verificar-email'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedPerfilRouteImport } from './routes/_authenticated/perfil'
 import { Route as AuthenticatedRolesRouteImport } from './routes/_authenticated/roles'
+import { Route as AuthenticatedTagsRouteImport } from './routes/_authenticated/tags'
 import { Route as AuthenticatedUsuariosRouteImport } from './routes/_authenticated/usuarios'
 import { Route as LoginGoogleRouteImport } from './routes/login_.google'
 
@@ -71,6 +72,11 @@ const AuthenticatedRolesRoute = AuthenticatedRolesRouteImport.update({
   path: '/roles',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedTagsRoute = AuthenticatedTagsRouteImport.update({
+  id: '/tags',
+  path: '/tags',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
 const AuthenticatedUsuariosRoute = AuthenticatedUsuariosRouteImport.update({
   id: '/usuarios',
   path: '/usuarios',
@@ -92,6 +98,7 @@ export interface FileRoutesByFullPath {
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/perfil': typeof AuthenticatedPerfilRoute
   '/roles': typeof AuthenticatedRolesRoute
+  '/tags': typeof AuthenticatedTagsRoute
   '/usuarios': typeof AuthenticatedUsuariosRoute
   '/login/google': typeof LoginGoogleRoute
 }
@@ -105,6 +112,7 @@ export interface FileRoutesByTo {
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/perfil': typeof AuthenticatedPerfilRoute
   '/roles': typeof AuthenticatedRolesRoute
+  '/tags': typeof AuthenticatedTagsRoute
   '/usuarios': typeof AuthenticatedUsuariosRoute
   '/login/google': typeof LoginGoogleRoute
 }
@@ -120,6 +128,7 @@ export interface FileRoutesById {
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/perfil': typeof AuthenticatedPerfilRoute
   '/_authenticated/roles': typeof AuthenticatedRolesRoute
+  '/_authenticated/tags': typeof AuthenticatedTagsRoute
   '/_authenticated/usuarios': typeof AuthenticatedUsuariosRoute
   '/login_/google': typeof LoginGoogleRoute
 }
@@ -135,6 +144,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/perfil'
     | '/roles'
+    | '/tags'
     | '/usuarios'
     | '/login/google'
   fileRoutesByTo: FileRoutesByTo
@@ -148,6 +158,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/perfil'
     | '/roles'
+    | '/tags'
     | '/usuarios'
     | '/login/google'
   id:
@@ -162,6 +173,7 @@ export interface FileRouteTypes {
     | '/_authenticated/dashboard'
     | '/_authenticated/perfil'
     | '/_authenticated/roles'
+    | '/_authenticated/tags'
     | '/_authenticated/usuarios'
     | '/login_/google'
   fileRoutesById: FileRoutesById
@@ -249,6 +261,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedRolesRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/tags': {
+      id: '/_authenticated/tags'
+      path: '/tags'
+      fullPath: '/tags'
+      preLoaderRoute: typeof AuthenticatedTagsRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/usuarios': {
       id: '/_authenticated/usuarios'
       path: '/usuarios'
@@ -270,6 +289,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedPerfilRoute: typeof AuthenticatedPerfilRoute
   AuthenticatedRolesRoute: typeof AuthenticatedRolesRoute
+  AuthenticatedTagsRoute: typeof AuthenticatedTagsRoute
   AuthenticatedUsuariosRoute: typeof AuthenticatedUsuariosRoute
 }
 
@@ -277,6 +297,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedPerfilRoute: AuthenticatedPerfilRoute,
   AuthenticatedRolesRoute: AuthenticatedRolesRoute,
+  AuthenticatedTagsRoute: AuthenticatedTagsRoute,
   AuthenticatedUsuariosRoute: AuthenticatedUsuariosRoute,
 }
 

@@ -5,6 +5,14 @@
  */
 import { prisma } from "../src/core/config/prisma";
 
+// Recursos personales: cada usuario solo opera sobre los suyos (lo filtra el repositorio).
+const CRUD_PERSONAL = ["tags"].flatMap((recurso) =>
+	["crear", "leer", "actualizar", "eliminar"].map((accion) => ({
+		recurso,
+		accion,
+	})),
+);
+
 export async function sembrarCatalogo() {
 	console.log("🌱 Iniciando el proceso de seed...");
 
@@ -41,6 +49,7 @@ export async function sembrarCatalogo() {
 		{ recurso: "asignaciones", accion: "leer" },
 		{ recurso: "asignaciones", accion: "actualizar" },
 		{ recurso: "auditoria", accion: "leer" },
+		...CRUD_PERSONAL,
 	];
 
 	for (const p of datosPermisos) {
@@ -63,7 +72,7 @@ export async function sembrarCatalogo() {
 				{ recurso: "usuarios", accion: "leer" },
 				{ recurso: "usuarios", accion: "actualizar" },
 			],
-			USUARIO: [{ recurso: "usuarios", accion: "leer" }],
+			USUARIO: [{ recurso: "usuarios", accion: "leer" }, ...CRUD_PERSONAL],
 		};
 
 	for (const [nombreRol, permisos] of Object.entries(permisosPorRol)) {

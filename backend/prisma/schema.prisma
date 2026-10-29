@@ -37,6 +37,7 @@ model Usuario {
   permisosDirectos UsuarioPermiso[]
   refreshTokens    RefreshToken[]
   tokensCuenta     TokenCuenta[]
+  tags             Tag[]
 
   @@map("usuario")
 }
@@ -193,4 +194,22 @@ model Auditoria {
   @@index([ocurridoEn])
   @@index([evento])
   @@map("auditoria")
+}
+
+// Generado por gen:module: ajustar campos y @map a las convenciones de la tabla.
+/// Tag personal (RN-60): etiqueta las notas y tareas de su dueño.
+model Tag {
+  id        Int       @id @default(autoincrement()) @map("tag_id")
+  usuarioId Int       @map("tag_fkusuario")
+  nombre    String    @map("tag_nombre") @db.VarChar(64)
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime? @updatedAt @map("updated_at")
+  /// Borrado lógico (RN-91). El nombre único por usuario lo valida la aplicación
+  /// ignorando los borrados (Prisma no admite índices únicos parciales).
+  deletedAt DateTime? @map("deleted_at")
+
+  usuario Usuario @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+
+  @@index([usuarioId])
+  @@map("tag")
 }

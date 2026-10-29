@@ -69,6 +69,8 @@ frontend/src/
 │   │   ├── components/             # RolCard, CrearRolForm, PermisosChecklist, AsignacionUsuarioPanel
 │   │   └── pages/                  # RolesPage.tsx
 │   │
+│   ├── tags/                       # Tags personales (generado con gen:module): api/ components/ hooks/ pages/ schemas/
+│   │
 │   └── usuarios/                      # Módulo de Usuarios
 │       ├── api/                    # Llamadas a la API de usuarios (usuariosApi.ts)
 │       ├── components/             # Tablas y tarjetas (UsuariosTable.tsx, PerfilUsuarioCard.tsx)
@@ -89,6 +91,7 @@ frontend/src/
 │       ├── dashboard.tsx           # Vista /dashboard
 │       ├── usuarios.tsx               # Vista /usuarios
 │       ├── roles.tsx               # Vista /roles
+│       ├── tags.tsx                # Vista /tags (tags personales)
 │       └── perfil.tsx              # Vista /perfil
 │
 ├── routeTree.gen.ts                # Árbol de rutas generado automáticamente por TanStack Router

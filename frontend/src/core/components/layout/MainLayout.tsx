@@ -7,6 +7,7 @@ import {
 	ShieldCheck,
 	UserCheck,
 	LogOut,
+	Tag,
 } from "lucide-react";
 import { useAuthStore } from "@/core/auth/store";
 import { SelectorTema } from "./SelectorTema";
@@ -64,6 +65,13 @@ export function MainLayout({ children }: MainLayoutProps) {
 								>
 									<LayoutDashboard className="h-4 w-4" />
 									Dashboard
+								</Link>
+								<Link
+									to="/tags"
+									className="flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-lg text-tinta-suave hover:text-tinta hover:bg-elevada/60 transition-colors [&.active]:bg-indigo-600/10 [&.active]:text-indigo-400 [&.active]:border [&.active]:border-indigo-500/20"
+								>
+									<Tag className="h-4 w-4" />
+									Tags
 								</Link>
 								<Link
 									to="/usuarios"
