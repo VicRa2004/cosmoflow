@@ -111,7 +111,7 @@ pnpm db:seed:demo   # roles, permisos, admin@dev.com / mod@dev.com / usuario@dev
 
 ```bash
 pnpm dev           # corre backend y frontend concurrentemente en paralelo
-pnpm dev:backend   # solo backend con Bun (hot reload)
+pnpm dev:backend   # solo backend con Bun (se reinicia al guardar)
 pnpm dev:frontend  # solo frontend con Vite (puerto 5173)
 ```
 

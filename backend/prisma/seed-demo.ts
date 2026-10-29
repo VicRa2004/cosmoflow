@@ -82,8 +82,12 @@ async function main() {
 
 	console.log(`✅ Usuarios de demo (contraseña para todos: ${PASSWORD})`);
 	console.log("   - admin@dev.com    (ADMIN)   → todos los permisos");
-	console.log("   - mod@dev.com      (MOD)     → crear, leer, actualizar");
-	console.log("   - usuario@dev.com  (USUARIO) → solo leer");
+	console.log(
+		"   - mod@dev.com      (MOD)     → lo suyo + crear, leer y editar usuarios",
+	);
+	console.log(
+		"   - usuario@dev.com  (USUARIO) → lo suyo (tareas, notas, tags, organizaciones)",
+	);
 	console.log(
 		`   - ${usuariosDeEjemplo.length} usuarios de ejemplo (ejemploN@demo.dev)`,
 	);

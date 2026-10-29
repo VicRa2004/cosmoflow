@@ -7,7 +7,7 @@
 	"scripts": {
 		"postinstall": "DATABASE_URL=${DATABASE_URL:-postgresql://cosmoflow:cambia_esta_password@localhost:5433/cosmoflow_db?schema=public} prisma generate",
 		"start": "bun src/index.ts",
-		"dev": "bun --hot src/index.ts",
+		"dev": "bun --watch src/index.ts",
 		"test": "bun test --path-ignore-patterns='**/*.e2e.spec.ts'",
 		"test:coverage": "bun test --coverage --path-ignore-patterns='**/*.e2e.spec.ts'",
 		"test:e2e": "bun scripts/test-e2e.ts",

@@ -76,6 +76,7 @@ export async function sembrarCatalogo() {
 				{ recurso: "usuarios", accion: "crear" },
 				{ recurso: "usuarios", accion: "leer" },
 				{ recurso: "usuarios", accion: "actualizar" },
+				...PERMISOS_PERSONALES,
 			],
 			USUARIO: [
 				{ recurso: "usuarios", accion: "leer" },

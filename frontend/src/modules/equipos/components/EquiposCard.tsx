@@ -106,20 +106,6 @@ export function EquiposCard({
 									</p>
 									<p className="truncate text-xs text-tinta-tenue">
 										{equipo.miembros.length} miembros
-										<Button
-											variant="ghost"
-											size="sm"
-											aria-label={`Tareas de ${equipo.nombre}`}
-											title="Tareas"
-											onClick={() =>
-												navigate({
-													to: "/tareas",
-													search: { organizacionId, equipoId: equipo.id },
-												})
-											}
-										>
-											<ListTodo className="h-4 w-4" />
-										</Button>
 										{equipo.liderId !== null &&
 											` · Líder: ${nombreMiembro.get(equipo.liderId) ?? "—"}`}
 									</p>
@@ -131,6 +117,20 @@ export function EquiposCard({
 										</div>
 									)}
 								</div>
+								<Button
+									variant="ghost"
+									size="sm"
+									aria-label={`Tareas de ${equipo.nombre}`}
+									title="Tareas"
+									onClick={() =>
+										navigate({
+											to: "/tareas",
+											search: { organizacionId, equipoId: equipo.id },
+										})
+									}
+								>
+									<ListTodo className="h-4 w-4" />
+								</Button>
 								{equipo.liderId !== null &&
 									(equipo.liderId === yo || puedeEditar) && (
 										<Button

@@ -35,7 +35,7 @@ pnpm format:fix         # aplica formato
 pnpm ci                 # chequeo tipo CI (falla si hay desvíos)
 pnpm verify             # verificación completa: ci + check:api + typecheck + tests + knip + arquitectura + build (el CI añade migraciones, e2e y Docker)
 pnpm dev                # corre frontend y backend concurrentemente en paralelo
-pnpm dev:backend        # corre el backend con Bun (hot reload)
+pnpm dev:backend        # corre el backend con Bun (se reinicia al guardar; `--watch`, no `--hot`: el WASM de Prisma se corrompe al recargar en caliente)
 pnpm dev:frontend       # corre el frontend con Vite (puerto 5173)
 pnpm build:frontend     # compila el frontend para producción
 pnpm test:backend       # tests del backend con Bun
