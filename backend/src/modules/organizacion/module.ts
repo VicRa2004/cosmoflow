@@ -3,6 +3,11 @@ import type { AppModule } from "@/core/shared/infrastructure/di/AppModule";
 import { TOKENS } from "@/core/shared/infrastructure/di/tokens";
 import { AUTH_TOKENS } from "@/modules/auth";
 import { EmisorInvitaciones } from "./application/services/EmisorInvitaciones";
+import { DelegarAdministracionUseCase } from "./application/useCases/DelegarAdministracionUseCase";
+import { ObtenerMiembrosUseCase } from "./application/useCases/ObtenerMiembrosUseCase";
+import { QuitarMiembroUseCase } from "./application/useCases/QuitarMiembroUseCase";
+import { MiembroController } from "./infrastructure/http/controllers/MiembroController";
+import { MiembroRouter } from "./infrastructure/http/routes/MiembroRouter";
 import { CancelarInvitacionUseCase } from "./application/useCases/CancelarInvitacionUseCase";
 import { ConsultarInvitacionUseCase } from "./application/useCases/ConsultarInvitacionUseCase";
 import { InvitarUseCase } from "./application/useCases/InvitarUseCase";
@@ -32,6 +37,8 @@ export const organizacionModule: AppModule = {
 		const almacenamiento = container.get(TOKENS.Almacenamiento);
 		const authMiddleware = container.get(AUTH_TOKENS.AuthMiddleware);
 		const guard = container.get(TOKENS.PermisoGuard);
+		const uow = container.get(TOKENS.UnitOfWork);
+		const eventBus = container.get(TOKENS.EventBus);
 		const router = new OrganizacionRouter(
 			authMiddleware,
 			guard,
@@ -48,6 +55,19 @@ export const organizacionModule: AppModule = {
 			}),
 		);
 		app.route("/api/organizaciones", router.router);
+
+		app.route(
+			"/api/organizaciones",
+			new MiembroRouter(
+				authMiddleware,
+				guard,
+				new MiembroController({
+					obtenerTodos: new ObtenerMiembrosUseCase(repo),
+					quitar: new QuitarMiembroUseCase(repo, eventBus, uow),
+					delegar: new DelegarAdministracionUseCase(repo, eventBus, uow),
+				}),
+			).router,
+		);
 
 		const invitaciones = new PrismaInvitacionRepository();
 		const emisor = new EmisorInvitaciones(
@@ -74,11 +94,7 @@ export const organizacionModule: AppModule = {
 				guard,
 				new RespuestaInvitacionController({
 					consultar: new ConsultarInvitacionUseCase(invitaciones),
-					responder: new ResponderInvitacionUseCase(
-						repo,
-						invitaciones,
-						container.get(TOKENS.UnitOfWork),
-					),
+					responder: new ResponderInvitacionUseCase(repo, invitaciones, uow),
 				}),
 			).router,
 		);

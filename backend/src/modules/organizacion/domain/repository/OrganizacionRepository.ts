@@ -1,4 +1,5 @@
 import type { Paginacion } from "@/core/shared/domain/Paginacion";
+import type { Miembro } from "../Miembro";
 import type { Organizacion } from "../Organizacion";
 
 export interface OrganizacionFiltros {
@@ -36,6 +37,15 @@ export interface OrganizacionRepository {
 	) => Promise<boolean>;
 	/** No hace nada si ya lo es. */
 	agregarMiembro: (organizacionId: number, usuarioId: number) => Promise<void>;
+	/** Miembros con usuario vivo: el admin primero y luego por nombre. */
+	buscarMiembros: (organizacionId: number) => Promise<Miembro[]>;
+	quitarMiembro: (organizacionId: number, usuarioId: number) => Promise<void>;
+	/** Pasa el puesto de administrador de un miembro a otro (RN-11). */
+	delegarAdministracion: (
+		organizacionId: number,
+		deUsuarioId: number,
+		aUsuarioId: number,
+	) => Promise<void>;
 	/** Borrado lógico (`deletedAt`). */
 	eliminar: (id: number) => Promise<void>;
 }

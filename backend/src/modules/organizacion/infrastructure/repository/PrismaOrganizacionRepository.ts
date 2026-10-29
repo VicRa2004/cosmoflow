@@ -1,5 +1,6 @@
 import { prisma } from "@/core/config/prisma";
 import type { Paginacion } from "@/core/shared/domain/Paginacion";
+import type { Miembro } from "../../domain/Miembro";
 import { Organizacion } from "../../domain/Organizacion";
 import type {
 	OrganizacionDelMiembro,
@@ -126,6 +127,53 @@ export class PrismaOrganizacionRepository implements OrganizacionRepository {
 			update: {},
 			create: { organizacionId, usuarioId },
 		});
+	}
+
+	async buscarMiembros(organizacionId: number): Promise<Miembro[]> {
+		const registros = await prisma.miembroOrganizacion.findMany({
+			where: { organizacionId, usuario: { deletedAt: null } },
+			include: {
+				usuario: { select: { nombre: true, email: true, avatar: true } },
+			},
+			orderBy: [{ isAdmin: "desc" }, { usuario: { nombre: "asc" } }],
+		});
+		return registros.map(({ usuarioId, isAdmin, createdAt, usuario }) => ({
+			usuarioId,
+			isAdmin,
+			createdAt,
+			...usuario,
+		}));
+	}
+
+	async quitarMiembro(
+		organizacionId: number,
+		usuarioId: number,
+	): Promise<void> {
+		await prisma.miembroOrganizacion.delete({
+			where: { organizacionId_usuarioId: { organizacionId, usuarioId } },
+		});
+	}
+
+	async delegarAdministracion(
+		organizacionId: number,
+		deUsuarioId: number,
+		aUsuarioId: number,
+	): Promise<void> {
+		// Las dos filas a la vez: nunca hay dos admins ni ninguno.
+		await prisma.$transaction([
+			prisma.miembroOrganizacion.update({
+				where: {
+					organizacionId_usuarioId: { organizacionId, usuarioId: deUsuarioId },
+				},
+				data: { isAdmin: false },
+			}),
+			prisma.miembroOrganizacion.update({
+				where: {
+					organizacionId_usuarioId: { organizacionId, usuarioId: aUsuarioId },
+				},
+				data: { isAdmin: true },
+			}),
+		]);
 	}
 
 	async eliminar(id: number): Promise<void> {
