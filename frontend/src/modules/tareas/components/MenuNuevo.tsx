@@ -132,10 +132,11 @@ export function MenuNuevo() {
 	const { puede } = usePermisos();
 	const menu = useRef<HTMLDivElement>(null);
 	const cerrar = () => menu.current?.hidePopover();
-	// shortcut: solo 10 organizaciones (por nombre) para no disparar peticiones de equipos y proyectos; ordenar por uso reciente si se queda corto.
+	// shortcut: las 10 organizaciones más recientes, para no disparar peticiones de equipos y proyectos; paginar si se queda corto.
 	const { data: organizaciones } = useOrganizacionesQuery({
 		pagina: 1,
 		limite: 10,
+		orden: "recientes",
 	});
 	const permisos = {
 		tareas: puede("tareas:crear"),

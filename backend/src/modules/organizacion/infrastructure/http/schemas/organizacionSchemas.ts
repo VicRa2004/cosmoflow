@@ -34,6 +34,7 @@ export const obtenerOrganizacionesSchema = z.object({
 	pagina: z.string().regex(/^\d+$/).transform(Number).optional().default(1),
 	limite: z.string().regex(/^\d+$/).transform(Number).optional().default(10),
 	nombre: z.string().trim().min(1).max(128).optional(),
+	orden: z.enum(["nombre", "recientes"]).optional(),
 });
 
 // ── Respuestas (sólo documentación OpenAPI) ──────────────────────────────────

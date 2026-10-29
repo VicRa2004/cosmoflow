@@ -99,6 +99,20 @@ describe("Organizaciones (e2e)", () => {
 		});
 	});
 
+	it("lista por nombre o, con orden=recientes, la última en la que entró primero (beto: Acme y luego Zeta)", async () => {
+		await api("/api/organizaciones", {
+			method: "POST",
+			token: beto,
+			body: { nombre: "Zeta", color: "#6366f1" },
+		});
+		const nombres = async (query: string) =>
+			(
+				await (await api(`/api/organizaciones${query}`, { token: beto })).json()
+			).datos.map((o: { nombre: string }) => o.nombre);
+		expect(await nombres("")).toEqual(["Acme", "Zeta"]);
+		expect(await nombres("?orden=recientes")).toEqual(["Zeta", "Acme"]);
+	});
+
 	it("valida el color y el tamaño del nombre", async () => {
 		const res = await api("/api/organizaciones", {
 			method: "POST",

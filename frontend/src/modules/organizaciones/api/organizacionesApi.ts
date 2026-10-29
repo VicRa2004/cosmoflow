@@ -13,6 +13,8 @@ export interface ObtenerOrganizacionesParams {
 	pagina?: number;
 	limite?: number;
 	nombre?: string;
+	/** `recientes`: en las que entró hace menos primero. Por defecto, por nombre. */
+	orden?: "nombre" | "recientes";
 }
 
 export const organizacionesApi = {

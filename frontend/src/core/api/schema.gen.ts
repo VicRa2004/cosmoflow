@@ -3759,6 +3759,7 @@ export interface paths {
                     pagina?: string;
                     limite?: string;
                     nombre?: string;
+                    orden?: "nombre" | "recientes";
                 };
                 header?: never;
                 path?: never;

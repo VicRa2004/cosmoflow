@@ -35,7 +35,7 @@ export class PrismaOrganizacionRepository implements OrganizacionRepository {
 
 	async buscar(
 		usuarioId: number,
-		{ pagina, limite, nombre }: OrganizacionFiltros,
+		{ pagina, limite, nombre, orden }: OrganizacionFiltros,
 	): Promise<Paginacion<OrganizacionDelMiembro>> {
 		const where = {
 			usuarioId,
@@ -53,7 +53,10 @@ export class PrismaOrganizacionRepository implements OrganizacionRepository {
 				include: { organizacion: true, ...rolesVivos },
 				skip: (pagina - 1) * limite,
 				take: limite,
-				orderBy: { organizacion: { nombre: "asc" } },
+				orderBy:
+					orden === "recientes"
+						? [{ createdAt: "desc" }, { organizacionId: "desc" }]
+						: { organizacion: { nombre: "asc" } },
 			}),
 			prisma.miembroOrganizacion.count({ where }),
 		]);

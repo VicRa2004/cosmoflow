@@ -6,6 +6,8 @@ export interface OrganizacionFiltros {
 	pagina: number;
 	limite: number;
 	nombre?: string;
+	/** `recientes`: en las que entró hace menos primero. Por defecto, por nombre. */
+	orden?: "nombre" | "recientes";
 }
 
 /** Una organización vista por uno de sus miembros. */
