@@ -1,4 +1,4 @@
-import { useNavigate } from "@tanstack/react-router";
+import { useNavigate, useRouter } from "@tanstack/react-router";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/core/api/client";
 import { useAuthStore } from "@/core/auth/store";
@@ -7,8 +7,10 @@ import { Button } from "@/core/components/ui/Button";
 import { authApi } from "../api/authApi";
 import { type LoginInput, loginSchema } from "../schemas/authSchemas";
 
-export function LoginForm() {
+/** `destino`: ruta interna a la que volver tras entrar; sin él, la portada. */
+export function LoginForm({ destino }: { destino?: string }) {
 	const navigate = useNavigate();
+	const router = useRouter();
 	const login = useAuthStore((state) => state.login);
 
 	const form = useAppForm({
@@ -19,7 +21,8 @@ export function LoginForm() {
 				const response = await authApi.login(value);
 				login(response);
 				toast.success(`¡Bienvenido de nuevo, ${response.usuario.nombre}!`);
-				navigate({ to: "/" });
+				if (destino) router.history.push(destino);
+				else navigate({ to: "/" });
 			} catch (error: unknown) {
 				toast.error(getErrorMessage(error));
 			}

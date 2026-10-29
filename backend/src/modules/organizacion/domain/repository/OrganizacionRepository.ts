@@ -29,6 +29,13 @@ export interface OrganizacionRepository {
 	/** Crea la organización con `adminId` como primer miembro y administrador (RN-10, RN-11). */
 	crear: (data: Organizacion, adminId: number) => Promise<Organizacion>;
 	actualizar: (data: Organizacion) => Promise<Organizacion>;
+	/** `true` si el usuario vivo con ese email ya es miembro. */
+	esMiembroPorEmail: (
+		organizacionId: number,
+		email: string,
+	) => Promise<boolean>;
+	/** No hace nada si ya lo es. */
+	agregarMiembro: (organizacionId: number, usuarioId: number) => Promise<void>;
 	/** Borrado lógico (`deletedAt`). */
 	eliminar: (id: number) => Promise<void>;
 }

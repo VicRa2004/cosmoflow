@@ -26,3 +26,7 @@ export const organizacionAFormValues = ({
 	descripcion,
 	color,
 }: OrganizacionDto): OrganizacionFormValues => ({ nombre, descripcion, color });
+
+export const invitarFormSchema = z.object({
+	email: z.email("Email no válido").trim(),
+});

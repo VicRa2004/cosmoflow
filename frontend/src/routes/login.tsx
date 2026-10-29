@@ -2,20 +2,24 @@ import { createFileRoute, Navigate } from "@tanstack/react-router";
 import { z } from "zod";
 import { useAuthStore } from "@/core/auth/store";
 import { LoginPage } from "@/modules/auth/pages/LoginPage";
+import { redirectSchema } from "@/modules/auth/schemas/authSchemas";
 
 export const Route = createFileRoute("/login")({
 	// `?error=google`: el login con Google falló o no está configurado.
-	validateSearch: z.object({ error: z.string().optional().catch(undefined) }),
+	validateSearch: z.object({
+		error: z.string().optional().catch(undefined),
+		redirect: redirectSchema,
+	}),
 	component: LoginRouteComponent,
 });
 
 function LoginRouteComponent() {
 	const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
-	const { error } = Route.useSearch();
+	const { error, redirect } = Route.useSearch();
 
 	if (isAuthenticated) {
 		return <Navigate to="/dashboard" replace />;
 	}
 
-	return <LoginPage errorGoogle={error === "google"} />;
+	return <LoginPage errorGoogle={error === "google"} destino={redirect} />;
 }

@@ -4,7 +4,14 @@ import { BotonGoogle } from "../components/BotonGoogle";
 import { LoginForm } from "../components/LoginForm";
 import { SeparadorO } from "../components/SeparadorO";
 
-export function LoginPage({ errorGoogle }: { errorGoogle: boolean }) {
+export function LoginPage({
+	errorGoogle,
+	destino,
+}: {
+	errorGoogle: boolean;
+	/** Ruta interna a la que volver tras entrar. */
+	destino?: string;
+}) {
 	return (
 		<AuthLayout
 			title="Inicia sesión"
@@ -21,7 +28,7 @@ export function LoginPage({ errorGoogle }: { errorGoogle: boolean }) {
 			)}
 			<BotonGoogle />
 			<SeparadorO />
-			<LoginForm />
+			<LoginForm destino={destino} />
 			<div className="mt-3 text-right text-[13px]">
 				<Link
 					to="/recuperar-password"
@@ -34,6 +41,7 @@ export function LoginPage({ errorGoogle }: { errorGoogle: boolean }) {
 				¿No tienes una cuenta?{" "}
 				<Link
 					to="/registro"
+					search={{ redirect: destino }}
 					className="font-medium text-indigo-400 hover:text-indigo-300 hover:underline"
 				>
 					Regístrate aquí

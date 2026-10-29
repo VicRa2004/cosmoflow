@@ -1,6 +1,19 @@
+import { env } from "@/core/config/env";
 import type { AppModule } from "@/core/shared/infrastructure/di/AppModule";
 import { TOKENS } from "@/core/shared/infrastructure/di/tokens";
 import { AUTH_TOKENS } from "@/modules/auth";
+import { EmisorInvitaciones } from "./application/services/EmisorInvitaciones";
+import { CancelarInvitacionUseCase } from "./application/useCases/CancelarInvitacionUseCase";
+import { ConsultarInvitacionUseCase } from "./application/useCases/ConsultarInvitacionUseCase";
+import { InvitarUseCase } from "./application/useCases/InvitarUseCase";
+import { ObtenerInvitacionesUseCase } from "./application/useCases/ObtenerInvitacionesUseCase";
+import { ReenviarInvitacionUseCase } from "./application/useCases/ReenviarInvitacionUseCase";
+import { ResponderInvitacionUseCase } from "./application/useCases/ResponderInvitacionUseCase";
+import { InvitacionController } from "./infrastructure/http/controllers/InvitacionController";
+import { RespuestaInvitacionController } from "./infrastructure/http/controllers/RespuestaInvitacionController";
+import { InvitacionRouter } from "./infrastructure/http/routes/InvitacionRouter";
+import { RespuestaInvitacionRouter } from "./infrastructure/http/routes/RespuestaInvitacionRouter";
+import { PrismaInvitacionRepository } from "./infrastructure/repository/PrismaInvitacionRepository";
 import { CambiarAvatarOrganizacionUseCase } from "./application/useCases/CambiarAvatarOrganizacionUseCase";
 import { ObtenerAvatarOrganizacionUseCase } from "./application/useCases/ObtenerAvatarOrganizacionUseCase";
 import { AvatarOrganizacionController } from "./infrastructure/http/controllers/AvatarOrganizacionController";
@@ -17,9 +30,11 @@ export const organizacionModule: AppModule = {
 	mount(app, container) {
 		const repo = new PrismaOrganizacionRepository();
 		const almacenamiento = container.get(TOKENS.Almacenamiento);
+		const authMiddleware = container.get(AUTH_TOKENS.AuthMiddleware);
+		const guard = container.get(TOKENS.PermisoGuard);
 		const router = new OrganizacionRouter(
-			container.get(AUTH_TOKENS.AuthMiddleware),
-			container.get(TOKENS.PermisoGuard),
+			authMiddleware,
+			guard,
 			new OrganizacionController({
 				crear: new CrearOrganizacionUseCase(repo),
 				obtenerTodos: new ObtenerOrganizacionesUseCase(repo),
@@ -33,5 +48,39 @@ export const organizacionModule: AppModule = {
 			}),
 		);
 		app.route("/api/organizaciones", router.router);
+
+		const invitaciones = new PrismaInvitacionRepository();
+		const emisor = new EmisorInvitaciones(
+			container.get(TOKENS.Mailer),
+			env.APP_URL,
+		);
+		app.route(
+			"/api/organizaciones",
+			new InvitacionRouter(
+				authMiddleware,
+				guard,
+				new InvitacionController({
+					invitar: new InvitarUseCase(repo, invitaciones, emisor),
+					obtenerTodas: new ObtenerInvitacionesUseCase(repo, invitaciones),
+					reenviar: new ReenviarInvitacionUseCase(repo, invitaciones, emisor),
+					cancelar: new CancelarInvitacionUseCase(repo, invitaciones),
+				}),
+			).router,
+		);
+		app.route(
+			"/api/invitaciones",
+			new RespuestaInvitacionRouter(
+				authMiddleware,
+				guard,
+				new RespuestaInvitacionController({
+					consultar: new ConsultarInvitacionUseCase(invitaciones),
+					responder: new ResponderInvitacionUseCase(
+						repo,
+						invitaciones,
+						container.get(TOKENS.UnitOfWork),
+					),
+				}),
+			).router,
+		);
 	},
 };

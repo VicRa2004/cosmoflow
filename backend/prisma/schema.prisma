@@ -335,7 +335,8 @@ model Organizacion {
   /// Borrado lógico (RN-91)
   deletedAt   DateTime? @map("deleted_at")
 
-  miembros MiembroOrganizacion[]
+  miembros     MiembroOrganizacion[]
+  invitaciones Invitacion[]
 
   @@map("organizacion")
 }
@@ -354,4 +355,32 @@ model MiembroOrganizacion {
   @@id([organizacionId, usuarioId])
   @@index([usuarioId])
   @@map("miembro_organizacion")
+}
+
+enum EstadoInvitacion {
+  pendiente
+  aceptada
+  rechazada
+  cancelada
+
+  @@map("estado_invitacion")
+}
+
+/// Única vía para entrar en una organización (RN-12). Se guarda el hash del token,
+/// nunca el token en claro.
+model Invitacion {
+  id             Int              @id @default(autoincrement()) @map("inv_id")
+  organizacionId Int              @map("inv_fkorganizacion")
+  /// En minúsculas
+  email          String           @map("inv_email") @db.VarChar(128)
+  tokenHash      String           @unique @map("inv_token_hash") @db.VarChar(128)
+  estado         EstadoInvitacion @default(pendiente) @map("inv_estado")
+  expiraEn       DateTime         @map("inv_expira_en")
+  createdAt      DateTime         @default(now()) @map("created_at")
+  updatedAt      DateTime?        @updatedAt @map("updated_at")
+
+  organizacion Organizacion @relation(fields: [organizacionId], references: [id], onDelete: Cascade)
+
+  @@index([organizacionId, estado])
+  @@map("invitacion")
 }

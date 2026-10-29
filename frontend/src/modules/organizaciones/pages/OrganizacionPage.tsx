@@ -14,6 +14,7 @@ import { ConfirmDialog } from "@/core/components/ui/ConfirmDialog";
 import { Spinner } from "@/core/components/ui/Spinner";
 import { AvatarOrganizacion } from "../components/AvatarOrganizacion";
 import { AvatarOrganizacionControles } from "../components/AvatarOrganizacionControles";
+import { InvitacionesCard } from "../components/InvitacionesCard";
 import { OrganizacionForm } from "../components/OrganizacionForm";
 import { useEliminarOrganizacionMutation } from "../hooks/useOrganizacionesMutation";
 import { useOrganizacionQuery } from "../hooks/useOrganizacionesQuery";
@@ -69,6 +70,8 @@ export function OrganizacionPage({ id }: { id: number }) {
 							/>
 						</CardContent>
 					</Card>
+
+					<InvitacionesCard organizacionId={data.id} />
 
 					<Card>
 						<CardHeader>

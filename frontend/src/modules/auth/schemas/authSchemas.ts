@@ -1,5 +1,15 @@
 import { z } from "zod";
 
+/**
+ * `?redirect=` de login y registro: a dónde volver tras entrar (p. ej. el enlace de
+ * una invitación). Solo rutas internas: `//otro.com` llevaría fuera de la app.
+ */
+export const redirectSchema = z
+	.string()
+	.regex(/^\/(?!\/)/)
+	.optional()
+	.catch(undefined);
+
 export const passwordSchema = z
 	.string()
 	.min(12, "La contraseña debe tener al menos 12 caracteres")

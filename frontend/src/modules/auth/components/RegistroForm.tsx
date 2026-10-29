@@ -1,4 +1,4 @@
-import { useNavigate } from "@tanstack/react-router";
+import { useNavigate, useRouter } from "@tanstack/react-router";
 import { UserPlus } from "lucide-react";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/core/api/client";
@@ -7,8 +7,10 @@ import { useAppForm } from "@/core/components/form/useAppForm";
 import { authApi } from "../api/authApi";
 import { type RegistroInput, registroSchema } from "../schemas/authSchemas";
 
-export function RegistroForm() {
+/** `destino`: ruta interna a la que volver tras entrar; sin él, la portada. */
+export function RegistroForm({ destino }: { destino?: string }) {
 	const navigate = useNavigate();
+	const router = useRouter();
 	const login = useAuthStore((state) => state.login);
 
 	const form = useAppForm({
@@ -21,7 +23,8 @@ export function RegistroForm() {
 				toast.success(
 					`¡Cuenta creada con éxito! Bienvenido, ${response.usuario.nombre}`,
 				);
-				navigate({ to: "/" });
+				if (destino) router.history.push(destino);
+				else navigate({ to: "/" });
 			} catch (error: unknown) {
 				toast.error(getErrorMessage(error));
 			}

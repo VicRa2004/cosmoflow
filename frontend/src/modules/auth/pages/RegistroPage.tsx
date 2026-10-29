@@ -4,7 +4,7 @@ import { BotonGoogle } from "../components/BotonGoogle";
 import { RegistroForm } from "../components/RegistroForm";
 import { SeparadorO } from "../components/SeparadorO";
 
-export function RegistroPage() {
+export function RegistroPage({ destino }: { destino?: string }) {
 	return (
 		<AuthLayout
 			title="Crea tu cuenta"
@@ -12,11 +12,12 @@ export function RegistroPage() {
 		>
 			<BotonGoogle />
 			<SeparadorO />
-			<RegistroForm />
+			<RegistroForm destino={destino} />
 			<div className="mt-6 text-center text-xs text-tinta-tenue">
 				¿Ya tienes una cuenta?{" "}
 				<Link
 					to="/login"
+					search={{ redirect: destino }}
 					className="font-medium text-indigo-400 hover:text-indigo-300 hover:underline"
 				>
 					Inicia sesión

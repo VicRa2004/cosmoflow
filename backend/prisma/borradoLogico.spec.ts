@@ -19,6 +19,7 @@ const EXENTOS: Record<string, string> = {
 	EventoOutbox: "técnica",
 	Auditoria: "registro histórico, nunca se borra",
 	Adjunto: "inmutable y sin endpoint de borrado",
+	Invitacion: "cancelarla cambia su estado; nunca se borra",
 	// Catálogo global de la plantilla; los roles por organización (Fase 2) sí lo llevarán.
 	Rol: "catálogo global de la plantilla",
 	Permiso: "catálogo global de la plantilla",

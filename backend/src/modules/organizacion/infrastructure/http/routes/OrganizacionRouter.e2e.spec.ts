@@ -1,17 +1,26 @@
-import { beforeAll, describe, expect, it } from "bun:test";
+import { beforeAll, describe, expect, it, spyOn } from "bun:test";
 import { prisma } from "@/core/config/prisma";
+import type { Correo } from "@/core/shared/domain/Mailer";
+import { container } from "@/core/shared/infrastructure/di/container";
+import { TOKENS } from "@/core/shared/infrastructure/di/tokens";
 import { api, crearUsuario, login, vaciarUsuarios } from "@/test/e2e";
+
+const correos: Correo[] = [];
+spyOn(container.get(TOKENS.Mailer), "enviar").mockImplementation(
+	async (correo) => {
+		correos.push(correo);
+	},
+);
 
 describe("Organizaciones (e2e)", () => {
 	let ana: string;
 	let beto: string;
-	let betoId: number;
 	let orgId: number;
 
 	beforeAll(async () => {
 		await vaciarUsuarios();
 		await crearUsuario("ana@org.dev", "USUARIO");
-		betoId = (await crearUsuario("beto@org.dev", "USUARIO")).id;
+		await crearUsuario("beto@org.dev", "USUARIO");
 		ana = await login("ana@org.dev");
 		beto = await login("beto@org.dev");
 
@@ -52,9 +61,16 @@ describe("Organizaciones (e2e)", () => {
 	});
 
 	it("un miembro la ve pero solo el administrador la personaliza (403)", async () => {
-		// shortcut: alta directa en BD hasta que existan las invitaciones (paso 2).
-		await prisma.miembroOrganizacion.create({
-			data: { organizacionId: orgId, usuarioId: betoId },
+		await api(`/api/organizaciones/${orgId}/invitaciones`, {
+			method: "POST",
+			token: ana,
+			body: { email: "beto@org.dev" },
+		});
+		const token = correos.at(-1)?.texto.match(/token=([a-f0-9]{64})/)?.[1];
+		await api("/api/invitaciones/aceptar", {
+			method: "POST",
+			token: beto,
+			body: { token },
 		});
 		const url = `/api/organizaciones/${orgId}`;
 

@@ -101,6 +101,33 @@ export class PrismaOrganizacionRepository implements OrganizacionRepository {
 		return this.toDomain(registro);
 	}
 
+	async esMiembroPorEmail(
+		organizacionId: number,
+		email: string,
+	): Promise<boolean> {
+		const miembro = await prisma.miembroOrganizacion.findFirst({
+			where: {
+				organizacionId,
+				usuario: {
+					email: { equals: email, mode: "insensitive" },
+					deletedAt: null,
+				},
+			},
+		});
+		return miembro !== null;
+	}
+
+	async agregarMiembro(
+		organizacionId: number,
+		usuarioId: number,
+	): Promise<void> {
+		await prisma.miembroOrganizacion.upsert({
+			where: { organizacionId_usuarioId: { organizacionId, usuarioId } },
+			update: {},
+			create: { organizacionId, usuarioId },
+		});
+	}
+
 	async eliminar(id: number): Promise<void> {
 		await prisma.organizacion.update({
 			where: { id },
