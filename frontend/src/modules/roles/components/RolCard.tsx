@@ -74,10 +74,9 @@ export function RolCard({ rol, permisos }: RolCardProps) {
 			<div className="flex justify-between gap-2">
 				{puede("roles:eliminar") ? (
 					<Button
-						variant="ghost"
+						variant="dangerGhost"
 						onClick={() => setConfirmando(true)}
 						isLoading={eliminar.isPending}
-						className="text-rose-400 hover:bg-rose-950 hover:text-rose-300"
 					>
 						<Trash2 className="h-4 w-4" />
 						Eliminar

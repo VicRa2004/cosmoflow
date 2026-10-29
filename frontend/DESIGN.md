@@ -243,6 +243,7 @@ Discretos y precisos; el índigo se gana su sitio.
 - **Primary:** relleno índigo de marca, texto blanco. Una acción primaria por zona, a la derecha del encabezado o al final del formulario.
 - **Secondary / Outline / Ghost:** relleno elevada; borde y superficie; transparente con tinta suave. El ghost se usa para iconos de barra y acciones de fila.
 - **Danger:** relleno rose sólido, solo para confirmar dentro de `ConfirmDialog`.
+- **DangerGhost:** transparente con texto rose y fondo rose tenue al pasar. Es el único estilo para iniciar un borrado (papeleras de fila, «Eliminar» rol, «Quitar avatar», «Cerrar todas las sesiones»).
 - **Hover / Focus:** transición de color; foco con el anillo índigo global. Deshabilitado al 50% de opacidad; cargando muestra el spinner y bloquea.
 
 ### Inputs / Fields
@@ -273,9 +274,9 @@ Círculo de 32px. Sin foto, la inicial en 12px semibold tinta suave sobre elevad
 Caja lg con borde discontinuo fuerte, icono de 32px en tinta tenue, título de 14px semibold, descripción y una acción opcional para salir del vacío.
 
 ### Named Rules
-**The Quiet Row Rule.** Las acciones de fila se revelan al pasar o enfocar la fila y quedan siempre visibles en dispositivos sin hover.
+**The Quiet Row Rule.** Las acciones de fila van dentro de `AccionesFila` (`Table.tsx`): se revelan al pasar o enfocar la fila y quedan siempre visibles en dispositivos sin hover.
 
-**The Distant Danger Rule.** Las acciones destructivas en reposo son texto rose sobre un botón neutro (outline o ghost), apartadas de la primaria (a la izquierda cuando comparten barra). El rose sólido solo aparece al confirmar.
+**The Distant Danger Rule.** Las acciones destructivas en reposo usan `variant="dangerGhost"`, apartadas de la primaria (a la izquierda cuando comparten barra). El rose sólido solo aparece al confirmar.
 
 ## Do's and Don'ts
 
@@ -287,7 +288,7 @@ Caja lg con borde discontinuo fuerte, icono de 32px en tinta tenue, título de 1
 - **Do** abrir cada página con `EncabezadoPagina`: título de 20px semibold, descripción y acciones a la derecha.
 - **Do** declarar cada sección en `navegacion.ts` con su permiso y ocultar con `usePermisos` lo que no se puede usar.
 - **Do** revelar las acciones de fila al pasar o enfocar, siempre visibles en táctil.
-- **Do** dejar las destructivas en rose sobre botón neutro y lejos de la primaria; rose sólido solo al confirmar.
+- **Do** iniciar todo borrado con `dangerGhost`, lejos de la primaria; rose sólido (`danger`) solo al confirmar.
 
 ### Don't:
 - **Don't** usar `zinc-*`, `slate-*`, `text-white` o `bg-black` para neutros.

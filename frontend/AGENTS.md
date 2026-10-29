@@ -152,6 +152,7 @@ Viven en `frontend/.agents/skills/` (TanStack Query/Router/Form/Table, Tailwind 
 - **Acentos** (`indigo`, `rose`, `amber`, `emerald`) se escriben pensando en el tema oscuro (texto `-300/-400`, fondos `-950/x`); en claro `index.css` invierte esos tonos para mantener el contraste. Si usas otro tono o color, compruébalo en los dos temas.
 - **Tema:** `data-tema="claro|oscuro"` en `<html>`. El script de `index.html` lo pone antes de pintar y `core/tema.ts` (`useTema`, `cambiarTema`) lo cambia y lo guarda; «sistema» sigue a `prefers-color-scheme`. La variante `dark:` de Tailwind responde a ese atributo.
 - **Primitivas en vez de HTML suelto:** `Dialog` (`<dialog>` nativo: foco, Esc y fondo inerte) y `ConfirmDialog` en lugar de `window.confirm`; `Tabla` recibe una lista o directamente la página del backend (`{ datos, pagina, totalPaginas, totalElementos }`) y muestra carga, error, vacío (`EmptyState`) y `Paginacion`; `Select` y `Checkbox` nativos con etiqueta y error.
+- **Acciones de fila y borrados:** las acciones de una fila van en `AccionesFila` (de `Table.tsx`; aparecen con hover/foco, siempre en táctil). Todo botón que inicia un borrado usa `variant="dangerGhost"`; `danger` (rose sólido) solo confirma en `ConfirmDialog`.
 
 ### 5. Layout, navegación y permisos
 - **Shell:** `MainLayout` = `Sidebar` (colapsable a iconos en escritorio, se recuerda en `localStorage`; cajón `<dialog>` en móvil) + `Navbar` (migas grupo › sección, `SelectorTema` y `MenuUsuario` con perfil y cerrar sesión, un `popover` nativo).

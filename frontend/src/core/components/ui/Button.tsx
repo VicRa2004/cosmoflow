@@ -3,7 +3,14 @@ import { cn } from "@/core/utils/cn";
 import { Spinner } from "./Spinner";
 
 export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
-	variant?: "primary" | "secondary" | "outline" | "danger" | "ghost";
+	/** `danger` solo confirma un borrado (ConfirmDialog); para iniciarlo, `dangerGhost`. */
+	variant?:
+		| "primary"
+		| "secondary"
+		| "outline"
+		| "danger"
+		| "dangerGhost"
+		| "ghost";
 	size?: "sm" | "md" | "lg";
 	isLoading?: boolean;
 }
@@ -30,6 +37,8 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
 			secondary: "bg-elevada text-tinta hover:bg-borde",
 			outline: "border border-borde bg-superficie text-tinta hover:bg-elevada",
 			danger: "bg-rose-600 text-white hover:bg-rose-700",
+			dangerGhost:
+				"bg-transparent text-rose-400 hover:bg-rose-950 hover:text-rose-300",
 			ghost:
 				"bg-transparent text-tinta-suave hover:bg-elevada hover:text-tinta",
 		};

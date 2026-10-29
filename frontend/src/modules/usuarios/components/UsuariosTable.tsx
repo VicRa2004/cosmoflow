@@ -4,7 +4,12 @@ import { Avatar } from "@/core/components/ui/Avatar";
 import { Badge } from "@/core/components/ui/Badge";
 import { Button } from "@/core/components/ui/Button";
 import { EmptyState } from "@/core/components/ui/EmptyState";
-import { type Columna, type Pagina, Tabla } from "@/core/components/ui/Table";
+import {
+	AccionesFila,
+	type Columna,
+	type Pagina,
+	Tabla,
+} from "@/core/components/ui/Table";
 
 interface UsuariosTableProps {
 	pagina?: Pagina<Usuario>;
@@ -69,16 +74,16 @@ export function UsuariosTable({
 						cabecera: <span className="sr-only">Acciones</span>,
 						className: "text-right",
 						celda: (u: Usuario) => (
-							<Button
-								variant="ghost"
-								size="sm"
-								onClick={() => onGestionarPermisos(u)}
-								// Aparece con la fila (hover o foco); en táctil siempre visible.
-								className="opacity-0 group-focus-within/fila:opacity-100 group-hover/fila:opacity-100 focus-visible:opacity-100 [@media(hover:none)]:opacity-100"
-							>
-								<KeyRound className="h-3.5 w-3.5" />
-								Permisos
-							</Button>
+							<AccionesFila>
+								<Button
+									variant="ghost"
+									size="sm"
+									onClick={() => onGestionarPermisos(u)}
+								>
+									<KeyRound className="h-3.5 w-3.5" />
+									Permisos
+								</Button>
+							</AccionesFila>
 						),
 					},
 				]

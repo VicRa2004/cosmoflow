@@ -414,7 +414,7 @@ ${campos.map(jsxCampo).join("\n")}
 
 	[`components/${Ns}Table.tsx`]: `import { Pencil, Trash2 } from "lucide-react";
 ${usaBadge ? `import { Badge } from "@/core/components/ui/Badge";\n` : ""}import { Button } from "@/core/components/ui/Button";
-import { type Columna, type Pagina, Tabla } from "@/core/components/ui/Table";
+import { AccionesFila, type Columna, type Pagina, Tabla } from "@/core/components/ui/Table";
 import type { ${N}Dto } from "../api/${ns}Api";
 
 interface ${Ns}TableProps {
@@ -440,14 +440,14 @@ ${columnas.join("\n")}
 			cabecera: <span className="sr-only">Acciones</span>,
 			className: "text-right",
 			celda: (fila) => (
-				<div className="flex justify-end gap-1">
+				<AccionesFila>
 					<Button variant="ghost" size="sm" onClick={() => onEditar(fila)} aria-label="Editar">
 						<Pencil className="h-4 w-4" />
 					</Button>
-					<Button variant="ghost" size="sm" onClick={() => onEliminar(fila)} aria-label="Eliminar">
-						<Trash2 className="h-4 w-4 text-rose-400" />
+					<Button variant="dangerGhost" size="sm" onClick={() => onEliminar(fila)} aria-label="Eliminar">
+						<Trash2 className="h-4 w-4" />
 					</Button>
-				</div>
+				</AccionesFila>
 			),
 		},
 	];

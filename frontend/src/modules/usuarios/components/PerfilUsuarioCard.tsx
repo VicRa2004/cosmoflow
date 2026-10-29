@@ -76,7 +76,7 @@ export function PerfilUsuarioCard() {
 						</Button>
 						{usuario.avatarUrl && (
 							<Button
-								variant="ghost"
+								variant="dangerGhost"
 								size="sm"
 								aria-label="Quitar avatar"
 								onClick={() => avatar.mutate(null)}

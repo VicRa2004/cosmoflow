@@ -1,6 +1,11 @@
 import { Pencil, Trash2 } from "lucide-react";
 import { Button } from "@/core/components/ui/Button";
-import { type Columna, type Pagina, Tabla } from "@/core/components/ui/Table";
+import {
+	AccionesFila,
+	type Columna,
+	type Pagina,
+	Tabla,
+} from "@/core/components/ui/Table";
 import { Badge, type BadgeProps } from "@/core/components/ui/Badge";
 import type { EstadoTarea, TareaDto } from "../api/tareasApi";
 import { ETIQUETAS_ESTADO, ETIQUETAS_PRIORIDAD } from "../schemas/tareaSchemas";
@@ -61,7 +66,7 @@ export function TareasTable({
 			cabecera: <span className="sr-only">Acciones</span>,
 			className: "text-right",
 			celda: (fila) => (
-				<div className="flex justify-end gap-1">
+				<AccionesFila>
 					<Button
 						variant="ghost"
 						size="sm"
@@ -71,14 +76,14 @@ export function TareasTable({
 						<Pencil className="h-4 w-4" />
 					</Button>
 					<Button
-						variant="ghost"
+						variant="dangerGhost"
 						size="sm"
 						onClick={() => onEliminar(fila)}
 						aria-label="Eliminar"
 					>
-						<Trash2 className="h-4 w-4 text-rose-400" />
+						<Trash2 className="h-4 w-4" />
 					</Button>
-				</div>
+				</AccionesFila>
 			),
 		},
 	];

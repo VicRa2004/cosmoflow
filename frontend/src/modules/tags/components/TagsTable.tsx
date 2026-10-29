@@ -1,6 +1,11 @@
 import { Pencil, Trash2 } from "lucide-react";
 import { Button } from "@/core/components/ui/Button";
-import { type Columna, type Pagina, Tabla } from "@/core/components/ui/Table";
+import {
+	AccionesFila,
+	type Columna,
+	type Pagina,
+	Tabla,
+} from "@/core/components/ui/Table";
 import type { TagDto } from "../api/tagsApi";
 
 interface TagsTableProps {
@@ -34,7 +39,7 @@ export function TagsTable({
 			cabecera: <span className="sr-only">Acciones</span>,
 			className: "text-right",
 			celda: (fila) => (
-				<div className="flex justify-end gap-1">
+				<AccionesFila>
 					<Button
 						variant="ghost"
 						size="sm"
@@ -44,14 +49,14 @@ export function TagsTable({
 						<Pencil className="h-4 w-4" />
 					</Button>
 					<Button
-						variant="ghost"
+						variant="dangerGhost"
 						size="sm"
 						onClick={() => onEliminar(fila)}
 						aria-label="Eliminar"
 					>
-						<Trash2 className="h-4 w-4 text-rose-400" />
+						<Trash2 className="h-4 w-4" />
 					</Button>
-				</div>
+				</AccionesFila>
 			),
 		},
 	];

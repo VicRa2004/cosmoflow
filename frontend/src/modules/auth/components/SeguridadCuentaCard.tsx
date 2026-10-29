@@ -52,10 +52,9 @@ export function SeguridadCuentaCard() {
 					¿Has perdido un dispositivo? Cierra la sesión en todos, incluido este.
 				</CardDescription>
 				<Button
-					variant="outline"
+					variant="dangerGhost"
 					size="sm"
 					onClick={() => setConfirmando(true)}
-					className="text-rose-400 hover:text-rose-300"
 					isLoading={cerrarSesiones.isPending}
 				>
 					<LogOut className="h-4 w-4" />

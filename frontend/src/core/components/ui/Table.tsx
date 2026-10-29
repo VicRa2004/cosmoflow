@@ -117,6 +117,18 @@ export function Tabla<T>({
 	);
 }
 
+/**
+ * Acciones de una fila: aparecen al pasar el ratón o al enfocar la fila;
+ * en pantallas táctiles (sin hover) siempre visibles.
+ */
+export function AccionesFila({ children }: { children: ReactNode }) {
+	return (
+		<div className="flex justify-end gap-1 opacity-0 group-focus-within/fila:opacity-100 group-hover/fila:opacity-100 [@media(hover:none)]:opacity-100">
+			{children}
+		</div>
+	);
+}
+
 export function Paginacion({
 	pagina,
 	totalPaginas,
