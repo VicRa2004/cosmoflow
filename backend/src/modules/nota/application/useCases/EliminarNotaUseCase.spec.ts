@@ -1,35 +1,40 @@
 import { describe, expect, it, mock } from "bun:test";
-import { EliminarNotaUseCase } from "./EliminarNotaUseCase";
-import { Nota } from "../../domain/Nota";
 import { NotaNoEncontradaError } from "../../domain/error/NotaNoEncontradaError";
+import { Nota } from "../../domain/Nota";
+import { ProyectosNota } from "../services/ProyectosNota";
+import { EliminarNotaUseCase } from "./EliminarNotaUseCase";
+
+const preparar = (nota: Nota | null) => {
+	const repo = {
+		buscarPorId: mock(async () => nota),
+		eliminar: mock(async () => {}),
+	};
+	return {
+		repo,
+		useCase: new EliminarNotaUseCase(
+			repo as never,
+			new ProyectosNota(repo as never, { contexto: mock(async () => null) }),
+		),
+	};
+};
 
 describe("EliminarNotaUseCase", () => {
 	it("debería borrar si existe", async () => {
-		const repo = {
-			buscarPorId: mock(async () =>
-				Nota.reconstituir(
-					1,
-					7,
-					{ titulo: "Ejemplo", contenido: "", tagIds: [] },
-					new Date(),
-				),
+		const { useCase, repo } = preparar(
+			Nota.reconstituir(
+				3,
+				7,
+				{ titulo: "x", contenido: "", tagIds: [] },
+				new Date(),
 			),
-			eliminar: mock(async () => {}),
-		};
-		const useCase = new EliminarNotaUseCase(repo as never);
-
-		await useCase.ejecutar(7, 1);
-
-		expect(repo.eliminar).toHaveBeenCalledWith(1);
+		);
+		await useCase.ejecutar(7, 3);
+		expect(repo.eliminar).toHaveBeenCalledWith(3);
 	});
 
 	it("debería lanzar NotaNoEncontradaError si no existe", async () => {
-		const repo = { buscarPorId: mock(async () => null), eliminar: mock() };
-		const useCase = new EliminarNotaUseCase(repo as never);
-
-		await expect(useCase.ejecutar(7, 999)).rejects.toThrow(
-			NotaNoEncontradaError,
-		);
+		const { useCase, repo } = preparar(null);
+		await expect(useCase.ejecutar(7, 3)).rejects.toThrow(NotaNoEncontradaError);
 		expect(repo.eliminar).not.toHaveBeenCalled();
 	});
 });

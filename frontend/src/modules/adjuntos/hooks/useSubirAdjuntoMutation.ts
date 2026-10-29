@@ -1,11 +1,12 @@
 import { useMutation } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/core/api/client";
-import { adjuntosApi } from "../api/adjuntosApi";
+import { type AmbitoAdjunto, adjuntosApi } from "../api/adjuntosApi";
 
-export function useSubirAdjuntoMutation() {
+/** Con `ambito`, la imagen la ven también los miembros de ese equipo o proyecto. */
+export function useSubirAdjuntoMutation(ambito?: AmbitoAdjunto) {
 	return useMutation({
-		mutationFn: adjuntosApi.subir,
+		mutationFn: (archivo: File) => adjuntosApi.subir(archivo, ambito),
 		onError: (error) => toast.error(getErrorMessage(error)),
 	});
 }

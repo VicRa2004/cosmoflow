@@ -1,6 +1,16 @@
 import { z } from "zod";
 import type { NotaDto } from "../api/notasApi";
 
+const idSearch = z.coerce.number().int().positive().optional().catch(undefined);
+
+/** `?organizacionId=&proyectoId=`: notas de ese proyecto (lista y alta). */
+export const contextoNotaSearch = z.object({
+	organizacionId: idSearch,
+	proyectoId: idSearch,
+});
+
+export type ContextoNotaSearch = z.infer<typeof contextoNotaSearch>;
+
 /** Valida lo que se escribe en el formulario y lo convierte al cuerpo de la API. */
 export const notaFormSchema = z.object({
 	titulo: z.string().trim().min(1, "Obligatorio").max(255, "Máximo 255"),

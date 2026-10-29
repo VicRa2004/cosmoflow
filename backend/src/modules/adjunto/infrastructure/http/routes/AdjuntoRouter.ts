@@ -9,7 +9,11 @@ import type { PermisoGuard } from "@/core/shared/infrastructure/http/permisoGuar
 import type { AuthMiddleware } from "@/modules/auth";
 import { ADJUNTO_MAX_BYTES } from "../../../application/useCases/SubirAdjuntoUseCase";
 import type { AdjuntoController } from "../controllers/AdjuntoController";
-import { adjuntoDtoSchema, adjuntoIdSchema } from "../schemas/adjuntoSchemas";
+import {
+	adjuntoDtoSchema,
+	adjuntoIdSchema,
+	ambitoAdjuntoQuerySchema,
+} from "../schemas/adjuntoSchemas";
 
 const tags = ["Adjuntos"];
 const security = [{ bearerAuth: [] }];
@@ -31,8 +35,10 @@ export class AdjuntoRouter {
 			path: "/",
 			tags,
 			security,
-			summary: "Subir una imagen (multipart, campo «archivo», máx. 5 MB)",
+			summary:
+				"Subir una imagen (multipart, campo «archivo», máx. 5 MB); con equipoId o proyectoId la ven sus miembros",
 			request: {
+				query: ambitoAdjuntoQuerySchema,
 				body: {
 					required: true,
 					content: {
@@ -48,6 +54,7 @@ export class AdjuntoRouter {
 				201: jsonResponse(adjuntoDtoSchema, "Imagen guardada"),
 				400: errorResponse("Archivo ausente o no es PNG, JPEG ni WebP"),
 				...protectedErrorResponses(`${recurso}:crear`),
+				404: errorResponse("Equipo o proyecto no encontrado"),
 				413: errorResponse("El archivo supera los 5 MB"),
 			},
 		});
@@ -67,7 +74,8 @@ export class AdjuntoRouter {
 			path: "/{id}",
 			tags,
 			security,
-			summary: "Imagen de un adjunto propio",
+			summary:
+				"Imagen de un adjunto propio o compartido con un equipo o proyecto del que se es miembro",
 			request: { params: adjuntoIdSchema },
 			responses: {
 				200: {
@@ -77,7 +85,7 @@ export class AdjuntoRouter {
 					},
 				},
 				...protectedErrorResponses(`${recurso}:leer`),
-				404: errorResponse("El adjunto no existe o es de otro usuario"),
+				404: errorResponse("El adjunto no existe o no se puede ver"),
 			},
 		});
 		this.router.get("/:id", guard.handle(recurso, "leer"), controller.obtener);

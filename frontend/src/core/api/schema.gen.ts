@@ -3262,7 +3262,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Listar notas (paginado) */
+        /** Listar notas personales, o las de un proyecto con ?proyectoId */
         get: {
             parameters: {
                 query?: {
@@ -3270,6 +3270,7 @@ export interface paths {
                     limite?: string;
                     busqueda?: string;
                     tagId?: string;
+                    proyectoId?: string;
                 };
                 header?: never;
                 path?: never;
@@ -3321,10 +3322,19 @@ export interface paths {
                         "application/json": components["schemas"]["ErrorResponse"];
                     };
                 };
+                /** @description Proyecto no encontrado */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
             };
         };
         put?: never;
-        /** Crear nota */
+        /** Crear nota personal o de un proyecto (RN-33, 50) */
         post: {
             parameters: {
                 query?: never;
@@ -3338,6 +3348,7 @@ export interface paths {
                         titulo: string;
                         contenido?: string;
                         tagIds?: number[];
+                        proyectoId?: number;
                     };
                 };
             };
@@ -3371,6 +3382,15 @@ export interface paths {
                 };
                 /** @description Permiso denegado (requiere notas:crear) */
                 403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Proyecto no encontrado */
+                404: {
                     headers: {
                         [name: string]: unknown;
                     };
@@ -3573,10 +3593,13 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Subir una imagen (multipart, campo «archivo», máx. 5 MB) */
+        /** Subir una imagen (multipart, campo «archivo», máx. 5 MB); con equipoId o proyectoId la ven sus miembros */
         post: {
             parameters: {
-                query?: never;
+                query?: {
+                    equipoId?: string;
+                    proyectoId?: string;
+                };
                 header?: never;
                 path?: never;
                 cookie?: never;
@@ -3626,6 +3649,15 @@ export interface paths {
                         "application/json": components["schemas"]["ErrorResponse"];
                     };
                 };
+                /** @description Equipo o proyecto no encontrado */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
                 /** @description El archivo supera los 5 MB */
                 413: {
                     headers: {
@@ -3650,7 +3682,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Imagen de un adjunto propio */
+        /** Imagen de un adjunto propio o compartido con un equipo o proyecto del que se es miembro */
         get: {
             parameters: {
                 query?: never;
@@ -3689,7 +3721,7 @@ export interface paths {
                         "application/json": components["schemas"]["ErrorResponse"];
                     };
                 };
-                /** @description El adjunto no existe o es de otro usuario */
+                /** @description El adjunto no existe o no se puede ver */
                 404: {
                     headers: {
                         [name: string]: unknown;
@@ -6289,6 +6321,8 @@ export interface components {
              */
             contenido: string;
             tagIds: number[];
+            organizacionId: number | null;
+            proyectoId: number | null;
             /**
              * Format: date-time
              * @example 2026-10-28T10:00:00Z

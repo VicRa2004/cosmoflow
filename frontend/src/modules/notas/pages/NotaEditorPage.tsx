@@ -2,9 +2,16 @@ import { useCanGoBack, useNavigate, useRouter } from "@tanstack/react-router";
 import { Spinner } from "@/core/components/ui/Spinner";
 import { NotaForm } from "../components/NotaForm";
 import { useNotaQuery } from "../hooks/useNotasQuery";
+import type { ContextoNotaSearch } from "../schemas/notaSchemas";
 
-/** Alta (sin `id`) o edición de una nota a página completa. */
-export function NotaEditorPage({ id }: { id?: number }) {
+/** Alta (sin `id`, en `contexto` si viene) o edición de una nota a página completa. */
+export function NotaEditorPage({
+	id,
+	contexto,
+}: {
+	id?: number;
+	contexto?: ContextoNotaSearch;
+}) {
 	const router = useRouter();
 	const navigate = useNavigate();
 	const puedeVolver = useCanGoBack();
@@ -25,6 +32,7 @@ export function NotaEditorPage({ id }: { id?: number }) {
 		<NotaForm
 			key={id ?? "nueva"}
 			inicial={data}
+			contexto={contexto}
 			onGuardado={volver}
 			onVolver={volver}
 		/>

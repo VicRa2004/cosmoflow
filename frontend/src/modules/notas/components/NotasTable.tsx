@@ -64,7 +64,9 @@ export function NotasTable({
 		},
 		{
 			cabecera: "Tags",
-			celda: (fila) => <TagsBadges tagIds={fila.tagIds} />,
+			celda: (fila) => (
+				<TagsBadges tagIds={fila.tagIds} organizacionId={fila.organizacionId} />
+			),
 		},
 		{
 			cabecera: "Editada",

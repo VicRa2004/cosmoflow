@@ -3,13 +3,15 @@ import "@milkdown/crepe/theme/common/style.css";
 import { useEffect, useRef } from "react";
 import { useFieldContext } from "@/core/components/form/contextos";
 import { cn } from "@/core/utils/cn";
-import { adjuntosApi } from "../api/adjuntosApi";
+import { type AmbitoAdjunto, adjuntosApi } from "../api/adjuntosApi";
 import { useSubirAdjuntoMutation } from "../hooks/useSubirAdjuntoMutation";
 
 interface EditorMarkdownProps {
 	label: string;
 	placeholder?: string;
 	className?: string;
+	/** En una tarea o nota compartida: las imágenes se comparten con sus miembros. */
+	ambito?: AmbitoAdjunto;
 }
 
 /**
@@ -21,10 +23,11 @@ export function EditorMarkdown({
 	label,
 	placeholder,
 	className,
+	ambito,
 }: EditorMarkdownProps) {
 	const campo = useFieldContext<string>();
 	const raiz = useRef<HTMLFieldSetElement>(null);
-	const subir = useSubirAdjuntoMutation();
+	const subir = useSubirAdjuntoMutation(ambito);
 	// Crepe guarda los callbacks al crearse: los refs le dan siempre los actuales.
 	const subirRef = useRef(subir.mutateAsync);
 	subirRef.current = subir.mutateAsync;

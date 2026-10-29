@@ -3,6 +3,7 @@ import type { Paginacion } from "@/core/shared/domain/Paginacion";
 import type { Prisma } from "@/generated/prisma/client";
 import { Nota } from "../../domain/Nota";
 import type {
+	AmbitoNotas,
 	NotaFiltros,
 	NotaRepository,
 } from "../../domain/repository/NotaRepository";
@@ -25,15 +26,21 @@ export class PrismaNotaRepository implements NotaRepository {
 				tagIds: raw.tags.map((t) => t.tagId),
 			},
 			raw.updatedAt,
+			raw.organizacionId && raw.proyectoId
+				? { organizacionId: raw.organizacionId, proyectoId: raw.proyectoId }
+				: null,
 		);
 	}
 
 	async buscar(
-		usuarioId: number,
+		ambito: AmbitoNotas,
 		{ pagina, limite, busqueda, tagId }: NotaFiltros,
 	): Promise<Paginacion<Nota>> {
 		const where: Prisma.NotaWhereInput = {
-			usuarioId,
+			// Las personales son las suyas sin proyecto.
+			...("usuarioId" in ambito
+				? { usuarioId: ambito.usuarioId, proyectoId: null }
+				: ambito),
 			deletedAt: null,
 			...(busqueda && {
 				OR: [
@@ -63,19 +70,22 @@ export class PrismaNotaRepository implements NotaRepository {
 		};
 	}
 
-	async buscarPorId(usuarioId: number, id: number): Promise<Nota | null> {
+	async buscarPorId(id: number): Promise<Nota | null> {
 		const registro = await prisma.nota.findFirst({
-			where: { id, usuarioId, deletedAt: null },
+			where: { id, deletedAt: null },
 			include,
 		});
 		return registro ? this.toDomain(registro) : null;
 	}
 
 	// Consulta la tabla del módulo `tag` sin importar su código: solo el dato.
-	async sonTagsPropios(usuarioId: number, tagIds: number[]): Promise<boolean> {
+	async sonTagsDe(
+		dueno: { usuarioId: number } | { organizacionId: number },
+		tagIds: number[],
+	): Promise<boolean> {
 		const unicos = [...new Set(tagIds)];
 		const propios = await prisma.tag.count({
-			where: { id: { in: unicos }, usuarioId, deletedAt: null },
+			where: { id: { in: unicos }, ...dueno, deletedAt: null },
 		});
 		return propios === unicos.length;
 	}
@@ -85,6 +95,7 @@ export class PrismaNotaRepository implements NotaRepository {
 		const registro = await prisma.nota.create({
 			data: {
 				usuarioId: data.getUsuarioId(),
+				...data.getProyecto(),
 				titulo,
 				contenido,
 				tags: { create: tagIds.map((tagId) => ({ tagId })) },

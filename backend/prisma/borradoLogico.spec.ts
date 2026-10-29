@@ -24,7 +24,7 @@ const EXENTOS: Record<string, string> = {
 	TokenCuenta: "técnica",
 	EventoOutbox: "técnica",
 	Auditoria: "registro histórico, nunca se borra",
-	Adjunto: "inmutable y sin endpoint de borrado",
+	Adjunto: "sin endpoint de borrado; solo cambia con quién se comparte",
 	Invitacion: "cancelarla cambia su estado; nunca se borra",
 	// Catálogo global de la plantilla; los roles por organización (RolOrganizacion) sí lo llevan.
 	Rol: "catálogo global de la plantilla",

@@ -1,4 +1,4 @@
-import { ListTodo, Pencil, Plus, Trash2 } from "lucide-react";
+import { ListTodo, NotebookPen, Pencil, Plus, Trash2 } from "lucide-react";
 import { useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { Badge, type BadgeProps } from "@/core/components/ui/Badge";
@@ -120,6 +120,20 @@ export function ProyectosCard({
 									}
 								>
 									<ListTodo className="h-4 w-4" />
+								</Button>
+								<Button
+									variant="ghost"
+									size="sm"
+									aria-label={`Notas de ${proyecto.nombre}`}
+									title="Notas"
+									onClick={() =>
+										navigate({
+											to: "/notas",
+											search: { organizacionId, proyectoId: proyecto.id },
+										})
+									}
+								>
+									<NotebookPen className="h-4 w-4" />
 								</Button>
 								{puedeEn(organizacion, "proyectos:editar") && (
 									<Button

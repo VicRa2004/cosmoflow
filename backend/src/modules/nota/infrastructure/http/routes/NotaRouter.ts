@@ -36,7 +36,7 @@ export class NotaRouter {
 			path: "/",
 			tags,
 			security,
-			summary: "Crear nota",
+			summary: "Crear nota personal o de un proyecto (RN-33, 50)",
 			request: {
 				body: {
 					required: true,
@@ -46,6 +46,7 @@ export class NotaRouter {
 			responses: {
 				201: jsonResponse(notaDtoSchema, "Nota creada"),
 				400: errorResponse("Validación fallida o tags ajenos"),
+				404: errorResponse("Proyecto no encontrado"),
 				...protectedErrorResponses(`${recurso}:crear`),
 			},
 		});
@@ -56,11 +57,12 @@ export class NotaRouter {
 			path: "/",
 			tags,
 			security,
-			summary: "Listar notas (paginado)",
+			summary: "Listar notas personales, o las de un proyecto con ?proyectoId",
 			request: { query: obtenerNotasSchema },
 			responses: {
 				200: jsonResponse(notaPaginaSchema, "Lista paginada"),
 				400: errorResponse("Parámetros inválidos"),
+				404: errorResponse("Proyecto no encontrado"),
 				...protectedErrorResponses(`${recurso}:leer`),
 			},
 		});

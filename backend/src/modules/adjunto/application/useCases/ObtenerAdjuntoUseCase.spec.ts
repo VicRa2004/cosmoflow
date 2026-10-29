@@ -1,45 +1,58 @@
 import { describe, expect, it, mock } from "bun:test";
+import type { Adjunto } from "../../domain/Adjunto";
 import { AdjuntoNoEncontradoError } from "../../domain/error/AdjuntoNoEncontradoError";
 import { ObtenerAdjuntoUseCase } from "./ObtenerAdjuntoUseCase";
 
-const adjunto = {
+const DUENO = 7;
+const OTRO = 8;
+const privado: Adjunto = {
 	id: 12,
-	usuarioId: 7,
+	usuarioId: DUENO,
 	clave: "adjuntos/7/x.png",
 	tipo: "image/png",
 	bytes: 3,
+	equipoId: null,
+	proyectoId: null,
 };
+const datos = new Uint8Array([1, 2, 3]);
+
+const preparar = (
+	adjunto: Adjunto | null,
+	{ esMiembro = false, enDisco = true } = {},
+) =>
+	new ObtenerAdjuntoUseCase(
+		{ buscarPorId: mock(async () => adjunto) } as never,
+		{ obtener: mock(async () => (enDisco ? datos : null)) } as never,
+		{ esMiembro: mock(async () => esMiembro) } as never,
+	);
 
 describe("ObtenerAdjuntoUseCase", () => {
 	it("debería devolver los bytes y el tipo del adjunto propio", async () => {
-		const datos = new Uint8Array([1, 2, 3]);
-		const useCase = new ObtenerAdjuntoUseCase(
-			{ buscarPorId: mock(async () => adjunto) } as never,
-			{ obtener: mock(async () => datos) } as never,
-		);
-
-		expect(await useCase.ejecutar(7, 12)).toEqual({ datos, tipo: "image/png" });
+		expect(await preparar(privado).ejecutar(DUENO, 12)).toEqual({
+			datos,
+			tipo: "image/png",
+		});
 	});
 
-	it("debería lanzar 404 si no es del usuario", async () => {
-		const useCase = new ObtenerAdjuntoUseCase(
-			{ buscarPorId: mock(async () => null) } as never,
-			{ obtener: mock(async () => null) } as never,
+	it("un adjunto privado no existe para otro usuario", async () => {
+		await expect(preparar(privado).ejecutar(OTRO, 12)).rejects.toThrow(
+			AdjuntoNoEncontradoError,
 		);
+	});
 
-		await expect(useCase.ejecutar(8, 12)).rejects.toThrow(
+	it("uno compartido con un equipo lo ven sus miembros, y nadie más", async () => {
+		const compartido = { ...privado, equipoId: 5 };
+		expect(
+			await preparar(compartido, { esMiembro: true }).ejecutar(OTRO, 12),
+		).toEqual({ datos, tipo: "image/png" });
+		await expect(preparar(compartido).ejecutar(OTRO, 12)).rejects.toThrow(
 			AdjuntoNoEncontradoError,
 		);
 	});
 
 	it("debería lanzar 404 si falta el archivo en el almacenamiento", async () => {
-		const useCase = new ObtenerAdjuntoUseCase(
-			{ buscarPorId: mock(async () => adjunto) } as never,
-			{ obtener: mock(async () => null) } as never,
-		);
-
-		await expect(useCase.ejecutar(7, 12)).rejects.toThrow(
-			AdjuntoNoEncontradoError,
-		);
+		await expect(
+			preparar(privado, { enDisco: false }).ejecutar(DUENO, 12),
+		).rejects.toThrow(AdjuntoNoEncontradoError);
 	});
 });

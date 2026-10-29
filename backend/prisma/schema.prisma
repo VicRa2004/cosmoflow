@@ -320,10 +320,17 @@ model Nota {
   /// Borrado lógico (RN-91)
   deletedAt DateTime? @map("deleted_at")
 
-  usuario Usuario   @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
-  tags    NotaTag[]
+  /// Nota de proyecto (RN-33): la ven sus miembros. Sin él, personal (RN-50).
+  organizacionId Int? @map("not_fkorganizacion")
+  proyectoId     Int? @map("not_fkproyecto")
+
+  /// Quien la creó; en las personales, su dueño
+  usuario  Usuario   @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  proyecto Proyecto? @relation(fields: [organizacionId, proyectoId], references: [organizacionId, id], onDelete: Cascade)
+  tags     NotaTag[]
 
   @@index([usuarioId, updatedAt])
+  @@index([proyectoId, updatedAt])
   @@map("nota")
 }
 
@@ -349,7 +356,14 @@ model Adjunto {
   bytes     Int      @map("adj_bytes")
   createdAt DateTime @default(now()) @map("created_at")
 
-  usuario Usuario @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  /// Compartido con un equipo o proyecto (sus miembros lo ven); sin ellos, solo su
+  /// dueño. Se fija al subirlo desde una tarea o nota compartida o al mover la tarea.
+  equipoId   Int? @map("adj_fkequipo")
+  proyectoId Int? @map("adj_fkproyecto")
+
+  usuario  Usuario   @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  equipo   Equipo?   @relation(fields: [equipoId], references: [id], onDelete: SetNull)
+  proyecto Proyecto? @relation(fields: [proyectoId], references: [id], onDelete: SetNull)
 
   @@index([usuarioId])
   @@map("adjunto")
@@ -482,6 +496,7 @@ model Equipo {
   tags         EquipoTag[]
   proyectos    ProyectoEquipo[]
   tareas       Tarea[]
+  adjuntos     Adjunto[]
 
   /// Destino de las FK compuestas de `MiembroEquipo` y `ProyectoEquipo`
   @@unique([organizacionId, id])
@@ -545,6 +560,8 @@ model Proyecto {
   equipos      ProyectoEquipo[]
   integrantes  IntegranteProyecto[]
   tareas       Tarea[]
+  notas        Nota[]
+  adjuntos     Adjunto[]
 
   /// Destino de las FK compuestas de `ProyectoEquipo` e `IntegranteProyecto`
   @@unique([organizacionId, id])

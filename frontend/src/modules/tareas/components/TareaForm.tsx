@@ -165,6 +165,13 @@ export function TareaForm({
 					{() => (
 						<EditorMarkdown
 							label="Contenido"
+							ambito={
+								equipoId
+									? { equipoId }
+									: proyectoId
+										? { proyectoId }
+										: undefined
+							}
 							className="-ml-12"
 							placeholder="Escribe o pulsa «/»: lista de tareas, título, imagen…"
 						/>

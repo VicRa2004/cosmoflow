@@ -1,5 +1,5 @@
 import { prisma } from "@/core/config/prisma";
-import type { Adjunto } from "../../domain/Adjunto";
+import type { Adjunto, AmbitoAdjunto } from "../../domain/Adjunto";
 import type { AdjuntoRepository } from "../../domain/repository/AdjuntoRepository";
 
 export class PrismaAdjuntoRepository implements AdjuntoRepository {
@@ -7,7 +7,24 @@ export class PrismaAdjuntoRepository implements AdjuntoRepository {
 		return prisma.adjunto.create({ data: datos });
 	}
 
-	buscarPorId(usuarioId: number, id: number): Promise<Adjunto | null> {
-		return prisma.adjunto.findFirst({ where: { id, usuarioId } });
+	buscarPorId(id: number): Promise<Adjunto | null> {
+		return prisma.adjunto.findUnique({ where: { id } });
+	}
+
+	async compartir(
+		usuarioId: number,
+		adjuntoIds: number[],
+		ambito: AmbitoAdjunto,
+	): Promise<void> {
+		if (adjuntoIds.length === 0) return;
+		await prisma.adjunto.updateMany({
+			where: {
+				id: { in: adjuntoIds },
+				usuarioId,
+				equipoId: null,
+				proyectoId: null,
+			},
+			data: ambito,
+		});
 	}
 }

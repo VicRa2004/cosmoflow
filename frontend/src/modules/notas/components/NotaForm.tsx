@@ -12,19 +12,31 @@ import {
 	notaAFormValues,
 	notaFormSchema,
 	notaFormVacio,
+	type ContextoNotaSearch,
 } from "../schemas/notaSchemas";
 
 interface NotaFormProps {
 	/** Sin `inicial` crea; con él, edita. */
 	inicial?: NotaDto;
+	/** Al crear: proyecto donde va (sin él, personal). */
+	contexto?: ContextoNotaSearch;
 	onGuardado: () => void;
 	onVolver: () => void;
 }
 
 /** Página-documento de una nota: título grande, tags y el editor debajo. */
-export function NotaForm({ inicial, onGuardado, onVolver }: NotaFormProps) {
+export function NotaForm({
+	inicial,
+	contexto,
+	onGuardado,
+	onVolver,
+}: NotaFormProps) {
 	const crear = useCrearNotaMutation();
 	const actualizar = useActualizarNotaMutation();
+	const proyectoId =
+		(inicial ? inicial.proyectoId : contexto?.proyectoId) ?? null;
+	const organizacionId =
+		(inicial ? inicial.organizacionId : contexto?.organizacionId) ?? null;
 
 	const form = useAppForm({
 		defaultValues: inicial ? notaAFormValues(inicial) : notaFormVacio,
@@ -32,7 +44,8 @@ export function NotaForm({ inicial, onGuardado, onVolver }: NotaFormProps) {
 		onSubmit: async ({ value }) => {
 			const datos = notaFormSchema.parse(value);
 			if (inicial) await actualizar.mutateAsync({ id: inicial.id, datos });
-			else await crear.mutateAsync(datos);
+			else
+				await crear.mutateAsync(proyectoId ? { ...datos, proyectoId } : datos);
 			onGuardado();
 		},
 	});
@@ -62,12 +75,19 @@ export function NotaForm({ inicial, onGuardado, onVolver }: NotaFormProps) {
 						<SelectorTags
 							valor={campo.state.value}
 							onChange={campo.handleChange}
+							organizacionId={proyectoId ? organizacionId : null}
 						/>
 					)}
 				</form.AppField>
 				<hr className="border-borde" />
 				<form.AppField name="contenido">
-					{() => <EditorMarkdown label="Contenido" className="-ml-12" />}
+					{() => (
+						<EditorMarkdown
+							label="Contenido"
+							className="-ml-12"
+							ambito={proyectoId ? { proyectoId } : undefined}
+						/>
+					)}
 				</form.AppField>
 			</form.Formulario>
 		</form.AppForm>

@@ -1,5 +1,6 @@
 import type { AppModule } from "@/core/shared/infrastructure/di/AppModule";
 import { TOKENS } from "@/core/shared/infrastructure/di/tokens";
+import { ADJUNTO_TOKENS } from "@/modules/adjunto";
 import { AUTH_TOKENS } from "@/modules/auth";
 import { EQUIPO_TOKENS } from "@/modules/equipo";
 import { PROYECTO_TOKENS } from "@/modules/proyecto";
@@ -32,7 +33,11 @@ export const tareaModule: AppModule = {
 				obtenerUno: new ObtenerTareaUseCase(repo, contextos),
 				actualizar: new ActualizarTareaUseCase(repo, contextos),
 				eliminar: new EliminarTareaUseCase(repo, contextos),
-				mover: new MoverTareaUseCase(repo, contextos),
+				mover: new MoverTareaUseCase(
+					repo,
+					contextos,
+					container.get(ADJUNTO_TOKENS.CompartirAdjuntos),
+				),
 			}),
 		);
 		app.route("/api/tareas", router.router);

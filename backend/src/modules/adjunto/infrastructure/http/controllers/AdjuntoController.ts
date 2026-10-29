@@ -5,7 +5,10 @@ import type { AuthEnv } from "@/modules/auth";
 import type { ObtenerAdjuntoUseCase } from "../../../application/useCases/ObtenerAdjuntoUseCase";
 import type { SubirAdjuntoUseCase } from "../../../application/useCases/SubirAdjuntoUseCase";
 import { AdjuntoInvalidoError } from "../../../domain/error/AdjuntoInvalidoError";
-import { adjuntoIdSchema } from "../schemas/adjuntoSchemas";
+import {
+	adjuntoIdSchema,
+	ambitoAdjuntoSchema,
+} from "../schemas/adjuntoSchemas";
 
 export class AdjuntoController extends BaseController {
 	constructor(
@@ -25,10 +28,11 @@ export class AdjuntoController extends BaseController {
 					"Falta el archivo en el campo «archivo»",
 				);
 			}
+			const ambito = validate(ambitoAdjuntoSchema, c.req.query());
 			const datos = new Uint8Array(await archivo.arrayBuffer());
 			return this.created(
 				c,
-				await this.useCases.subir.ejecutar(c.get("usuario").id, datos),
+				await this.useCases.subir.ejecutar(c.get("usuario").id, datos, ambito),
 			);
 		});
 

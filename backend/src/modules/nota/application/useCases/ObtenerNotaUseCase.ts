@@ -1,16 +1,11 @@
-import { NotaNoEncontradaError } from "../../domain/error/NotaNoEncontradaError";
-import type { NotaRepository } from "../../domain/repository/NotaRepository";
 import type { NotaDto } from "../dtos/NotaDto";
 import { NotaMapper } from "../mappers/NotaMapper";
+import type { ProyectosNota } from "../services/ProyectosNota";
 
 export class ObtenerNotaUseCase {
-	constructor(private readonly notaRepository: NotaRepository) {}
+	constructor(private readonly proyectos: ProyectosNota) {}
 
 	async ejecutar(usuarioId: number, id: number): Promise<NotaDto> {
-		const nota = await this.notaRepository.buscarPorId(usuarioId, id);
-		if (!nota) {
-			throw new NotaNoEncontradaError();
-		}
-		return NotaMapper.toDto(nota);
+		return NotaMapper.toDto(await this.proyectos.buscarVisible(usuarioId, id));
 	}
 }

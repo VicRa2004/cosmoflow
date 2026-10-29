@@ -10,7 +10,11 @@ const campos = {
 	tagIds: z.array(z.number().int().positive()).max(50).optional(),
 };
 
-export const crearNotaSchema = z.object(campos);
+/** Sin `proyectoId`, personal (RN-50). */
+export const crearNotaSchema = z.object({
+	...campos,
+	proyectoId: z.number().int().positive().optional(),
+});
 
 export const actualizarNotaSchema = z.object(campos).partial();
 
@@ -28,6 +32,8 @@ export const obtenerNotasSchema = z.object({
 	limite: numero.optional().default(10),
 	busqueda: z.string().trim().min(1).max(128).optional(),
 	tagId: numero.optional(),
+	/** Sin él, las personales. */
+	proyectoId: numero.optional(),
 });
 
 // ── Respuestas (sólo documentación OpenAPI) ──────────────────────────────────
@@ -38,6 +44,8 @@ export const notaDtoSchema = z
 		titulo: z.string().openapi({ example: "Ideas para el viaje" }),
 		contenido: z.string().openapi({ example: "## Lugares\n- Lisboa" }),
 		tagIds: z.array(z.number().int()),
+		organizacionId: z.number().int().nullable(),
+		proyectoId: z.number().int().nullable(),
 		updatedAt: z.iso.datetime().openapi({ example: "2026-10-28T10:00:00Z" }),
 	})
 	.openapi("NotaDto");

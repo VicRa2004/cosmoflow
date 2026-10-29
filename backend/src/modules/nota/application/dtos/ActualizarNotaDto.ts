@@ -1,3 +1,3 @@
-import type { CrearNotaDto } from "./CrearNotaDto";
+import type { CamposNotaDto } from "./CrearNotaDto";
 
-export type ActualizarNotaDto = Partial<CrearNotaDto>;
+export type ActualizarNotaDto = Partial<CamposNotaDto>;

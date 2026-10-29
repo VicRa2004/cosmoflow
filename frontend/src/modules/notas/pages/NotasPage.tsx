@@ -14,13 +14,35 @@ import type { NotaDto } from "../api/notasApi";
 import { NotasTable } from "../components/NotasTable";
 import { useEliminarNotaMutation } from "../hooks/useNotasMutation";
 import { useNotasQuery } from "../hooks/useNotasQuery";
+import type { ContextoNotaSearch } from "../schemas/notaSchemas";
+import { useProyectosQuery } from "@/modules/proyectos/hooks/useProyectos";
 
-export function NotasPage() {
+/** «Notas · Lanzamiento»: nombre del proyecto de la lista. */
+function TituloProyecto({
+	organizacionId,
+	proyectoId,
+}: {
+	organizacionId: number;
+	proyectoId: number;
+}) {
+	const { data: proyectos } = useProyectosQuery(organizacionId);
+	const nombre = proyectos?.find((p) => p.id === proyectoId)?.nombre;
+	return <>Notas · {nombre ?? "…"}</>;
+}
+
+/** Sin `contexto`, las personales; con él, las de ese proyecto (RN-33). */
+export function NotasPage({
+	contexto = {},
+}: {
+	contexto?: ContextoNotaSearch;
+}) {
+	const { organizacionId, proyectoId } = contexto;
+	const deProyecto = organizacionId !== undefined && proyectoId !== undefined;
 	const { puede } = usePermisos();
 	const [pagina, setPagina] = useState(1);
 	const [busqueda, setBusqueda] = useState("");
 	const [tagId, setTagId] = useState("");
-	const { tags } = useTagsDisponibles();
+	const { tags } = useTagsDisponibles(deProyecto ? organizacionId : undefined);
 	const navigate = useNavigate();
 	const editar = (nota: NotaDto) =>
 		navigate({ to: "/notas/$id", params: { id: String(nota.id) } });
@@ -32,11 +54,23 @@ export function NotasPage() {
 		limite: 10,
 		busqueda: busqueda.trim() || undefined,
 		tagId: tagId ? Number(tagId) : undefined,
+		...(deProyecto && { proyectoId }),
 	});
 
 	return (
 		<div className="space-y-6">
-			<EncabezadoPagina titulo="Notas">
+			<EncabezadoPagina
+				titulo={
+					deProyecto ? (
+						<TituloProyecto
+							organizacionId={organizacionId}
+							proyectoId={proyectoId}
+						/>
+					) : (
+						"Notas"
+					)
+				}
+			>
 				{tags.length > 0 && (
 					<div className="w-full sm:w-40">
 						<Select
@@ -70,7 +104,14 @@ export function NotasPage() {
 					<Search className="pointer-events-none absolute top-2.5 left-3 h-4 w-4 text-tinta-tenue" />
 				</div>
 				{puede("notas:crear") && (
-					<Button onClick={() => navigate({ to: "/notas/nueva" })}>
+					<Button
+						onClick={() =>
+							navigate({
+								to: "/notas/nueva",
+								search: deProyecto ? contexto : {},
+							})
+						}
+					>
 						<Plus className="h-4 w-4" />
 						Nueva
 					</Button>
@@ -94,7 +135,12 @@ export function NotasPage() {
 				contenido={leyendo?.contenido ?? ""}
 				detalles={
 					leyendo &&
-					leyendo.tagIds.length > 0 && <TagsBadges tagIds={leyendo.tagIds} />
+					leyendo.tagIds.length > 0 && (
+						<TagsBadges
+							tagIds={leyendo.tagIds}
+							organizacionId={leyendo.organizacionId}
+						/>
+					)
 				}
 				onEditar={
 					leyendo && puede("notas:actualizar")

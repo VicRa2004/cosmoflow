@@ -14,6 +14,8 @@ export interface ObtenerNotasParams {
 	limite?: number;
 	busqueda?: string;
 	tagId?: number;
+	/** Sin él, las personales. */
+	proyectoId?: number;
 }
 
 export const notasApi = {

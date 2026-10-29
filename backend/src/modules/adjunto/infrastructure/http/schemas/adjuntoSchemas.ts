@@ -7,6 +7,26 @@ export const adjuntoIdSchema = z.object({
 		.transform(Number),
 });
 
+const id = z.string().regex(/^\d+$/).transform(Number);
+
+/** `?equipoId=` o `?proyectoId=`: la imagen se comparte con sus miembros. */
+export const ambitoAdjuntoQuerySchema = z.object({
+	equipoId: id.optional(),
+	proyectoId: id.optional(),
+});
+
+export const ambitoAdjuntoSchema = ambitoAdjuntoQuerySchema
+	.refine((v) => v.equipoId === undefined || v.proyectoId === undefined, {
+		message: "Con un equipo o con un proyecto, no con los dos",
+	})
+	.transform((v) =>
+		v.equipoId
+			? { equipoId: v.equipoId }
+			: v.proyectoId
+				? { proyectoId: v.proyectoId }
+				: undefined,
+	);
+
 // ── Respuestas (sólo documentación OpenAPI) ──────────────────────────────────
 
 export const adjuntoDtoSchema = z

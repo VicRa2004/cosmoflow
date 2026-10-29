@@ -1,11 +1,13 @@
 import { describe, expect, it, mock } from "bun:test";
 import { AdjuntoInvalidoError } from "../../domain/error/AdjuntoInvalidoError";
+import { AmbitoNoEncontradoError } from "../../domain/error/AmbitoNoEncontradoError";
 import { ADJUNTO_MAX_BYTES, SubirAdjuntoUseCase } from "./SubirAdjuntoUseCase";
 
 const PNG = new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 1]);
 
 function preparar(
 	crear = mock(async (datos: object) => ({ id: 12, ...datos })),
+	esMiembro = true,
 ) {
 	const almacenamiento = {
 		guardar: mock(async () => {}),
@@ -15,6 +17,7 @@ function preparar(
 	const useCase = new SubirAdjuntoUseCase(
 		{ crear } as never,
 		almacenamiento as never,
+		{ esMiembro: mock(async () => esMiembro) } as never,
 	);
 	return { useCase, almacenamiento, crear };
 }
@@ -64,5 +67,19 @@ describe("SubirAdjuntoUseCase", () => {
 
 		await expect(useCase.ejecutar(7, PNG)).rejects.toThrow("BD caída");
 		expect(almacenamiento.eliminar).toHaveBeenCalledTimes(1);
+	});
+
+	it("con ámbito queda compartida, solo si quien sube es miembro", async () => {
+		const { useCase, crear } = preparar();
+		await useCase.ejecutar(7, PNG, { proyectoId: 4 });
+		expect(crear).toHaveBeenCalledWith(
+			expect.objectContaining({ equipoId: null, proyectoId: 4 }),
+		);
+
+		const ajeno = preparar(undefined, false);
+		await expect(
+			ajeno.useCase.ejecutar(7, PNG, { equipoId: 5 }),
+		).rejects.toThrow(AmbitoNoEncontradoError);
+		expect(ajeno.almacenamiento.guardar).not.toHaveBeenCalled();
 	});
 });
