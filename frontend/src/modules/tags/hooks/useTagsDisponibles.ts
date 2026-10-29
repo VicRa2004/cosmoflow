@@ -1,4 +1,4 @@
-import { useTagsQuery } from "@/modules/tags/hooks/useTagsQuery";
+import { useTagsQuery } from "./useTagsQuery";
 
 // shortcut: solo los 100 primeros tags (por nombre); paginar el selector si alguien tiene más.
 const LIMITE = 100;

@@ -8,7 +8,7 @@ import type { EstadoTarea, TareaDto } from "../api/tareasApi";
 import { TareaDialog } from "../components/TareaDialog";
 import { TareasTable } from "../components/TareasTable";
 import { useEliminarTareaMutation } from "../hooks/useTareasMutation";
-import { useTagsDisponibles } from "../hooks/useTagsDisponibles";
+import { useTagsDisponibles } from "@/modules/tags/hooks/useTagsDisponibles";
 import { useTareasQuery } from "../hooks/useTareasQuery";
 import { ETIQUETAS_ESTADO } from "../schemas/tareaSchemas";
 

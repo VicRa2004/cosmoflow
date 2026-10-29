@@ -4,7 +4,8 @@ import { type Columna, type Pagina, Tabla } from "@/core/components/ui/Table";
 import { Badge, type BadgeProps } from "@/core/components/ui/Badge";
 import type { EstadoTarea, TareaDto } from "../api/tareasApi";
 import { ETIQUETAS_ESTADO, ETIQUETAS_PRIORIDAD } from "../schemas/tareaSchemas";
-import { TagsTarea, VencimientoTarea } from "./celdas";
+import { TagsBadges } from "@/modules/tags/components/TagsBadges";
+import { VencimientoTarea } from "./celdas";
 
 const VARIANTE_ESTADO: Record<EstadoTarea, BadgeProps["variant"]> = {
 	pendiente: "default",
@@ -54,7 +55,7 @@ export function TareasTable({
 		},
 		{
 			cabecera: "Tags",
-			celda: (fila) => <TagsTarea tagIds={fila.tagIds} />,
+			celda: (fila) => <TagsBadges tagIds={fila.tagIds} />,
 		},
 		{
 			cabecera: <span className="sr-only">Acciones</span>,

@@ -17,6 +17,7 @@ import { Route as RegistroRouteImport } from './routes/registro'
 import { Route as RestablecerPasswordRouteImport } from './routes/restablecer-password'
 import { Route as VerificarEmailRouteImport } from './routes/verificar-email'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
+import { Route as AuthenticatedNotasRouteImport } from './routes/_authenticated/notas'
 import { Route as AuthenticatedPerfilRouteImport } from './routes/_authenticated/perfil'
 import { Route as AuthenticatedRolesRouteImport } from './routes/_authenticated/roles'
 import { Route as AuthenticatedTagsRouteImport } from './routes/_authenticated/tags'
@@ -63,6 +64,11 @@ const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
   path: '/dashboard',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedNotasRoute = AuthenticatedNotasRouteImport.update({
+  id: '/notas',
+  path: '/notas',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
 const AuthenticatedPerfilRoute = AuthenticatedPerfilRouteImport.update({
   id: '/perfil',
   path: '/perfil',
@@ -102,6 +108,7 @@ export interface FileRoutesByFullPath {
   '/restablecer-password': typeof RestablecerPasswordRoute
   '/verificar-email': typeof VerificarEmailRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
+  '/notas': typeof AuthenticatedNotasRoute
   '/perfil': typeof AuthenticatedPerfilRoute
   '/roles': typeof AuthenticatedRolesRoute
   '/tags': typeof AuthenticatedTagsRoute
@@ -117,6 +124,7 @@ export interface FileRoutesByTo {
   '/restablecer-password': typeof RestablecerPasswordRoute
   '/verificar-email': typeof VerificarEmailRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
+  '/notas': typeof AuthenticatedNotasRoute
   '/perfil': typeof AuthenticatedPerfilRoute
   '/roles': typeof AuthenticatedRolesRoute
   '/tags': typeof AuthenticatedTagsRoute
@@ -134,6 +142,7 @@ export interface FileRoutesById {
   '/restablecer-password': typeof RestablecerPasswordRoute
   '/verificar-email': typeof VerificarEmailRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
+  '/_authenticated/notas': typeof AuthenticatedNotasRoute
   '/_authenticated/perfil': typeof AuthenticatedPerfilRoute
   '/_authenticated/roles': typeof AuthenticatedRolesRoute
   '/_authenticated/tags': typeof AuthenticatedTagsRoute
@@ -151,6 +160,7 @@ export interface FileRouteTypes {
     | '/restablecer-password'
     | '/verificar-email'
     | '/dashboard'
+    | '/notas'
     | '/perfil'
     | '/roles'
     | '/tags'
@@ -166,6 +176,7 @@ export interface FileRouteTypes {
     | '/restablecer-password'
     | '/verificar-email'
     | '/dashboard'
+    | '/notas'
     | '/perfil'
     | '/roles'
     | '/tags'
@@ -182,6 +193,7 @@ export interface FileRouteTypes {
     | '/restablecer-password'
     | '/verificar-email'
     | '/_authenticated/dashboard'
+    | '/_authenticated/notas'
     | '/_authenticated/perfil'
     | '/_authenticated/roles'
     | '/_authenticated/tags'
@@ -259,6 +271,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDashboardRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/notas': {
+      id: '/_authenticated/notas'
+      path: '/notas'
+      fullPath: '/notas'
+      preLoaderRoute: typeof AuthenticatedNotasRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/perfil': {
       id: '/_authenticated/perfil'
       path: '/perfil'
@@ -306,6 +325,7 @@ declare module '@tanstack/react-router' {
 
 interface AuthenticatedRouteChildren {
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
+  AuthenticatedNotasRoute: typeof AuthenticatedNotasRoute
   AuthenticatedPerfilRoute: typeof AuthenticatedPerfilRoute
   AuthenticatedRolesRoute: typeof AuthenticatedRolesRoute
   AuthenticatedTagsRoute: typeof AuthenticatedTagsRoute
@@ -315,6 +335,7 @@ interface AuthenticatedRouteChildren {
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
+  AuthenticatedNotasRoute: AuthenticatedNotasRoute,
   AuthenticatedPerfilRoute: AuthenticatedPerfilRoute,
   AuthenticatedRolesRoute: AuthenticatedRolesRoute,
   AuthenticatedTagsRoute: AuthenticatedTagsRoute,

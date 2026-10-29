@@ -6,7 +6,8 @@ import { Button } from "@/core/components/ui/Button";
 import { EmptyState } from "@/core/components/ui/EmptyState";
 import { type Columna, Tabla } from "@/core/components/ui/Table";
 import type { TareaDto } from "../api/tareasApi";
-import { TagsTarea, VencimientoTarea } from "../components/celdas";
+import { TagsBadges } from "@/modules/tags/components/TagsBadges";
+import { VencimientoTarea } from "../components/celdas";
 import { TareaDialog } from "../components/TareaDialog";
 import { useActualizarTareaMutation } from "../hooks/useTareasMutation";
 import { usePendientesQuery } from "../hooks/useTareasQuery";
@@ -76,7 +77,7 @@ export function PendientesPage() {
 		},
 		{
 			cabecera: "Tags",
-			celda: (fila) => <TagsTarea tagIds={fila.tagIds} />,
+			celda: (fila) => <TagsBadges tagIds={fila.tagIds} />,
 		},
 	];
 

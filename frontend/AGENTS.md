@@ -69,8 +69,9 @@ frontend/src/
 │   │   ├── components/             # RolCard, CrearRolForm, PermisosChecklist, AsignacionUsuarioPanel
 │   │   └── pages/                  # RolesPage.tsx
 │   │
-│   ├── tareas/                     # Tareas personales y PendientesPage (portada); SelectorTags usa tags/
-│   ├── tags/                       # Tags personales (generado con gen:module): api/ components/ hooks/ pages/ schemas/
+│   ├── notas/                      # Notas personales: búsqueda en título y contenido, filtro por tag
+│   ├── tareas/                     # Tareas personales y PendientesPage (portada)
+│   ├── tags/                       # Tags personales; SelectorTags, TagsBadges y useTagsDisponibles los usan tareas y notas
 │   │
 │   └── usuarios/                      # Módulo de Usuarios
 │       ├── api/                    # Llamadas a la API de usuarios (usuariosApi.ts)
@@ -92,6 +93,7 @@ frontend/src/
 │       ├── dashboard.tsx           # Vista /dashboard: pendientes por vencimiento (RN-43)
 │       ├── usuarios.tsx               # Vista /usuarios
 │       ├── roles.tsx               # Vista /roles
+│       ├── notas.tsx               # Vista /notas
 │       ├── tareas.tsx              # Vista /tareas
 │       ├── tags.tsx                # Vista /tags (tags personales)
 │       └── perfil.tsx              # Vista /perfil

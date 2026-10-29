@@ -8,6 +8,7 @@ import {
 	UserCheck,
 	LogOut,
 	ListTodo,
+	StickyNote,
 	Tag,
 } from "lucide-react";
 import { useAuthStore } from "@/core/auth/store";
@@ -73,6 +74,13 @@ export function MainLayout({ children }: MainLayoutProps) {
 								>
 									<ListTodo className="h-4 w-4" />
 									Tareas
+								</Link>
+								<Link
+									to="/notas"
+									className="flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-lg text-tinta-suave hover:text-tinta hover:bg-elevada/60 transition-colors [&.active]:bg-indigo-600/10 [&.active]:text-indigo-400 [&.active]:border [&.active]:border-indigo-500/20"
+								>
+									<StickyNote className="h-4 w-4" />
+									Notas
 								</Link>
 								<Link
 									to="/tags"

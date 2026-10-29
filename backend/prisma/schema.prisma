@@ -39,6 +39,7 @@ model Usuario {
   tokensCuenta     TokenCuenta[]
   tags             Tag[]
   tareas           Tarea[]
+  notas            Nota[]
 
   @@map("usuario")
 }
@@ -211,6 +212,7 @@ model Tag {
 
   usuario Usuario    @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
   tareas  TareaTag[]
+  notas   NotaTag[]
 
   @@index([usuarioId])
   @@map("tag")
@@ -267,4 +269,36 @@ model TareaTag {
   @@id([tareaId, tagId])
   @@index([tagId])
   @@map("tarea_tag")
+}
+
+// Generado por gen:module: ajustar campos y @map a las convenciones de la tabla.
+/// Nota personal (RN-50): solo la ve su dueño. Las de proyecto llegan en la Fase 2.
+model Nota {
+  id        Int       @id @default(autoincrement()) @map("not_id")
+  usuarioId Int       @map("not_fkusuario")
+  titulo    String    @map("not_titulo") @db.VarChar(255)
+  /// Markdown
+  contenido String    @default("") @map("not_contenido")
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @default(now()) @updatedAt @map("updated_at")
+  /// Borrado lógico (RN-91)
+  deletedAt DateTime? @map("deleted_at")
+
+  usuario Usuario   @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  tags    NotaTag[]
+
+  @@index([usuarioId, updatedAt])
+  @@map("nota")
+}
+
+model NotaTag {
+  notaId Int @map("ntt_fknota")
+  tagId  Int @map("ntt_fktag")
+
+  nota Nota @relation(fields: [notaId], references: [id], onDelete: Cascade)
+  tag  Tag  @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([notaId, tagId])
+  @@index([tagId])
+  @@map("nota_tag")
 }

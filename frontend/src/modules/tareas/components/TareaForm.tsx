@@ -11,7 +11,7 @@ import {
 	tareaFormSchema,
 	tareaFormVacio,
 } from "../schemas/tareaSchemas";
-import { SelectorTags } from "./SelectorTags";
+import { SelectorTags } from "@/modules/tags/components/SelectorTags";
 
 interface TareaFormProps {
 	/** Sin `inicial` crea; con él, edita. */
