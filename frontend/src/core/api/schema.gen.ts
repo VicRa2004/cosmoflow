@@ -5637,6 +5637,15 @@ export interface paths {
                         "application/json": components["schemas"]["ErrorResponse"];
                     };
                 };
+                /** @description Es el único equipo de algún proyecto (RN-31) */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
             };
         };
         options?: never;
@@ -5720,6 +5729,326 @@ export interface paths {
         };
         post?: never;
         delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/organizaciones/{organizacionId}/proyectos": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Proyectos de la organización (cualquier miembro) */
+        get: {
+            parameters: {
+                query?: {
+                    estado?: components["schemas"]["EstadoProyecto"];
+                };
+                header?: never;
+                path: {
+                    organizacionId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Proyectos */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ProyectoDto"][];
+                    };
+                };
+                /** @description No autenticado */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Permiso denegado (requiere organizaciones:leer) */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Organización no encontrada */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        /** Crear proyecto (proyectos:crear) */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    organizacionId: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        nombre: string;
+                        /** @default  */
+                        descripcion?: string;
+                        estado?: components["schemas"]["EstadoProyecto"];
+                        equipoIds: number[];
+                        /** @default [] */
+                        integranteIds?: number[];
+                    };
+                };
+            };
+            responses: {
+                /** @description Proyecto creado */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ProyectoDto"];
+                    };
+                };
+                /** @description Validación fallida o sin equipos */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description No autenticado */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Sin el permiso proyectos:crear */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Organización o proyecto no encontrado */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/organizaciones/{organizacionId}/proyectos/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Obtener proyecto */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    organizacionId: string;
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Proyecto */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ProyectoDto"];
+                    };
+                };
+                /** @description No autenticado */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Permiso denegado (requiere organizaciones:leer) */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Organización o proyecto no encontrado */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        /** Editar datos, estado, equipos e integrantes (proyectos:editar) */
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    organizacionId: string;
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        nombre?: string;
+                        descripcion?: string;
+                        estado?: components["schemas"]["EstadoProyecto"];
+                        equipoIds?: number[];
+                        integranteIds?: number[];
+                    };
+                };
+            };
+            responses: {
+                /** @description Proyecto actualizado */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ProyectoDto"];
+                    };
+                };
+                /** @description Validación fallida o sin equipos */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description No autenticado */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Sin el permiso proyectos:editar */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Organización o proyecto no encontrado */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        /** Eliminar proyecto (proyectos:eliminar) */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    organizacionId: string;
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Proyecto eliminado */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description No autenticado */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Sin el permiso proyectos:eliminar */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Organización o proyecto no encontrado */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
         options?: never;
         head?: never;
         patch?: never;
@@ -5973,6 +6302,19 @@ export interface components {
             }[];
             tagIds: number[];
         };
+        ProyectoDto: {
+            /** @example 1 */
+            id: number;
+            /** @example Lanzamiento v2 */
+            nombre: string;
+            /** @example  */
+            descripcion: string;
+            estado: components["schemas"]["EstadoProyecto"];
+            equipoIds: number[];
+            integranteIds: number[];
+        };
+        /** @enum {string} */
+        EstadoProyecto: "activo" | "en_pausa" | "terminado";
     };
     responses: never;
     parameters: never;
@@ -6000,5 +6342,7 @@ export type InvitacionDto = components['schemas']['InvitacionDto'];
 export type InvitacionRecibidaDto = components['schemas']['InvitacionRecibidaDto'];
 export type RespuestaInvitacionDto = components['schemas']['RespuestaInvitacionDto'];
 export type EquipoDto = components['schemas']['EquipoDto'];
+export type ProyectoDto = components['schemas']['ProyectoDto'];
+export type EstadoProyecto = components['schemas']['EstadoProyecto'];
 export type $defs = Record<string, never>;
 export type operations = Record<string, never>;

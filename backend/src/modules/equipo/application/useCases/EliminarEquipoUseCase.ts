@@ -1,4 +1,5 @@
 import type { AccesoOrganizacion } from "@/modules/organizacion";
+import type { BajaEquipo } from "../../domain/BajaEquipo";
 import type { EquipoRepository } from "../../domain/repository/EquipoRepository";
 import type { AmbitoEquipo } from "../dtos/EquipoDto";
 import { buscarEquipo } from "./buscarEquipo";
@@ -7,6 +8,7 @@ export class EliminarEquipoUseCase {
 	constructor(
 		private readonly equipoRepository: EquipoRepository,
 		private readonly acceso: AccesoOrganizacion,
+		private readonly baja: BajaEquipo,
 	) {}
 
 	async ejecutar(
@@ -15,6 +17,7 @@ export class EliminarEquipoUseCase {
 	): Promise<void> {
 		await this.acceso.exigir(usuarioId, organizacionId, "equipos:eliminar");
 		await buscarEquipo(this.equipoRepository, organizacionId, id);
+		await this.baja.comprobar(organizacionId, id);
 		await this.equipoRepository.eliminar(organizacionId, id);
 	}
 }

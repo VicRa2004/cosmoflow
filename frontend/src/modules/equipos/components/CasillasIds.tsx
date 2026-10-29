@@ -1,5 +1,15 @@
 import { Checkbox } from "@/core/components/ui/Checkbox";
 
+/** Primer error de un `form.Field` sin campo cableado (issue de Zod o texto). */
+export const primerError = (errores: unknown[]) => {
+	const error = errores[0];
+	if (typeof error === "string") return error;
+	if (error && typeof error === "object" && "message" in error) {
+		return String(error.message);
+	}
+	return undefined;
+};
+
 interface CasillasIdsProps {
 	leyenda: string;
 	opciones: { id: number; etiqueta: string }[];

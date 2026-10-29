@@ -18,8 +18,11 @@ export function useEquiposQuery(organizacionId: number, tagId?: number) {
 
 export function useGestionEquipos(organizacionId: number) {
 	const queryClient = useQueryClient();
+	// También cambian los proyectos (equipos que muestran): se refresca la organización.
 	const refrescar = () =>
-		queryClient.invalidateQueries({ queryKey: equiposKey(organizacionId) });
+		queryClient.invalidateQueries({
+			queryKey: organizacionesKeys.detalle(organizacionId),
+		});
 
 	return {
 		guardar: useMutation({

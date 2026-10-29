@@ -16,6 +16,8 @@ const EXENTOS: Record<string, string> = {
 	MiembroRolOrganizacion: "relación",
 	MiembroEquipo: "relación",
 	EquipoTag: "relación",
+	ProyectoEquipo: "relación",
+	IntegranteProyecto: "relación",
 	// Técnicas: no son datos del usuario y caducan o se purgan solas.
 	RefreshToken: "técnica",
 	TokenCuenta: "técnica",

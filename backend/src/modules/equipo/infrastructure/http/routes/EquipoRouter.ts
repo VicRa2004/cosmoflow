@@ -139,6 +139,7 @@ export class EquipoRouter {
 			responses: {
 				204: { description: "Equipo eliminado" },
 				...escribir("equipos:eliminar"),
+				409: errorResponse("Es el único equipo de algún proyecto (RN-31)"),
 			},
 		});
 		this.router.delete("/:id", actualizar, controller.eliminar);

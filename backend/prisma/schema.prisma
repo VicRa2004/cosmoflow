@@ -345,6 +345,7 @@ model Organizacion {
   roles        RolOrganizacion[]
   tags         Tag[]
   equipos      Equipo[]
+  proyectos    Proyecto[]
 
   @@map("organizacion")
 }
@@ -361,6 +362,7 @@ model MiembroOrganizacion {
   usuario      Usuario                  @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
   roles        MiembroRolOrganizacion[]
   equipos      MiembroEquipo[]
+  proyectos    IntegranteProyecto[]
 
   @@id([organizacionId, usuarioId])
   @@index([usuarioId])
@@ -448,8 +450,9 @@ model Equipo {
   organizacion Organizacion    @relation(fields: [organizacionId], references: [id], onDelete: Cascade)
   miembros     MiembroEquipo[]
   tags         EquipoTag[]
+  proyectos    ProyectoEquipo[]
 
-  /// Destino de la FK compuesta de `MiembroEquipo`
+  /// Destino de las FK compuestas de `MiembroEquipo` y `ProyectoEquipo`
   @@unique([organizacionId, id])
   @@index([organizacionId])
   @@map("equipo")
@@ -485,4 +488,62 @@ model EquipoTag {
   @@id([equipoId, tagId])
   @@index([tagId])
   @@map("equipo_tag")
+}
+
+enum EstadoProyecto {
+  activo
+  en_pausa
+  terminado
+
+  @@map("estado_proyecto")
+}
+
+/// Trabajo dentro de una organización (RN-30), con al menos un equipo (RN-31).
+model Proyecto {
+  id             Int            @id @default(autoincrement()) @map("pry_id")
+  organizacionId Int            @map("pry_fkorganizacion")
+  nombre         String         @map("pry_nombre") @db.VarChar(100)
+  descripcion    String         @default("") @map("pry_descripcion") @db.VarChar(500)
+  estado         EstadoProyecto @default(activo) @map("pry_estado")
+  createdAt      DateTime       @default(now()) @map("created_at")
+  updatedAt      DateTime?      @updatedAt @map("updated_at")
+  /// Borrado lógico (RN-91)
+  deletedAt      DateTime?      @map("deleted_at")
+
+  organizacion Organizacion         @relation(fields: [organizacionId], references: [id], onDelete: Cascade)
+  equipos      ProyectoEquipo[]
+  integrantes  IntegranteProyecto[]
+
+  /// Destino de las FK compuestas de `ProyectoEquipo` e `IntegranteProyecto`
+  @@unique([organizacionId, id])
+  @@index([organizacionId])
+  @@map("proyecto")
+}
+
+/// FK compuestas: el equipo es de la misma organización que el proyecto.
+model ProyectoEquipo {
+  organizacionId Int @map("pre_fkorganizacion")
+  proyectoId     Int @map("pre_fkproyecto")
+  equipoId       Int @map("pre_fkequipo")
+
+  proyecto Proyecto @relation(fields: [organizacionId, proyectoId], references: [organizacionId, id], onDelete: Cascade)
+  equipo   Equipo   @relation(fields: [organizacionId, equipoId], references: [organizacionId, id], onDelete: Cascade)
+
+  @@id([proyectoId, equipoId])
+  @@index([organizacionId, equipoId])
+  @@map("proyecto_equipo")
+}
+
+/// Integrante suelto (RN-32). FK a `MiembroOrganizacion`: salir de ella lo quita del proyecto.
+model IntegranteProyecto {
+  organizacionId Int @map("ipr_fkorganizacion")
+  proyectoId     Int @map("ipr_fkproyecto")
+  usuarioId      Int @map("ipr_fkusuario")
+
+  proyecto Proyecto            @relation(fields: [organizacionId, proyectoId], references: [organizacionId, id], onDelete: Cascade)
+  miembro  MiembroOrganizacion @relation(fields: [organizacionId, usuarioId], references: [organizacionId, usuarioId], onDelete: Cascade)
+
+  @@id([proyectoId, usuarioId])
+  @@index([organizacionId, usuarioId])
+  @@map("integrante_proyecto")
 }

@@ -5,7 +5,7 @@ import type { TagDto } from "@/modules/tags/api/tagsApi";
 import type { EquipoDto } from "../api/equiposApi";
 import { useGestionEquipos } from "../hooks/useEquipos";
 import { equipoAFormValues, equipoFormSchema } from "../schemas/equipoSchemas";
-import { CasillasIds } from "./CasillasIds";
+import { CasillasIds, primerError } from "./CasillasIds";
 
 interface EquipoFormProps {
 	organizacionId: number;
@@ -15,15 +15,6 @@ interface EquipoFormProps {
 	tags: TagDto[];
 	onGuardado: () => void;
 }
-
-const primerError = (errores: unknown[]) => {
-	const error = errores[0];
-	if (typeof error === "string") return error;
-	if (error && typeof error === "object" && "message" in error) {
-		return String(error.message);
-	}
-	return undefined;
-};
 
 /** Datos, miembros (mínimo 2), líder opcional y tags de la organización. */
 export function EquipoForm({

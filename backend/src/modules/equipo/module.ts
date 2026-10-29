@@ -11,6 +11,7 @@ import { ObtenerEquipoUseCase } from "./application/useCases/ObtenerEquipoUseCas
 import { ObtenerEquiposUseCase } from "./application/useCases/ObtenerEquiposUseCase";
 import { EquipoController } from "./infrastructure/http/controllers/EquipoController";
 import { EquipoRouter } from "./infrastructure/http/routes/EquipoRouter";
+import { EQUIPO_TOKENS } from "./infrastructure/tokens";
 import { PrismaEquipoRepository } from "./infrastructure/repository/PrismaEquipoRepository";
 
 export const equipoModule: AppModule = {
@@ -20,6 +21,9 @@ export const equipoModule: AppModule = {
 			ORGANIZACION_TOKENS.SalidaMiembro,
 			() => new SalidaMiembroEquipos(new PrismaEquipoRepository()),
 		);
+		container.set(EQUIPO_TOKENS.BajaEquipo, () => ({
+			comprobar: async () => {},
+		}));
 	},
 	mount(app, container) {
 		const repo = new PrismaEquipoRepository();
@@ -35,7 +39,11 @@ export const equipoModule: AppModule = {
 					crear: new CrearEquipoUseCase(repo, acceso),
 					actualizar: new ActualizarEquipoUseCase(repo, acceso),
 					delegados: new CambiarDelegadosUseCase(repo, acceso),
-					eliminar: new EliminarEquipoUseCase(repo, acceso),
+					eliminar: new EliminarEquipoUseCase(
+						repo,
+						acceso,
+						container.get(EQUIPO_TOKENS.BajaEquipo),
+					),
 				}),
 			).router,
 		);
