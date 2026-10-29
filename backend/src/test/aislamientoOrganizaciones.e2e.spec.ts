@@ -3,7 +3,16 @@ import type { Correo } from "@/core/shared/domain/Mailer";
 import { container } from "@/core/shared/infrastructure/di/container";
 import { TOKENS } from "@/core/shared/infrastructure/di/tokens";
 import { app } from "@/core/shared/infrastructure/http/server";
-import { api, crearUsuario, login, vaciarUsuarios } from "@/test/e2e";
+import {
+	api as apiBase,
+	crearUsuario,
+	login,
+	vaciarUsuarios,
+} from "@/test/e2e";
+
+// IP propia: sus invitaciones no gastan el cupo de correos (por IP) de los demás e2e.
+const api: typeof apiBase = (ruta, init = {}) =>
+	apiBase(ruta, { ip: "10.99.0.1", ...init });
 
 const correos: Correo[] = [];
 spyOn(container.get(TOKENS.Mailer), "enviar").mockImplementation(
