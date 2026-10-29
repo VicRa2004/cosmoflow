@@ -8,13 +8,15 @@ import { useProyectosQuery } from "@/modules/proyectos/hooks/useProyectos";
 import type { DestinoTarea, TareaDto } from "../api/tareasApi";
 import { useMoverTareaMutation } from "../hooks/useTareasMutation";
 
-/** `"equipo:5"` / `"proyecto:2"` ↔ destino de la API. */
+/** `"organizacion:1"` / `"equipo:5"` / `"proyecto:2"` ↔ destino de la API. */
 const aDestino = (valor: string): DestinoTarea | null => {
 	const [tipo, id] = valor.split(":");
 	if (!id) return null;
-	return tipo === "equipo"
-		? { equipoId: Number(id) }
-		: { proyectoId: Number(id) };
+	return tipo === "organizacion"
+		? { organizacionId: Number(id) }
+		: tipo === "equipo"
+			? { equipoId: Number(id) }
+			: { proyectoId: Number(id) };
 };
 
 function Destinos({ organizacionId }: { organizacionId: number }) {
@@ -22,6 +24,9 @@ function Destinos({ organizacionId }: { organizacionId: number }) {
 	const { data: proyectos = [] } = useProyectosQuery(organizacionId);
 	return (
 		<>
+			<option value={`organizacion:${organizacionId}`}>
+				Toda la organización
+			</option>
 			<optgroup label="Equipos">
 				{equipos.map((e) => (
 					<option key={e.id} value={`equipo:${e.id}`}>
@@ -40,7 +45,7 @@ function Destinos({ organizacionId }: { organizacionId: number }) {
 	);
 }
 
-/** RN-45: una tarea personal pasa a un equipo o proyecto, sin vuelta atrás. */
+/** RN-45: una tarea personal pasa a la organización, un equipo o un proyecto, sin vuelta atrás. */
 export function MoverTareaDialog({
 	tarea,
 	abierto,
@@ -76,8 +81,8 @@ export function MoverTareaDialog({
 				}}
 			>
 				<p className="text-sm text-tinta-tenue">
-					Pasará a ser del equipo o proyecto y ya no volverá a ser personal. Sus
-					tags personales se quitan.
+					Pasará a ser compartida y ya no volverá a ser personal. Sus tags
+					personales se quitan.
 				</p>
 				<Select
 					label="Organización"
@@ -102,7 +107,7 @@ export function MoverTareaDialog({
 						value={destino}
 						onChange={(e) => setDestino(e.target.value)}
 					>
-						<option value="">Elige un equipo o proyecto</option>
+						<option value="">Elige un destino</option>
 						<Destinos organizacionId={organizacionId} />
 					</Select>
 				)}

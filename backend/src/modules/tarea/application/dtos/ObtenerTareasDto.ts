@@ -1,7 +1,8 @@
 import type { TareaFiltros } from "../../domain/repository/TareaRepository";
 
-/** Sin `equipoId` ni `proyectoId`, las personales. */
+/** Sin destino, las personales; `organizacionId` solo, las de la organización. */
 export interface ObtenerTareasDto extends TareaFiltros {
+	organizacionId?: number;
 	equipoId?: number;
 	proyectoId?: number;
 }

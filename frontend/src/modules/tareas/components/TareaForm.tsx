@@ -3,7 +3,7 @@ import { useState } from "react";
 import { Button } from "@/core/components/ui/Button";
 import { EditorMarkdown } from "@/modules/adjuntos/components/EditorMarkdown";
 import { useAppForm } from "@/core/components/form/useAppForm";
-import type { TareaDto } from "../api/tareasApi";
+import { destinoDe, type TareaDto } from "../api/tareasApi";
 import { CampoResponsables } from "./CampoResponsables";
 import { MoverTareaDialog } from "./MoverTareaDialog";
 import {
@@ -23,7 +23,7 @@ import { SelectorTags } from "@/modules/tags/components/SelectorTags";
 interface TareaFormProps {
 	/** Sin `inicial` crea; con él, edita. */
 	inicial?: TareaDto;
-	/** Al crear: equipo o proyecto donde va (sin él, personal). */
+	/** Al crear: organización, equipo o proyecto donde va (sin él, personal). */
 	contexto?: ContextoTareaSearch;
 	onGuardado: () => void;
 	onVolver: () => void;
@@ -46,7 +46,10 @@ export function TareaForm({
 	const proyectoId = inicial ? inicial.proyectoId : contexto?.proyectoId;
 	const organizacionId =
 		(inicial ? inicial.organizacionId : contexto?.organizacionId) ?? null;
-	const compartida = organizacionId !== null && Boolean(equipoId || proyectoId);
+	const destino =
+		organizacionId !== null
+			? destinoDe({ organizacionId, equipoId, proyectoId })
+			: undefined;
 
 	const form = useAppForm({
 		defaultValues: inicial ? tareaAFormValues(inicial) : tareaFormVacio,
@@ -62,14 +65,7 @@ export function TareaForm({
 				});
 			} else {
 				await crear.mutateAsync(
-					compartida
-						? {
-								...datos,
-								equipoId: equipoId ?? undefined,
-								proyectoId: proyectoId ?? undefined,
-								responsableIds,
-							}
-						: datos,
+					destino ? { ...datos, ...destino, responsableIds } : datos,
 				);
 			}
 			onGuardado();
@@ -92,7 +88,7 @@ export function TareaForm({
 								onClick={() => setMoviendo(true)}
 							>
 								<FolderInput className="h-4 w-4" />
-								Mover a equipo o proyecto
+								Mover a una organización
 							</Button>
 						)}
 						<form.BotonEnviar>{inicial ? "Guardar" : "Crear"}</form.BotonEnviar>
@@ -147,7 +143,7 @@ export function TareaForm({
 						/>
 					)}
 				</form.AppField>
-				{compartida && organizacionId !== null && (
+				{organizacionId !== null && (
 					<form.Field name="responsableIds">
 						{(campo) => (
 							<CampoResponsables
@@ -165,13 +161,7 @@ export function TareaForm({
 					{() => (
 						<EditorMarkdown
 							label="Contenido"
-							ambito={
-								equipoId
-									? { equipoId }
-									: proyectoId
-										? { proyectoId }
-										: undefined
-							}
+							ambito={destino}
 							className="-ml-12"
 							placeholder="Escribe o pulsa «/»: lista de tareas, título, imagen…"
 						/>

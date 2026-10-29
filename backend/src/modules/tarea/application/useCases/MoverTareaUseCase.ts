@@ -12,7 +12,7 @@ const adjuntosEnlazados = (markdown: string) =>
 	[...markdown.matchAll(/\/api\/adjuntos\/(\d+)/g)].map((m) => Number(m[1]));
 
 /**
- * RN-45: personal → equipo o proyecto, con los permisos del destino (RN-22). Nunca al
+ * RN-45: personal → organización, equipo o proyecto, con los permisos del destino (RN-22). Nunca al
  * revés. Sus imágenes propias pasan a verse en el destino.
  */
 export class MoverTareaUseCase {
@@ -34,9 +34,7 @@ export class MoverTareaUseCase {
 			id,
 		);
 		if (!tarea.esPersonal()) {
-			throw new TareaInvalidaError(
-				"Una tarea de equipo o proyecto no se puede mover",
-			);
+			throw new TareaInvalidaError("Una tarea compartida no se puede mover");
 		}
 		const contexto = await this.contextos.exigirCrear(usuarioId, destino);
 		tarea.mover({ organizacionId: contexto.organizacionId, ...destino });

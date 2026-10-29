@@ -6,7 +6,7 @@ import type { ContextoTarea } from "../services/ContextosTarea";
 
 /**
  * Tags del dueño (personal) o de la organización (compartida), RN-60; responsables
- * entre los miembros del equipo o proyecto (RN-23).
+ * entre los miembros de la organización, equipo o proyecto (RN-23).
  */
 export async function validarTarea(
 	repo: TareaRepository,
@@ -24,7 +24,7 @@ export async function validarTarea(
 		tarea.getResponsableIds().some((id) => !contexto?.miembroIds.includes(id))
 	) {
 		throw new TareaInvalidaError(
-			"Los responsables deben ser miembros del equipo o proyecto",
+			"Los responsables deben ser miembros del destino de la tarea",
 		);
 	}
 }

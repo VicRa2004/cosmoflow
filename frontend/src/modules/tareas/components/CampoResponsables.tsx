@@ -12,8 +12,8 @@ interface CampoResponsablesProps {
 }
 
 /**
- * Responsables entre los miembros del equipo, o de los equipos e integrantes del
- * proyecto (RN-23, 44). Solo para tareas compartidas.
+ * Responsables entre los miembros del equipo, de los equipos e integrantes del
+ * proyecto, o de toda la organización si no hay ninguno (RN-23, 44). Solo para tareas compartidas.
  */
 export function CampoResponsables({
 	organizacionId,
@@ -27,6 +27,7 @@ export function CampoResponsables({
 	const { data: proyectos = [] } = useProyectosQuery(organizacionId);
 	const proyecto = proyectos.find((p) => p.id === proyectoId);
 	const equipoIds = equipoId ? [equipoId] : (proyecto?.equipoIds ?? []);
+	const deOrganizacion = !equipoId && !proyectoId;
 	const posibles = new Set([
 		...equipos
 			.filter((e) => equipoIds.includes(e.id))
@@ -38,7 +39,7 @@ export function CampoResponsables({
 		<CasillasIds
 			leyenda="Responsables"
 			opciones={miembros
-				.filter((m) => posibles.has(m.usuarioId))
+				.filter((m) => deOrganizacion || posibles.has(m.usuarioId))
 				.map((m) => ({ id: m.usuarioId, etiqueta: m.nombre }))}
 			valor={valor}
 			onChange={onChange}

@@ -1,5 +1,5 @@
 import { useNavigate } from "@tanstack/react-router";
-import { Trash2 } from "lucide-react";
+import { ListTodo, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { Badge } from "@/core/components/ui/Badge";
 import { Button } from "@/core/components/ui/Button";
@@ -53,6 +53,16 @@ export function OrganizacionPage({ id }: { id: number }) {
 						<p className="text-sm text-tinta-tenue">{data.descripcion}</p>
 					)}
 				</div>
+				<Button
+					variant="secondary"
+					size="sm"
+					onClick={() =>
+						navigate({ to: "/tareas", search: { organizacionId: data.id } })
+					}
+				>
+					<ListTodo className="h-4 w-4" />
+					Tareas
+				</Button>
 				<Badge variant={data.isAdmin ? "purple" : "default"}>
 					{data.isAdmin ? "Administrador" : "Miembro"}
 				</Badge>

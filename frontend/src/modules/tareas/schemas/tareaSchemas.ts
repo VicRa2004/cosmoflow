@@ -26,8 +26,9 @@ const prioridades = Object.keys(ETIQUETAS_PRIORIDAD) as [
 const idSearch = z.coerce.number().int().positive().optional().catch(undefined);
 
 /**
- * `?organizacionId=&equipoId=` o `&proyectoId=`: tareas de ese equipo o proyecto
- * (lista y alta). La organización sirve para sus tags y miembros.
+ * `?organizacionId=` solo: tareas de la organización sin equipo ni proyecto;
+ * con `&equipoId=` o `&proyectoId=`, las de ese equipo o proyecto (lista y alta).
+ * La organización sirve también para sus tags y miembros.
  */
 export const contextoTareaSearch = z.object({
 	organizacionId: idSearch,

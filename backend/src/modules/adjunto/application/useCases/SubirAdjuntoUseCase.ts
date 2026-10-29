@@ -13,7 +13,7 @@ export const ADJUNTO_MAX_BYTES = 5 * 1024 * 1024;
 /**
  * Guarda una imagen del usuario. No se vincula a una tarea o nota: el markdown
  * la referencia por URL, así se puede subir antes de guardar la tarea. Con `ambito`
- * (desde una tarea o nota compartida) lo ven también los miembros de ese equipo o proyecto.
+ * (desde una tarea o nota compartida) lo ven también los miembros de esa organización, equipo o proyecto.
  * shortcut: las imágenes que se quitan del markdown quedan huérfanas en disco; añadir una limpieza programada si el espacio importa.
  */
 export class SubirAdjuntoUseCase {
@@ -47,6 +47,8 @@ export class SubirAdjuntoUseCase {
 				clave,
 				tipo: formato.tipo,
 				bytes: datos.byteLength,
+				organizacionId:
+					ambito && "organizacionId" in ambito ? ambito.organizacionId : null,
 				equipoId: ambito && "equipoId" in ambito ? ambito.equipoId : null,
 				proyectoId: ambito && "proyectoId" in ambito ? ambito.proyectoId : null,
 			});

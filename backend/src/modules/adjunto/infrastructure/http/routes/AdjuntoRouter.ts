@@ -36,7 +36,7 @@ export class AdjuntoRouter {
 			tags,
 			security,
 			summary:
-				"Subir una imagen (multipart, campo «archivo», máx. 5 MB); con equipoId o proyectoId la ven sus miembros",
+				"Subir una imagen (multipart, campo «archivo», máx. 5 MB); con organizacionId, equipoId o proyectoId la ven sus miembros",
 			request: {
 				query: ambitoAdjuntoQuerySchema,
 				body: {
@@ -54,7 +54,7 @@ export class AdjuntoRouter {
 				201: jsonResponse(adjuntoDtoSchema, "Imagen guardada"),
 				400: errorResponse("Archivo ausente o no es PNG, JPEG ni WebP"),
 				...protectedErrorResponses(`${recurso}:crear`),
-				404: errorResponse("Equipo o proyecto no encontrado"),
+				404: errorResponse("Organización, equipo o proyecto no encontrado"),
 				413: errorResponse("El archivo supera los 5 MB"),
 			},
 		});
@@ -75,7 +75,7 @@ export class AdjuntoRouter {
 			tags,
 			security,
 			summary:
-				"Imagen de un adjunto propio o compartido con un equipo o proyecto del que se es miembro",
+				"Imagen de un adjunto propio o compartido con una organización, equipo o proyecto del que se es miembro",
 			request: { params: adjuntoIdSchema },
 			responses: {
 				200: {

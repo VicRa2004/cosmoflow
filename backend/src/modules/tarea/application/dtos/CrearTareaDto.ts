@@ -12,8 +12,9 @@ export interface CamposTareaDto {
 	responsableIds?: number[];
 }
 
-/** Sin `equipoId` ni `proyectoId`, personal. */
+/** Sin destino, personal; `organizacionId` solo, de la organización sin equipo ni proyecto. */
 export interface CrearTareaDto extends CamposTareaDto {
+	organizacionId?: number;
 	equipoId?: number;
 	proyectoId?: number;
 }

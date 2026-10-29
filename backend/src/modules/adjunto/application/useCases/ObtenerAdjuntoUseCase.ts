@@ -3,7 +3,7 @@ import { AdjuntoNoEncontradoError } from "../../domain/error/AdjuntoNoEncontrado
 import type { AdjuntoRepository } from "../../domain/repository/AdjuntoRepository";
 import type { MiembrosAmbito } from "../services/MiembrosAmbito";
 
-/** Lo ve su dueño y, si está compartido, los miembros de ese equipo o proyecto. */
+/** Lo ve su dueño y, si está compartido, los miembros de esa organización, equipo o proyecto. */
 export class ObtenerAdjuntoUseCase {
 	constructor(
 		private readonly adjuntoRepository: AdjuntoRepository,

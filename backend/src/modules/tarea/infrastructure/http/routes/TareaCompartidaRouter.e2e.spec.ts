@@ -186,6 +186,35 @@ describe("Tareas de equipo y proyecto (e2e)", () => {
 		expect(lista.totalElementos).toBe(1);
 	});
 
+	it("en la organización, sin equipo ni proyecto, crea cualquier miembro y solo ellos la ven", async () => {
+		const crear = await post("/api/tareas", t.caro, {
+			titulo: "Renovar dominio",
+			organizacionId: acme,
+			responsableIds: [id.beto],
+		});
+		expect(crear.status).toBe(201);
+		const tarea = await crear.json();
+		expect(tarea).toMatchObject({
+			organizacionId: acme,
+			equipoId: null,
+			proyectoId: null,
+		});
+
+		// Solo las de la organización: las de sus equipos y proyectos van aparte.
+		const lista = await (
+			await api(`/api/tareas?organizacionId=${acme}`, { token: t.ana })
+		).json();
+		expect(lista.datos.map((d: { id: number }) => d.id)).toEqual([tarea.id]);
+
+		expect(
+			(await api(`/api/tareas?organizacionId=${acme}`, { token: t.zoe }))
+				.status,
+		).toBe(404);
+		expect(
+			(await api(`/api/tareas/${tarea.id}`, { token: t.zoe })).status,
+		).toBe(404);
+	});
+
 	it("salir de la organización lo quita como responsable (decisión 20)", async () => {
 		expect(
 			(

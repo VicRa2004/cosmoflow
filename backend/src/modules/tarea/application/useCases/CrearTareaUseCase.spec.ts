@@ -9,6 +9,7 @@ import { CrearTareaUseCase } from "./CrearTareaUseCase";
 
 const USUARIO = 7;
 const EQUIPO = 5;
+const ORGANIZACION = 10;
 
 const preparar = ({
 	tagsValidos = true,
@@ -31,16 +32,52 @@ const preparar = ({
 		),
 	};
 	const proyectos = { contexto: mock(async () => null) };
+	const organizaciones = {
+		contexto: mock(async () =>
+			esMiembro
+				? {
+						organizacionId: ORGANIZACION,
+						miembroIds: [USUARIO, 9],
+						puedeCrear: true,
+					}
+				: null,
+		),
+	};
 	return {
 		repo,
 		useCase: new CrearTareaUseCase(
 			repo as never,
-			new ContextosTarea(equipos, proyectos),
+			new ContextosTarea(equipos, proyectos, organizaciones),
 		),
 	};
 };
 
 describe("CrearTareaUseCase", () => {
+	it("crea la tarea de la organización, sin equipo ni proyecto, con responsables de sus miembros", async () => {
+		const { useCase } = preparar();
+		const tarea = await useCase.ejecutar(USUARIO, {
+			titulo: "Demo",
+			organizacionId: ORGANIZACION,
+			responsableIds: [9],
+		});
+		expect(tarea).toMatchObject({
+			organizacionId: ORGANIZACION,
+			equipoId: null,
+			proyectoId: null,
+			responsableIds: [9],
+		});
+	});
+
+	it("no crea en una organización de la que no es miembro", async () => {
+		const { useCase } = preparar({ esMiembro: false });
+		await expect(
+			useCase.ejecutar(USUARIO, {
+				titulo: "Demo",
+				organizacionId: ORGANIZACION,
+			}),
+		).rejects.toThrow(ContextoNoEncontradoError);
+	});
+
 	it("crea la tarea personal sin consultar tags si no lleva", async () => {
 		const { repo, useCase } = preparar();
 		const tarea = await useCase.ejecutar(USUARIO, { titulo: "Demo" });
@@ -93,7 +130,7 @@ describe("CrearTareaUseCase", () => {
 				equipoId: EQUIPO,
 				responsableIds: [99],
 			}),
-		).rejects.toThrow("miembros del equipo o proyecto");
+		).rejects.toThrow("miembros del destino");
 	});
 
 	it("con líder, quien no es líder ni delegado no crea (RN-22)", async () => {

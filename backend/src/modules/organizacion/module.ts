@@ -4,6 +4,7 @@ import { TOKENS } from "@/core/shared/infrastructure/di/tokens";
 import { AUTH_TOKENS } from "@/modules/auth";
 import { AccesoOrganizacionService } from "./application/services/AccesoOrganizacionService";
 import { EmisorInvitaciones } from "./application/services/EmisorInvitaciones";
+import { TareasOrganizacionService } from "./application/services/TareasOrganizacionService";
 import { ActualizarRolUseCase } from "./application/useCases/ActualizarRolUseCase";
 import { AsignarRolesUseCase } from "./application/useCases/AsignarRolesUseCase";
 import { CrearRolUseCase } from "./application/useCases/CrearRolUseCase";
@@ -46,6 +47,10 @@ export const organizacionModule: AppModule = {
 		container.set(
 			ORGANIZACION_TOKENS.AccesoOrganizacion,
 			() => new AccesoOrganizacionService(new PrismaOrganizacionRepository()),
+		);
+		container.set(
+			ORGANIZACION_TOKENS.TareasOrganizacion,
+			() => new TareasOrganizacionService(new PrismaOrganizacionRepository()),
 		);
 		container.set(ORGANIZACION_TOKENS.SalidaMiembro, () => ({
 			comprobar: async () => {},

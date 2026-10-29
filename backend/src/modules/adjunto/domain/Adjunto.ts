@@ -6,9 +6,13 @@ export interface Adjunto {
 	clave: string;
 	tipo: string;
 	bytes: number;
-	/** Compartido con un equipo o proyecto: también lo ven sus miembros. */
+	/** Compartido con una organización, equipo o proyecto: también lo ven sus miembros. */
+	organizacionId: number | null;
 	equipoId: number | null;
 	proyectoId: number | null;
 }
 
-export type AmbitoAdjunto = { equipoId: number } | { proyectoId: number };
+export type AmbitoAdjunto =
+	| { organizacionId: number }
+	| { equipoId: number }
+	| { proyectoId: number };

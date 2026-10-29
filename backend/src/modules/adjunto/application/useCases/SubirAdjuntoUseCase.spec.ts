@@ -73,7 +73,11 @@ describe("SubirAdjuntoUseCase", () => {
 		const { useCase, crear } = preparar();
 		await useCase.ejecutar(7, PNG, { proyectoId: 4 });
 		expect(crear).toHaveBeenCalledWith(
-			expect.objectContaining({ equipoId: null, proyectoId: 4 }),
+			expect.objectContaining({
+				organizacionId: null,
+				equipoId: null,
+				proyectoId: 4,
+			}),
 		);
 
 		const ajeno = preparar(undefined, false);

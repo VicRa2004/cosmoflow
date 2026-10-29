@@ -7,7 +7,7 @@ import type { ContextosTarea } from "../services/ContextosTarea";
 import { destinoDe } from "./destinoDe";
 import { validarTarea } from "./validarTarea";
 
-/** Personal, o en un equipo o proyecto respetando RN-22. */
+/** Personal, o en la organización, un equipo o un proyecto respetando RN-22. */
 export class CrearTareaUseCase {
 	constructor(
 		private readonly tareaRepository: TareaRepository,
@@ -15,8 +15,9 @@ export class CrearTareaUseCase {
 	) {}
 
 	async ejecutar(usuarioId: number, dto: CrearTareaDto): Promise<TareaDto> {
-		const { equipoId, proyectoId, responsableIds, ...campos } = dto;
-		const destino = destinoDe({ equipoId, proyectoId });
+		const { organizacionId, equipoId, proyectoId, responsableIds, ...campos } =
+			dto;
+		const destino = destinoDe({ organizacionId, equipoId, proyectoId });
 		const contexto = destino
 			? await this.contextos.exigirCrear(usuarioId, destino)
 			: null;

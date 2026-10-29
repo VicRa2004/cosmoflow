@@ -43,7 +43,11 @@ const preparar = (
 		repo,
 		useCase: new ActualizarTareaUseCase(
 			repo as never,
-			new ContextosTarea(equipos, { contexto: mock(async () => null) }),
+			new ContextosTarea(
+				equipos,
+				{ contexto: mock(async () => null) },
+				{ contexto: mock(async () => null) },
+			),
 		),
 	};
 };

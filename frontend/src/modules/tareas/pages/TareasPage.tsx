@@ -7,7 +7,7 @@ import { EncabezadoPagina } from "@/core/components/ui/EncabezadoPagina";
 import { ConfirmDialog } from "@/core/components/ui/ConfirmDialog";
 import { Input } from "@/core/components/ui/Input";
 import { Select } from "@/core/components/ui/Select";
-import type { EstadoTarea, TareaDto } from "../api/tareasApi";
+import { destinoDe, type EstadoTarea, type TareaDto } from "../api/tareasApi";
 import { TareaLectura } from "../components/TareaLectura";
 import { TareasTable } from "../components/TareasTable";
 import { useEliminarTareaMutation } from "../hooks/useTareasMutation";
@@ -19,8 +19,9 @@ import {
 } from "../schemas/tareaSchemas";
 import { useEquiposQuery } from "@/modules/equipos/hooks/useEquipos";
 import { useProyectosQuery } from "@/modules/proyectos/hooks/useProyectos";
+import { useOrganizacionQuery } from "@/modules/organizaciones/hooks/useOrganizacionesQuery";
 
-/** «Tareas · Plataforma»: nombre del equipo o proyecto de la lista. */
+/** «Tareas · Plataforma»: nombre del equipo, proyecto u organización de la lista. */
 function TituloContexto({
 	organizacionId,
 	equipoId,
@@ -29,21 +30,23 @@ function TituloContexto({
 	ContextoTareaSearch) {
 	const { data: equipos } = useEquiposQuery(organizacionId);
 	const { data: proyectos } = useProyectosQuery(organizacionId);
+	const { data: organizacion } = useOrganizacionQuery(organizacionId);
 	const nombre = equipoId
 		? equipos?.find((e) => e.id === equipoId)?.nombre
-		: proyectos?.find((p) => p.id === proyectoId)?.nombre;
+		: proyectoId
+			? proyectos?.find((p) => p.id === proyectoId)?.nombre
+			: organizacion?.nombre;
 	return <>Tareas · {nombre ?? "…"}</>;
 }
 
-/** Sin `contexto`, las personales; con él, las de ese equipo o proyecto. */
+/** Sin `contexto`, las personales; con él, las de esa organización, equipo o proyecto. */
 export function TareasPage({
 	contexto = {},
 }: {
 	contexto?: ContextoTareaSearch;
 }) {
 	const { organizacionId, equipoId, proyectoId } = contexto;
-	const enContexto =
-		organizacionId !== undefined && Boolean(equipoId || proyectoId);
+	const enContexto = organizacionId !== undefined;
 	const { puede } = usePermisos();
 	const [pagina, setPagina] = useState(1);
 	const [busqueda, setBusqueda] = useState("");
@@ -62,7 +65,7 @@ export function TareasPage({
 		busqueda: busqueda.trim() || undefined,
 		estado: estado || undefined,
 		tagId: tagId ? Number(tagId) : undefined,
-		...(enContexto && { equipoId, proyectoId }),
+		...(enContexto && destinoDe({ organizacionId, equipoId, proyectoId })),
 	});
 
 	return (

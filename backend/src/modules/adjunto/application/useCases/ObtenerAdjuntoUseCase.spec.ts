@@ -11,6 +11,7 @@ const privado: Adjunto = {
 	clave: "adjuntos/7/x.png",
 	tipo: "image/png",
 	bytes: 3,
+	organizacionId: null,
 	equipoId: null,
 	proyectoId: null,
 };

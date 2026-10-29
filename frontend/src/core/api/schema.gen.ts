@@ -2759,6 +2759,7 @@ export interface paths {
                     busqueda?: string;
                     estado?: "pendiente" | "en_progreso" | "completada" | "cancelada";
                     tagId?: string;
+                    organizacionId?: string;
                     equipoId?: string;
                     proyectoId?: string;
                 };
@@ -2844,6 +2845,7 @@ export interface paths {
                         fechaVencimiento?: string | null;
                         tagIds?: number[];
                         responsableIds?: number[];
+                        organizacionId?: number;
                         equipoId?: number;
                         proyectoId?: number;
                     };
@@ -3195,6 +3197,8 @@ export interface paths {
             requestBody: {
                 content: {
                     "application/json": {
+                        organizacionId: number;
+                    } | {
                         equipoId: number;
                     } | {
                         proyectoId: number;
@@ -3593,10 +3597,11 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Subir una imagen (multipart, campo «archivo», máx. 5 MB); con equipoId o proyectoId la ven sus miembros */
+        /** Subir una imagen (multipart, campo «archivo», máx. 5 MB); con organizacionId, equipoId o proyectoId la ven sus miembros */
         post: {
             parameters: {
                 query?: {
+                    organizacionId?: string;
                     equipoId?: string;
                     proyectoId?: string;
                 };
@@ -3649,7 +3654,7 @@ export interface paths {
                         "application/json": components["schemas"]["ErrorResponse"];
                     };
                 };
-                /** @description Equipo o proyecto no encontrado */
+                /** @description Organización, equipo o proyecto no encontrado */
                 404: {
                     headers: {
                         [name: string]: unknown;
@@ -3682,7 +3687,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Imagen de un adjunto propio o compartido con un equipo o proyecto del que se es miembro */
+        /** Imagen de un adjunto propio o compartido con una organización, equipo o proyecto del que se es miembro */
         get: {
             parameters: {
                 query?: never;

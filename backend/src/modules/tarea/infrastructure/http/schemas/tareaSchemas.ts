@@ -18,27 +18,39 @@ const campos = {
 	fechaInicio: dia.optional(),
 	fechaVencimiento: dia.optional(),
 	tagIds: z.array(z.number().int().positive()).max(50).optional(),
-	/** Solo en las de equipo o proyecto (RN-44). */
+	/** Solo en las compartidas (RN-44). */
 	responsableIds: z.array(z.number().int().positive()).max(50).optional(),
 };
 
 const id = z.number().int().positive();
 const unSoloDestino = {
-	message: "Una tarea es de un equipo o de un proyecto, no de los dos",
+	message:
+		"Una tarea es de la organización, de un equipo o de un proyecto: solo uno",
 	path: ["proyectoId"],
 };
-const sinDosDestinos = (v: { equipoId?: unknown; proyectoId?: unknown }) =>
-	v.equipoId === undefined || v.proyectoId === undefined;
+const sinDosDestinos = (v: {
+	organizacionId?: unknown;
+	equipoId?: unknown;
+	proyectoId?: unknown;
+}) =>
+	[v.organizacionId, v.equipoId, v.proyectoId].filter((d) => d !== undefined)
+		.length <= 1;
 
-/** Sin `equipoId` ni `proyectoId`, personal. */
+/** Sin destino, personal; `organizacionId` solo, de la organización. */
 export const crearTareaSchema = z
-	.object({ ...campos, equipoId: id.optional(), proyectoId: id.optional() })
+	.object({
+		...campos,
+		organizacionId: id.optional(),
+		equipoId: id.optional(),
+		proyectoId: id.optional(),
+	})
 	.refine(sinDosDestinos, unSoloDestino);
 
 export const actualizarTareaSchema = z.object(campos).partial();
 
-/** RN-45: de personal a un equipo o a un proyecto. */
+/** RN-45: de personal a la organización, a un equipo o a un proyecto. */
 export const moverTareaSchema = z.union([
+	z.object({ organizacionId: id }).strict(),
 	z.object({ equipoId: id }).strict(),
 	z.object({ proyectoId: id }).strict(),
 ]);
@@ -57,12 +69,13 @@ export const paginacionSchema = z.object({
 	limite: numero.optional().default(10),
 });
 
-/** Sin `equipoId` ni `proyectoId`, las personales. */
+/** Sin destino, las personales; `organizacionId` solo, las de la organización. */
 export const obtenerTareasSchema = paginacionSchema
 	.extend({
 		busqueda: z.string().trim().min(1).max(128).optional(),
 		estado: z.enum(ESTADOS_TAREA).optional(),
 		tagId: numero.optional(),
+		organizacionId: numero.optional(),
 		equipoId: numero.optional(),
 		proyectoId: numero.optional(),
 	})

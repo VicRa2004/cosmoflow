@@ -3,6 +3,7 @@ import { TOKENS } from "@/core/shared/infrastructure/di/tokens";
 import { ADJUNTO_TOKENS } from "@/modules/adjunto";
 import { AUTH_TOKENS } from "@/modules/auth";
 import { EQUIPO_TOKENS } from "@/modules/equipo";
+import { ORGANIZACION_TOKENS } from "@/modules/organizacion";
 import { PROYECTO_TOKENS } from "@/modules/proyecto";
 import { ContextosTarea } from "./application/services/ContextosTarea";
 import { MoverTareaUseCase } from "./application/useCases/MoverTareaUseCase";
@@ -22,6 +23,7 @@ export const tareaModule: AppModule = {
 		const contextos = new ContextosTarea(
 			container.get(EQUIPO_TOKENS.TareasEquipo),
 			container.get(PROYECTO_TOKENS.TareasProyecto),
+			container.get(ORGANIZACION_TOKENS.TareasOrganizacion),
 		);
 		const router = new TareaRouter(
 			container.get(AUTH_TOKENS.AuthMiddleware),

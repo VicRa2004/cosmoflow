@@ -2,8 +2,11 @@ import { apiClient } from "@/core/api/client";
 import type { components } from "@/core/api/schema.gen";
 
 export type AdjuntoDto = components["schemas"]["AdjuntoDto"];
-/** Con quién se comparte la imagen: los miembros de ese equipo o proyecto la ven. */
-export type AmbitoAdjunto = { equipoId: number } | { proyectoId: number };
+/** Con quién se comparte la imagen: los miembros de esa organización, equipo o proyecto la ven. */
+export type AmbitoAdjunto =
+	| { organizacionId: number }
+	| { equipoId: number }
+	| { proyectoId: number };
 
 export const adjuntosApi = {
 	async subir(archivo: File, ambito?: AmbitoAdjunto): Promise<AdjuntoDto> {

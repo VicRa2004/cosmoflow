@@ -18,13 +18,29 @@ export interface ObtenerTareasParams {
 	busqueda?: string;
 	estado?: EstadoTarea;
 	tagId?: number;
-	/** Sin equipo ni proyecto, las personales. */
+	/** Sin destino, las personales; `organizacionId` solo, las de la organización. */
+	organizacionId?: number;
 	equipoId?: number;
 	proyectoId?: number;
 }
 
-/** RN-45: de personal a un equipo o a un proyecto. */
-export type DestinoTarea = { equipoId: number } | { proyectoId: number };
+/** RN-45: de personal a la organización, a un equipo o a un proyecto. */
+export type DestinoTarea =
+	| { organizacionId: number }
+	| { equipoId: number }
+	| { proyectoId: number };
+
+/** Destino de una tarea compartida: equipo, proyecto o, si no, la organización sola. */
+export const destinoDe = ({
+	organizacionId,
+	equipoId,
+	proyectoId,
+}: {
+	organizacionId: number;
+	equipoId?: number | null;
+	proyectoId?: number | null;
+}): DestinoTarea =>
+	equipoId ? { equipoId } : proyectoId ? { proyectoId } : { organizacionId };
 
 export const tareasApi = {
 	async obtenerTodos(params: ObtenerTareasParams = {}): Promise<TareasPagina> {

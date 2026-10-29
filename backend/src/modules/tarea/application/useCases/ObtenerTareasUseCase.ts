@@ -7,7 +7,7 @@ import { TareaMapper } from "../mappers/TareaMapper";
 import type { ContextosTarea } from "../services/ContextosTarea";
 import { destinoDe } from "./destinoDe";
 
-/** Las personales, o las de un equipo o proyecto del que se es miembro. */
+/** Las personales, o las de una organización, equipo o proyecto del que se es miembro. */
 export class ObtenerTareasUseCase {
 	constructor(
 		private readonly tareaRepository: TareaRepository,
@@ -16,9 +16,9 @@ export class ObtenerTareasUseCase {
 
 	async ejecutar(
 		usuarioId: number,
-		{ equipoId, proyectoId, ...filtros }: ObtenerTareasDto,
+		{ organizacionId, equipoId, proyectoId, ...filtros }: ObtenerTareasDto,
 	): Promise<Paginacion<TareaDto>> {
-		const destino = destinoDe({ equipoId, proyectoId });
+		const destino = destinoDe({ organizacionId, equipoId, proyectoId });
 		if (destino && !(await this.contextos.de(usuarioId, destino))) {
 			throw new ContextoNoEncontradoError();
 		}

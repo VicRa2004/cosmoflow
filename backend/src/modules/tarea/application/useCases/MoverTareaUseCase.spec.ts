@@ -25,7 +25,11 @@ const preparar = (tarea: Tarea, puedeCrear = true) => {
 		adjuntos,
 		useCase: new MoverTareaUseCase(
 			repo as never,
-			new ContextosTarea(equipos, { contexto: mock(async () => null) }),
+			new ContextosTarea(
+				equipos,
+				{ contexto: mock(async () => null) },
+				{ contexto: mock(async () => null) },
+			),
 			adjuntos,
 		),
 	};

@@ -259,14 +259,15 @@ model Tarea {
   /// Borrado lógico (RN-91)
   deletedAt        DateTime?      @map("deleted_at")
 
-  /// Tarea compartida (RN-40): de un equipo o de un proyecto, nunca de los dos.
-  /// Sin ellos es personal. CHECK de exclusividad en la migración.
+  /// Tarea compartida (RN-40): de la organización, de un equipo o de un proyecto
+  /// (nunca de los dos). Sin organización es personal. CHECK en la migración.
   organizacionId   Int?           @map("tar_fkorganizacion")
   equipoId         Int?           @map("tar_fkequipo")
   proyectoId       Int?           @map("tar_fkproyecto")
 
   /// Quien la creó; en las personales, su dueño
   usuario      Usuario            @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  organizacion Organizacion?      @relation(fields: [organizacionId], references: [id], onDelete: Cascade)
   equipo       Equipo?            @relation(fields: [organizacionId, equipoId], references: [organizacionId, id], onDelete: Cascade)
   proyecto     Proyecto?          @relation(fields: [organizacionId, proyectoId], references: [organizacionId, id], onDelete: Cascade)
   tags         TareaTag[]
@@ -275,6 +276,7 @@ model Tarea {
   /// Destino de la FK compuesta de `TareaResponsable`
   @@unique([organizacionId, id])
   @@index([usuarioId, estado])
+  @@index([organizacionId])
   @@index([equipoId])
   @@index([proyectoId])
   @@map("tarea")
@@ -356,12 +358,15 @@ model Adjunto {
   bytes     Int      @map("adj_bytes")
   createdAt DateTime @default(now()) @map("created_at")
 
-  /// Compartido con un equipo o proyecto (sus miembros lo ven); sin ellos, solo su
-  /// dueño. Se fija al subirlo desde una tarea o nota compartida o al mover la tarea.
-  equipoId   Int? @map("adj_fkequipo")
-  proyectoId Int? @map("adj_fkproyecto")
+  /// Compartido con una organización, equipo o proyecto (sus miembros lo ven); sin
+  /// ellos, solo su dueño. Se fija al subirlo desde una tarea o nota compartida o al
+  /// mover la tarea.
+  organizacionId Int? @map("adj_fkorganizacion")
+  equipoId       Int? @map("adj_fkequipo")
+  proyectoId     Int? @map("adj_fkproyecto")
 
-  usuario  Usuario   @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  usuario      Usuario       @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  organizacion Organizacion? @relation(fields: [organizacionId], references: [id], onDelete: SetNull)
   equipo   Equipo?   @relation(fields: [equipoId], references: [id], onDelete: SetNull)
   proyecto Proyecto? @relation(fields: [proyectoId], references: [id], onDelete: SetNull)
 
@@ -389,6 +394,8 @@ model Organizacion {
   tags         Tag[]
   equipos      Equipo[]
   proyectos    Proyecto[]
+  tareas       Tarea[]
+  adjuntos     Adjunto[]
 
   @@map("organizacion")
 }

@@ -1,4 +1,5 @@
 import type { TareasEquipo } from "@/modules/equipo";
+import type { TareasOrganizacion } from "@/modules/organizacion";
 import type { TareasProyecto } from "@/modules/proyecto";
 import { ContextoNoEncontradoError } from "../../domain/error/ContextoNoEncontradoError";
 import { SinPermisoTareasError } from "../../domain/error/SinPermisoTareasError";
@@ -12,23 +13,31 @@ export interface ContextoTarea {
 	puedeCrear: boolean;
 }
 
-/** Equipo o proyecto de una tarea compartida, visto por quien pide. */
+/** Organización, equipo o proyecto de una tarea compartida, visto por quien pide. */
 export class ContextosTarea {
 	constructor(
 		private readonly equipos: TareasEquipo,
 		private readonly proyectos: TareasProyecto,
+		private readonly organizaciones: TareasOrganizacion,
 	) {}
 
 	/** `null` si no existe o no es miembro. */
 	async de(
 		usuarioId: number,
-		ubicacion: { equipoId?: number | null; proyectoId?: number | null },
+		ubicacion: {
+			organizacionId?: number | null;
+			equipoId?: number | null;
+			proyectoId?: number | null;
+		},
 	): Promise<ContextoTarea | null> {
 		if (ubicacion.equipoId) {
 			return this.equipos.contexto(usuarioId, ubicacion.equipoId);
 		}
 		if (ubicacion.proyectoId) {
 			return this.proyectos.contexto(usuarioId, ubicacion.proyectoId);
+		}
+		if (ubicacion.organizacionId) {
+			return this.organizaciones.contexto(usuarioId, ubicacion.organizacionId);
 		}
 		return null;
 	}

@@ -26,8 +26,11 @@ export interface DatosTarea {
 	tagIds: number[];
 }
 
-/** Equipo o proyecto destino de una tarea compartida, nunca los dos. */
-export type DestinoTarea = { equipoId: number } | { proyectoId: number };
+/** Organización (sin equipo ni proyecto), equipo o proyecto de una tarea compartida. */
+export type DestinoTarea =
+	| { organizacionId: number }
+	| { equipoId: number }
+	| { proyectoId: number };
 
 export interface UbicacionTarea {
 	organizacionId: number | null;
@@ -42,7 +45,7 @@ const PERSONAL: UbicacionTarea = {
 };
 
 /**
- * Personal (RN-40: de su dueño) o compartida en un equipo o proyecto, con
+ * Personal (RN-40: de su dueño) o compartida en la organización, un equipo o un proyecto, con
  * responsables (RN-44). Solo se mueve de personal a compartida (RN-45).
  */
 export class Tarea extends Entity {
@@ -65,7 +68,7 @@ export class Tarea extends Entity {
 		this.responsableIds = responsableIds;
 	}
 
-	/** Sin `en`, personal; con él, compartida en ese equipo o proyecto. */
+	/** Sin `en`, personal; con él, compartida en esa organización, equipo o proyecto. */
 	public static crear(
 		usuarioId: number,
 		datos: Partial<DatosTarea> & { titulo: string },
@@ -141,12 +144,10 @@ export class Tarea extends Entity {
 		return this.ubicacion.organizacionId === null;
 	}
 
-	/** RN-45: solo de personal a equipo o proyecto. Sus tags personales no viajan. */
+	/** RN-45: solo de personal a compartida. Sus tags personales no viajan. */
 	public mover(destino: { organizacionId: number } & DestinoTarea): void {
 		if (!this.esPersonal()) {
-			throw new TareaInvalidaError(
-				"Una tarea de equipo o proyecto no se puede mover",
-			);
+			throw new TareaInvalidaError("Una tarea compartida no se puede mover");
 		}
 		this.ubicacion = Tarea.ubicar(destino);
 		this.datos = { ...this.datos, tagIds: [] };

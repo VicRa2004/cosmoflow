@@ -63,7 +63,9 @@ export class PrismaTareaRepository implements TareaRepository {
 				// Las personales son las suyas sin organización: las que movió ya no.
 				...("usuarioId" in ambito
 					? { usuarioId: ambito.usuarioId, organizacionId: null }
-					: ambito),
+					: "organizacionId" in ambito
+						? { ...ambito, equipoId: null, proyectoId: null }
+						: ambito),
 				deletedAt: null,
 				...(busqueda && {
 					titulo: { contains: busqueda, mode: "insensitive" },

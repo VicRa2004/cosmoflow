@@ -21,6 +21,7 @@ export class PrismaAdjuntoRepository implements AdjuntoRepository {
 			where: {
 				id: { in: adjuntoIds },
 				usuarioId,
+				organizacionId: null,
 				equipoId: null,
 				proyectoId: null,
 			},
