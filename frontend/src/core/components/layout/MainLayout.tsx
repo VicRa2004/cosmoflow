@@ -7,6 +7,7 @@ import {
 	ShieldCheck,
 	UserCheck,
 	LogOut,
+	ListTodo,
 	Tag,
 } from "lucide-react";
 import { useAuthStore } from "@/core/auth/store";
@@ -65,6 +66,10 @@ export function MainLayout({ children }: MainLayoutProps) {
 								>
 									<LayoutDashboard className="h-4 w-4" />
 									Dashboard
+								</Link>
+								<Link to="/tareas">
+									<ListTodo className="h-4 w-4" />
+									Tareas
 								</Link>
 								<Link
 									to="/tags"

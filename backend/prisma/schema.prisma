@@ -38,6 +38,7 @@ model Usuario {
   refreshTokens    RefreshToken[]
   tokensCuenta     TokenCuenta[]
   tags             Tag[]
+  tareas           Tarea[]
 
   @@map("usuario")
 }
@@ -208,8 +209,62 @@ model Tag {
   /// ignorando los borrados (Prisma no admite índices únicos parciales).
   deletedAt DateTime? @map("deleted_at")
 
-  usuario Usuario @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  usuario Usuario    @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  tareas  TareaTag[]
 
   @@index([usuarioId])
   @@map("tag")
+}
+
+// Generado por gen:module: ajustar campos y @map a las convenciones de la tabla.
+enum EstadoTarea {
+  pendiente
+  en_progreso
+  completada
+  cancelada
+
+  @@map("estado_tarea")
+}
+
+enum PrioridadTarea {
+  baja
+  media
+  alta
+
+  @@map("prioridad_tarea")
+}
+
+/// Tarea personal (RN-40): de su dueño, sin equipo ni proyecto (llegan en la Fase 2).
+model Tarea {
+  id               Int            @id @default(autoincrement()) @map("tar_id")
+  usuarioId        Int            @map("tar_fkusuario")
+  titulo           String         @map("tar_titulo") @db.VarChar(255)
+  /// Markdown (RN-41)
+  contenido        String         @default("") @map("tar_contenido")
+  estado           EstadoTarea    @default(pendiente) @map("tar_estado")
+  prioridad        PrioridadTarea @default(media) @map("tar_prioridad")
+  fechaInicio      DateTime?      @map("tar_fecha_inicio") @db.Date
+  fechaVencimiento DateTime?      @map("tar_fecha_vencimiento") @db.Date
+  createdAt        DateTime       @default(now()) @map("created_at")
+  updatedAt        DateTime?      @updatedAt @map("updated_at")
+  /// Borrado lógico (RN-91)
+  deletedAt        DateTime?      @map("deleted_at")
+
+  usuario Usuario    @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  tags    TareaTag[]
+
+  @@index([usuarioId, estado])
+  @@map("tarea")
+}
+
+model TareaTag {
+  tareaId Int @map("tat_fktarea")
+  tagId   Int @map("tat_fktag")
+
+  tarea Tarea @relation(fields: [tareaId], references: [id], onDelete: Cascade)
+  tag   Tag   @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([tareaId, tagId])
+  @@index([tagId])
+  @@map("tarea_tag")
 }

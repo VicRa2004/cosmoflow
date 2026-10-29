@@ -6,7 +6,7 @@
 import { prisma } from "../src/core/config/prisma";
 
 // Recursos personales: cada usuario solo opera sobre los suyos (lo filtra el repositorio).
-const CRUD_PERSONAL = ["tags"].flatMap((recurso) =>
+const CRUD_PERSONAL = ["tags", "tareas"].flatMap((recurso) =>
 	["crear", "leer", "actualizar", "eliminar"].map((accion) => ({
 		recurso,
 		accion,

@@ -69,6 +69,7 @@ frontend/src/
 │   │   ├── components/             # RolCard, CrearRolForm, PermisosChecklist, AsignacionUsuarioPanel
 │   │   └── pages/                  # RolesPage.tsx
 │   │
+│   ├── tareas/                     # Tareas personales: filtros por estado/tag, SelectorTags (usa tags/)
 │   ├── tags/                       # Tags personales (generado con gen:module): api/ components/ hooks/ pages/ schemas/
 │   │
 │   └── usuarios/                      # Módulo de Usuarios
@@ -91,6 +92,7 @@ frontend/src/
 │       ├── dashboard.tsx           # Vista /dashboard
 │       ├── usuarios.tsx               # Vista /usuarios
 │       ├── roles.tsx               # Vista /roles
+│       ├── tareas.tsx              # Vista /tareas
 │       ├── tags.tsx                # Vista /tags (tags personales)
 │       └── perfil.tsx              # Vista /perfil
 │

@@ -5,6 +5,7 @@ import { autorizacionModule } from "@/modules/autorizacion/module";
 import { auditoriaModule } from "@/modules/auditoria/module";
 import { eventosModule } from "@/modules/eventos/module";
 import { tagModule } from "@/modules/tag/module";
+import { tareaModule } from "@/modules/tarea/module";
 
 /**
  * Módulos activos, en orden de registro. Añadir o quitar un módulo = tocar esta lista
@@ -17,4 +18,5 @@ export const modules: AppModule[] = [
 	eventosModule,
 	auditoriaModule,
 	tagModule,
+	tareaModule,
 ];

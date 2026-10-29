@@ -2369,6 +2369,344 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/tareas": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Listar tareas (paginado) */
+        get: {
+            parameters: {
+                query?: {
+                    pagina?: string;
+                    limite?: string;
+                    busqueda?: string;
+                    estado?: "pendiente" | "en_progreso" | "completada" | "cancelada";
+                    tagId?: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Lista paginada */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            datos: components["schemas"]["TareaDto"][];
+                            /** @example 1 */
+                            pagina: number;
+                            /** @example 10 */
+                            totalElementos: number;
+                            /** @example 1 */
+                            totalPaginas: number;
+                        };
+                    };
+                };
+                /** @description Parámetros inválidos */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description No autenticado */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Permiso denegado (requiere tareas:leer) */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        /** Crear tarea */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        titulo: string;
+                        contenido?: string;
+                        /** @enum {string} */
+                        estado?: "pendiente" | "en_progreso" | "completada" | "cancelada";
+                        /** @enum {string} */
+                        prioridad?: "baja" | "media" | "alta";
+                        /**
+                         * Format: date
+                         * @example 2026-11-15
+                         */
+                        fechaInicio?: string | null;
+                        /**
+                         * Format: date
+                         * @example 2026-11-15
+                         */
+                        fechaVencimiento?: string | null;
+                        tagIds?: number[];
+                    };
+                };
+            };
+            responses: {
+                /** @description Tarea creado */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["TareaDto"];
+                    };
+                };
+                /** @description Validación fallida, fechas incoherentes o tags ajenos */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description No autenticado */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Permiso denegado (requiere tareas:crear) */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/tareas/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Obtener tarea por ID */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Tarea encontrado */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["TareaDto"];
+                    };
+                };
+                /** @description No autenticado */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Permiso denegado (requiere tareas:leer) */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Tarea no encontrada */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        /** Actualizar tarea */
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        titulo?: string;
+                        contenido?: string;
+                        /** @enum {string} */
+                        estado?: "pendiente" | "en_progreso" | "completada" | "cancelada";
+                        /** @enum {string} */
+                        prioridad?: "baja" | "media" | "alta";
+                        /**
+                         * Format: date
+                         * @example 2026-11-15
+                         */
+                        fechaInicio?: string | null;
+                        /**
+                         * Format: date
+                         * @example 2026-11-15
+                         */
+                        fechaVencimiento?: string | null;
+                        tagIds?: number[];
+                    };
+                };
+            };
+            responses: {
+                /** @description Tarea actualizado */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["TareaDto"];
+                    };
+                };
+                /** @description Validación fallida, fechas incoherentes o tags ajenos */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description No autenticado */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Permiso denegado (requiere tareas:actualizar) */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Tarea no encontrada */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        /** Eliminar tarea */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Tarea eliminado */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description No autenticado */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Permiso denegado (requiere tareas:eliminar) */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Tarea no encontrada */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -2469,6 +2807,29 @@ export interface components {
             /** @example urgente */
             nombre: string;
         };
+        TareaDto: {
+            /** @example 1 */
+            id: number;
+            /** @example Preparar la demo */
+            titulo: string;
+            /** @example - [ ] Diapositivas */
+            contenido: string;
+            /** @enum {string} */
+            estado: "pendiente" | "en_progreso" | "completada" | "cancelada";
+            /** @enum {string} */
+            prioridad: "baja" | "media" | "alta";
+            /**
+             * Format: date
+             * @example 2026-11-15
+             */
+            fechaInicio: string | null;
+            /**
+             * Format: date
+             * @example 2026-11-15
+             */
+            fechaVencimiento: string | null;
+            tagIds: number[];
+        };
     };
     responses: never;
     parameters: never;
@@ -2484,5 +2845,6 @@ export type RolDto = components['schemas']['RolDto'];
 export type AsignacionUsuario = components['schemas']['AsignacionUsuario'];
 export type RegistroAuditoria = components['schemas']['RegistroAuditoria'];
 export type TagDto = components['schemas']['TagDto'];
+export type TareaDto = components['schemas']['TareaDto'];
 export type $defs = Record<string, never>;
 export type operations = Record<string, never>;
