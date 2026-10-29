@@ -2,11 +2,10 @@ import { Plus, Search } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/core/components/ui/Button";
 import { ConfirmDialog } from "@/core/components/ui/ConfirmDialog";
-import { Dialog } from "@/core/components/ui/Dialog";
 import { Input } from "@/core/components/ui/Input";
 import { Select } from "@/core/components/ui/Select";
 import type { EstadoTarea, TareaDto } from "../api/tareasApi";
-import { TareaForm } from "../components/TareaForm";
+import { TareaDialog } from "../components/TareaDialog";
 import { TareasTable } from "../components/TareasTable";
 import { useEliminarTareaMutation } from "../hooks/useTareasMutation";
 import { useTagsDisponibles } from "../hooks/useTagsDisponibles";
@@ -33,42 +32,44 @@ export function TareasPage() {
 
 	return (
 		<div className="space-y-6">
-			<div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+			<div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
 				<h1 className="text-2xl font-bold tracking-tight text-tinta">Tareas</h1>
-				<div className="flex flex-wrap gap-2">
-					<Select
-						aria-label="Filtrar por estado"
-						value={estado}
-						onChange={(e) => {
-							setEstado(e.target.value as EstadoTarea | "");
-							setPagina(1);
-						}}
-						className="sm:w-40"
-					>
-						<option value="">Todos los estados</option>
-						{Object.entries(ETIQUETAS_ESTADO).map(([valor, texto]) => (
-							<option key={valor} value={valor}>
-								{texto}
-							</option>
-						))}
-					</Select>
-					{tags.length > 0 && (
+				<div className="flex flex-col gap-2 sm:flex-row">
+					<div className="w-full sm:w-44">
 						<Select
-							aria-label="Filtrar por tag"
-							value={tagId}
+							aria-label="Filtrar por estado"
+							value={estado}
 							onChange={(e) => {
-								setTagId(e.target.value);
+								setEstado(e.target.value as EstadoTarea | "");
 								setPagina(1);
 							}}
-							className="sm:w-40"
 						>
-							<option value="">Todos los tags</option>
-							{tags.map((tag) => (
-								<option key={tag.id} value={tag.id}>
-									{tag.nombre}
+							<option value="">Todos los estados</option>
+							{Object.entries(ETIQUETAS_ESTADO).map(([valor, texto]) => (
+								<option key={valor} value={valor}>
+									{texto}
 								</option>
 							))}
 						</Select>
+					</div>
+					{tags.length > 0 && (
+						<div className="w-full sm:w-40">
+							<Select
+								aria-label="Filtrar por tag"
+								value={tagId}
+								onChange={(e) => {
+									setTagId(e.target.value);
+									setPagina(1);
+								}}
+							>
+								<option value="">Todos los tags</option>
+								{tags.map((tag) => (
+									<option key={tag.id} value={tag.id}>
+										{tag.nombre}
+									</option>
+								))}
+							</Select>
+						</div>
 					)}
 					<div className="relative w-full sm:w-64">
 						<Input
@@ -99,19 +100,7 @@ export function TareasPage() {
 				onEliminar={setEliminando}
 			/>
 
-			<Dialog
-				abierto={editando !== null}
-				onCerrar={() => setEditando(null)}
-				titulo={editando === "nuevo" ? "Nueva tarea" : "Editar tarea"}
-			>
-				{editando !== null && (
-					<TareaForm
-						key={editando === "nuevo" ? "nuevo" : editando.id}
-						inicial={editando === "nuevo" ? undefined : editando}
-						onGuardado={() => setEditando(null)}
-					/>
-				)}
-			</Dialog>
+			<TareaDialog editando={editando} onCerrar={() => setEditando(null)} />
 
 			<ConfirmDialog
 				abierto={eliminando !== null}

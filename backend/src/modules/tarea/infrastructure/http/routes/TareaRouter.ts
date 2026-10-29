@@ -11,6 +11,7 @@ import {
 	actualizarTareaSchema,
 	crearTareaSchema,
 	obtenerTareasSchema,
+	paginacionSchema,
 	tareaDtoSchema,
 	tareaIdSchema,
 	tareaPaginaSchema,
@@ -70,6 +71,28 @@ export class TareaRouter {
 			"/",
 			guard.handle(recurso, "leer"),
 			controller.obtenerTodos,
+		);
+
+		// Antes de "/{id}": si no, "pendientes" se tomaría por un ID.
+		docs.registerPath({
+			method: "get",
+			path: "/pendientes",
+			tags,
+			security,
+			summary: "Tareas pendientes",
+			description:
+				"Pendientes y en progreso, por vencimiento más próximo (sin fecha al final) y, a igual fecha, por prioridad (RN-43).",
+			request: { query: paginacionSchema },
+			responses: {
+				200: jsonResponse(tareaPaginaSchema, "Lista paginada"),
+				400: errorResponse("Parámetros inválidos"),
+				...protectedErrorResponses(`${recurso}:leer`),
+			},
+		});
+		this.router.get(
+			"/pendientes",
+			guard.handle(recurso, "leer"),
+			controller.obtenerPendientes,
 		);
 
 		docs.registerPath({

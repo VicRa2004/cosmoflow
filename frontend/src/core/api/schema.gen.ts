@@ -2515,6 +2515,83 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/tareas/pendientes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Tareas pendientes
+         * @description Pendientes y en progreso, por vencimiento más próximo (sin fecha al final) y, a igual fecha, por prioridad (RN-43).
+         */
+        get: {
+            parameters: {
+                query?: {
+                    pagina?: string;
+                    limite?: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Lista paginada */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            datos: components["schemas"]["TareaDto"][];
+                            /** @example 1 */
+                            pagina: number;
+                            /** @example 10 */
+                            totalElementos: number;
+                            /** @example 1 */
+                            totalPaginas: number;
+                        };
+                    };
+                };
+                /** @description Parámetros inválidos */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description No autenticado */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Permiso denegado (requiere tareas:leer) */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/tareas/{id}": {
         parameters: {
             query?: never;

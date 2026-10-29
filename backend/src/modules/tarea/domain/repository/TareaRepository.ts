@@ -19,6 +19,14 @@ export interface TareaRepository {
 		usuarioId: number,
 		filtros: TareaFiltros,
 	) => Promise<Paginacion<Tarea>>;
+	/**
+	 * Pendientes y en progreso (RN-43): vencimiento más próximo primero, sin fecha
+	 * al final; a igual fecha, más prioridad primero.
+	 */
+	buscarPendientes: (
+		usuarioId: number,
+		paginacion: { pagina: number; limite: number },
+	) => Promise<Paginacion<Tarea>>;
 	buscarPorId: (usuarioId: number, id: number) => Promise<Tarea | null>;
 	/** `true` si todos son tags vivos (no borrados) del usuario. */
 	sonTagsPropios: (usuarioId: number, tagIds: number[]) => Promise<boolean>;

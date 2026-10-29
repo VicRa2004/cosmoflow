@@ -46,23 +46,56 @@ export class PrismaTareaRepository implements TareaRepository {
 		usuarioId: number,
 		{ pagina, limite, busqueda, estado, tagId }: TareaFiltros,
 	): Promise<Paginacion<Tarea>> {
-		const where: Prisma.TareaWhereInput = {
-			usuarioId,
-			deletedAt: null,
-			...(busqueda && {
-				titulo: { contains: busqueda, mode: "insensitive" },
-			}),
-			...(estado && { estado }),
-			...(tagId && { tags: { some: { tagId, tag: { deletedAt: null } } } }),
-		};
+		return this.paginar(
+			{
+				usuarioId,
+				deletedAt: null,
+				...(busqueda && {
+					titulo: { contains: busqueda, mode: "insensitive" },
+				}),
+				...(estado && { estado }),
+				...(tagId && { tags: { some: { tagId, tag: { deletedAt: null } } } }),
+			},
+			[{ createdAt: "desc" }, { id: "desc" }],
+			pagina,
+			limite,
+		);
+	}
 
+	async buscarPendientes(
+		usuarioId: number,
+		{ pagina, limite }: { pagina: number; limite: number },
+	): Promise<Paginacion<Tarea>> {
+		return this.paginar(
+			{
+				usuarioId,
+				deletedAt: null,
+				estado: { in: ["pendiente", "en_progreso"] },
+			},
+			[
+				{ fechaVencimiento: { sort: "asc", nulls: "last" } },
+				// El enum de Postgres ordena por declaración: baja < media < alta.
+				{ prioridad: "desc" },
+				{ id: "asc" },
+			],
+			pagina,
+			limite,
+		);
+	}
+
+	private async paginar(
+		where: Prisma.TareaWhereInput,
+		orderBy: Prisma.TareaOrderByWithRelationInput[],
+		pagina: number,
+		limite: number,
+	): Promise<Paginacion<Tarea>> {
 		const [registros, totalElementos] = await prisma.$transaction([
 			prisma.tarea.findMany({
 				where,
 				include,
+				orderBy,
 				skip: (pagina - 1) * limite,
 				take: limite,
-				orderBy: [{ createdAt: "desc" }, { id: "desc" }],
 			}),
 			prisma.tarea.count({ where }),
 		]);

@@ -3,11 +3,13 @@ import type { ActualizarTareaUseCase } from "../../../application/useCases/Actua
 import type { CrearTareaUseCase } from "../../../application/useCases/CrearTareaUseCase";
 import type { EliminarTareaUseCase } from "../../../application/useCases/EliminarTareaUseCase";
 import type { ObtenerTareaUseCase } from "../../../application/useCases/ObtenerTareaUseCase";
+import type { ObtenerPendientesUseCase } from "../../../application/useCases/ObtenerPendientesUseCase";
 import type { ObtenerTareasUseCase } from "../../../application/useCases/ObtenerTareasUseCase";
 import {
 	actualizarTareaSchema,
 	crearTareaSchema,
 	obtenerTareasSchema,
+	paginacionSchema,
 	tareaIdSchema,
 } from "../schemas/tareaSchemas";
 import { BaseController } from "@/core/shared/infrastructure/http/base.controller";
@@ -21,6 +23,7 @@ export class TareaController extends BaseController {
 		private readonly useCases: {
 			crear: CrearTareaUseCase;
 			obtenerTodos: ObtenerTareasUseCase;
+			obtenerPendientes: ObtenerPendientesUseCase;
 			obtenerUno: ObtenerTareaUseCase;
 			actualizar: ActualizarTareaUseCase;
 			eliminar: EliminarTareaUseCase;
@@ -44,6 +47,18 @@ export class TareaController extends BaseController {
 			return this.ok(
 				c,
 				await this.useCases.obtenerTodos.ejecutar(c.get("usuario").id, dto),
+			);
+		});
+
+	obtenerPendientes = (c: Context<AuthEnv>): Promise<Response> =>
+		this.executeSafely(c, async () => {
+			const dto = validate(paginacionSchema, c.req.query());
+			return this.ok(
+				c,
+				await this.useCases.obtenerPendientes.ejecutar(
+					c.get("usuario").id,
+					dto,
+				),
 			);
 		});
 

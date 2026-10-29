@@ -69,14 +69,14 @@ frontend/src/
 │   │   ├── components/             # RolCard, CrearRolForm, PermisosChecklist, AsignacionUsuarioPanel
 │   │   └── pages/                  # RolesPage.tsx
 │   │
-│   ├── tareas/                     # Tareas personales: filtros por estado/tag, SelectorTags (usa tags/)
+│   ├── tareas/                     # Tareas personales y PendientesPage (portada); SelectorTags usa tags/
 │   ├── tags/                       # Tags personales (generado con gen:module): api/ components/ hooks/ pages/ schemas/
 │   │
 │   └── usuarios/                      # Módulo de Usuarios
 │       ├── api/                    # Llamadas a la API de usuarios (usuariosApi.ts)
 │       ├── components/             # Tablas y tarjetas (UsuariosTable.tsx, PerfilUsuarioCard.tsx)
 │       ├── hooks/                  # Custom hooks de TanStack Query (useUsuariosQuery.ts)
-│       └── pages/                  # Vistas del módulo (DashboardPage.tsx, UsuariosPage.tsx, PerfilPage.tsx)
+│       └── pages/                  # Vistas del módulo (UsuariosPage.tsx, PerfilPage.tsx)
 │
 ├── routes/                         # Enrutamiento tipado basado en archivos (TanStack Router)
 │   ├── __root.tsx                  # Raíz con Toaster de Sonner y Outlet
@@ -89,7 +89,7 @@ frontend/src/
 │   ├── verificar-email.tsx         # ?token= del correo → verifica el email
 │   ├── _authenticated.tsx          # Layout protegido: guardián de sesión
 │   └── _authenticated/             # Rutas hijas protegidas
-│       ├── dashboard.tsx           # Vista /dashboard
+│       ├── dashboard.tsx           # Vista /dashboard: pendientes por vencimiento (RN-43)
 │       ├── usuarios.tsx               # Vista /usuarios
 │       ├── roles.tsx               # Vista /roles
 │       ├── tareas.tsx              # Vista /tareas

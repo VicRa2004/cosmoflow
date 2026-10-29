@@ -5,6 +5,7 @@ import { ActualizarTareaUseCase } from "./application/useCases/ActualizarTareaUs
 import { CrearTareaUseCase } from "./application/useCases/CrearTareaUseCase";
 import { EliminarTareaUseCase } from "./application/useCases/EliminarTareaUseCase";
 import { ObtenerTareaUseCase } from "./application/useCases/ObtenerTareaUseCase";
+import { ObtenerPendientesUseCase } from "./application/useCases/ObtenerPendientesUseCase";
 import { ObtenerTareasUseCase } from "./application/useCases/ObtenerTareasUseCase";
 import { TareaController } from "./infrastructure/http/controllers/TareaController";
 import { TareaRouter } from "./infrastructure/http/routes/TareaRouter";
@@ -19,6 +20,7 @@ export const tareaModule: AppModule = {
 			new TareaController({
 				crear: new CrearTareaUseCase(repo),
 				obtenerTodos: new ObtenerTareasUseCase(repo),
+				obtenerPendientes: new ObtenerPendientesUseCase(repo),
 				obtenerUno: new ObtenerTareaUseCase(repo),
 				actualizar: new ActualizarTareaUseCase(repo),
 				eliminar: new EliminarTareaUseCase(repo),

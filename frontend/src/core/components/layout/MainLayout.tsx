@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
 import {
 	Hexagon,
-	LayoutDashboard,
+	CircleDot,
 	Users,
 	ShieldCheck,
 	UserCheck,
@@ -64,10 +64,13 @@ export function MainLayout({ children }: MainLayoutProps) {
 									to="/dashboard"
 									className="flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-lg text-tinta-suave hover:text-tinta hover:bg-elevada/60 transition-colors [&.active]:bg-indigo-600/10 [&.active]:text-indigo-400 [&.active]:border [&.active]:border-indigo-500/20"
 								>
-									<LayoutDashboard className="h-4 w-4" />
-									Dashboard
+									<CircleDot className="h-4 w-4" />
+									Pendientes
 								</Link>
-								<Link to="/tareas">
+								<Link
+									to="/tareas"
+									className="flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-lg text-tinta-suave hover:text-tinta hover:bg-elevada/60 transition-colors [&.active]:bg-indigo-600/10 [&.active]:text-indigo-400 [&.active]:border [&.active]:border-indigo-500/20"
+								>
 									<ListTodo className="h-4 w-4" />
 									Tareas
 								</Link>

@@ -33,9 +33,12 @@ export const tareaIdSchema = z.object({
 
 const numero = z.string().regex(/^\d+$/).transform(Number);
 
-export const obtenerTareasSchema = z.object({
+export const paginacionSchema = z.object({
 	pagina: numero.optional().default(1),
 	limite: numero.optional().default(10),
+});
+
+export const obtenerTareasSchema = paginacionSchema.extend({
 	busqueda: z.string().trim().min(1).max(128).optional(),
 	estado: z.enum(ESTADOS_TAREA).optional(),
 	tagId: numero.optional(),

@@ -26,6 +26,15 @@ export const tareasApi = {
 		return response.data;
 	},
 
+	async obtenerPendientes(
+		params: { pagina?: number; limite?: number } = {},
+	): Promise<TareasPagina> {
+		const response = await apiClient.get<TareasPagina>("/tareas/pendientes", {
+			params,
+		});
+		return response.data;
+	},
+
 	async crear(datos: CrearTareaInput): Promise<TareaDto> {
 		const response = await apiClient.post<TareaDto>("/tareas", datos);
 		return response.data;
