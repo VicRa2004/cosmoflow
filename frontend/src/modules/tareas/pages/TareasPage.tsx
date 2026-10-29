@@ -8,6 +8,7 @@ import { Input } from "@/core/components/ui/Input";
 import { Select } from "@/core/components/ui/Select";
 import type { EstadoTarea, TareaDto } from "../api/tareasApi";
 import { TareaDialog } from "../components/TareaDialog";
+import { TareaLectura } from "../components/TareaLectura";
 import { TareasTable } from "../components/TareasTable";
 import { useEliminarTareaMutation } from "../hooks/useTareasMutation";
 import { useTagsDisponibles } from "@/modules/tags/hooks/useTagsDisponibles";
@@ -23,6 +24,7 @@ export function TareasPage() {
 	const { tags } = useTagsDisponibles();
 	/** `null` = cerrado; `"nuevo"` = alta; un DTO = edición. */
 	const [editando, setEditando] = useState<TareaDto | "nuevo" | null>(null);
+	const [leyendo, setLeyendo] = useState<TareaDto | null>(null);
 	const [eliminando, setEliminando] = useState<TareaDto | null>(null);
 	const eliminar = useEliminarTareaMutation();
 	const { data, isLoading, error } = useTareasQuery({
@@ -98,10 +100,19 @@ export function TareasPage() {
 				isLoading={isLoading}
 				error={error}
 				onCambioPagina={setPagina}
+				onAbrir={setLeyendo}
 				onEditar={setEditando}
 				onEliminar={setEliminando}
 			/>
 
+			<TareaLectura
+				tarea={leyendo}
+				onCerrar={() => setLeyendo(null)}
+				onEditar={(tarea) => {
+					setLeyendo(null);
+					setEditando(tarea);
+				}}
+			/>
 			<TareaDialog editando={editando} onCerrar={() => setEditando(null)} />
 
 			<ConfirmDialog

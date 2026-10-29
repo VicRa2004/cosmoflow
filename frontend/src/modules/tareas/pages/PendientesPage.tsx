@@ -11,6 +11,7 @@ import type { TareaDto } from "../api/tareasApi";
 import { TagsBadges } from "@/modules/tags/components/TagsBadges";
 import { VencimientoTarea } from "../components/celdas";
 import { TareaDialog } from "../components/TareaDialog";
+import { TareaLectura } from "../components/TareaLectura";
 import { useActualizarTareaMutation } from "../hooks/useTareasMutation";
 import { usePendientesQuery } from "../hooks/useTareasQuery";
 import { ETIQUETAS_ESTADO } from "../schemas/tareaSchemas";
@@ -21,6 +22,7 @@ export function PendientesPage() {
 	const { puede } = usePermisos();
 	const [pagina, setPagina] = useState(1);
 	const [editando, setEditando] = useState<TareaDto | "nuevo" | null>(null);
+	const [leyendo, setLeyendo] = useState<TareaDto | null>(null);
 	const { data, isLoading, error } = usePendientesQuery(pagina);
 	const actualizar = useActualizarTareaMutation();
 
@@ -55,7 +57,7 @@ export function PendientesPage() {
 			celda: (fila) => (
 				<button
 					type="button"
-					onClick={() => setEditando(fila)}
+					onClick={() => setLeyendo(fila)}
 					className="text-left font-medium text-tinta hover:text-indigo-400 hover:underline"
 				>
 					{fila.titulo}
@@ -122,6 +124,14 @@ export function PendientesPage() {
 				}
 			/>
 
+			<TareaLectura
+				tarea={leyendo}
+				onCerrar={() => setLeyendo(null)}
+				onEditar={(tarea) => {
+					setLeyendo(null);
+					setEditando(tarea);
+				}}
+			/>
 			<TareaDialog editando={editando} onCerrar={() => setEditando(null)} />
 		</div>
 	);

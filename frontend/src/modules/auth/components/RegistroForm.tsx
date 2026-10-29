@@ -34,7 +34,7 @@ export function RegistroForm() {
 				<form.AppField name="nombre">
 					{(campo) => (
 						<campo.CampoTexto
-							label="Nombre Completo"
+							label="Nombre completo"
 							placeholder="Juan Pérez"
 							autoComplete="name"
 						/>
@@ -43,7 +43,7 @@ export function RegistroForm() {
 				<form.AppField name="email">
 					{(campo) => (
 						<campo.CampoTexto
-							label="Correo Electrónico"
+							label="Correo electrónico"
 							type="email"
 							placeholder="juan@ejemplo.com"
 							autoComplete="email"

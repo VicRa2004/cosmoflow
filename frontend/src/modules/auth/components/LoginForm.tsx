@@ -1,5 +1,4 @@
 import { useNavigate } from "@tanstack/react-router";
-import { KeyRound, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/core/api/client";
 import { useAuthStore } from "@/core/auth/store";
@@ -38,7 +37,7 @@ export function LoginForm() {
 				<form.AppField name="email">
 					{(campo) => (
 						<campo.CampoTexto
-							label="Correo Electrónico"
+							label="Correo electrónico"
 							type="email"
 							placeholder="usuario@ejemplo.com"
 							autoComplete="email"
@@ -56,25 +55,21 @@ export function LoginForm() {
 					)}
 				</form.AppField>
 
-				<form.BotonEnviar className="w-full mt-2" size="lg">
-					<KeyRound className="h-4 w-4 mr-1.5" />
-					Iniciar Sesión
+				<form.BotonEnviar className="w-full" size="lg">
+					Iniciar sesión
 				</form.BotonEnviar>
 
-				<div className="pt-4 border-t border-borde">
-					<p className="text-xs text-tinta-tenue mb-2 font-medium">
-						Credenciales de prueba del sistema:
-					</p>
+				{/* Solo en desarrollo: el seed demo crea este usuario. */}
+				{import.meta.env.DEV && (
 					<Button
-						variant="outline"
+						variant="ghost"
 						size="sm"
 						onClick={rellenarDemoAdmin}
-						className="w-full text-xs text-indigo-300 border-indigo-900/50 hover:bg-indigo-950/40"
+						className="w-full text-tinta-tenue"
 					>
-						<Sparkles className="h-3.5 w-3.5 text-indigo-400 mr-1.5" />
-						Rellenar como Administrador (admin@dev.com)
+						Rellenar con el admin de prueba
 					</Button>
-				</div>
+				)}
 			</form.Formulario>
 		</form.AppForm>
 	);

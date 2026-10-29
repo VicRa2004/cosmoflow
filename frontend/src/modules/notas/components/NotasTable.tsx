@@ -27,6 +27,8 @@ interface NotasTableProps {
 	isLoading: boolean;
 	error?: unknown;
 	onCambioPagina: (pagina: number) => void;
+	/** Abre la lectura (contenido renderizado). */
+	onAbrir: (fila: NotaDto) => void;
 	onEditar: (fila: NotaDto) => void;
 	onEliminar: (fila: NotaDto) => void;
 }
@@ -36,6 +38,7 @@ export function NotasTable({
 	isLoading,
 	error,
 	onCambioPagina,
+	onAbrir,
 	onEditar,
 	onEliminar,
 }: NotasTableProps) {
@@ -46,7 +49,7 @@ export function NotasTable({
 				<div className="max-w-xl">
 					<button
 						type="button"
-						onClick={() => onEditar(fila)}
+						onClick={() => onAbrir(fila)}
 						className="text-left font-medium text-tinta hover:text-indigo-400 hover:underline"
 					>
 						{fila.titulo}

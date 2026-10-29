@@ -24,6 +24,8 @@ interface TareasTableProps {
 	isLoading: boolean;
 	error?: unknown;
 	onCambioPagina: (pagina: number) => void;
+	/** Abre la lectura (contenido renderizado). */
+	onAbrir: (fila: TareaDto) => void;
 	onEditar: (fila: TareaDto) => void;
 	onEliminar: (fila: TareaDto) => void;
 }
@@ -33,14 +35,22 @@ export function TareasTable({
 	isLoading,
 	error,
 	onCambioPagina,
+	onAbrir,
 	onEditar,
 	onEliminar,
 }: TareasTableProps) {
 	const columnas: Columna<TareaDto>[] = [
 		{
 			cabecera: "Título",
-			className: "font-medium text-tinta",
-			celda: (fila) => fila.titulo,
+			celda: (fila) => (
+				<button
+					type="button"
+					onClick={() => onAbrir(fila)}
+					className="text-left font-medium text-tinta hover:text-indigo-400 hover:underline"
+				>
+					{fila.titulo}
+				</button>
+			),
 		},
 		{
 			cabecera: "Estado",

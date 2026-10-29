@@ -7,8 +7,8 @@ import { SeparadorO } from "../components/SeparadorO";
 export function RegistroPage() {
 	return (
 		<AuthLayout
-			title="Crear Cuenta"
-			subtitle="Únete a la plataforma completando tus datos"
+			title="Crea tu cuenta"
+			subtitle="Empieza a organizar tus tareas y notas."
 		>
 			<BotonGoogle />
 			<SeparadorO />

@@ -30,7 +30,7 @@ export function RecuperarPasswordForm() {
 				<form.AppField name="email">
 					{(campo) => (
 						<campo.CampoTexto
-							label="Correo Electrónico"
+							label="Correo electrónico"
 							type="email"
 							placeholder="usuario@ejemplo.com"
 							autoComplete="email"

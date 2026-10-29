@@ -7,13 +7,13 @@ import { SeparadorO } from "../components/SeparadorO";
 export function LoginPage({ errorGoogle }: { errorGoogle: boolean }) {
 	return (
 		<AuthLayout
-			title="Iniciar Sesión"
-			subtitle="Ingresa tus credenciales para acceder a Cosmoflow"
+			title="Inicia sesión"
+			subtitle="Bienvenido de nuevo. Entra para ver tus pendientes."
 		>
 			{errorGoogle && (
 				<p
 					role="alert"
-					className="mb-4 rounded-lg border border-rose-900/50 bg-rose-950/40 px-3 py-2 text-sm text-rose-300"
+					className="mb-4 rounded-md border border-rose-800 bg-rose-950 px-3 py-2 text-sm text-rose-300"
 				>
 					No se pudo iniciar sesión con Google. Inténtalo de nuevo o usa tu
 					email y contraseña.
@@ -22,7 +22,7 @@ export function LoginPage({ errorGoogle }: { errorGoogle: boolean }) {
 			<BotonGoogle />
 			<SeparadorO />
 			<LoginForm />
-			<div className="mt-4 text-right text-xs">
+			<div className="mt-3 text-right text-[13px]">
 				<Link
 					to="/recuperar-password"
 					className="font-medium text-indigo-400 hover:text-indigo-300 hover:underline"
@@ -30,7 +30,7 @@ export function LoginPage({ errorGoogle }: { errorGoogle: boolean }) {
 					¿Olvidaste tu contraseña?
 				</Link>
 			</div>
-			<div className="mt-6 text-center text-xs text-tinta-tenue">
+			<div className="mt-8 text-center text-sm text-tinta-tenue">
 				¿No tienes una cuenta?{" "}
 				<Link
 					to="/registro"

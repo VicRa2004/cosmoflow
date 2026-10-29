@@ -26,12 +26,12 @@ export function Sidebar({
 	})).filter((grupo) => grupo.items.length > 0);
 
 	return (
-		<div className="flex h-full flex-col">
+		<div className="flex h-full flex-col bg-lateral [color-scheme:dark]">
 			<Link
 				to="/"
 				onClick={onNavegar}
 				className={cn(
-					"flex h-14 shrink-0 items-center gap-2.5 px-4 text-[15px] font-semibold tracking-tight text-tinta",
+					"flex h-14 shrink-0 items-center gap-2.5 px-4 text-[15px] font-semibold tracking-tight text-lateral-tinta",
 					colapsado && "justify-center px-0",
 				)}
 			>
@@ -43,9 +43,9 @@ export function Sidebar({
 				{grupos.map((grupo) => (
 					<div key={grupo.titulo} className="mt-4 first:mt-1">
 						{colapsado ? (
-							<hr className="mx-2 mb-3 border-borde" />
+							<hr className="mx-2 mb-3 border-lateral-borde" />
 						) : (
-							<p className="px-2 pb-1.5 text-xs font-medium text-tinta-tenue">
+							<p className="px-2 pb-1.5 text-xs font-medium text-lateral-tenue">
 								{grupo.titulo}
 							</p>
 						)}
@@ -57,14 +57,14 @@ export function Sidebar({
 										onClick={onNavegar}
 										title={colapsado ? etiqueta : undefined}
 										className={cn(
-											"group flex h-8 items-center gap-2.5 rounded-md px-2 text-sm text-tinta-suave transition-colors hover:bg-elevada hover:text-tinta",
-											"[&.active]:bg-elevada [&.active]:font-medium [&.active]:text-tinta",
+											"group flex h-8 items-center gap-2.5 rounded-md px-2 text-sm text-lateral-suave transition-colors hover:bg-lateral-elevada hover:text-lateral-tinta",
+											"[&.active]:bg-lateral-elevada [&.active]:font-medium [&.active]:text-lateral-tinta",
 											colapsado && "justify-center px-0",
 										)}
 									>
 										<Icono
 											aria-hidden
-											className="size-4 shrink-0 text-tinta-tenue group-[.active]:text-indigo-500"
+											className="size-4 shrink-0 text-lateral-tenue group-[.active]:text-lateral-acento"
 										/>
 										<span className={cn("truncate", colapsado && "sr-only")}>
 											{etiqueta}
@@ -80,7 +80,7 @@ export function Sidebar({
 			{onAlternar && (
 				<div
 					className={cn(
-						"border-t border-borde p-3",
+						"border-t border-lateral-borde p-3",
 						colapsado && "px-0 text-center",
 					)}
 				>
@@ -89,7 +89,7 @@ export function Sidebar({
 						onClick={onAlternar}
 						aria-label={colapsado ? "Expandir menú" : "Colapsar menú"}
 						title={colapsado ? "Expandir menú" : "Colapsar menú"}
-						className="inline-flex size-8 items-center justify-center rounded-md text-tinta-tenue transition-colors hover:bg-elevada hover:text-tinta"
+						className="inline-flex size-8 items-center justify-center rounded-md text-lateral-tenue transition-colors hover:bg-lateral-elevada hover:text-lateral-tinta"
 					>
 						{colapsado ? (
 							<PanelLeftOpen className="size-4" />

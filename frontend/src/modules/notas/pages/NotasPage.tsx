@@ -7,6 +7,8 @@ import { ConfirmDialog } from "@/core/components/ui/ConfirmDialog";
 import { Dialog } from "@/core/components/ui/Dialog";
 import { Input } from "@/core/components/ui/Input";
 import { Select } from "@/core/components/ui/Select";
+import { DialogoLectura } from "@/modules/adjuntos/components/DialogoLectura";
+import { TagsBadges } from "@/modules/tags/components/TagsBadges";
 import { useTagsDisponibles } from "@/modules/tags/hooks/useTagsDisponibles";
 import type { NotaDto } from "../api/notasApi";
 import { NotaForm } from "../components/NotaForm";
@@ -22,6 +24,7 @@ export function NotasPage() {
 	const { tags } = useTagsDisponibles();
 	/** `null` = cerrado; `"nuevo"` = alta; un DTO = edición. */
 	const [editando, setEditando] = useState<NotaDto | "nuevo" | null>(null);
+	const [leyendo, setLeyendo] = useState<NotaDto | null>(null);
 	const [eliminando, setEliminando] = useState<NotaDto | null>(null);
 	const eliminar = useEliminarNotaMutation();
 	const { data, isLoading, error } = useNotasQuery({
@@ -79,8 +82,28 @@ export function NotasPage() {
 				isLoading={isLoading}
 				error={error}
 				onCambioPagina={setPagina}
+				onAbrir={setLeyendo}
 				onEditar={setEditando}
 				onEliminar={setEliminando}
+			/>
+
+			<DialogoLectura
+				abierto={leyendo !== null}
+				onCerrar={() => setLeyendo(null)}
+				titulo={leyendo?.titulo ?? ""}
+				contenido={leyendo?.contenido ?? ""}
+				detalles={
+					leyendo &&
+					leyendo.tagIds.length > 0 && <TagsBadges tagIds={leyendo.tagIds} />
+				}
+				onEditar={
+					leyendo && puede("notas:actualizar")
+						? () => {
+								setEditando(leyendo);
+								setLeyendo(null);
+							}
+						: undefined
+				}
 			/>
 
 			<Dialog

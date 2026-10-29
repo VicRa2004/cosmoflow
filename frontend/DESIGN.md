@@ -2,29 +2,38 @@
 name: Cosmoflow
 description: Productividad personal y de equipo con el oficio del estándar de la categoría (Linear, Notion, Todoist).
 colors:
-  indigo-marca: "oklch(55.5% 0.16 277)"
-  indigo-marca-hover: "oklch(50% 0.16 277)"
-  indigo-foco: "oklch(62% 0.15 277)"
+  indigo-marca: "oklch(53% 0.22 277)"
+  indigo-marca-hover: "oklch(47% 0.21 277)"
+  indigo-foco: "oklch(61% 0.2 277)"
   rose-peligro: "oklch(58.6% 0.253 17.585)"
   rose-peligro-hover: "oklch(51.4% 0.222 16.935)"
-  fondo: "#ffffff"
-  lateral: "oklch(98.2% 0.002 286)"
+  fondo: "oklch(99.2% 0.003 270)"
   superficie: "#ffffff"
-  elevada: "oklch(95.6% 0.003 286)"
-  borde: "oklch(91.6% 0.004 286)"
-  borde-fuerte: "oklch(86.5% 0.006 286)"
-  tinta: "oklch(21% 0.006 285.885)"
-  tinta-suave: "oklch(37% 0.013 285.805)"
-  tinta-tenue: "oklch(55.2% 0.016 285.938)"
-  fondo-oscuro: "oklch(17.5% 0.004 286)"
-  lateral-oscuro: "oklch(15% 0.004 286)"
-  superficie-oscuro: "oklch(20% 0.005 286)"
-  elevada-oscuro: "oklch(24.5% 0.006 286)"
-  borde-oscuro: "oklch(26.5% 0.006 286)"
-  borde-fuerte-oscuro: "oklch(33% 0.008 286)"
-  tinta-oscuro: "oklch(96.7% 0.001 286.375)"
-  tinta-suave-oscuro: "oklch(87.1% 0.006 286.286)"
-  tinta-tenue-oscuro: "oklch(70.5% 0.015 286.067)"
+  elevada: "oklch(96.4% 0.007 270)"
+  borde: "oklch(92.4% 0.009 270)"
+  borde-fuerte: "oklch(86.5% 0.012 270)"
+  tinta: "oklch(22% 0.025 270)"
+  tinta-suave: "oklch(38% 0.025 270)"
+  tinta-tenue: "oklch(53% 0.025 270)"
+  lateral: "oklch(23% 0.055 274)"
+  lateral-elevada: "oklch(30% 0.06 274)"
+  lateral-borde: "oklch(31% 0.05 274)"
+  lateral-tinta: "oklch(97% 0.01 274)"
+  lateral-suave: "oklch(84% 0.03 274)"
+  lateral-tenue: "oklch(68% 0.04 274)"
+  lateral-acento: "oklch(78% 0.13 277)"
+  lateral-alerta: "oklch(78% 0.12 15)"
+  fondo-oscuro: "oklch(17.5% 0.016 272)"
+  superficie-oscuro: "oklch(20.5% 0.018 272)"
+  elevada-oscuro: "oklch(25% 0.02 272)"
+  borde-oscuro: "oklch(27.5% 0.02 272)"
+  borde-fuerte-oscuro: "oklch(34% 0.022 272)"
+  tinta-oscuro: "oklch(96.5% 0.006 272)"
+  tinta-suave-oscuro: "oklch(85% 0.014 272)"
+  tinta-tenue-oscuro: "oklch(70% 0.02 272)"
+  lateral-oscuro: "oklch(14.5% 0.035 274)"
+  lateral-elevada-oscuro: "oklch(22% 0.045 274)"
+  lateral-borde-oscuro: "oklch(23% 0.035 274)"
 typography:
   headline:
     fontFamily: "Inter Variable, ui-sans-serif, system-ui, sans-serif"
@@ -128,13 +137,13 @@ components:
     padding: "2px 6px"
     typography: "{typography.meta}"
   nav-item:
-    textColor: "{colors.tinta-suave}"
+    textColor: "{colors.lateral-suave}"
     rounded: "{rounded.md}"
     padding: "0 8px"
     height: "{spacing.control-sm}"
   nav-item-active:
-    backgroundColor: "{colors.elevada}"
-    textColor: "{colors.tinta}"
+    backgroundColor: "{colors.lateral-elevada}"
+    textColor: "{colors.lateral-tinta}"
   avatar:
     backgroundColor: "{colors.elevada}"
     textColor: "{colors.tinta-suave}"
@@ -150,12 +159,13 @@ components:
 
 Cosmoflow es una herramienta en la que se pasan horas, así que la interfaz se retira y el contenido del usuario manda. El sistema es el estándar de la categoría ejecutado con oficio, a la altura de Linear, Notion y Todoist: un sidebar agrupado y colapsable, una barra superior delgada con migas y páginas de trabajo con título, acción primaria y tabla. No hay rarezas de mundo propio; la calidad está en la precisión de los detalles, no en la novedad.
 
-La paleta es zinc fría sin tinte con un único acento índigo. El contenido vive sobre blanco y el sidebar queda un paso más gris; en oscuro todo pasa a grafito, con el sidebar más hundido que el contenido. La profundidad la dan filetes de 1px, no sombras: solo lo que flota (menús, diálogos, la caja de acceso) proyecta sombra. La densidad es de herramienta de escritorio: controles de 36px, ítems de menú de 32px, cuerpo a 14px.
+La paleta es «Noche índigo»: neutros con un leve tinte azul y un único acento índigo vivo. El contenido vive sobre un blanco apenas azulado; el sidebar es un raíl azul noche en los dos temas, con su propia tinta, y es lo único oscuro de la vista en claro. En oscuro el contenido pasa a un grafito azulado y el raíl queda aún más hundido. La profundidad la dan filetes de 1px, no sombras: solo lo que flota (menús, diálogos) proyecta sombra. La densidad es de herramienta de escritorio: controles de 36px, ítems de menú de 32px, cuerpo a 14px.
 
 El tema (claro, oscuro, sistema) lo decide `data-tema` en `<html>`. Los componentes nunca nombran neutros concretos: usan tokens semánticos que cambian con el tema, y los acentos se escriben para oscuro y se invierten en claro desde la hoja global.
 
 **Key Characteristics:**
-- Neutros zinc fríos vía tokens semánticos; un solo acento índigo.
+- Neutros con tinte azul vía tokens semánticos; un solo acento índigo.
+- Sidebar y panel de acceso azul noche en ambos temas, con tokens `lateral-*` propios.
 - Filetes de 1px como estructura; sombra solo en lo flotante.
 - Inter variable a 14px, títulos de página a 20px semibold, todo en sentence case.
 - Controles de 36px, radios de 6px (controles) y 8px (tarjetas).
@@ -163,15 +173,14 @@ El tema (claro, oscuro, sistema) lo decide `data-tema` en `<html>`. Los componen
 
 ## Colors
 
-Zinc fría y sin tinte con un único acento índigo; los semánticos (rose, amber, emerald) solo comunican estado.
+«Noche índigo»: neutros con un leve tinte azul (tono 270 en el contenido, 274 en el raíl lateral) y un único acento índigo vivo (tono 277); los semánticos (rose, amber, emerald) solo comunican estado.
 
 ### Primary
-- **Índigo de marca** (indigo-marca): relleno del botón primario y del isotipo; su hover baja a indigo-marca-hover. Blanco encima con contraste de 4.5:1 o más.
-- **Índigo de foco** (indigo-foco): anillo de foco (`outline` de 2px con 2px de separación), borde de input enfocado con halo al 20%, icono del ítem activo del menú, casillas (`accent-color`), cursor de texto, selección de texto al 28% y enlaces del markdown.
+- **Índigo de marca** (indigo-marca): relleno del botón primario y del isotipo (la escala índigo 500/600/700 está redefinida en la hoja global); su hover baja a indigo-marca-hover. Blanco encima con contraste de 4.5:1 o más.
+- **Índigo de foco** (indigo-foco): anillo de foco (`outline` de 2px con 2px de separación), borde de input enfocado con halo al 20%, casillas, cursor de texto, selección de texto al 25%, spinner de carga y enlaces del markdown. Los títulos de fila que abren la lectura pasan a índigo (con subrayado) solo al pasar.
 
 ### Neutral
 - **Fondo** (fondo): lienzo de la página y de la barra superior.
-- **Lateral** (lateral): sidebar, cajón móvil y fondo de las pantallas de acceso; un paso más gris que el contenido (más hundido en oscuro).
 - **Superficie** (superficie): tarjetas, inputs, tablas, diálogos y menús.
 - **Elevada** (elevada): hover, ítem activo del menú, chips y badges neutros, avatar sin foto, bloques de código.
 - **Borde** (borde): el filete por defecto de todo elemento (lo aplica la capa base) y las divisiones entre filas.
@@ -180,15 +189,26 @@ Zinc fría y sin tinte con un único acento índigo; los semánticos (rose, ambe
 - **Tinta suave** (tinta-suave): etiquetas de campo, celdas de tabla, ítems de menú en reposo.
 - **Tinta tenue** (tinta-tenue): descripciones, ayuda, metadatos, cabeceras de tabla, iconos en reposo, títulos de grupo del menú.
 
+### Raíl lateral (azul noche)
+Familia propia para el sidebar, el cajón móvil y el panel de marca del acceso. Es oscura en los dos temas y declara `color-scheme: dark`; en oscuro solo cambian `lateral`, `lateral-elevada` y `lateral-borde`, más hundidos.
+- **Lateral** (lateral): fondo del raíl.
+- **Lateral elevada** (lateral-elevada): hover e ítem activo del menú, chips del panel de marca.
+- **Lateral borde** (lateral-borde): filetes del raíl (separador de grupos colapsados, pie del sidebar).
+- **Lateral tinta / suave / tenue** (lateral-tinta, lateral-suave, lateral-tenue): marca e ítem activo; ítems en reposo y texto del panel; títulos de grupo e iconos en reposo.
+- **Lateral acento** (lateral-acento): el índigo claro del icono del ítem activo.
+- **Lateral alerta** (lateral-alerta): rose claro para lo vencido sobre azul noche.
+
 Los valores `-oscuro` del frontmatter son los mismos tokens bajo `data-tema="oscuro"`.
 
 ### Semánticos de estado
 Rose (error, peligro, vencido), amber (aviso), emerald (éxito) e índigo suave (badge `purple`). Se escriben para oscuro (texto `-300/-400`, fondos `-950` y bordes `-800` con transparencia) y la hoja global invierte esos tonos en claro para mantener el contraste sin clases `dark:`.
 
 ### Named Rules
-**The One Accent Rule.** Índigo es el único color de marca: botón primario, icono activo, foco, selección y casillas. Nada más se pinta de índigo para decorar.
+**The One Accent Rule.** Índigo es el único color de marca: botón primario, isotipo, icono activo (lateral-acento), foco, selección, casillas y enlaces. Nada más se pinta de índigo para decorar.
 
-**The Semantic Neutral Rule.** Los neutros se escriben solo con tokens semánticos (`bg-superficie`, `text-tinta`…). Prohibido `zinc-*`, `slate-*`, `text-white` o `bg-black` para neutros; `text-white` solo sobre un acento sólido. La única excepción es el velo de los `<dialog>` (zinc-950 al 50%), igual en ambos temas.
+**The Semantic Neutral Rule.** Los neutros se escriben solo con tokens semánticos (`bg-superficie`, `text-tinta`…). Prohibido `zinc-*`, `slate-*`, `text-white` o `bg-black` para neutros; `text-white` solo sobre un acento sólido. La única excepción es el velo de los `<dialog>` (`zinc-950` al 50%), igual en ambos temas.
+
+**The Night Rail Rule.** Sobre `lateral` solo se usan los tokens `lateral-*`; nunca `tinta-*`, `elevada` ni `borde`, que siguen al tema y desaparecerían sobre azul noche.
 
 **The Both Themes Rule.** Un acento en un tono distinto de los invertidos en la hoja global se comprueba en claro y en oscuro antes de usarse.
 
@@ -199,7 +219,7 @@ Rose (error, peligro, vencido), amber (aviso), emerald (éxito) e índigo suave 
 **Character:** Una sola familia neutra y legible en sesiones largas; la jerarquía sale de tamaño y peso, nunca de mayúsculas ni de color de acento.
 
 ### Hierarchy
-- **Headline** (600, 20px, interlineado 1.4, tracking ajustado): título de página en el encabezado y en las pantallas de acceso. Uno por página.
+- **Headline** (600, 20px, interlineado 1.4, tracking ajustado): título de página en el encabezado. Uno por página. Las pantallas de acceso suben su título a 24px y el titular del panel de marca a 30px, ambos semibold con tracking ajustado.
 - **Title** (600, 16px): título de tarjeta y de diálogo. La marca del sidebar usa 15px semibold.
 - **Body** (400, 14px): cuerpo, celdas, ítems de menú, inputs, botones. El markdown usa este tamaño con interlineado relajado.
 - **Label** (500, 13px): etiquetas de campo en sentence case y botones pequeños.
@@ -216,6 +236,8 @@ Shell de dos columnas. A la izquierda el sidebar de 240px (56px colapsado a icon
 
 El contenido se centra en un máximo de 1152px con márgenes de 16/24/32px según ancho y 24–32px de aire vertical. Cada página abre con su encabezado: título y descripción a la izquierda, acciones y filtros a la derecha (apilados por debajo de 1024px). Debajo, tablas o listas.
 
+Las pantallas de acceso son una pantalla dividida: desde 1024px, a la izquierda un panel de marca azul noche (46% del ancho, máx. 672px, 48px de relleno) con la marca arriba y, centrados, el titular, un texto y una muestra ilustrativa de pendientes; a la derecha el formulario (máx. 384px) centrado sobre fondo, con el selector de tema arriba a la derecha. Por debajo de 1024px solo queda el formulario, encabezado por el isotipo a 36px.
+
 Ritmo: tarjetas con 24px de relleno, celdas de 12px × 16px, separaciones de 8px entre acciones y de 16px entre bloques de formulario.
 
 ### Named Rules
@@ -223,10 +245,12 @@ Ritmo: tarjetas con 24px de relleno, celdas de 12px × 16px, separaciones de 8px
 
 ## Elevation & Depth
 
-Sistema plano con filetes: toda superficie en reposo se separa por un borde de 1px y por el paso tonal fondo › lateral › superficie › elevada. La sombra existe solo para lo que flota sobre el resto.
+Sistema plano con filetes: toda superficie en reposo se separa por un borde de 1px y por el paso tonal fondo › superficie › elevada; el raíl azul noche se separa por contraste, sin filete. La sombra existe solo para lo que flota sobre el resto.
 
 ### Shadow Vocabulary
-- **Flotante** (`box-shadow: 0 1px 2px oklch(0% 0 0 / 0.06), 0 8px 24px -4px oklch(0% 0 0 / 0.12)`; en oscuro `0 1px 2px oklch(0% 0 0 / 0.4), 0 12px 32px -4px oklch(0% 0 0 / 0.6)`): menú de usuario, diálogos y la caja de las pantallas de acceso.
+- **Flotante** (en claro, tintada de azul noche: `0 1px 2px oklch(20% 0.05 274 / 0.06), 0 8px 24px -4px oklch(20% 0.05 274 / 0.14)`; en oscuro `0 1px 2px oklch(0% 0 0 / 0.4), 0 12px 32px -4px oklch(0% 0 0 / 0.6)`): menú de usuario, diálogos y la muestra de pendientes que flota en el panel de marca.
+
+El panel de marca lleva además un único resplandor radial índigo desde su esquina superior izquierda; es exclusivo de ese panel.
 
 ### Named Rules
 **The Rule Over Shadow Rule.** Filetes de 1px en lugar de sombras. Si no flota, no tiene sombra.
@@ -262,13 +286,19 @@ Contenedor lg con filete, cabecera de 36px en meta tinta tenue, filas separadas 
 md, filete de 1px, 12px medium. Neutro sobre elevada; los de estado usan los semánticos invertibles.
 
 ### Navigation
-Ítems de 32px con icono de 16px en tinta tenue y texto en tinta suave; hover y activo pasan a elevada y tinta, y el activo además pone su icono en índigo y el texto en 500. Los títulos de grupo son meta 12px medium en sentence case; colapsado, un filete sustituye al título. Migas en la barra: grupo en tinta tenue con chevron, sección en tinta medium.
+Sobre el raíl azul noche: ítems de 32px con icono de 16px en lateral-tenue y texto en lateral-suave; hover y activo pasan a lateral-elevada y lateral-tinta, y el activo además pone su icono en lateral-acento y el texto en 500. Los títulos de grupo son meta 12px medium en lateral-tenue y sentence case; colapsado, un filete sustituye al título. Migas en la barra: grupo en tinta tenue con chevron, sección en tinta medium.
 
 ### Avatar
 Círculo de 32px. Sin foto, la inicial en 12px semibold tinta suave sobre elevada: neutro, nunca coloreado por usuario.
 
 ### Dialogs y menús
 `<dialog>` nativo (y `popover` nativo para el menú de usuario): superficie, lg, filete y sombra flotante, velo al 50%. Esc y clic fuera cierran.
+
+### Lectura (DialogoLectura)
+Las tareas y notas se leen antes de editarse. El título de la fila es un botón (tinta medium, índigo y subrayado al pasar) que abre un `Dialog` de 672px: bajo el título, los detalles en una lista `<dl>` de dos columnas (término en tinta tenue); tras un filete, el markdown renderizado con desplazamiento propio (máx. 60vh), o «Sin contenido.» en tinta tenue; y, si hay permiso, «Editar» outline con lápiz a la derecha tras otro filete. El lápiz de la fila edita directamente.
+
+### Pantallas de acceso
+Panel de marca y formulario (ver Layout). La muestra de pendientes es ilustrativa y oculta a lectores de pantalla: caja lg con filete lateral-borde sobre lateral-elevada al 60%, filas separadas por filetes, chip de tag en lateral-elevada y fecha en numerales tabulares (lateral-alerta si vence).
 
 ### Empty State
 Caja lg con borde discontinuo fuerte, icono de 32px en tinta tenue, título de 14px semibold, descripción y una acción opcional para salir del vacío.
@@ -281,8 +311,9 @@ Caja lg con borde discontinuo fuerte, icono de 32px en tinta tenue, título de 1
 ## Do's and Don'ts
 
 ### Do:
-- **Do** limitar el índigo a botón primario, icono activo, foco, selección y casillas.
-- **Do** escribir neutros solo con tokens semánticos (`fondo`, `lateral`, `superficie`, `elevada`, `borde`, `borde-fuerte`, `tinta`, `tinta-suave`, `tinta-tenue`).
+- **Do** limitar el índigo a botón primario, isotipo, icono activo, foco, selección, casillas y enlaces.
+- **Do** escribir neutros solo con tokens semánticos (`fondo`, `superficie`, `elevada`, `borde`, `borde-fuerte`, `tinta`, `tinta-suave`, `tinta-tenue`) y, sobre el raíl azul noche, solo con `lateral-*`.
+- **Do** abrir la lectura al pulsar el título de una tarea o nota y dejar el lápiz de la fila para editar.
 - **Do** separar con filetes de 1px; reservar la sombra flotante a menús y diálogos.
 - **Do** usar 6px de radio en controles y 8px en tarjetas; controles de 36px (32px en `sm`).
 - **Do** abrir cada página con `EncabezadoPagina`: título de 20px semibold, descripción y acciones a la derecha.
@@ -291,7 +322,8 @@ Caja lg con borde discontinuo fuerte, icono de 32px en tinta tenue, título de 1
 - **Do** iniciar todo borrado con `dangerGhost`, lejos de la primaria; rose sólido (`danger`) solo al confirmar.
 
 ### Don't:
-- **Don't** usar `zinc-*`, `slate-*`, `text-white` o `bg-black` para neutros.
+- **Don't** usar `zinc-*`, `slate-*`, `text-white` o `bg-black` para neutros (salvo el velo `zinc-950/50` de los `<dialog>`).
+- **Don't** usar tokens que siguen al tema (`tinta-*`, `elevada`, `borde`) sobre el raíl azul noche.
 - **Don't** introducir un segundo color de marca ni colorear avatares por usuario.
 - **Don't** poner sombra a tarjetas, tablas o cualquier cosa que no flote.
 - **Don't** escribir etiquetas en mayúsculas espaciadas ni eyebrows sobre los títulos.

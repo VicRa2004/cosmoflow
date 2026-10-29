@@ -31,7 +31,7 @@ export function MainLayout({ children }: { children: ReactNode }) {
 		<div className="flex min-h-screen bg-fondo text-tinta">
 			<aside
 				className={cn(
-					"sticky top-0 hidden h-screen shrink-0 border-r border-borde bg-lateral transition-[width] duration-200 ease-out motion-reduce:transition-none md:block",
+					"sticky top-0 hidden h-screen shrink-0 bg-lateral transition-[width] duration-200 ease-out motion-reduce:transition-none md:block",
 					colapsado ? "w-14" : "w-60",
 				)}
 			>
@@ -45,7 +45,7 @@ export function MainLayout({ children }: { children: ReactNode }) {
 				aria-label="Menú"
 				onClick={(e) => e.target === cajon.current && cerrarCajon()}
 				className={cn(
-					"fixed inset-y-0 left-0 m-0 h-dvh max-h-dvh w-72 max-w-[85vw] border-r border-borde bg-lateral p-0 text-tinta backdrop:bg-zinc-950/50",
+					"fixed inset-y-0 left-0 m-0 h-dvh max-h-dvh w-72 max-w-[85vw] bg-lateral p-0 text-lateral-tinta backdrop:bg-zinc-950/50",
 					"-translate-x-full transition-[translate,display,overlay] transition-discrete duration-200 ease-out open:translate-x-0 starting:open:-translate-x-full motion-reduce:transition-none md:hidden",
 				)}
 			>

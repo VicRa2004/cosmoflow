@@ -5,32 +5,43 @@
 
 /*
  * Tokens semánticos: los componentes usan `bg-superficie`, `text-tinta`…, nunca `zinc-*`.
- * Neutros zinc (fríos, sin tinte) y un solo acento índigo: el estándar de la categoría.
+ * «Noche índigo»: neutros con un leve tinte azul, un índigo vivo y el sidebar azul
+ * noche en los dos temas (con su propia tinta, `text-lateral-*`).
  */
 :root {
-	--fondo: var(--color-white);
-	--lateral: oklch(98.2% 0.002 286);
+	--fondo: oklch(99.2% 0.003 270);
 	--superficie: var(--color-white);
-	--elevada: oklch(95.6% 0.003 286);
-	--borde: oklch(91.6% 0.004 286);
-	--borde-fuerte: oklch(86.5% 0.006 286);
-	--tinta: var(--color-zinc-900);
-	--tinta-suave: var(--color-zinc-700);
-	--tinta-tenue: var(--color-zinc-500);
+	--elevada: oklch(96.4% 0.007 270);
+	--borde: oklch(92.4% 0.009 270);
+	--borde-fuerte: oklch(86.5% 0.012 270);
+	--tinta: oklch(22% 0.025 270);
+	--tinta-suave: oklch(38% 0.025 270);
+	--tinta-tenue: oklch(53% 0.025 270);
+	--lateral: oklch(23% 0.055 274);
+	--lateral-elevada: oklch(30% 0.06 274);
+	--lateral-borde: oklch(31% 0.05 274);
+	--lateral-tinta: oklch(97% 0.01 274);
+	--lateral-suave: oklch(84% 0.03 274);
+	--lateral-tenue: oklch(68% 0.04 274);
+	--lateral-acento: oklch(78% 0.13 277);
+	--lateral-alerta: oklch(78% 0.12 15);
 	--sombra-flotante:
-		0 1px 2px oklch(0% 0 0 / 0.06), 0 8px 24px -4px oklch(0% 0 0 / 0.12);
+		0 1px 2px oklch(20% 0.05 274 / 0.06),
+		0 8px 24px -4px oklch(20% 0.05 274 / 0.14);
 }
 
 :root[data-tema="oscuro"] {
-	--fondo: oklch(17.5% 0.004 286);
-	--lateral: oklch(15% 0.004 286);
-	--superficie: oklch(20% 0.005 286);
-	--elevada: oklch(24.5% 0.006 286);
-	--borde: oklch(26.5% 0.006 286);
-	--borde-fuerte: oklch(33% 0.008 286);
-	--tinta: var(--color-zinc-100);
-	--tinta-suave: var(--color-zinc-300);
-	--tinta-tenue: var(--color-zinc-400);
+	--fondo: oklch(17.5% 0.016 272);
+	--superficie: oklch(20.5% 0.018 272);
+	--elevada: oklch(25% 0.02 272);
+	--borde: oklch(27.5% 0.02 272);
+	--borde-fuerte: oklch(34% 0.022 272);
+	--tinta: oklch(96.5% 0.006 272);
+	--tinta-suave: oklch(85% 0.014 272);
+	--tinta-tenue: oklch(70% 0.02 272);
+	--lateral: oklch(14.5% 0.035 274);
+	--lateral-elevada: oklch(22% 0.045 274);
+	--lateral-borde: oklch(23% 0.035 274);
 	--sombra-flotante:
 		0 1px 2px oklch(0% 0 0 / 0.4), 0 12px 32px -4px oklch(0% 0 0 / 0.6);
 	color-scheme: dark;
@@ -38,7 +49,6 @@
 
 @theme inline {
 	--color-fondo: var(--fondo);
-	--color-lateral: var(--lateral);
 	--color-superficie: var(--superficie);
 	--color-elevada: var(--elevada);
 	--color-borde: var(--borde);
@@ -46,15 +56,23 @@
 	--color-tinta: var(--tinta);
 	--color-tinta-suave: var(--tinta-suave);
 	--color-tinta-tenue: var(--tinta-tenue);
+	--color-lateral: var(--lateral);
+	--color-lateral-elevada: var(--lateral-elevada);
+	--color-lateral-borde: var(--lateral-borde);
+	--color-lateral-tinta: var(--lateral-tinta);
+	--color-lateral-suave: var(--lateral-suave);
+	--color-lateral-tenue: var(--lateral-tenue);
+	--color-lateral-acento: var(--lateral-acento);
+	--color-lateral-alerta: var(--lateral-alerta);
 	--shadow-flotante: var(--sombra-flotante);
 }
 
 @theme {
 	--font-sans: "Inter Variable", ui-sans-serif, system-ui, sans-serif;
 	/* Índigo de marca (botón primario, foco, selección); blanco encima ≥4.5:1. */
-	--color-indigo-500: oklch(62% 0.15 277);
-	--color-indigo-600: oklch(55.5% 0.16 277);
-	--color-indigo-700: oklch(50% 0.16 277);
+	--color-indigo-500: oklch(61% 0.2 277);
+	--color-indigo-600: oklch(53% 0.22 277);
+	--color-indigo-700: oklch(47% 0.21 277);
 }
 
 /*
@@ -97,7 +115,7 @@
 		caret-color: var(--color-indigo-500);
 	}
 	::selection {
-		background-color: oklch(62% 0.15 277 / 0.28);
+		background-color: oklch(61% 0.2 277 / 0.25);
 	}
 	:focus-visible {
 		outline: 2px solid var(--color-indigo-500);
