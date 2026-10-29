@@ -60,6 +60,14 @@ export class PermisoController extends BaseController {
 			return c.body(null, 204);
 		});
 
+	obtenerMios = (c: Context): Promise<Response> =>
+		this.executeSafely(c, async () =>
+			this.ok(
+				c,
+				await this.useCases.obtenerPorUsuario.ejecutar(c.get("usuario").id),
+			),
+		);
+
 	obtenerPorUsuario = (c: Context): Promise<Response> =>
 		this.executeSafely(c, async () => {
 			const { usuarioId } = validate(usuarioIdParamSchema, {

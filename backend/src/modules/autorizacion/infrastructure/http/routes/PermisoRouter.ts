@@ -39,6 +39,23 @@ export class PermisoRouter {
 
 		this.router.use(this.authMiddleware.handle);
 
+		// Antes de `/:id`; sin permiso propio: la interfaz lo usa para ocultar lo que no puede usar.
+		docs.registerPath({
+			method: "get",
+			path: "/mios",
+			tags,
+			security,
+			summary: "Obtener los permisos efectivos del usuario autenticado",
+			responses: {
+				200: jsonResponse(
+					z.array(permisoDtoSchema),
+					"Permisos efectivos del usuario autenticado",
+				),
+				401: errorResponse("No autenticado"),
+			},
+		});
+		this.router.get("/mios", this.controller.obtenerMios);
+
 		docs.registerPath({
 			method: "get",
 			path: "/usuarios/{usuarioId}",

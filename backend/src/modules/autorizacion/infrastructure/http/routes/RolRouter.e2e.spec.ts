@@ -20,6 +20,16 @@ describe("Roles y asignaciones (e2e)", () => {
 		expect(res.status).toBe(403);
 	});
 
+	it("cada usuario consulta sus propios permisos sin permisos:leer", async () => {
+		const res = await api("/api/permisos/mios", { token: tokenSinPermiso });
+		expect(res.status).toBe(200);
+		const claves = (
+			(await res.json()) as { recurso: string; accion: string }[]
+		).map((p) => `${p.recurso}:${p.accion}`);
+
+		expect(claves).not.toContain("roles:leer");
+	});
+
 	it("crear rol → asignarlo → el usuario gana y pierde permisos", async () => {
 		const token = adminToken;
 		const permisos: { id: number; recurso: string; accion: string }[] = await (
