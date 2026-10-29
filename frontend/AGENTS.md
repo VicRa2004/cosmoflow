@@ -1,6 +1,6 @@
-# Reglas del Frontend (Hexacore)
+# Reglas del Frontend (Cosmoflow)
 
-> Parte del monorepo Hexacore. Para reglas generales del monorepo y workspaces ver `../AGENTS.md`.
+> Parte del monorepo Cosmoflow. Para reglas generales del monorepo y workspaces ver `../AGENTS.md`.
 
 ## Operación en el Monorepo
 

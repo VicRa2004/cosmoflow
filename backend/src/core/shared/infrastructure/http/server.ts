@@ -59,7 +59,7 @@ app.get(
 	"/docs",
 	Scalar({
 		url: "/openapi.json",
-		pageTitle: "Hexacore API Reference",
+		pageTitle: "Cosmoflow API Reference",
 		theme: "purple",
 	}),
 );

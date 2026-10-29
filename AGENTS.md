@@ -1,4 +1,4 @@
-# Reglas del Monorepo (Hexacore)
+# Reglas del Monorepo (Cosmoflow)
 
 Monorepo simple con dos carpetas: `backend/` y `frontend/`. Sin `apps/` ni `packages/`.
 
@@ -54,7 +54,7 @@ pnpm db:migrate         # prisma migrate dev (backend)
 pnpm db:up / db:down    # PostgreSQL de desarrollo en Docker (docker-compose.dev.yml, puerto 5433)
 pnpm db:seed            # catálogo de roles y permisos (seguro en cualquier entorno)
 pnpm db:seed:demo       # catálogo + usuarios de prueba y de ejemplo (solo desarrollo)
-pnpm init:project       # renombra el template (hexacore) a un proyecto nuevo; idempotente
+pnpm init:project       # renombra el template (cosmoflow) a un proyecto nuevo; idempotente
 ```
 
 Bun solo ejecuta el backend: `dev`, `test`, `start`, `scripts/*`, `prisma.seed`. Nunca instala.

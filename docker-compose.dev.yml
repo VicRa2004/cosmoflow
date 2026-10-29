@@ -5,9 +5,9 @@ services:
   postgres:
     image: postgres:18
     environment:
-      POSTGRES_USER: hexacore
+      POSTGRES_USER: cosmoflow
       POSTGRES_PASSWORD: cambia_esta_password
-      POSTGRES_DB: hexacore_db
+      POSTGRES_DB: cosmoflow_db
     ports:
       - "5433:5432"
     volumes:
@@ -15,7 +15,7 @@ services:
       # Solo se ejecuta al crear el volumen por primera vez.
       - ./docker/dev/crear-bd-test.sql:/docker-entrypoint-initdb.d/crear-bd-test.sql:ro
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U hexacore -d hexacore_db"]
+      test: ["CMD-SHELL", "pg_isready -U cosmoflow -d cosmoflow_db"]
       interval: 2s
       timeout: 3s
       retries: 15

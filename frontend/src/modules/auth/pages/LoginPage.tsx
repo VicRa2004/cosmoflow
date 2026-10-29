@@ -6,7 +6,7 @@ export function LoginPage() {
 	return (
 		<AuthLayout
 			title="Iniciar Sesión"
-			subtitle="Ingresa tus credenciales para acceder a Hexacore"
+			subtitle="Ingresa tus credenciales para acceder a Cosmoflow"
 		>
 			<LoginForm />
 			<div className="mt-4 text-right text-xs">

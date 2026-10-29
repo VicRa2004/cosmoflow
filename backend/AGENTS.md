@@ -1,6 +1,6 @@
-# Reglas del Backend (Hexacore)
+# Reglas del Backend (Cosmoflow)
 
-> Parte del monorepo Hexacore. Para reglas de workspaces, instalación y lint ver `../AGENTS.md`.
+> Parte del monorepo Cosmoflow. Para reglas de workspaces, instalación y lint ver `../AGENTS.md`.
 
 ## Operación en el monorepo
 

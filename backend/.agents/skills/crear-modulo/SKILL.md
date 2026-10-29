@@ -3,7 +3,7 @@ nombre: crear-modulo
 description: "Guía paso a paso para crear un módulo nuevo del backend (domain → application → infrastructure, cableado en su module.ts y checklist). Úsala al crear o ampliar un módulo en src/modules/ o src/core/, o al añadir una entidad, caso de uso, repositorio, controlador o router."
 ---
 
-# Guía de Módulos (Hexacore)
+# Guía de Módulos (Cosmoflow)
 
 ## Paso 1: generarlo
 

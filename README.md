@@ -1,4 +1,4 @@
-# Hexacore (monorepo)
+# Cosmoflow (monorepo)
 
 Monorepo con **backend** hexagonal (Bun + Hono + Prisma 7 + PostgreSQL) y **frontend** (Vite + React 19 + TanStack). Solo dos carpetas: `backend/` y `frontend/` (sin `apps/` ni `packages/`).
 

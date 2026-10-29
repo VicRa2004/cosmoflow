@@ -723,7 +723,7 @@ const run = (cmd: string[]) => {
 			...process.env,
 			DATABASE_URL:
 				process.env.DATABASE_URL ??
-				"postgresql://hexacore:cambia_esta_password@localhost:5433/hexacore_db?schema=public",
+				"postgresql://cosmoflow:cambia_esta_password@localhost:5433/cosmoflow_db?schema=public",
 		},
 	});
 	if (exitCode !== 0) {

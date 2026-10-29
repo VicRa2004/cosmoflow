@@ -52,7 +52,7 @@ export function DashboardPage() {
 						¡Hola, {usuario?.nombre}!
 					</h1>
 					<p className="text-sm sm:text-base text-tinta-suave leading-relaxed">
-						Bienvenido a la consola de Hexacore. El frontend está estructurado
+						Bienvenido a la consola de Cosmoflow. El frontend está estructurado
 						de forma modular con React 19, TanStack Suite (Query, Router, Form)
 						y Tailwind CSS v4, consumiendo el backend con Bun y Hono.
 					</p>

@@ -42,7 +42,7 @@ export const useAuthStore = create<AuthState>()(
 			},
 		}),
 		{
-			name: "hexacore-auth-storage",
+			name: "cosmoflow-auth-storage",
 			// v2: `user` pasó a `usuario` (v1: `role` a `roles`); las sesiones anteriores se descartan.
 			version: 2,
 			migrate: () => ({

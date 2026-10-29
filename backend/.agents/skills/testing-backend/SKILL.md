@@ -3,7 +3,7 @@ name: testing-backend
 description: "Convenciones de tests del backend con bun:test: ubicación de los specs, tests unitarios de casos de uso con mocks y E2E de rutas HTTP contra Postgres real (DATABASE_URL_TEST, pnpm test:e2e). Úsala al escribir, ejecutar o depurar tests en backend/."
 ---
 
-# Testing (Hexacore)
+# Testing (Cosmoflow)
 
 ## Comandos
 
@@ -102,7 +102,7 @@ describe("CrearUsuarioUseCase", () => {
 1. Define en `backend/.env` una BD **distinta** de la de desarrollo (se borra entera en cada ejecución;
    el script se niega si coincide con `DATABASE_URL`). Prisma la crea si no existe:
    ```bash
-   DATABASE_URL_TEST="postgresql://hexacore:cambia_esta_password@localhost:5433/hexacore_test?schema=public"
+   DATABASE_URL_TEST="postgresql://cosmoflow:cambia_esta_password@localhost:5433/cosmoflow_db_test?schema=public"
    ```
 2. `pnpm test:e2e` (o `pnpm --filter backend test:e2e`). `scripts/test-e2e.ts` hace
    `prisma migrate reset --force` + seed y luego `bun test .e2e.spec.ts`. Admite filtros extra:

@@ -5,7 +5,7 @@ description: Guía y estándares para diseñar y estructurar pruebas automatizad
 
 # Diseño Óptimo de Tests
 
-Esta skill establece la metodología, patrones y estándares para construir suites de pruebas automatizadas deterministas, rápidas y fiables en el monorepo Hexacore.
+Esta skill establece la metodología, patrones y estándares para construir suites de pruebas automatizadas deterministas, rápidas y fiables en el monorepo Cosmoflow.
 
 ---
 
@@ -37,7 +37,7 @@ Estructura cada test bajo el patrón **Arrange - Act - Assert**:
 describe("CrearUsuarioUseCase", () => {
   it("debería crear un usuario exitosamente cuando los datos son válidos y el email no existe", async () => {
     // Arrange (Preparar)
-    const dto = { nombre: "Test", email: "test@hexacore.io", password: "StrongPassword123!" };
+    const dto = { nombre: "Test", email: "test@cosmoflow.io", password: "StrongPassword123!" };
     mockUsuarioRepository.buscarPorEmail.mockResolvedValue(null);
 
     // Act (Ejecutar)
@@ -67,8 +67,8 @@ import { BaseError } from "@/core/shared/domain/error/BaseError";
 
 describe("Email Value Object", () => {
   it("debería instanciarse correctamente con un formato de email válido", () => {
-    const email = Email.create("usuario@hexacore.io");
-    expect(email.value).toBe("usuario@hexacore.io");
+    const email = Email.create("usuario@cosmoflow.io");
+    expect(email.value).toBe("usuario@cosmoflow.io");
   });
 
   it("debería lanzar BaseError si el email no contiene arroba", () => {
@@ -174,7 +174,7 @@ describe("POST /api/usuarios (E2E)", () => {
 
 ---
 
-## 6. Pipeline de Verificación Cuádruple en Hexacore
+## 6. Pipeline de Verificación Cuádruple en Cosmoflow
 
 Para asegurar que los cambios son estables y no introducen regresiones, ejecutar siempre en este orden riguroso:
 

@@ -53,7 +53,7 @@ export function MainLayout({ children }: MainLayoutProps) {
 									<Hexagon className="h-5 w-5 stroke-[2.2]" />
 								</div>
 								<span className="text-lg font-bold tracking-tight text-tinta group-hover:text-indigo-400 transition-colors">
-									Hexacore
+									Cosmoflow
 								</span>
 							</Link>
 
@@ -129,8 +129,8 @@ export function MainLayout({ children }: MainLayoutProps) {
 
 			{/* Footer */}
 			<footer className="border-t border-borde/60 py-6 text-center text-xs text-tinta-tenue">
-				Hexacore Monorepo &copy; {new Date().getFullYear()} &mdash; Arquitectura
-				Hexagonal y Modular
+				Cosmoflow Monorepo &copy; {new Date().getFullYear()} &mdash;
+				Arquitectura Hexagonal y Modular
 			</footer>
 		</div>
 	);

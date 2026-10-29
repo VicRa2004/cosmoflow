@@ -1,5 +1,5 @@
 {
-	"name": "hexacore-monorepo",
+	"name": "cosmoflow-monorepo",
 	"version": "1.0.0",
 	"private": true,
 	"author": "Victor Raúl",
@@ -22,9 +22,9 @@
 		"test:frontend": "pnpm --filter frontend test",
 		"test:e2e": "pnpm --filter backend test:e2e",
 		"typecheck": "pnpm --filter backend --filter frontend exec tsc --noEmit",
-		"knip": "DATABASE_URL=${DATABASE_URL:-postgresql://hexacore:cambia_esta_password@localhost:5433/hexacore_db?schema=public} knip",
+		"knip": "DATABASE_URL=${DATABASE_URL:-postgresql://cosmoflow:cambia_esta_password@localhost:5433/cosmoflow_db?schema=public} knip",
 		"check:architecture": "pnpm --filter backend check:architecture",
-		"db:generate": "DATABASE_URL=${DATABASE_URL:-postgresql://hexacore:cambia_esta_password@localhost:5433/hexacore_db?schema=public} pnpm --filter backend exec prisma generate",
+		"db:generate": "DATABASE_URL=${DATABASE_URL:-postgresql://cosmoflow:cambia_esta_password@localhost:5433/cosmoflow_db?schema=public} pnpm --filter backend exec prisma generate",
 		"db:push": "pnpm --filter backend exec prisma db push",
 		"db:migrate": "pnpm --filter backend exec prisma migrate dev",
 		"db:seed": "pnpm --filter backend seed",
@@ -38,7 +38,7 @@
 		"check:api": "pnpm gen:api && git diff --exit-code frontend/src/core/api/schema.gen.ts"
 	},
 	"keywords": [],
-	"description": "Monorepo Hexacore: backend (Bun + Hono + Prisma) y frontend (Vite + React + TanStack).",
+	"description": "Monorepo Cosmoflow: backend (Bun + Hono + Prisma) y frontend (Vite + React + TanStack).",
 	"devDependencies": {
 		"@biomejs/biome": "2.5.15",
 		"knip": "6.42.1",

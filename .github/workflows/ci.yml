@@ -45,7 +45,7 @@ jobs:
       - run: pnpm test:e2e
       - name: Imagen Docker + smoke test de /health
         run: |
-          docker build -f backend/Dockerfile -t hexacore .
-          docker run -d --name app --network host -e DATABASE_URL -e JWT_SECRET hexacore
+          docker build -f backend/Dockerfile -t cosmoflow .
+          docker run -d --name app --network host -e DATABASE_URL -e JWT_SECRET cosmoflow
           curl -fsS --retry 15 --retry-connrefused --retry-delay 2 http://localhost:3000/health \
             || { docker logs app; exit 1; }

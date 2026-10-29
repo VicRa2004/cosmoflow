@@ -5,7 +5,7 @@ description: Estándares y directrices para el diseño limpio, estructura modula
 
 # Diseño y Estructura de Código
 
-Esta skill define las reglas de oro para diseñar, estructurar y mantener un código limpio, modular, escalable y robusto en todo el monorepo Hexacore.
+Esta skill define las reglas de oro para diseñar, estructurar y mantener un código limpio, modular, escalable y robusto en todo el monorepo Cosmoflow.
 
 ---
 

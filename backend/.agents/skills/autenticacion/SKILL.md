@@ -3,7 +3,7 @@ name: autenticacion
 description: "Flujo de autenticación del backend: access token JWT + refresh token en cookie httpOnly, endpoints /api/auth/*, rotación, expiraciones, recuperación de contraseña, verificación de email, bloqueo por intentos y cómo debe consumirlo el frontend. Úsala al tocar el módulo auth, sesiones, cookies, correos de cuenta o la renovación de tokens en el cliente."
 ---
 
-# Autenticación con Refresh Tokens (Hexacore)
+# Autenticación con Refresh Tokens (Cosmoflow)
 
 ## Endpoints
 

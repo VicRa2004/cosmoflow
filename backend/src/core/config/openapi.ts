@@ -7,10 +7,10 @@ import { env } from "./env";
 export const openApiConfig = {
 	openapi: "3.0.0",
 	info: {
-		title: "Hexacore API",
+		title: "Cosmoflow API",
 		version: "1.0.0",
 		description:
-			"Documentación interactiva de la API de Hexacore generada con Scalar. Arquitectura hexagonal construida con Bun, Hono y PostgreSQL.",
+			"Documentación interactiva de la API de Cosmoflow generada con Scalar. Arquitectura hexagonal construida con Bun, Hono y PostgreSQL.",
 		contact: {
 			name: "Soporte",
 		},

@@ -26,7 +26,7 @@ const EnvSchema = z
 			.transform((url) => url.replace(/\/$/, "")),
 		// Sin RESEND_API_KEY los correos se escriben en consola (ConsoleMailer).
 		RESEND_API_KEY: z.string().optional(),
-		MAIL_FROM: z.string().default("Hexacore <no-reply@localhost>"),
+		MAIL_FROM: z.string().default("Cosmoflow <no-reply@localhost>"),
 		// Sin S3_BUCKET los archivos van a disco en STORAGE_DIR (LocalAlmacenamiento).
 		STORAGE_DIR: z.string().default("uploads"),
 		S3_BUCKET: z.string().optional(),

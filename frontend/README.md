@@ -1,6 +1,6 @@
-# Frontend (Hexacore)
+# Frontend (Cosmoflow)
 
-Frontend modular y escalable para el monorepo Hexacore, construido con **Vite**, **React 19**, **TypeScript** y el ecosistema **TanStack**.
+Frontend modular y escalable para el monorepo Cosmoflow, construido con **Vite**, **React 19**, **TypeScript** y el ecosistema **TanStack**.
 
 ## Stack Tecnológico
 

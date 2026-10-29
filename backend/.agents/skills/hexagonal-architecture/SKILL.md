@@ -5,7 +5,7 @@ description: Guía integral y estándares para diseñar e implementar la Arquite
 
 # Arquitectura Hexagonal (Puertos y Adaptadores)
 
-Esta skill establece los principios, la estructura y las convenciones estrictas para desarrollar dentro de la Arquitectura Hexagonal de **Hexacore**.
+Esta skill establece los principios, la estructura y las convenciones estrictas para desarrollar dentro de la Arquitectura Hexagonal de **Cosmoflow**.
 
 ---
 
