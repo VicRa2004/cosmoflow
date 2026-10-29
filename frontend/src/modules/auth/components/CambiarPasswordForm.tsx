@@ -42,7 +42,7 @@ export function CambiarPasswordForm() {
 	});
 
 	return (
-		<Card className="max-w-2xl mx-auto">
+		<Card>
 			<CardHeader>
 				<CardTitle className="text-lg">Cambiar contraseña</CardTitle>
 				<CardDescription>

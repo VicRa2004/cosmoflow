@@ -45,13 +45,13 @@ Separación estricta entre la infraestructura compartida (`core`), las funcional
 frontend/src/
 ├── core/                           # Base transversal y compartida
 │   ├── api/                        # Cliente Axios (client.ts) y tipos generados del OpenAPI (schema.gen.ts)
-│   ├── auth/                       # Store de sesión Zustand (store.ts) y tipos de usuario
+│   ├── auth/                       # Store de sesión Zustand (store.ts), tipos de usuario y usePermisos (permisos efectivos)
 │   ├── components/
 │   │   ├── ErrorBoundary.tsx       # Última red para errores fuera de las rutas
 │   │   ├── form/                   # useAppForm + campos conectados a TanStack Form
-│   │   ├── layout/                 # MainLayout, AuthLayout y SelectorTema
-│   │   └── ui/                     # Primitivas: Button, Input, Select, Checkbox, Card, Badge, Spinner,
-│   │                               #   Dialog, ConfirmDialog, Table (Tabla + Paginacion), EmptyState
+│   │   ├── layout/                 # MainLayout (Sidebar + Navbar), navegacion.ts (menú), MenuUsuario, AuthLayout, SelectorTema y Marca
+│   │   └── ui/                     # Primitivas: Button, Input, Select, Checkbox, Card, Badge, Spinner, Avatar,
+│   │                               #   Dialog, ConfirmDialog, Table (Tabla + Paginacion), EmptyState, EncabezadoPagina
 │   ├── router/                     # QueryClient, instancia del router y pantallas de error/404 (RouteFallbacks)
 │   ├── tema.ts                     # Tema claro/oscuro/sistema (data-tema en <html>)
 │   └── utils/                      # Utilidades transversales (cn.ts)
@@ -110,7 +110,7 @@ Parte frontend de la checklist de `backend/AGENTS.md` ("Cómo quitar un módulo"
 
 1. Borrar `src/modules/<nombre>/`.
 2. Borrar sus rutas en `src/routes/` (`routeTree.gen.ts` se regenera solo en `dev`/`build`).
-3. Quitar sus enlaces de navegación en `src/core/components/layout/MainLayout.tsx`.
+3. Quitar sus enlaces de navegación en `src/core/components/layout/navegacion.ts`.
 4. `pnpm gen:api` desde la raíz (el backend ya no expone sus endpoints) y `pnpm verify`.
 
 ---
@@ -147,12 +147,19 @@ Viven en `frontend/.agents/skills/` (TanStack Query/Router/Form/Table, Tailwind 
 - Usar Tailwind CSS v4 y la utilidad `cn(...)` para combinar clases condicionales.
 - No crear estilos CSS tradicionales en hojas externas salvo reglas globales indispensables en `index.css`.
 - Los componentes de `core/components/ui/` deben ser accesibles, recibir `className` opcional y propagar props nativas de HTML de forma segura.
-- **Colores neutros = tokens semánticos** (definidos en `index.css`, cambian con el tema): `bg-fondo` (página), `bg-superficie` (tarjetas, inputs), `bg-elevada` (hover, chips), `border-borde` / `border-borde-fuerte`, `text-tinta` (títulos, texto principal), `text-tinta-suave` (etiquetas), `text-tinta-tenue` (ayuda, metadatos). **Prohibido `slate-*`, `text-white` o `bg-black` para neutros**: no se verían en tema claro. `text-white` solo sobre fondos de acento sólidos (`bg-indigo-600`).
+- **Sistema de diseño:** ver `DESIGN.md` (tokens, tipografía, componentes y reglas). Inter variable, neutros zinc, un solo acento índigo, filetes de 1px en lugar de sombras (solo `shadow-flotante` en menús y diálogos), radios `rounded-md` (controles) y `rounded-lg` (tarjetas), controles de 36px (`h-9`).
+- **Colores neutros = tokens semánticos** (definidos en `index.css`, cambian con el tema): `bg-fondo` (página), `bg-lateral` (sidebar), `bg-superficie` (tarjetas, inputs), `bg-elevada` (hover, ítem activo, chips), `border-borde` / `border-borde-fuerte`, `text-tinta` (títulos, texto principal), `text-tinta-suave` (etiquetas), `text-tinta-tenue` (ayuda, metadatos). **Prohibido `zinc-*`/`slate-*`, `text-white` o `bg-black` para neutros**: no se verían en tema claro. `text-white` solo sobre fondos de acento sólidos (`bg-indigo-600`).
 - **Acentos** (`indigo`, `rose`, `amber`, `emerald`) se escriben pensando en el tema oscuro (texto `-300/-400`, fondos `-950/x`); en claro `index.css` invierte esos tonos para mantener el contraste. Si usas otro tono o color, compruébalo en los dos temas.
 - **Tema:** `data-tema="claro|oscuro"` en `<html>`. El script de `index.html` lo pone antes de pintar y `core/tema.ts` (`useTema`, `cambiarTema`) lo cambia y lo guarda; «sistema» sigue a `prefers-color-scheme`. La variante `dark:` de Tailwind responde a ese atributo.
 - **Primitivas en vez de HTML suelto:** `Dialog` (`<dialog>` nativo: foco, Esc y fondo inerte) y `ConfirmDialog` en lugar de `window.confirm`; `Tabla` recibe una lista o directamente la página del backend (`{ datos, pagina, totalPaginas, totalElementos }`) y muestra carga, error, vacío (`EmptyState`) y `Paginacion`; `Select` y `Checkbox` nativos con etiqueta y error.
 
-### 5. Formularios
+### 5. Layout, navegación y permisos
+- **Shell:** `MainLayout` = `Sidebar` (colapsable a iconos en escritorio, se recuerda en `localStorage`; cajón `<dialog>` en móvil) + `Navbar` (migas grupo › sección, `SelectorTema` y `MenuUsuario` con perfil y cerrar sesión, un `popover` nativo).
+- **Menú:** un módulo nuevo añade su enlace en `core/components/layout/navegacion.ts` (grupo, ruta, icono Lucide y `permiso` `recurso:leer`). Los grupos sin enlaces visibles no se muestran.
+- **Ocultar lo que no se puede usar:** `const { puede } = usePermisos()` (`core/auth/usePermisos.ts`, lee `GET /api/permisos/mios`) y `{puede("tareas:crear") && <Button …/>}`. Mientras carga responde `false`; sin el módulo `autorizacion` (404) todo está permitido. Es solo interfaz: la seguridad la pone el backend (403).
+- **Cabecera de página:** `EncabezadoPagina` (título, descripción y acciones/filtros a la derecha) en lugar de `<h1>` suelto. Sin icono decorativo ni texto encima del título.
+
+### 6. Formularios
 - `useAppForm` (`core/components/form/useAppForm.ts`) en lugar de `useForm`: trae los campos ya cableados (valor, `onBlur`, error de Zod tras tocar el campo, `aria-invalid`/`aria-describedby`, id único).
   ```tsx
   const form = useAppForm({ defaultValues, validators: { onSubmit: schema }, onSubmit });
@@ -166,7 +173,7 @@ Viven en `frontend/.agents/skills/` (TanStack Query/Router/Form/Table, Tailwind 
 - Campos: `CampoTexto`, `CampoSelect` (opciones como hijos), `CampoCheckbox`. `Formulario` llama a `handleSubmit` y se traga el rechazo (el toast lo da la mutación); `BotonEnviar` se bloquea mientras `onSubmit` está en curso. Un campo nuevo se añade en `campos.tsx` y se registra en `useAppForm.ts`.
 - Un CRUD nuevo no se escribe a mano: `pnpm gen:module <nombre>` genera también su frontend (ver skill `crear-modulo` del backend).
 
-### 6. Errores de render
+### 7. Errores de render
 - Errores dentro de una ruta: `DefaultErrorComponent` (con el layout intacto y «Reintentar»). Rutas inexistentes: `DefaultNotFoundComponent`. Ambos en `core/router/RouteFallbacks.tsx`.
 - Fuera de las rutas (providers, el propio router): `core/components/ErrorBoundary.tsx`, sin hooks del router ni primitivas.
 

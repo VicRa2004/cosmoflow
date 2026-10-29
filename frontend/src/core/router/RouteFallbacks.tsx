@@ -66,17 +66,14 @@ export function DefaultNotFoundComponent() {
 
 	return (
 		<main className="flex min-h-screen flex-col items-center justify-center gap-6 bg-fondo p-6 text-center">
-			<div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-indigo-500/20 bg-indigo-600/10 text-indigo-400">
-				<Compass className="h-7 w-7" />
-			</div>
-			<div className="space-y-2">
-				<p className="font-mono text-sm font-semibold text-indigo-400">404</p>
-				<h1 className="text-3xl font-extrabold tracking-tight text-tinta">
+			<Compass aria-hidden className="size-8 text-tinta-tenue" />
+			<div className="space-y-1.5">
+				<h1 className="text-xl font-semibold tracking-tight text-tinta">
 					Página no encontrada
 				</h1>
 				<p className="max-w-sm text-sm text-tinta-tenue">
-					La dirección no existe o ha cambiado. Comprueba el enlace o vuelve a
-					un sitio conocido.
+					La dirección no existe o ha cambiado (error 404). Comprueba el enlace
+					o vuelve a un sitio conocido.
 				</p>
 			</div>
 			<div className="flex gap-2">

@@ -41,7 +41,7 @@ export function Dialog({
 			// Clic en el fondo (fuera de la caja) = cerrar.
 			onClick={(e) => e.target === ref.current && onCerrar()}
 			className={cn(
-				"m-auto w-[calc(100%-2rem)] max-w-lg rounded-xl border border-borde bg-superficie p-0 text-tinta shadow-2xl backdrop:bg-black/60 backdrop:backdrop-blur-sm",
+				"m-auto w-[calc(100%-2rem)] max-w-lg rounded-lg border border-borde bg-superficie p-0 text-tinta shadow-flotante backdrop:bg-zinc-950/50",
 				className,
 			)}
 		>
@@ -49,7 +49,7 @@ export function Dialog({
 				<div className="space-y-4 p-6">
 					<div className="flex items-start justify-between gap-4">
 						<div className="space-y-1">
-							<h2 id={`${id}-titulo`} className="text-lg font-bold">
+							<h2 id={`${id}-titulo`} className="text-base font-semibold">
 								{titulo}
 							</h2>
 							{descripcion && (

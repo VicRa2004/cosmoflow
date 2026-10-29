@@ -4,12 +4,15 @@ import { UsuariosTable } from "../components/UsuariosTable";
 import { Input } from "@/core/components/ui/Input";
 import type { Usuario } from "@/core/auth/types";
 import { AsignacionUsuarioPanel } from "@/modules/roles/components/AsignacionUsuarioPanel";
-import { Search, Users as UsersIcon } from "lucide-react";
+import { Search } from "lucide-react";
+import { usePermisos } from "@/core/auth/usePermisos";
+import { EncabezadoPagina } from "@/core/components/ui/EncabezadoPagina";
 
 export function UsuariosPage() {
 	const [pagina, setPagina] = useState(1);
 	const [emailBusqueda, setEmailBusqueda] = useState("");
 	const [seleccionado, setSeleccionado] = useState<Usuario | null>(null);
+	const { puede } = usePermisos();
 
 	const { data, isLoading, error } = useUsuariosQuery({
 		pagina,
@@ -19,22 +22,10 @@ export function UsuariosPage() {
 
 	return (
 		<div className="space-y-6">
-			{/* Encabezado */}
-			<div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-				<div>
-					<div className="flex items-center gap-2.5">
-						<div className="p-2 rounded-lg bg-indigo-600/10 border border-indigo-500/20 text-indigo-400">
-							<UsersIcon className="h-5 w-5" />
-						</div>
-						<h1 className="text-2xl font-bold tracking-tight text-tinta">
-							Gestión de Usuarios
-						</h1>
-					</div>
-					<p className="mt-1 text-sm text-tinta-tenue">
-						Consulta y administra los usuarios registrados en el sistema.
-					</p>
-				</div>
-
+			<EncabezadoPagina
+				titulo="Usuarios"
+				descripcion="Consulta y administra los usuarios registrados en el sistema."
+			>
 				<div className="w-full sm:w-72">
 					<div className="relative">
 						<Input
@@ -50,7 +41,7 @@ export function UsuariosPage() {
 						<Search className="absolute left-3 top-2.5 h-4 w-4 text-tinta-tenue pointer-events-none" />
 					</div>
 				</div>
-			</div>
+			</EncabezadoPagina>
 
 			{/* Tabla de Usuarios con TanStack Query */}
 			<UsuariosTable
@@ -58,7 +49,9 @@ export function UsuariosPage() {
 				isLoading={isLoading}
 				error={error}
 				onCambioPagina={setPagina}
-				onGestionarPermisos={setSeleccionado}
+				onGestionarPermisos={
+					puede("asignaciones:leer") ? setSeleccionado : undefined
+				}
 			/>
 
 			<AsignacionUsuarioPanel

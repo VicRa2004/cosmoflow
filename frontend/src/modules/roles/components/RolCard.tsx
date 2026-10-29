@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Save, Trash2 } from "lucide-react";
+import { usePermisos } from "@/core/auth/usePermisos";
 import { Button } from "@/core/components/ui/Button";
 import { Card } from "@/core/components/ui/Card";
 import { ConfirmDialog } from "@/core/components/ui/ConfirmDialog";
@@ -25,6 +26,7 @@ export function RolCard({ rol, permisos }: RolCardProps) {
 	);
 	const actualizar = useActualizarRolMutation();
 	const eliminar = useEliminarRolMutation();
+	const { puede } = usePermisos();
 
 	const toggle = (permisoId: number) =>
 		setSeleccionados((actual) => {
@@ -68,26 +70,31 @@ export function RolCard({ rol, permisos }: RolCardProps) {
 				onToggle={toggle}
 			/>
 
-			<div className="flex justify-end gap-2">
-				<Button
-					variant="ghost"
-					size="sm"
-					onClick={() => setConfirmando(true)}
-					isLoading={eliminar.isPending}
-					className="text-rose-400 hover:bg-rose-950/20 hover:text-rose-300"
-				>
-					<Trash2 className="h-4 w-4" />
-					Eliminar
-				</Button>
-				<Button
-					size="sm"
-					onClick={guardar}
-					isLoading={actualizar.isPending}
-					disabled={!nombre.trim()}
-				>
-					<Save className="h-4 w-4" />
-					Guardar
-				</Button>
+			{/* Eliminar a la izquierda, lejos de Guardar: que no se pulse por error. */}
+			<div className="flex justify-between gap-2">
+				{puede("roles:eliminar") ? (
+					<Button
+						variant="ghost"
+						onClick={() => setConfirmando(true)}
+						isLoading={eliminar.isPending}
+						className="text-rose-400 hover:bg-rose-950 hover:text-rose-300"
+					>
+						<Trash2 className="h-4 w-4" />
+						Eliminar
+					</Button>
+				) : (
+					<span />
+				)}
+				{puede("roles:actualizar") && (
+					<Button
+						onClick={guardar}
+						isLoading={actualizar.isPending}
+						disabled={!nombre.trim()}
+					>
+						<Save className="h-4 w-4" />
+						Guardar
+					</Button>
+				)}
 			</div>
 
 			<ConfirmDialog

@@ -55,7 +55,7 @@ export function Tabla<T>({
 		return (
 			<div
 				role="alert"
-				className="flex items-center gap-3 rounded-xl border border-rose-900/40 bg-rose-950/20 p-4 text-sm text-rose-400"
+				className="flex items-center gap-3 rounded-lg border border-rose-800 bg-rose-950 p-4 text-sm text-rose-400"
 			>
 				<AlertCircle className="h-5 w-5 shrink-0" />
 				{getErrorMessage(error)}
@@ -70,34 +70,34 @@ export function Tabla<T>({
 
 	return (
 		<div className="space-y-4">
-			<div className="overflow-x-auto rounded-xl border border-borde bg-superficie/40">
+			<div className="overflow-x-auto rounded-lg border border-borde bg-superficie">
 				<table className="w-full text-left text-sm" aria-label={etiqueta}>
-					<thead className="border-b border-borde bg-superficie/90 text-xs uppercase tracking-wider text-tinta-tenue">
+					<thead className="border-b border-borde text-xs text-tinta-tenue">
 						<tr>
 							{columnas.map((columna, i) => (
 								<th
 									// biome-ignore lint/suspicious/noArrayIndexKey: las columnas son fijas
 									key={i}
 									scope="col"
-									className={cn("px-6 py-3.5 font-semibold", columna.className)}
+									className={cn("h-9 px-4 font-medium", columna.className)}
 								>
 									{columna.cabecera}
 								</th>
 							))}
 						</tr>
 					</thead>
-					<tbody className="divide-y divide-borde/60">
+					<tbody className="divide-y divide-borde">
 						{filas.map((fila) => (
 							<tr
 								key={clave(fila)}
-								className="transition-colors hover:bg-elevada/30"
+								className="group/fila transition-colors hover:bg-elevada/50"
 							>
 								{columnas.map((columna, i) => (
 									<td
 										// biome-ignore lint/suspicious/noArrayIndexKey: las columnas son fijas
 										key={i}
 										className={cn(
-											"px-6 py-4 text-tinta-suave",
+											"px-4 py-3 text-tinta-suave",
 											columna.className,
 										)}
 									>
@@ -129,7 +129,7 @@ export function Paginacion({
 	return (
 		<nav
 			aria-label="Paginación"
-			className="flex items-center justify-between px-1"
+			className="flex flex-col gap-3 px-1 sm:flex-row sm:items-center sm:justify-between"
 		>
 			<p className="text-xs text-tinta-tenue">
 				Página <span className="font-semibold text-tinta">{pagina}</span> de{" "}

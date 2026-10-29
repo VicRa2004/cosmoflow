@@ -21,7 +21,7 @@ export function RegistroForm() {
 				toast.success(
 					`¡Cuenta creada con éxito! Bienvenido, ${response.usuario.nombre}`,
 				);
-				navigate({ to: "/dashboard" });
+				navigate({ to: "/" });
 			} catch (error: unknown) {
 				toast.error(getErrorMessage(error));
 			}

@@ -15,6 +15,6 @@ export const Route = createFileRoute("/login_/google")({
 		} catch {
 			throw redirect({ to: "/login", search: { error: "google" } });
 		}
-		throw redirect({ to: "/dashboard" });
+		throw redirect({ to: "/" });
 	},
 });

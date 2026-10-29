@@ -20,7 +20,7 @@ export function LoginForm() {
 				const response = await authApi.login(value);
 				login(response);
 				toast.success(`¡Bienvenido de nuevo, ${response.usuario.nombre}!`);
-				navigate({ to: "/dashboard" });
+				navigate({ to: "/" });
 			} catch (error: unknown) {
 				toast.error(getErrorMessage(error));
 			}

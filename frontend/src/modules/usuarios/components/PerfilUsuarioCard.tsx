@@ -1,4 +1,5 @@
 import { useAuthStore } from "@/core/auth/store";
+import { Avatar } from "@/core/components/ui/Avatar";
 import { Badge } from "@/core/components/ui/Badge";
 import {
 	Card,
@@ -7,7 +8,7 @@ import {
 	CardHeader,
 	CardTitle,
 } from "@/core/components/ui/Card";
-import { Shield, Mail, Hash, CheckCircle, Camera, Trash2 } from "lucide-react";
+import { Camera, Trash2 } from "lucide-react";
 import { useRef } from "react";
 import { Button } from "@/core/components/ui/Button";
 import { useAvatarMutation } from "../hooks/useAvatarMutation";
@@ -34,26 +35,20 @@ export function PerfilUsuarioCard() {
 			: "default";
 
 	return (
-		<Card className="max-w-2xl mx-auto">
+		<Card>
 			<CardHeader>
 				<div className="flex items-center gap-4">
-					{usuario.avatarUrl ? (
-						<img
-							src={usuario.avatarUrl}
-							alt={`Avatar de ${usuario.nombre}`}
-							className="h-16 w-16 rounded-2xl border border-indigo-500/20 object-cover"
-						/>
-					) : (
-						<div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-indigo-600/10 border border-indigo-500/20 text-xl font-bold text-indigo-400">
-							{usuario.nombre.charAt(0).toUpperCase()}
-						</div>
-					)}
+					<Avatar
+						nombre={usuario.nombre}
+						url={usuario.avatarUrl}
+						className="size-16 text-xl"
+					/>
 					<div className="flex-1">
 						<CardTitle>{usuario.nombre}</CardTitle>
 						<CardDescription className="flex items-center gap-2 mt-1">
 							<Badge variant={varianteRol}>{usuario.roles.join(", ")}</Badge>
 							<Badge variant={usuario.isActivo ? "success" : "danger"}>
-								{usuario.isActivo ? "Cuenta Activa" : "Cuenta Inactiva"}
+								{usuario.isActivo ? "Cuenta activa" : "Cuenta inactiva"}
 							</Badge>
 						</CardDescription>
 					</div>
@@ -93,54 +88,35 @@ export function PerfilUsuarioCard() {
 					</div>
 				</div>
 			</CardHeader>
-			<CardContent className="space-y-4 pt-4 border-t border-borde/80">
-				<div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-					<div className="rounded-lg border border-borde bg-superficie/50 p-3.5">
-						<div className="flex items-center gap-2 text-xs font-medium text-tinta-tenue">
-							<Hash className="h-3.5 w-3.5" />
-							ID de Usuario
-						</div>
-						<p className="mt-1 text-sm font-semibold text-tinta font-mono">
-							#{usuario.id}
-						</p>
+			<CardContent className="border-t border-borde pt-2">
+				<dl className="divide-y divide-borde text-sm">
+					<div className="grid gap-1 py-3 sm:grid-cols-3">
+						<dt className="text-tinta-tenue">ID de usuario</dt>
+						<dd className="text-tinta sm:col-span-2">#{usuario.id}</dd>
 					</div>
-
-					<div className="rounded-lg border border-borde bg-superficie/50 p-3.5">
-						<div className="flex items-center gap-2 text-xs font-medium text-tinta-tenue">
-							<Mail className="h-3.5 w-3.5" />
-							Correo Electrónico
-						</div>
-						<p className="mt-1 text-sm font-semibold text-tinta truncate">
+					<div className="grid gap-1 py-3 sm:grid-cols-3">
+						<dt className="text-tinta-tenue">Correo electrónico</dt>
+						<dd className="truncate text-tinta sm:col-span-2">
 							{usuario.email}
-						</p>
+						</dd>
 					</div>
-
-					<div className="rounded-lg border border-borde bg-superficie/50 p-3.5">
-						<div className="flex items-center gap-2 text-xs font-medium text-tinta-tenue">
-							<Shield className="h-3.5 w-3.5" />
-							Nivel de Autorización
-						</div>
-						<p className="mt-1 text-sm font-semibold text-tinta">
-							{usuario.roles.join(", ")} (Control Basado en Permisos)
-						</p>
+					<div className="grid gap-1 py-3 sm:grid-cols-3">
+						<dt className="text-tinta-tenue">Roles</dt>
+						<dd className="text-tinta sm:col-span-2">
+							{usuario.roles.join(", ")}
+						</dd>
 					</div>
-
-					<div className="rounded-lg border border-borde bg-superficie/50 p-3.5">
-						<div className="flex items-center gap-2 text-xs font-medium text-tinta-tenue">
-							<CheckCircle className="h-3.5 w-3.5" />
-							Estado de Verificación
-						</div>
-						{usuario.emailVerificado === false ? (
-							<p className="mt-1 text-sm font-semibold text-amber-400">
-								Email sin verificar
-							</p>
-						) : (
-							<p className="mt-1 text-sm font-semibold text-emerald-400">
-								Email verificado
-							</p>
-						)}
+					<div className="grid gap-1 py-3 sm:grid-cols-3">
+						<dt className="text-tinta-tenue">Verificación</dt>
+						<dd className="sm:col-span-2">
+							{usuario.emailVerificado === false ? (
+								<span className="text-amber-400">Email sin verificar</span>
+							) : (
+								<span className="text-emerald-400">Email verificado</span>
+							)}
+						</dd>
 					</div>
-				</div>
+				</dl>
 			</CardContent>
 		</Card>
 	);

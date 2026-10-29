@@ -111,7 +111,7 @@ function Formulario({
 	return (
 		<div className="space-y-5">
 			<fieldset className="space-y-2">
-				<legend className="text-xs font-semibold uppercase tracking-wider text-tinta-suave">
+				<legend className="text-[13px] font-medium text-tinta-suave">
 					Roles
 				</legend>
 				<div className="flex flex-wrap gap-x-5 gap-y-2">
@@ -127,7 +127,7 @@ function Formulario({
 			</fieldset>
 
 			<fieldset className="space-y-2">
-				<legend className="text-xs font-semibold uppercase tracking-wider text-tinta-suave">
+				<legend className="text-[13px] font-medium text-tinta-suave">
 					Excepciones de permisos
 				</legend>
 				<p className="text-xs text-tinta-tenue">
@@ -140,7 +140,7 @@ function Formulario({
 							key={recurso}
 							className="rounded-lg border border-borde bg-fondo/40 p-3 space-y-2"
 						>
-							<p className="text-xs font-semibold uppercase tracking-wider text-tinta-tenue">
+							<p className="text-[13px] font-medium text-tinta-tenue">
 								{recurso}
 							</p>
 							{delRecurso.map((permiso) => (

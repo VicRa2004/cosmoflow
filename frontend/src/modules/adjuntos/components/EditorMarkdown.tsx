@@ -68,7 +68,7 @@ export function EditorMarkdown({
 				</div>
 			) : (
 				<div className="space-y-1.5">
-					<span className="block text-xs font-semibold uppercase tracking-wider text-tinta-suave">
+					<span className="block text-[13px] font-medium text-tinta-suave">
 						{label}
 					</span>
 					<ContenidoMarkdown

@@ -23,25 +23,21 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
 		ref,
 	) => {
 		const baseStyles =
-			"inline-flex items-center justify-center font-medium rounded-lg transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 focus-visible:ring-offset-superficie disabled:opacity-50 disabled:pointer-events-none cursor-pointer select-none";
+			"inline-flex shrink-0 items-center justify-center whitespace-nowrap font-medium rounded-md transition-colors disabled:opacity-50 disabled:pointer-events-none cursor-pointer select-none [&_svg]:shrink-0";
 
 		const variants = {
-			primary:
-				"bg-indigo-600 text-white hover:bg-indigo-500 active:bg-indigo-700 shadow-sm",
-			secondary:
-				"bg-elevada text-tinta hover:bg-borde-fuerte active:bg-superficie border border-borde-fuerte",
-			outline:
-				"border border-borde-fuerte bg-transparent text-tinta hover:bg-elevada hover:text-tinta",
-			danger:
-				"bg-rose-600 text-white hover:bg-rose-500 active:bg-rose-700 shadow-sm",
+			primary: "bg-indigo-600 text-white hover:bg-indigo-700",
+			secondary: "bg-elevada text-tinta hover:bg-borde",
+			outline: "border border-borde bg-superficie text-tinta hover:bg-elevada",
+			danger: "bg-rose-600 text-white hover:bg-rose-700",
 			ghost:
 				"bg-transparent text-tinta-suave hover:bg-elevada hover:text-tinta",
 		};
 
 		const sizes = {
-			sm: "text-xs px-2.5 py-1.5 gap-1.5",
-			md: "text-sm px-4 py-2 gap-2",
-			lg: "text-base px-5 py-2.5 gap-2.5",
+			sm: "h-8 text-[13px] px-2.5 gap-1.5",
+			md: "h-9 text-sm px-3.5 gap-2",
+			lg: "h-10 text-sm px-4 gap-2",
 		};
 
 		return (

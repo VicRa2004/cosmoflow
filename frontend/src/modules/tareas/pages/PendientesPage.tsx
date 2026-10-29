@@ -1,6 +1,8 @@
 import { Circle, CircleCheck, ListTodo, Plus } from "lucide-react";
 import { useState } from "react";
 import { useAuthStore } from "@/core/auth/store";
+import { usePermisos } from "@/core/auth/usePermisos";
+import { EncabezadoPagina } from "@/core/components/ui/EncabezadoPagina";
 import { Badge } from "@/core/components/ui/Badge";
 import { Button } from "@/core/components/ui/Button";
 import { EmptyState } from "@/core/components/ui/EmptyState";
@@ -16,6 +18,7 @@ import { ETIQUETAS_ESTADO } from "../schemas/tareaSchemas";
 /** Portada: lo que queda por hacer, lo que vence antes primero (RN-43). */
 export function PendientesPage() {
 	const nombre = useAuthStore((state) => state.usuario?.nombre);
+	const { puede } = usePermisos();
 	const [pagina, setPagina] = useState(1);
 	const [editando, setEditando] = useState<TareaDto | "nuevo" | null>(null);
 	const { data, isLoading, error } = usePendientesQuery(pagina);
@@ -83,23 +86,24 @@ export function PendientesPage() {
 
 	return (
 		<div className="space-y-6">
-			<div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-				<div>
-					<h1 className="text-2xl font-bold tracking-tight text-tinta">
-						Pendientes
-					</h1>
-					<p className="text-sm text-tinta-suave">
+			<EncabezadoPagina
+				titulo="Pendientes"
+				descripcion={
+					<>
 						{nombre ? `Hola, ${nombre}. ` : ""}
-						{data
+						{data?.totalElementos
 							? `Tienes ${data.totalElementos} ${data.totalElementos === 1 ? "tarea abierta" : "tareas abiertas"}.`
 							: ""}
-					</p>
-				</div>
-				<Button onClick={() => setEditando("nuevo")}>
-					<Plus className="h-4 w-4" />
-					Nueva tarea
-				</Button>
-			</div>
+					</>
+				}
+			>
+				{puede("tareas:crear") && (
+					<Button onClick={() => setEditando("nuevo")}>
+						<Plus className="h-4 w-4" />
+						Nueva tarea
+					</Button>
+				)}
+			</EncabezadoPagina>
 
 			<Tabla
 				etiqueta="Tareas pendientes"

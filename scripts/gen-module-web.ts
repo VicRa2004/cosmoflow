@@ -468,9 +468,11 @@ ${columnas.join("\n")}
 
 	[`pages/${Ns}Page.tsx`]: `import { Plus${filtro ? ", Search" : ""} } from "lucide-react";
 import { useState } from "react";
+import { usePermisos } from "@/core/auth/usePermisos";
 import { Button } from "@/core/components/ui/Button";
 import { ConfirmDialog } from "@/core/components/ui/ConfirmDialog";
 import { Dialog } from "@/core/components/ui/Dialog";
+import { EncabezadoPagina } from "@/core/components/ui/EncabezadoPagina";
 ${filtro ? `import { Input } from "@/core/components/ui/Input";\n` : ""}import type { ${N}Dto } from "../api/${ns}Api";
 import { ${N}Form } from "../components/${N}Form";
 import { ${Ns}Table } from "../components/${Ns}Table";
@@ -478,6 +480,7 @@ import { useEliminar${N}Mutation } from "../hooks/use${Ns}Mutation";
 import { use${Ns}Query } from "../hooks/use${Ns}Query";
 
 export function ${Ns}Page() {
+	const { puede } = usePermisos();
 	const [pagina, setPagina] = useState(1);${filtro ? `\n\tconst [busqueda, setBusqueda] = useState("");` : ""}
 	/** \`null\` = cerrado; \`"nuevo"\` = alta; un DTO = edición. */
 	const [editando, setEditando] = useState<${N}Dto | "nuevo" | null>(null);
@@ -490,9 +493,7 @@ export function ${Ns}Page() {
 
 	return (
 		<div className="space-y-6">
-			<div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-				<h1 className="text-2xl font-bold tracking-tight text-tinta">${humano(ns)}</h1>
-				<div className="flex gap-2">${
+			<EncabezadoPagina titulo="${humano(ns)}">${
 					filtro
 						? `
 					<div className="relative w-full sm:w-64">
@@ -510,12 +511,13 @@ export function ${Ns}Page() {
 					</div>`
 						: ""
 				}
+				{puede("${kebabs}:crear") && (
 					<Button onClick={() => setEditando("nuevo")}>
 						<Plus className="h-4 w-4" />
 						${o("Nuevo")}
 					</Button>
-				</div>
-			</div>
+				)}
+			</EncabezadoPagina>
 
 			<${Ns}Table
 				pagina={data}
@@ -593,5 +595,5 @@ if (exitCode !== 0) fallar("Falló el formateo con Biome");
 
 console.log(`
 Frontend de ${n} creado en src/modules/${ns} y src/routes/_authenticated/${kebabs}.tsx.
-${omitidos.length ? `Campos sin control genérico (añadir a mano en ${N}Form): ${omitidos.join(", ")}\n` : ""}Siguiente paso: añadir el enlace a /${kebabs} en src/core/components/layout/MainLayout.tsx.
+${omitidos.length ? `Campos sin control genérico (añadir a mano en ${N}Form): ${omitidos.join(", ")}\n` : ""}Siguiente paso: añadir el enlace a /${kebabs} (permiso «${kebabs}:leer») en src/core/components/layout/navegacion.ts.
 `);

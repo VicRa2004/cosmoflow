@@ -23,7 +23,7 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
 				{label && (
 					<label
 						htmlFor={selectId}
-						className="block text-xs font-semibold uppercase tracking-wider text-tinta-suave"
+						className="block text-[13px] font-medium text-tinta-suave"
 					>
 						{label}
 					</label>
@@ -34,8 +34,8 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
 					aria-invalid={!!error}
 					aria-describedby={descripcion}
 					className={cn(
-						"w-full cursor-pointer rounded-lg border bg-superficie px-3 py-2 text-sm text-tinta shadow-sm transition-colors",
-						"focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500",
+						"h-9 w-full cursor-pointer rounded-md border bg-superficie px-2.5 text-sm text-tinta transition-colors",
+						"focus:outline-none focus:border-indigo-500 focus:ring-3 focus:ring-indigo-500/20",
 						"disabled:cursor-not-allowed disabled:opacity-50",
 						error
 							? "border-rose-500/80"

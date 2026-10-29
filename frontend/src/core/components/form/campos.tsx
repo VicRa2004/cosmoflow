@@ -57,7 +57,7 @@ export function CampoAreaTexto({
 		<div className="w-full space-y-1.5">
 			<label
 				htmlFor={id}
-				className="block text-xs font-semibold uppercase tracking-wider text-tinta-suave"
+				className="block text-[13px] font-medium text-tinta-suave"
 			>
 				{label}
 			</label>
@@ -70,8 +70,8 @@ export function CampoAreaTexto({
 				aria-invalid={!!error}
 				aria-describedby={error ? `${id}-error` : undefined}
 				className={cn(
-					"min-h-28 w-full rounded-lg border bg-superficie/80 px-3.5 py-2 font-mono text-sm text-tinta placeholder-tinta-tenue shadow-sm transition-colors",
-					"focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500",
+					"min-h-28 w-full rounded-md border bg-superficie px-3 py-2 font-mono text-sm text-tinta placeholder:text-tinta-tenue transition-colors",
+					"focus:outline-none focus:border-indigo-500 focus:ring-3 focus:ring-indigo-500/20",
 					error
 						? "border-rose-500/80"
 						: "border-borde hover:border-borde-fuerte",

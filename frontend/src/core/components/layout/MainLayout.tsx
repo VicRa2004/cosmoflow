@@ -1,161 +1,63 @@
-import type { ReactNode } from "react";
-import { Link, useNavigate } from "@tanstack/react-router";
-import {
-	Hexagon,
-	CircleDot,
-	Users,
-	ShieldCheck,
-	UserCheck,
-	LogOut,
-	ListTodo,
-	StickyNote,
-	Tag,
-} from "lucide-react";
-import { useAuthStore } from "@/core/auth/store";
-import { SelectorTema } from "./SelectorTema";
-import { Badge } from "@/core/components/ui/Badge";
-import { Button } from "@/core/components/ui/Button";
-import { toast } from "sonner";
-import { authApi } from "@/modules/auth/api/authApi";
+import { type ReactNode, useRef, useState } from "react";
+import { cn } from "@/core/utils/cn";
+import { Navbar } from "./Navbar";
+import { Sidebar } from "./Sidebar";
 
-interface MainLayoutProps {
-	children: ReactNode;
+const CLAVE_COLAPSADO = "sidebar-colapsado";
+
+function leerColapsado() {
+	try {
+		return localStorage.getItem(CLAVE_COLAPSADO) === "1";
+	} catch {
+		return false; // localStorage bloqueado (modo privado)
+	}
 }
 
-export function MainLayout({ children }: MainLayoutProps) {
-	const navigate = useNavigate();
-	const { usuario, logout } = useAuthStore();
+export function MainLayout({ children }: { children: ReactNode }) {
+	const [colapsado, setColapsado] = useState(leerColapsado);
+	const cajon = useRef<HTMLDialogElement>(null);
 
-	const handleLogout = async () => {
+	const alternar = () => {
+		setColapsado(!colapsado);
 		try {
-			await authApi.logout();
+			localStorage.setItem(CLAVE_COLAPSADO, colapsado ? "0" : "1");
 		} catch {
-			// Ignoramos error en logout para asegurar limpieza local
-		} finally {
-			logout();
-			toast.info("Sesión cerrada correctamente");
-			navigate({ to: "/login" });
+			// sin persistencia: dura hasta recargar
 		}
 	};
-
-	const varianteRol = usuario?.roles.includes("ADMIN")
-		? "purple"
-		: usuario?.roles.includes("MOD")
-			? "warning"
-			: "default";
+	const cerrarCajon = () => cajon.current?.close();
 
 	return (
-		<div className="min-h-screen flex flex-col bg-fondo text-tinta">
-			{/* Navbar Superior */}
-			<header className="sticky top-0 z-40 border-b border-borde bg-fondo/80 backdrop-blur-md">
-				<div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-					<div className="flex h-16 items-center justify-between gap-4">
-						<div className="flex items-center gap-8">
-							<Link to="/dashboard" className="flex items-center gap-2.5 group">
-								<div className="flex h-9 w-9 items-center justify-center rounded-lg bg-indigo-600/10 border border-indigo-500/20 text-indigo-400 group-hover:bg-indigo-600/20 transition-colors">
-									<Hexagon className="h-5 w-5 stroke-[2.2]" />
-								</div>
-								<span className="text-lg font-bold tracking-tight text-tinta group-hover:text-indigo-400 transition-colors">
-									Cosmoflow
-								</span>
-							</Link>
+		<div className="flex min-h-screen bg-fondo text-tinta">
+			<aside
+				className={cn(
+					"sticky top-0 hidden h-screen shrink-0 border-r border-borde bg-lateral transition-[width] duration-200 ease-out motion-reduce:transition-none md:block",
+					colapsado ? "w-14" : "w-60",
+				)}
+			>
+				<Sidebar colapsado={colapsado} onAlternar={alternar} />
+			</aside>
 
-							<nav className="hidden md:flex items-center gap-1">
-								<Link
-									to="/dashboard"
-									className="flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-lg text-tinta-suave hover:text-tinta hover:bg-elevada/60 transition-colors [&.active]:bg-indigo-600/10 [&.active]:text-indigo-400 [&.active]:border [&.active]:border-indigo-500/20"
-								>
-									<CircleDot className="h-4 w-4" />
-									Pendientes
-								</Link>
-								<Link
-									to="/tareas"
-									className="flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-lg text-tinta-suave hover:text-tinta hover:bg-elevada/60 transition-colors [&.active]:bg-indigo-600/10 [&.active]:text-indigo-400 [&.active]:border [&.active]:border-indigo-500/20"
-								>
-									<ListTodo className="h-4 w-4" />
-									Tareas
-								</Link>
-								<Link
-									to="/notas"
-									className="flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-lg text-tinta-suave hover:text-tinta hover:bg-elevada/60 transition-colors [&.active]:bg-indigo-600/10 [&.active]:text-indigo-400 [&.active]:border [&.active]:border-indigo-500/20"
-								>
-									<StickyNote className="h-4 w-4" />
-									Notas
-								</Link>
-								<Link
-									to="/tags"
-									className="flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-lg text-tinta-suave hover:text-tinta hover:bg-elevada/60 transition-colors [&.active]:bg-indigo-600/10 [&.active]:text-indigo-400 [&.active]:border [&.active]:border-indigo-500/20"
-								>
-									<Tag className="h-4 w-4" />
-									Tags
-								</Link>
-								<Link
-									to="/usuarios"
-									className="flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-lg text-tinta-suave hover:text-tinta hover:bg-elevada/60 transition-colors [&.active]:bg-indigo-600/10 [&.active]:text-indigo-400 [&.active]:border [&.active]:border-indigo-500/20"
-								>
-									<Users className="h-4 w-4" />
-									Usuarios
-								</Link>
-								<Link
-									to="/roles"
-									className="flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-lg text-tinta-suave hover:text-tinta hover:bg-elevada/60 transition-colors [&.active]:bg-indigo-600/10 [&.active]:text-indigo-400 [&.active]:border [&.active]:border-indigo-500/20"
-								>
-									<ShieldCheck className="h-4 w-4" />
-									Roles
-								</Link>
-								<Link
-									to="/perfil"
-									className="flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-lg text-tinta-suave hover:text-tinta hover:bg-elevada/60 transition-colors [&.active]:bg-indigo-600/10 [&.active]:text-indigo-400 [&.active]:border [&.active]:border-indigo-500/20"
-								>
-									<UserCheck className="h-4 w-4" />
-									Mi Perfil
-								</Link>
-							</nav>
-						</div>
+			{/* Móvil: el mismo menú en un cajón (<dialog>: foco atrapado, Esc y fondo inerte). */}
+			{/* biome-ignore lint/a11y/useKeyWithClickEvents: el equivalente de teclado es Esc, nativo de <dialog> */}
+			<dialog
+				ref={cajon}
+				aria-label="Menú"
+				onClick={(e) => e.target === cajon.current && cerrarCajon()}
+				className={cn(
+					"fixed inset-y-0 left-0 m-0 h-dvh max-h-dvh w-72 max-w-[85vw] border-r border-borde bg-lateral p-0 text-tinta backdrop:bg-zinc-950/50",
+					"-translate-x-full transition-[translate,display,overlay] transition-discrete duration-200 ease-out open:translate-x-0 starting:open:-translate-x-full motion-reduce:transition-none md:hidden",
+				)}
+			>
+				<Sidebar onNavegar={cerrarCajon} />
+			</dialog>
 
-						<div className="flex items-center gap-3">
-							<SelectorTema />
-							{usuario && (
-								<div className="hidden sm:flex items-center gap-2.5 pr-2">
-									<div className="text-right">
-										<p className="text-xs font-semibold text-tinta">
-											{usuario.nombre}
-										</p>
-										<p className="text-[11px] text-tinta-tenue">
-											{usuario.email}
-										</p>
-									</div>
-									<Badge variant={varianteRol}>
-										{usuario.roles.join(", ")}
-									</Badge>
-								</div>
-							)}
-
-							<Button
-								variant="ghost"
-								size="sm"
-								onClick={handleLogout}
-								className="text-tinta-tenue hover:text-rose-400 hover:bg-rose-950/20"
-								title="Cerrar sesión"
-							>
-								<LogOut className="h-4 w-4 mr-1.5" />
-								<span className="hidden sm:inline">Salir</span>
-							</Button>
-						</div>
-					</div>
-				</div>
-			</header>
-
-			{/* Contenido Principal */}
-			<main className="flex-1 mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8 py-8">
-				{children}
-			</main>
-
-			{/* Footer */}
-			<footer className="border-t border-borde/60 py-6 text-center text-xs text-tinta-tenue">
-				Cosmoflow Monorepo &copy; {new Date().getFullYear()} &mdash;
-				Arquitectura Hexagonal y Modular
-			</footer>
+			<div className="flex min-w-0 flex-1 flex-col">
+				<Navbar onAbrirMenu={() => cajon.current?.showModal()} />
+				<main className="mx-auto w-full max-w-6xl flex-1 px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
+					{children}
+				</main>
+			</div>
 		</div>
 	);
 }

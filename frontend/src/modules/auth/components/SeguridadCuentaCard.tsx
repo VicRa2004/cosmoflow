@@ -25,7 +25,7 @@ export function SeguridadCuentaCard() {
 	const [confirmando, setConfirmando] = useState(false);
 
 	return (
-		<Card className="max-w-2xl mx-auto space-y-4">
+		<Card className="space-y-4">
 			<CardHeader className="pb-0">
 				<CardTitle className="text-lg">Seguridad</CardTitle>
 			</CardHeader>
@@ -52,9 +52,10 @@ export function SeguridadCuentaCard() {
 					¿Has perdido un dispositivo? Cierra la sesión en todos, incluido este.
 				</CardDescription>
 				<Button
-					variant="danger"
+					variant="outline"
 					size="sm"
 					onClick={() => setConfirmando(true)}
+					className="text-rose-400 hover:text-rose-300"
 					isLoading={cerrarSesiones.isPending}
 				>
 					<LogOut className="h-4 w-4" />

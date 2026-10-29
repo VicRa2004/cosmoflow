@@ -13,9 +13,7 @@ export function SelectorTags({ valor, onChange }: SelectorTagsProps) {
 
 	return (
 		<fieldset className="space-y-2">
-			<legend className="text-xs font-semibold uppercase tracking-wider text-tinta-suave">
-				Tags
-			</legend>
+			<legend className="text-[13px] font-medium text-tinta-suave">Tags</legend>
 			{tags.length === 0 ? (
 				<p className="text-xs text-tinta-tenue">
 					Aún no tienes tags.{" "}

@@ -9,7 +9,7 @@ export function Card({
 	return (
 		<div
 			className={cn(
-				"rounded-xl border border-borde bg-superficie/60 p-6 shadow-xl backdrop-blur-sm",
+				"rounded-lg border border-borde bg-superficie p-6",
 				className,
 			)}
 			{...props}
@@ -25,7 +25,7 @@ export function CardHeader({
 	...props
 }: HTMLAttributes<HTMLDivElement>) {
 	return (
-		<div className={cn("flex flex-col space-y-1.5 pb-4", className)} {...props}>
+		<div className={cn("flex flex-col gap-1 pb-4", className)} {...props}>
 			{children}
 		</div>
 	);
@@ -38,7 +38,7 @@ export function CardTitle({
 }: HTMLAttributes<HTMLHeadingElement>) {
 	return (
 		<h3
-			className={cn("text-xl font-bold tracking-tight text-tinta", className)}
+			className={cn("text-base font-semibold text-tinta", className)}
 			{...props}
 		>
 			{children}
