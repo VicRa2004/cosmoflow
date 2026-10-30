@@ -17,6 +17,9 @@ export type AmbitoTareas =
 	| { equipoId: number }
 	| { proyectoId: number };
 
+/** Un equipo o un proyecto concreto. */
+export type GrupoTareas = { equipoId: number } | { proyectoId: number };
+
 /**
  * Las lecturas ignoran las borradas. Quién puede ver cada tarea lo decide la
  * aplicación (`buscarTareaVisible`): aquí no hay filtro por usuario en `buscarPorId`.
@@ -45,4 +48,11 @@ export interface TareaRepository {
 	actualizar: (data: Tarea) => Promise<Tarea>;
 	/** Borrado lógico (`deletedAt`). */
 	eliminar: (id: number) => Promise<void>;
+	/** Al eliminar el equipo o proyecto, sus tareas quedan en la organización. */
+	pasarAOrganizacion: (grupo: GrupoTareas) => Promise<void>;
+	/**
+	 * Quita como responsables a quienes ya no ven la tarea (RN-23). Con un equipo, en
+	 * sus tareas y en las de los proyectos en los que está.
+	 */
+	depurarResponsables: (grupo: GrupoTareas) => Promise<void>;
 }

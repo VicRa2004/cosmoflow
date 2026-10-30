@@ -13,6 +13,7 @@ import {
 import { ConfirmDialog } from "@/core/components/ui/ConfirmDialog";
 import { Dialog } from "@/core/components/ui/Dialog";
 import { Select } from "@/core/components/ui/Select";
+import { Paginacion, paginarLista } from "@/core/components/ui/Table";
 import { useEquiposQuery } from "@/modules/equipos/hooks/useEquipos";
 import type { OrganizacionDto } from "@/modules/organizaciones/api/organizacionesApi";
 import { useMiembrosQuery } from "@/modules/organizaciones/hooks/useMiembros";
@@ -38,6 +39,8 @@ export function ProyectosCard({
 	const navigate = useNavigate();
 	const [estado, setEstado] = useState<EstadoProyecto>();
 	const { data: proyectos } = useProyectosQuery(organizacionId, estado);
+	const [pagina, setPagina] = useState(1);
+	const paginaProyectos = paginarLista(proyectos ?? [], pagina);
 	const { data: equipos = [] } = useEquiposQuery(organizacionId);
 	const { data: miembros = [] } = useMiembrosQuery(organizacionId);
 	const nombreEquipo = new Map(equipos.map((e) => [e.id, e.nombre]));
@@ -68,9 +71,10 @@ export function ProyectosCard({
 					label="Filtrar por estado"
 					className="sm:w-64"
 					value={estado ?? ""}
-					onChange={(e) =>
-						setEstado((e.target.value || undefined) as EstadoProyecto)
-					}
+					onChange={(e) => {
+						setEstado((e.target.value || undefined) as EstadoProyecto);
+						setPagina(1);
+					}}
 				>
 					<option value="">Todos</option>
 					{Object.entries(ETIQUETA_ESTADO).map(([valor, etiqueta]) => (
@@ -87,7 +91,7 @@ export function ProyectosCard({
 					</p>
 				) : (
 					<ul className="divide-y divide-borde">
-						{proyectos?.map((proyecto) => (
+						{paginaProyectos.datos.map((proyecto) => (
 							<li
 								key={proyecto.id}
 								className="flex items-center gap-3 py-2.5 text-sm"
@@ -161,6 +165,9 @@ export function ProyectosCard({
 						))}
 					</ul>
 				)}
+				{paginaProyectos.totalPaginas > 1 && (
+					<Paginacion {...paginaProyectos} onCambioPagina={setPagina} />
+				)}
 			</CardContent>
 
 			<Dialog
@@ -183,7 +190,7 @@ export function ProyectosCard({
 			<ConfirmDialog
 				abierto={borrando !== null}
 				titulo={`¿Eliminar el proyecto «${borrando?.nombre ?? ""}»?`}
-				mensaje="Sus equipos e integrantes siguen en la organización."
+				mensaje="Sus tareas pasan a la organización y sus notas, a quien las creó. Sus equipos e integrantes siguen en la organización."
 				textoConfirmar="Eliminar"
 				peligroso
 				isLoading={eliminar.isPending}

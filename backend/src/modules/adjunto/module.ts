@@ -22,6 +22,15 @@ export const adjuntoModule: AppModule = {
 	mount(app, container) {
 		const repo = new PrismaAdjuntoRepository();
 		const almacenamiento = container.get(TOKENS.Almacenamiento);
+		const eventBus = container.get(TOKENS.EventBus);
+		for (const evento of ["equipo.eliminado", "proyecto.eliminado"]) {
+			eventBus.subscribe(evento, (e) => {
+				const { organizacionId, ...grupo } = e.data as {
+					organizacionId: number;
+				} & ({ equipoId: number } | { proyectoId: number });
+				return repo.pasarAOrganizacion(organizacionId, grupo);
+			});
+		}
 		const miembros = new MiembrosAmbito(
 			container.get(EQUIPO_TOKENS.TareasEquipo),
 			container.get(PROYECTO_TOKENS.TareasProyecto),

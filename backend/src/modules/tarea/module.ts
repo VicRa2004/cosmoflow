@@ -5,6 +5,7 @@ import { AUTH_TOKENS } from "@/modules/auth";
 import { EQUIPO_TOKENS } from "@/modules/equipo";
 import { ORGANIZACION_TOKENS } from "@/modules/organizacion";
 import { PROYECTO_TOKENS } from "@/modules/proyecto";
+import { ReubicarTareas } from "./application/subscribers/ReubicarTareas";
 import { ContextosTarea } from "./application/services/ContextosTarea";
 import { MoverTareaUseCase } from "./application/useCases/MoverTareaUseCase";
 import { ActualizarTareaUseCase } from "./application/useCases/ActualizarTareaUseCase";
@@ -27,6 +28,7 @@ export const tareaModule: AppModule = {
 		);
 		const eventBus = container.get(TOKENS.EventBus);
 		const uow = container.get(TOKENS.UnitOfWork);
+		new ReubicarTareas(eventBus, repo).suscribir();
 		const router = new TareaRouter(
 			container.get(AUTH_TOKENS.AuthMiddleware),
 			container.get(TOKENS.PermisoGuard),

@@ -30,6 +30,8 @@ export const proyectoModule: AppModule = {
 	mount(app, container) {
 		const repo = new PrismaProyectoRepository();
 		const acceso = container.get(ORGANIZACION_TOKENS.AccesoOrganizacion);
+		const eventBus = container.get(TOKENS.EventBus);
+		const uow = container.get(TOKENS.UnitOfWork);
 		app.route(
 			"/api/organizaciones/:organizacionId/proyectos",
 			new ProyectoRouter(
@@ -39,8 +41,13 @@ export const proyectoModule: AppModule = {
 					obtenerTodos: new ObtenerProyectosUseCase(repo, acceso),
 					obtenerUno: new ObtenerProyectoUseCase(repo, acceso),
 					crear: new CrearProyectoUseCase(repo, acceso),
-					actualizar: new ActualizarProyectoUseCase(repo, acceso),
-					eliminar: new EliminarProyectoUseCase(repo, acceso),
+					actualizar: new ActualizarProyectoUseCase(
+						repo,
+						acceso,
+						eventBus,
+						uow,
+					),
+					eliminar: new EliminarProyectoUseCase(repo, acceso, eventBus, uow),
 				}),
 			).router,
 		);

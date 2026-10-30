@@ -14,6 +14,23 @@ export interface Pagina<T> {
 	totalPaginas: number;
 }
 
+/** Una página de una lista ya cargada entera, con la forma de las del backend. */
+export function paginarLista<T>(
+	lista: T[],
+	pagina: number,
+	limite = 10,
+): Pagina<T> {
+	const totalPaginas = Math.ceil(lista.length / limite);
+	// Si se borra lo último de la última página, se queda en la anterior.
+	const actual = Math.min(pagina, Math.max(1, totalPaginas));
+	return {
+		datos: lista.slice((actual - 1) * limite, actual * limite),
+		pagina: actual,
+		totalElementos: lista.length,
+		totalPaginas,
+	};
+}
+
 export interface Columna<T> {
 	cabecera: ReactNode;
 	celda: (fila: T) => ReactNode;

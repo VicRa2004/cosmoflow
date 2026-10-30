@@ -15,6 +15,12 @@ import { PrismaNotaRepository } from "./infrastructure/repository/PrismaNotaRepo
 export const notaModule: AppModule = {
 	mount(app, container) {
 		const repo = new PrismaNotaRepository();
+		// Idempotente: la reentrega del outbox ya no encuentra notas del proyecto.
+		container
+			.get(TOKENS.EventBus)
+			.subscribe("proyecto.eliminado", (e) =>
+				repo.hacerPersonales((e.data as { proyectoId: number }).proyectoId),
+			);
 		const proyectos = new ProyectosNota(
 			repo,
 			container.get(PROYECTO_TOKENS.TareasProyecto),

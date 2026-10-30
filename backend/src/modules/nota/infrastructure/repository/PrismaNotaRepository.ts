@@ -125,4 +125,14 @@ export class PrismaNotaRepository implements NotaRepository {
 			data: { deletedAt: new Date() },
 		});
 	}
+
+	async hacerPersonales(proyectoId: number): Promise<void> {
+		await prisma.$transaction([
+			prisma.notaTag.deleteMany({ where: { nota: { proyectoId } } }),
+			prisma.nota.updateMany({
+				where: { proyectoId },
+				data: { organizacionId: null, proyectoId: null },
+			}),
+		]);
+	}
 }

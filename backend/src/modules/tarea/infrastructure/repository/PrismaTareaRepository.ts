@@ -3,6 +3,7 @@ import type { Paginacion } from "@/core/shared/domain/Paginacion";
 import type { Prisma } from "@/generated/prisma/client";
 import type {
 	AmbitoTareas,
+	GrupoTareas,
 	TareaFiltros,
 	TareaRepository,
 } from "../../domain/repository/TareaRepository";
@@ -207,6 +208,64 @@ export class PrismaTareaRepository implements TareaRepository {
 		await prisma.tarea.update({
 			where: { id },
 			data: { deletedAt: new Date() },
+		});
+	}
+
+	async pasarAOrganizacion(grupo: GrupoTareas): Promise<void> {
+		await prisma.tarea.updateMany({
+			where: grupo,
+			data: "equipoId" in grupo ? { equipoId: null } : { proyectoId: null },
+		});
+	}
+
+	async depurarResponsables(grupo: GrupoTareas): Promise<void> {
+		const miembros = { select: { usuarioId: true } } as const;
+		// shortcut: filtra en memoria; pasar a SQL si un grupo llega a miles de responsables.
+		const responsables = await prisma.tareaResponsable.findMany({
+			where: {
+				tarea:
+					"equipoId" in grupo
+						? {
+								OR: [
+									{ equipoId: grupo.equipoId },
+									{
+										proyecto: {
+											equipos: { some: { equipoId: grupo.equipoId } },
+										},
+									},
+								],
+							}
+						: { proyectoId: grupo.proyectoId },
+			},
+			select: {
+				tareaId: true,
+				usuarioId: true,
+				tarea: {
+					select: {
+						equipo: { select: { miembros } },
+						proyecto: {
+							select: {
+								integrantes: miembros,
+								equipos: { select: { equipo: { select: { miembros } } } },
+							},
+						},
+					},
+				},
+			},
+		});
+		const fuera = responsables.filter(({ usuarioId, tarea }) => {
+			const ven = [
+				...(tarea.equipo?.miembros ?? []),
+				...(tarea.proyecto?.integrantes ?? []),
+				...(tarea.proyecto?.equipos.flatMap((e) => e.equipo.miembros) ?? []),
+			];
+			return !ven.some((m) => m.usuarioId === usuarioId);
+		});
+		if (fuera.length === 0) return;
+		await prisma.tareaResponsable.deleteMany({
+			where: {
+				OR: fuera.map(({ tareaId, usuarioId }) => ({ tareaId, usuarioId })),
+			},
 		});
 	}
 }

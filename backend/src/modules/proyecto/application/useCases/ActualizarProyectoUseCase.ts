@@ -1,4 +1,7 @@
+import type { EventBus } from "@/core/shared/domain/events/EventBus";
+import type { UnitOfWork } from "@/core/shared/domain/UnitOfWork";
 import type { AccesoOrganizacion } from "@/modules/organizacion";
+import { ProyectoActualizadoEvent } from "../../domain/event/ProyectoActualizadoEvent";
 import type { ProyectoRepository } from "../../domain/repository/ProyectoRepository";
 import type {
 	ActualizarProyectoDto,
@@ -14,6 +17,8 @@ export class ActualizarProyectoUseCase {
 	constructor(
 		private readonly proyectoRepository: ProyectoRepository,
 		private readonly acceso: AccesoOrganizacion,
+		private readonly eventBus: EventBus,
+		private readonly uow: UnitOfWork,
 	) {}
 
 	async ejecutar(
@@ -29,8 +34,13 @@ export class ActualizarProyectoUseCase {
 		);
 		proyecto.actualizar(dto);
 		await validarReferencias(this.proyectoRepository, organizacionId, dto);
-		return ProyectoMapper.toDto(
-			await this.proyectoRepository.actualizar(proyecto),
-		);
+		const actualizado = await this.uow.ejecutar(async () => {
+			const guardado = await this.proyectoRepository.actualizar(proyecto);
+			await this.eventBus.publish(
+				new ProyectoActualizadoEvent({ organizacionId, proyectoId: id }),
+			);
+			return guardado;
+		});
+		return ProyectoMapper.toDto(actualizado);
 	}
 }

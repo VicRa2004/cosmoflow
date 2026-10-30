@@ -11,6 +11,16 @@ export class PrismaAdjuntoRepository implements AdjuntoRepository {
 		return prisma.adjunto.findUnique({ where: { id } });
 	}
 
+	async pasarAOrganizacion(
+		organizacionId: number,
+		grupo: { equipoId: number } | { proyectoId: number },
+	): Promise<void> {
+		await prisma.adjunto.updateMany({
+			where: grupo,
+			data: { organizacionId, equipoId: null, proyectoId: null },
+		});
+	}
+
 	async compartir(
 		usuarioId: number,
 		adjuntoIds: number[],

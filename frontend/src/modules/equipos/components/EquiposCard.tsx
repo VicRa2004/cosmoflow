@@ -14,6 +14,7 @@ import {
 import { ConfirmDialog } from "@/core/components/ui/ConfirmDialog";
 import { Dialog } from "@/core/components/ui/Dialog";
 import { Select } from "@/core/components/ui/Select";
+import { Paginacion, paginarLista } from "@/core/components/ui/Table";
 import type { OrganizacionDto } from "@/modules/organizaciones/api/organizacionesApi";
 import { AvatarOrganizacion } from "@/modules/organizaciones/components/AvatarOrganizacion";
 import { useMiembrosQuery } from "@/modules/organizaciones/hooks/useMiembros";
@@ -35,6 +36,8 @@ export function EquiposCard({
 	const yo = useAuthStore((state) => state.usuario?.id);
 	const [tagId, setTagId] = useState<number>();
 	const { data: equipos } = useEquiposQuery(organizacionId, tagId);
+	const [pagina, setPagina] = useState(1);
+	const paginaEquipos = paginarLista(equipos ?? [], pagina);
 	const { data: miembros = [] } = useMiembrosQuery(organizacionId);
 	// shortcut: los 100 primeros tags; paginar si una organización tiene más.
 	const { data: paginaTags } = useTagsQuery(
@@ -74,9 +77,10 @@ export function EquiposCard({
 						label="Filtrar por tag"
 						className="sm:w-64"
 						value={tagId ?? ""}
-						onChange={(e) =>
-							setTagId(e.target.value ? Number(e.target.value) : undefined)
-						}
+						onChange={(e) => {
+							setTagId(e.target.value ? Number(e.target.value) : undefined);
+							setPagina(1);
+						}}
 					>
 						<option value="">Todos</option>
 						{tags.map((t) => (
@@ -92,7 +96,7 @@ export function EquiposCard({
 					</p>
 				) : (
 					<ul className="divide-y divide-borde">
-						{equipos?.map((equipo) => (
+						{paginaEquipos.datos.map((equipo) => (
 							<li
 								key={equipo.id}
 								className="flex items-center gap-3 py-2.5 text-sm"
@@ -169,6 +173,9 @@ export function EquiposCard({
 						))}
 					</ul>
 				)}
+				{paginaEquipos.totalPaginas > 1 && (
+					<Paginacion {...paginaEquipos} onCambioPagina={setPagina} />
+				)}
 			</CardContent>
 
 			<Dialog
@@ -207,7 +214,7 @@ export function EquiposCard({
 			<ConfirmDialog
 				abierto={borrando !== null}
 				titulo={`¿Eliminar el equipo «${borrando?.nombre ?? ""}»?`}
-				mensaje="Sus miembros siguen en la organización."
+				mensaje="Sus tareas pasan a la organización, con sus responsables. Sus miembros siguen en la organización."
 				textoConfirmar="Eliminar"
 				peligroso
 				isLoading={eliminar.isPending}

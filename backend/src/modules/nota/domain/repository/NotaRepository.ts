@@ -32,4 +32,6 @@ export interface NotaRepository {
 	actualizar: (data: Nota) => Promise<Nota>;
 	/** Borrado lógico (`deletedAt`). */
 	eliminar: (id: number) => Promise<void>;
+	/** Al eliminar el proyecto, sus notas pasan a quien las creó, sin los tags de la organización. */
+	hacerPersonales: (proyectoId: number) => Promise<void>;
 }
