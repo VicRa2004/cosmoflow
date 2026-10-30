@@ -1,8 +1,10 @@
 import { env } from "@/core/config/env";
 import type { AppModule } from "@/core/shared/infrastructure/di/AppModule";
+import type { DependencyContainer } from "@/core/shared/infrastructure/di/DependencyContainer";
 import { TOKENS } from "@/core/shared/infrastructure/di/tokens";
 import { AUTH_TOKENS } from "@/modules/auth";
 import { ORGANIZACION_TOKENS } from "@/modules/organizacion";
+import { AvisarVencimientos } from "./application/services/AvisarVencimientos";
 import { Notificador } from "./application/services/Notificador";
 import { AtenderBotTelegram } from "./application/telegram/AtenderBotTelegram";
 import { NotificarTareas } from "./application/subscribers/NotificarTareas";
@@ -23,6 +25,12 @@ import { PrismaVinculoTelegramRepository } from "./infrastructure/repository/Pri
 import { TelegramBotApi } from "./infrastructure/telegram/TelegramBotApi";
 
 const repo = new PrismaNotificacionRepository();
+// Sin estado: `mount` y `onStart` crean el suyo con los canales activos.
+const crearNotificador = (container: DependencyContainer) =>
+	new Notificador(repo, [
+		new CorreoCanal(container.get(TOKENS.Mailer)),
+		...(bot ? [new TelegramCanal(bot)] : []),
+	]);
 const vinculos = new PrismaVinculoTelegramRepository();
 // Sin TELEGRAM_BOT_TOKEN no hay canal Telegram ni polling.
 const bot = env.TELEGRAM_BOT_TOKEN
@@ -35,14 +43,10 @@ const bot = env.TELEGRAM_BOT_TOKEN
  */
 export const notificacionModule: AppModule = {
 	mount(app, container) {
-		const notificador = new Notificador(repo, [
-			new CorreoCanal(container.get(TOKENS.Mailer)),
-			...(bot ? [new TelegramCanal(bot)] : []),
-		]);
 		new NotificarTareas(
 			container.get(TOKENS.EventBus),
 			repo,
-			notificador,
+			crearNotificador(container),
 			env.APP_URL,
 		).suscribir();
 
@@ -85,7 +89,17 @@ export const notificacionModule: AppModule = {
 				atender.ejecutar(),
 			);
 		}
-		// Las claves solo sirven mientras el outbox puede reintentar (minutos).
+		const vencimientos = new AvisarVencimientos(
+			repo,
+			crearNotificador(container),
+			env.APP_URL,
+			env.ZONA_HORARIA,
+		);
+		// Cada hora; avisa una vez por tarea y día gracias a las claves de envío.
+		scheduler.programar("notificacion.vencimientos", 60 * 60 * 1000, () =>
+			vencimientos.ejecutar(),
+		);
+		// Las de eventos solo sirven mientras el outbox reintenta; las de vencimiento, ese día.
 		scheduler.programar("notificacion.purgar", 24 * 60 * 60 * 1000, () =>
 			repo.purgarEnvios(new Date(Date.now() - 30 * 86_400_000)),
 		);

@@ -6804,7 +6804,7 @@ export interface components {
              * @example tareaAsignada
              * @enum {string}
              */
-            evento: "tareaAsignada" | "mencion" | "estadoCambiado";
+            evento: "tareaAsignada" | "mencion" | "estadoCambiado" | "vencimiento";
             /**
              * @example correo
              * @enum {string}

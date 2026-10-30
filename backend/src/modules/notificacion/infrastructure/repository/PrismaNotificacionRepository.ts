@@ -1,7 +1,10 @@
 import { prisma } from "@/core/config/prisma";
 import type { Destinatario } from "../../domain/CanalNotificacion";
 import type { Preferencia } from "../../domain/catalogo";
-import type { NotificacionRepository } from "../../domain/repository/NotificacionRepository";
+import type {
+	NotificacionRepository,
+	TareaPorVencer,
+} from "../../domain/repository/NotificacionRepository";
 
 export class PrismaNotificacionRepository implements NotificacionRepository {
 	async preferencias(usuarioId: number): Promise<Preferencia[]> {
@@ -84,6 +87,30 @@ export class PrismaNotificacionRepository implements NotificacionRepository {
 			where: { id: tareaId, deletedAt: null },
 			select: { titulo: true, organizacionId: true },
 		});
+	}
+
+	async tareasPorVencer(dias: string[]): Promise<TareaPorVencer[]> {
+		const tareas = await prisma.tarea.findMany({
+			where: {
+				deletedAt: null,
+				estado: { in: ["pendiente", "en_progreso"] },
+				fechaVencimiento: { in: dias.map((dia) => new Date(dia)) },
+			},
+			select: {
+				id: true,
+				titulo: true,
+				fechaVencimiento: true,
+				organizacionId: true,
+				usuarioId: true,
+				responsables: { select: { usuarioId: true } },
+			},
+		});
+		return tareas.map(({ fechaVencimiento, responsables, ...tarea }) => ({
+			...tarea,
+			// `@db.Date` llega como medianoche UTC: el día ISO es su parte de fecha.
+			fechaVencimiento: (fechaVencimiento as Date).toISOString().slice(0, 10),
+			responsableIds: responsables.map((r) => r.usuarioId),
+		}));
 	}
 
 	async registrarEnvio(clave: string): Promise<boolean> {

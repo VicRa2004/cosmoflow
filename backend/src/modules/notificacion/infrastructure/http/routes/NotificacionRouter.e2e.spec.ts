@@ -110,10 +110,12 @@ describe("Notificaciones (e2e)", () => {
 		const res = await api(preferencias, { token: t.beto });
 		expect(res.status).toBe(200);
 		expect(await res.json()).toEqual(
-			["tareaAsignada", "mencion", "estadoCambiado"].flatMap((evento) => [
-				{ evento, canal: "correo", activo: true, personalizado: false },
-				{ evento, canal: "telegram", activo: false, personalizado: false },
-			]),
+			["tareaAsignada", "mencion", "estadoCambiado", "vencimiento"].flatMap(
+				(evento) => [
+					{ evento, canal: "correo", activo: true, personalizado: false },
+					{ evento, canal: "telegram", activo: false, personalizado: false },
+				],
+			),
 		);
 	});
 

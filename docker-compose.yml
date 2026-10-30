@@ -20,6 +20,8 @@ x-app: &app
     GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
     # Bot de Telegram de las notificaciones; vacío, canal desactivado.
     TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN:-}
+    # Zona de los recordatorios de vencimiento (avisan desde las 8:00 locales).
+    ZONA_HORARIA: ${ZONA_HORARIA:-America/Mexico_City}
     PORT: 3000
     # Solo se llega a `app` a través de Traefik: el rate limit usa su X-Forwarded-For.
     TRUST_PROXY: ${TRUST_PROXY:-true}

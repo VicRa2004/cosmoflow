@@ -18,6 +18,7 @@ const EVENTOS: Record<PreferenciaNotificacion["evento"], string> = {
 	tareaAsignada: "Te asignan una tarea",
 	mencion: "Te mencionan en una tarea",
 	estadoCambiado: "Cambia el estado de una tarea que creaste",
+	vencimiento: "Una tarea tuya vence mañana o hoy",
 };
 const CANALES: Record<PreferenciaNotificacion["canal"], string> = {
 	correo: "Correo",

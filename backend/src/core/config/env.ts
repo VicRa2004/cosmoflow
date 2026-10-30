@@ -39,6 +39,18 @@ const EnvSchema = z
 		GOOGLE_CLIENT_SECRET: z.string().optional(),
 		// Sin él, el canal Telegram de las notificaciones queda desactivado.
 		TELEGRAM_BOT_TOKEN: z.string().optional(),
+		// Zona IANA en la que se decide qué día es «hoy» (recordatorios de vencimiento).
+		ZONA_HORARIA: z
+			.string()
+			.default("America/Mexico_City")
+			.refine((zona) => {
+				try {
+					new Intl.DateTimeFormat("es", { timeZone: zona });
+					return true;
+				} catch {
+					return false;
+				}
+			}, "ZONA_HORARIA debe ser una zona IANA, p. ej. America/Mexico_City"),
 	})
 	.refine(
 		(env) =>
@@ -67,6 +79,7 @@ const envPrev = {
 	GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID || undefined,
 	GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET || undefined,
 	TELEGRAM_BOT_TOKEN: process.env.TELEGRAM_BOT_TOKEN || undefined,
+	ZONA_HORARIA: process.env.ZONA_HORARIA || undefined,
 };
 
 export const env = EnvSchema.parse(envPrev);

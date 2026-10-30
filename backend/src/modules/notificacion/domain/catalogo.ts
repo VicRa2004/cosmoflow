@@ -3,6 +3,7 @@ export const EVENTOS_NOTIFICACION = [
 	"tareaAsignada",
 	"mencion",
 	"estadoCambiado",
+	"vencimiento",
 ] as const;
 export type EventoNotificacion = (typeof EVENTOS_NOTIFICACION)[number];
 
