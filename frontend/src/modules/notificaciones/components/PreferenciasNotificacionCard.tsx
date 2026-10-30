@@ -11,6 +11,8 @@ import {
 	useActualizarPreferenciasMutation,
 	usePreferenciasNotificacionQuery,
 } from "../hooks/usePreferenciasNotificacion";
+import { useEstadoTelegramQuery } from "../hooks/useTelegram";
+import { VinculoTelegram } from "./VinculoTelegram";
 
 const EVENTOS: Record<PreferenciaNotificacion["evento"], string> = {
 	tareaAsignada: "Te asignan una tarea",
@@ -18,6 +20,7 @@ const EVENTOS: Record<PreferenciaNotificacion["evento"], string> = {
 };
 const CANALES: Record<PreferenciaNotificacion["canal"], string> = {
 	correo: "Correo",
+	telegram: "Telegram",
 };
 
 /**
@@ -33,6 +36,14 @@ export function PreferenciasNotificacionCard({
 	const { data: preferencias, error } =
 		usePreferenciasNotificacionQuery(organizacionId);
 	const actualizar = useActualizarPreferenciasMutation(organizacionId);
+	const { data: telegram } = useEstadoTelegramQuery();
+	// Sin bot en el servidor, Telegram no se muestra.
+	const visibles = preferencias?.filter(
+		(p) => p.canal !== "telegram" || telegram?.disponible,
+	);
+	// El usuario no puede activarlo sin vincular; la organización sí (vale para quien lo vincule).
+	const bloqueado = (p: PreferenciaNotificacion) =>
+		p.canal === "telegram" && !deOrganizacion && !telegram?.vinculado;
 
 	return (
 		<Card className="space-y-4">
@@ -49,45 +60,52 @@ export function PreferenciasNotificacionCard({
 				<p className="text-sm text-rose-400">
 					No se pudieron cargar tus preferencias.
 				</p>
-			) : !preferencias ? (
+			) : !visibles ? (
 				<div className="flex justify-center py-4 text-tinta-tenue">
 					<Spinner />
 				</div>
 			) : (
-				<ul className="divide-y divide-borde">
-					{Object.entries(EVENTOS).map(([evento, descripcion]) => (
-						<li
-							key={evento}
-							className="flex flex-col gap-2 py-3 sm:flex-row sm:items-center sm:justify-between"
-						>
-							<span className="text-sm text-tinta-suave">
-								{descripcion}
-								{preferencias.some(
-									(p) => p.evento === evento && p.personalizado === false,
-								) && (
-									<span className="block text-xs text-tinta-tenue">
-										Sin elegir: en cada organización vale lo que ella decida.
-									</span>
-								)}
-							</span>
-							<div className="flex gap-4">
-								{preferencias
-									.filter((p) => p.evento === evento)
-									.map((p) => (
-										<Checkbox
-											key={p.canal}
-											label={CANALES[p.canal]}
-											checked={p.activo}
-											disabled={actualizar.isPending}
-											onChange={(e) =>
-												actualizar.mutate([{ ...p, activo: e.target.checked }])
-											}
-										/>
-									))}
-							</div>
-						</li>
-					))}
-				</ul>
+				<>
+					{!deOrganizacion && telegram?.disponible && (
+						<VinculoTelegram vinculado={telegram.vinculado} />
+					)}
+					<ul className="divide-y divide-borde">
+						{Object.entries(EVENTOS).map(([evento, descripcion]) => (
+							<li
+								key={evento}
+								className="flex flex-col gap-2 py-3 sm:flex-row sm:items-center sm:justify-between"
+							>
+								<span className="text-sm text-tinta-suave">
+									{descripcion}
+									{visibles.some(
+										(p) => p.evento === evento && p.personalizado === false,
+									) && (
+										<span className="block text-xs text-tinta-tenue">
+											Sin elegir: en cada organización vale lo que ella decida.
+										</span>
+									)}
+								</span>
+								<div className="flex gap-4">
+									{visibles
+										.filter((p) => p.evento === evento)
+										.map((p) => (
+											<Checkbox
+												key={p.canal}
+												label={CANALES[p.canal]}
+												checked={p.activo}
+												disabled={actualizar.isPending || bloqueado(p)}
+												onChange={(e) =>
+													actualizar.mutate([
+														{ ...p, activo: e.target.checked },
+													])
+												}
+											/>
+										))}
+								</div>
+							</li>
+						))}
+					</ul>
+				</>
 			)}
 		</Card>
 	);

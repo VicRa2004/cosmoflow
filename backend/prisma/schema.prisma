@@ -43,6 +43,7 @@ model Usuario {
   adjuntos                 Adjunto[]
   organizaciones           MiembroOrganizacion[]
   preferenciasNotificacion PreferenciaNotificacion[]
+  vinculoTelegram          VinculoTelegram?
 
   @@map("usuario")
 }
@@ -636,6 +637,20 @@ model PreferenciaNotificacionOrganizacion {
 
   @@id([organizacionId, evento, canal])
   @@map("preferencia_notificacion_organizacion")
+}
+
+/// Cuenta de Telegram del usuario. Mientras se vincula guarda el hash del token de un
+/// solo uso del enlace `t.me/<bot>?start=<token>`; al vincular, el chat y sin token.
+model VinculoTelegram {
+  usuarioId     Int       @id @map("vte_fkusuario")
+  chatId        String?   @unique @map("vte_chat_id") @db.VarChar(32)
+  tokenHash     String?   @unique @map("vte_token_hash") @db.VarChar(64)
+  tokenExpiraEn DateTime? @map("vte_token_expira_en")
+  vinculadoEn   DateTime? @map("vte_vinculado_en")
+
+  usuario Usuario @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+
+  @@map("vinculo_telegram")
 }
 
 /// Avisos ya enviados: el outbox entrega «al menos una vez» y esto evita repetirlos.

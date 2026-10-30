@@ -2,6 +2,9 @@ import type { Context } from "hono";
 import { BaseController } from "@/core/shared/infrastructure/http/base.controller";
 import { validate } from "@/core/shared/infrastructure/libs/validate";
 import type { AuthEnv } from "@/modules/auth";
+import type { DesvincularTelegramUseCase } from "../../../application/useCases/DesvincularTelegramUseCase";
+import type { IniciarVinculoTelegramUseCase } from "../../../application/useCases/IniciarVinculoTelegramUseCase";
+import type { ObtenerEstadoTelegramUseCase } from "../../../application/useCases/ObtenerEstadoTelegramUseCase";
 import type { ActualizarPreferenciasUseCase } from "../../../application/useCases/ActualizarPreferenciasUseCase";
 import type { ObtenerPreferenciasUseCase } from "../../../application/useCases/ObtenerPreferenciasUseCase";
 import type { ActualizarPreferenciasOrganizacionUseCase } from "../../../application/useCases/ActualizarPreferenciasOrganizacionUseCase";
@@ -19,6 +22,9 @@ export class NotificacionController extends BaseController {
 			actualizarPreferencias: ActualizarPreferenciasUseCase;
 			obtenerDeOrganizacion: ObtenerPreferenciasOrganizacionUseCase;
 			actualizarDeOrganizacion: ActualizarPreferenciasOrganizacionUseCase;
+			estadoTelegram: ObtenerEstadoTelegramUseCase;
+			vincularTelegram: IniciarVinculoTelegramUseCase;
+			desvincularTelegram: DesvincularTelegramUseCase;
 		},
 	) {
 		super();
@@ -70,5 +76,27 @@ export class NotificacionController extends BaseController {
 					preferencias,
 				),
 			);
+		});
+
+	estadoTelegram = (c: Context<AuthEnv>): Promise<Response> =>
+		this.executeSafely(c, async () =>
+			this.ok(
+				c,
+				await this.useCases.estadoTelegram.ejecutar(c.get("usuario").id),
+			),
+		);
+
+	vincularTelegram = (c: Context<AuthEnv>): Promise<Response> =>
+		this.executeSafely(c, async () =>
+			this.ok(
+				c,
+				await this.useCases.vincularTelegram.ejecutar(c.get("usuario").id),
+			),
+		);
+
+	desvincularTelegram = (c: Context<AuthEnv>): Promise<Response> =>
+		this.executeSafely(c, async () => {
+			await this.useCases.desvincularTelegram.ejecutar(c.get("usuario").id);
+			return c.body(null, 204);
 		});
 }

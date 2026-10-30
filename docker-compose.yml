@@ -18,6 +18,8 @@ x-app: &app
     S3_SECRET_ACCESS_KEY: ${S3_SECRET_ACCESS_KEY:-}
     GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
     GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
+    # Bot de Telegram de las notificaciones; vacío, canal desactivado.
+    TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN:-}
     PORT: 3000
     # Solo se llega a `app` a través de Traefik: el rate limit usa su X-Forwarded-For.
     TRUST_PROXY: ${TRUST_PROXY:-true}

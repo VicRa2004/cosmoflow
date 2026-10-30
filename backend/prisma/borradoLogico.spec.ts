@@ -24,6 +24,7 @@ const EXENTOS: Record<string, string> = {
 	TokenCuenta: "técnica",
 	EventoOutbox: "técnica",
 	NotificacionEnviada: "técnica: claves de idempotencia que se purgan",
+	VinculoTelegram: "técnica: desvincular borra el vínculo",
 	PreferenciaNotificacion: "ajuste del usuario; se sobrescribe, no se borra",
 	PreferenciaNotificacionOrganizacion:
 		"ajuste de la organización; se sobrescribe, no se borra",

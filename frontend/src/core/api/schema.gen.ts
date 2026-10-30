@@ -6276,6 +6276,132 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/notificaciones/telegram": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** ¿Hay bot de Telegram y lo tengo vinculado? */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Estado */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["EstadoTelegram"];
+                    };
+                };
+                /** @description No autenticado */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        /** Desvincular mi cuenta de Telegram */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Desvinculada */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description No autenticado */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/notificaciones/telegram/vincular": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Enlace de un solo uso (15 min) para vincular mi cuenta de Telegram */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Enlace t.me */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["EnlaceTelegram"];
+                    };
+                };
+                /** @description No autenticado */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Telegram no está configurado */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/organizaciones/{organizacionId}/notificaciones": {
         parameters: {
             query?: never;
@@ -6683,8 +6809,16 @@ export interface components {
              * @example correo
              * @enum {string}
              */
-            canal: "correo";
+            canal: "correo" | "telegram";
             activo: boolean;
+        };
+        EstadoTelegram: {
+            disponible: boolean;
+            vinculado: boolean;
+        };
+        EnlaceTelegram: {
+            /** @example https://t.me/cosmoflow_bot?start=abc123 */
+            enlace: string;
         };
     };
     responses: never;
@@ -6717,5 +6851,7 @@ export type ProyectoDto = components['schemas']['ProyectoDto'];
 export type EstadoProyecto = components['schemas']['EstadoProyecto'];
 export type PreferenciaNotificacionUsuario = components['schemas']['PreferenciaNotificacionUsuario'];
 export type PreferenciaNotificacion = components['schemas']['PreferenciaNotificacion'];
+export type EstadoTelegram = components['schemas']['EstadoTelegram'];
+export type EnlaceTelegram = components['schemas']['EnlaceTelegram'];
 export type $defs = Record<string, never>;
 export type operations = Record<string, never>;

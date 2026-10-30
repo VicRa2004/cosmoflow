@@ -6,6 +6,8 @@ import {
 import type { AuthMiddleware } from "@/modules/auth";
 import type { NotificacionController } from "../controllers/NotificacionController";
 import {
+	enlaceTelegramSchema,
+	estadoTelegramSchema,
 	preferenciasSchema,
 	preferenciasUsuarioSchema,
 } from "../schemas/notificacionSchemas";
@@ -56,5 +58,46 @@ export class NotificacionRouter {
 			},
 		});
 		this.router.put("/preferencias", controller.actualizarPreferencias);
+
+		docs.registerPath({
+			method: "get",
+			path: "/telegram",
+			tags,
+			security,
+			summary: "¿Hay bot de Telegram y lo tengo vinculado?",
+			responses: {
+				200: jsonResponse(estadoTelegramSchema, "Estado"),
+				401: errorResponse("No autenticado"),
+			},
+		});
+		this.router.get("/telegram", controller.estadoTelegram);
+
+		docs.registerPath({
+			method: "post",
+			path: "/telegram/vincular",
+			tags,
+			security,
+			summary:
+				"Enlace de un solo uso (15 min) para vincular mi cuenta de Telegram",
+			responses: {
+				200: jsonResponse(enlaceTelegramSchema, "Enlace t.me"),
+				401: errorResponse("No autenticado"),
+				503: errorResponse("Telegram no está configurado"),
+			},
+		});
+		this.router.post("/telegram/vincular", controller.vincularTelegram);
+
+		docs.registerPath({
+			method: "delete",
+			path: "/telegram",
+			tags,
+			security,
+			summary: "Desvincular mi cuenta de Telegram",
+			responses: {
+				204: { description: "Desvinculada" },
+				401: errorResponse("No autenticado"),
+			},
+		});
+		this.router.delete("/telegram", controller.desvincularTelegram);
 	}
 }

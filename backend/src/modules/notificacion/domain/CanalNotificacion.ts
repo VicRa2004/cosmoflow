@@ -4,6 +4,8 @@ export interface Destinatario {
 	usuarioId: number;
 	email: string;
 	nombre: string;
+	/** `null` si no vinculó Telegram: ese canal no le avisa. */
+	telegramChatId: string | null;
 }
 
 export interface Aviso {

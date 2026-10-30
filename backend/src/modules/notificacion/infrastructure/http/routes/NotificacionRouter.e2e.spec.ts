@@ -1,4 +1,5 @@
 import { beforeAll, describe, expect, it, spyOn } from "bun:test";
+import { env } from "@/core/config/env";
 import { prisma } from "@/core/config/prisma";
 import type { Correo } from "@/core/shared/domain/Mailer";
 import { container } from "@/core/shared/infrastructure/di/container";
@@ -108,21 +109,29 @@ describe("Notificaciones (e2e)", () => {
 	it("cada usuario ve sus preferencias con los valores por defecto", async () => {
 		const res = await api(preferencias, { token: t.beto });
 		expect(res.status).toBe(200);
-		expect(await res.json()).toEqual([
-			{
-				evento: "tareaAsignada",
-				canal: "correo",
-				activo: true,
-				personalizado: false,
-			},
-			{
-				evento: "estadoCambiado",
-				canal: "correo",
-				activo: true,
-				personalizado: false,
-			},
-		]);
+		expect(await res.json()).toEqual(
+			["tareaAsignada", "estadoCambiado"].flatMap((evento) => [
+				{ evento, canal: "correo", activo: true, personalizado: false },
+				{ evento, canal: "telegram", activo: false, personalizado: false },
+			]),
+		);
 	});
+
+	it.skipIf(Boolean(env.TELEGRAM_BOT_TOKEN))(
+		"sin TELEGRAM_BOT_TOKEN, Telegram no está disponible",
+		async () => {
+			expect(
+				await (
+					await api("/api/notificaciones/telegram", { token: t.ana })
+				).json(),
+			).toEqual({ disponible: false, vinculado: false });
+			const vincular = await api("/api/notificaciones/telegram/vincular", {
+				method: "POST",
+				token: t.ana,
+			});
+			expect(vincular.status).toBe(503);
+		},
+	);
 
 	it("rechaza eventos o canales desconocidos y exige sesión", async () => {
 		const res = await api(preferencias, {

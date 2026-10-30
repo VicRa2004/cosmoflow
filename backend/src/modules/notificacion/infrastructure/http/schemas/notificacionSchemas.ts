@@ -31,3 +31,19 @@ export const organizacionIdParamSchema = z.object({
 		.regex(/^\d+$/, "El ID debe ser un número válido")
 		.transform(Number),
 });
+
+export const estadoTelegramSchema = z
+	.object({
+		/** `false`: el servidor no tiene bot; la interfaz oculta Telegram. */
+		disponible: z.boolean(),
+		vinculado: z.boolean(),
+	})
+	.openapi("EstadoTelegram");
+
+export const enlaceTelegramSchema = z
+	.object({
+		enlace: z
+			.string()
+			.openapi({ example: "https://t.me/cosmoflow_bot?start=abc123" }),
+	})
+	.openapi("EnlaceTelegram");

@@ -37,6 +37,8 @@ const EnvSchema = z
 		// Sin las dos, el botón de Google vuelve al login con error.
 		GOOGLE_CLIENT_ID: z.string().optional(),
 		GOOGLE_CLIENT_SECRET: z.string().optional(),
+		// Sin él, el canal Telegram de las notificaciones queda desactivado.
+		TELEGRAM_BOT_TOKEN: z.string().optional(),
 	})
 	.refine(
 		(env) =>
@@ -64,6 +66,7 @@ const envPrev = {
 	S3_SECRET_ACCESS_KEY: process.env.S3_SECRET_ACCESS_KEY || undefined,
 	GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID || undefined,
 	GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET || undefined,
+	TELEGRAM_BOT_TOKEN: process.env.TELEGRAM_BOT_TOKEN || undefined,
 };
 
 export const env = EnvSchema.parse(envPrev);

@@ -1,6 +1,7 @@
 import { apiClient } from "@/core/api/client";
 import type { components } from "@/core/api/schema.gen";
 
+export type EstadoTelegram = components["schemas"]["EstadoTelegram"];
 export type PreferenciaNotificacion =
 	components["schemas"]["PreferenciaNotificacion"];
 /** `personalizado` solo existe en las del usuario. */
@@ -33,5 +34,23 @@ export const notificacionesApi = {
 			preferencias,
 		);
 		return response.data;
+	},
+
+	async estadoTelegram(): Promise<EstadoTelegram> {
+		const response = await apiClient.get<EstadoTelegram>(
+			"/notificaciones/telegram",
+		);
+		return response.data;
+	},
+
+	async vincularTelegram(): Promise<string> {
+		const response = await apiClient.post<{ enlace: string }>(
+			"/notificaciones/telegram/vincular",
+		);
+		return response.data.enlace;
+	},
+
+	async desvincularTelegram(): Promise<void> {
+		await apiClient.delete("/notificaciones/telegram");
 	},
 };

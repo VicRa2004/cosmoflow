@@ -64,12 +64,18 @@ export class PrismaNotificacionRepository implements NotificacionRepository {
 	async destinatarios(usuarioIds: number[]): Promise<Destinatario[]> {
 		const usuarios = await prisma.usuario.findMany({
 			where: { id: { in: usuarioIds }, isActivo: true, deletedAt: null },
-			select: { id: true, email: true, nombre: true },
+			select: {
+				id: true,
+				email: true,
+				nombre: true,
+				vinculoTelegram: { select: { chatId: true } },
+			},
 		});
-		return usuarios.map(({ id, email, nombre }) => ({
+		return usuarios.map(({ id, email, nombre, vinculoTelegram }) => ({
 			usuarioId: id,
 			email,
 			nombre,
+			telegramChatId: vinculoTelegram?.chatId ?? null,
 		}));
 	}
 
