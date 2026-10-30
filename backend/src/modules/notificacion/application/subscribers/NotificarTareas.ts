@@ -8,6 +8,10 @@ interface ResponsablesAsignados {
 	tareaId: number;
 	usuarioIds: number[];
 }
+interface Mencionados {
+	tareaId: number;
+	usuarioIds: number[];
+}
 interface EstadoCambiado {
 	tareaId: number;
 	creadorId: number;
@@ -23,7 +27,10 @@ const ETIQUETAS_ESTADO: Record<string, string> = {
 };
 const etiqueta = (estado: string) => ETIQUETAS_ESTADO[estado] ?? estado;
 
-/** Tarea asignada → sus responsables nuevos; cambio de estado → quien la creó. */
+/**
+ * Tarea asignada → sus responsables nuevos; mención → los mencionados nuevos; cambio
+ * de estado → quien la creó.
+ */
 export class NotificarTareas {
 	constructor(
 		private readonly eventBus: EventBus,
@@ -35,6 +42,9 @@ export class NotificarTareas {
 	public suscribir(): void {
 		this.eventBus.subscribe("tarea.responsablesAsignados", (event) =>
 			this.onAsignada(event),
+		);
+		this.eventBus.subscribe("tarea.mencionados", (event) =>
+			this.onMencionados(event),
 		);
 		this.eventBus.subscribe("tarea.estadoCambiado", (event) =>
 			this.onEstadoCambiado(event),
@@ -55,6 +65,25 @@ export class NotificarTareas {
 			aviso: {
 				asunto: `Te asignaron «${titulo}»`,
 				texto: `Ahora eres responsable de la tarea «${titulo}».`,
+				enlace: this.enlace(tareaId),
+			},
+		});
+	}
+
+	private async onMencionados(event: DomainEvent): Promise<void> {
+		const { tareaId, usuarioIds } = event.data as Mencionados;
+		const tarea = await this.repo.tarea(tareaId);
+		if (tarea === null) return;
+		const { titulo, organizacionId } = tarea;
+		await this.notificador.notificar({
+			evento: "mencion",
+			usuarioIds,
+			organizacionId,
+			clave: this.clave(event, tareaId),
+			actorId: event.meta?.usuarioId,
+			aviso: {
+				asunto: `Te mencionaron en «${titulo}»`,
+				texto: `Te mencionaron en la tarea «${titulo}».`,
 				enlace: this.enlace(tareaId),
 			},
 		});

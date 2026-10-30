@@ -4,6 +4,8 @@ import { useEffect, useRef } from "react";
 import { useFieldContext } from "@/core/components/form/contextos";
 import { cn } from "@/core/utils/cn";
 import { type AmbitoAdjunto, adjuntosApi } from "../api/adjuntosApi";
+import { type Mencionable, marcarMenciones } from "../editor/pluginMenciones";
+import { useMenciones } from "../editor/useMenciones";
 import { useSubirAdjuntoMutation } from "../hooks/useSubirAdjuntoMutation";
 
 interface EditorMarkdownProps {
@@ -12,18 +14,22 @@ interface EditorMarkdownProps {
 	className?: string;
 	/** En una tarea o nota compartida: las imágenes se comparten con sus miembros. */
 	ambito?: AmbitoAdjunto;
+	/** Con ella, `@` abre el menú para mencionar a una de estas personas. */
+	mencionables?: Mencionable[];
 }
 
 /**
  * Campo markdown tipo Notion (Milkdown Crepe): `/` abre el menú de bloques, al
  * seleccionar texto sale la barra de formato e insertar o pegar una imagen la sube
- * a `/api/adjuntos`. Guarda markdown. Va dentro de `form.AppField`.
+ * a `/api/adjuntos` y, con `mencionables`, `@` menciona a alguien. Guarda markdown.
+ * Va dentro de `form.AppField`.
  */
 export function EditorMarkdown({
 	label,
 	placeholder,
 	className,
 	ambito,
+	mencionables,
 }: EditorMarkdownProps) {
 	const campo = useFieldContext<string>();
 	const raiz = useRef<HTMLFieldSetElement>(null);
@@ -33,6 +39,7 @@ export function EditorMarkdown({
 	subirRef.current = subir.mutateAsync;
 	const cambiarRef = useRef(campo.handleChange);
 	cambiarRef.current = campo.handleChange;
+	const menciones = useMenciones(raiz, mencionables);
 
 	// biome-ignore lint/correctness/useExhaustiveDependencies: el valor inicial se lee una vez; después manda el editor
 	useEffect(() => {
@@ -92,6 +99,8 @@ export function EditorMarkdown({
 				},
 			},
 		});
+		if (menciones.plugin) crepe.editor.use(menciones.plugin);
+		marcarMenciones(crepe.editor);
 		crepe.on((api) =>
 			api.markdownUpdated((_ctx, markdown) => cambiarRef.current(markdown)),
 		);
@@ -101,11 +110,15 @@ export function EditorMarkdown({
 		};
 	}, []);
 
+	// El menú va fuera del fieldset: dentro, el DOM es de Crepe.
 	return (
-		<fieldset
-			ref={raiz}
-			aria-label={label}
-			className={cn("editor-markdown min-w-0", className)}
-		/>
+		<>
+			<fieldset
+				ref={raiz}
+				aria-label={label}
+				className={cn("editor-markdown min-w-0", className)}
+			/>
+			{menciones.menu}
+		</>
 	);
 }

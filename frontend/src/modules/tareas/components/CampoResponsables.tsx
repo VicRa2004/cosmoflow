@@ -1,7 +1,5 @@
-import { useEquiposQuery } from "@/modules/equipos/hooks/useEquipos";
 import { CasillasIds } from "@/modules/equipos/components/CasillasIds";
-import { useMiembrosQuery } from "@/modules/organizaciones/hooks/useMiembros";
-import { useProyectosQuery } from "@/modules/proyectos/hooks/useProyectos";
+import { useMiembrosDestino } from "../hooks/useMiembrosDestino";
 
 interface CampoResponsablesProps {
 	organizacionId: number;
@@ -11,10 +9,7 @@ interface CampoResponsablesProps {
 	onChange: (valor: number[]) => void;
 }
 
-/**
- * Responsables entre los miembros del equipo, de los equipos e integrantes del
- * proyecto, o de toda la organización si no hay ninguno (RN-23, 44). Solo para tareas compartidas.
- */
+/** Responsables entre quienes ven la tarea (RN-23, 44). Solo para tareas compartidas. */
 export function CampoResponsables({
 	organizacionId,
 	equipoId,
@@ -22,25 +17,12 @@ export function CampoResponsables({
 	valor,
 	onChange,
 }: CampoResponsablesProps) {
-	const { data: miembros = [] } = useMiembrosQuery(organizacionId);
-	const { data: equipos = [] } = useEquiposQuery(organizacionId);
-	const { data: proyectos = [] } = useProyectosQuery(organizacionId);
-	const proyecto = proyectos.find((p) => p.id === proyectoId);
-	const equipoIds = equipoId ? [equipoId] : (proyecto?.equipoIds ?? []);
-	const deOrganizacion = !equipoId && !proyectoId;
-	const posibles = new Set([
-		...equipos
-			.filter((e) => equipoIds.includes(e.id))
-			.flatMap((e) => e.miembros.map((m) => m.usuarioId)),
-		...(proyecto?.integranteIds ?? []),
-	]);
+	const miembros = useMiembrosDestino(organizacionId, equipoId, proyectoId);
 
 	return (
 		<CasillasIds
 			leyenda="Responsables"
-			opciones={miembros
-				.filter((m) => deOrganizacion || posibles.has(m.usuarioId))
-				.map((m) => ({ id: m.usuarioId, etiqueta: m.nombre }))}
+			opciones={miembros.map((m) => ({ id: m.id, etiqueta: m.nombre }))}
 			valor={valor}
 			onChange={onChange}
 		/>

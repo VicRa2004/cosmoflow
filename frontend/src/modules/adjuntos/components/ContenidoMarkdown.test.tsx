@@ -34,6 +34,13 @@ describe("ContenidoMarkdown", () => {
 		expect(html("```\n<br />\n```")).toContain("&lt;br /&gt;");
 	});
 
+	it("muestra las menciones como chip y sigue quitando los protocolos peligrosos", () => {
+		const salida = html("[@Ana](mencion:12) [mal](javascript:alert(1))");
+
+		expect(salida).toContain('<span class="mencion">@Ana</span>');
+		expect(salida).not.toContain("javascript:");
+	});
+
 	it("abre los enlaces externos en otra pestaña sin opener", () => {
 		expect(html("[web](https://ejemplo.com)")).toContain(
 			'target="_blank" rel="noopener noreferrer"',

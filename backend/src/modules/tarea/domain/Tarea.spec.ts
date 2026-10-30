@@ -49,4 +49,28 @@ describe("Tarea", () => {
 		const tarea = Tarea.crear(7, { titulo: "Demo", tagIds: [1, 2, 1] });
 		expect(tarea.getDatos().tagIds).toEqual([1, 2]);
 	});
+
+	it("guarda solo las menciones de quien tiene acceso y avisa de las nuevas", () => {
+		const tarea = Tarea.reconstituir(
+			1,
+			7,
+			Tarea.crear(7, { titulo: "Demo" }).getDatos(),
+			{ organizacionId: 10, equipoId: null, proyectoId: null },
+			[],
+			[8],
+		);
+		tarea.actualizar({
+			contenido:
+				"Hola [@Beto](mencion:8), [@Caro](mencion:9) y [@Zoe](mencion:99)",
+		});
+		tarea.mencionar([7, 8, 9]);
+
+		expect(tarea.getMencionIds()).toEqual([8, 9]);
+		expect(tarea.pullDomainEvents()).toEqual([
+			expect.objectContaining({
+				eventName: "tarea.mencionados",
+				data: { tareaId: 1, usuarioIds: [9] },
+			}),
+		]);
+	});
 });

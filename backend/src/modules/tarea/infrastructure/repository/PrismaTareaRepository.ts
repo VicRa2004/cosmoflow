@@ -12,6 +12,7 @@ import { type DatosTarea, Tarea } from "../../domain/Tarea";
 const include = {
 	tags: { where: { tag: { deletedAt: null } }, select: { tagId: true } },
 	responsables: { select: { usuarioId: true }, orderBy: { usuarioId: "asc" } },
+	menciones: { select: { usuarioId: true } },
 } satisfies Prisma.TareaInclude;
 
 type PrismaTareaRecord = Prisma.TareaGetPayload<{ include: typeof include }>;
@@ -40,6 +41,7 @@ export class PrismaTareaRepository implements TareaRepository {
 				proyectoId: raw.proyectoId,
 			},
 			raw.responsables.map((r) => r.usuarioId),
+			raw.menciones.map((m) => m.usuarioId),
 		);
 	}
 
@@ -161,6 +163,11 @@ export class PrismaTareaRepository implements TareaRepository {
 						data: data.getResponsableIds().map((usuarioId) => ({ usuarioId })),
 					},
 				},
+				menciones: {
+					createMany: {
+						data: data.getMencionIds().map((usuarioId) => ({ usuarioId })),
+					},
+				},
 			},
 			include,
 		});
@@ -182,6 +189,12 @@ export class PrismaTareaRepository implements TareaRepository {
 					deleteMany: {},
 					createMany: {
 						data: data.getResponsableIds().map((usuarioId) => ({ usuarioId })),
+					},
+				},
+				menciones: {
+					deleteMany: {},
+					createMany: {
+						data: data.getMencionIds().map((usuarioId) => ({ usuarioId })),
 					},
 				},
 			},

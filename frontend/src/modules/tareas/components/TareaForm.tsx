@@ -1,10 +1,10 @@
 import { ArrowLeft, FolderInput } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/core/components/ui/Button";
-import { EditorMarkdown } from "@/modules/adjuntos/components/EditorMarkdown";
 import { useAppForm } from "@/core/components/form/useAppForm";
 import { destinoDe, type TareaDto } from "../api/tareasApi";
 import { CampoResponsables } from "./CampoResponsables";
+import { EditorTarea } from "./EditorTarea";
 import { MoverTareaDialog } from "./MoverTareaDialog";
 import {
 	useActualizarTareaMutation,
@@ -159,11 +159,18 @@ export function TareaForm({
 				<hr className="border-borde" />
 				<form.AppField name="contenido">
 					{() => (
-						<EditorMarkdown
+						<EditorTarea
+							organizacionId={organizacionId}
+							equipoId={equipoId}
+							proyectoId={proyectoId}
 							label="Contenido"
 							ambito={destino}
 							className="-ml-12"
-							placeholder="Escribe o pulsa «/»: lista de tareas, título, imagen…"
+							placeholder={
+								organizacionId === null
+									? "Escribe o pulsa «/»: lista de tareas, título, imagen…"
+									: "Escribe, pulsa «/» para insertar un bloque o «@» para mencionar…"
+							}
 						/>
 					)}
 				</form.AppField>

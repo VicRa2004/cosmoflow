@@ -11,7 +11,11 @@ const components = {
 			<img src={src} alt={alt} {...props} />
 		);
 	},
-	a({ href, ...props }) {
+	a({ href, children, ...props }) {
+		// Mención de una tarea (`[@Ana](mencion:12)`): un chip, no un enlace.
+		if (href?.startsWith("mencion:")) {
+			return <span className="mencion">{children}</span>;
+		}
 		const externo = href?.startsWith("http") ?? false;
 		return (
 			<a
@@ -19,10 +23,19 @@ const components = {
 				{...props}
 				target={externo ? "_blank" : undefined}
 				rel={externo ? "noopener noreferrer" : undefined}
-			/>
+			>
+				{children}
+			</a>
 		);
 	},
 } satisfies MarkdownComponents;
+
+/** Por defecto se quitan los protocolos desconocidos; `mencion:<id>` se deja pasar. */
+const urlTransform = (
+	url: string,
+	kind: "link" | "image",
+	porDefecto: string,
+) => (kind === "link" && /^mencion:\d+$/.test(url) ? url : porDefecto);
 
 /**
  * Crepe guarda las líneas vacías y los saltos con Shift+Enter como `<br />`, que sin
@@ -53,7 +66,9 @@ export function ContenidoMarkdown({
 }) {
 	return (
 		<div className={cn("markdown", className)}>
-			<Markdown components={components}>{convertirSaltos(children)}</Markdown>
+			<Markdown components={components} urlTransform={urlTransform}>
+				{convertirSaltos(children)}
+			</Markdown>
 		</div>
 	);
 }

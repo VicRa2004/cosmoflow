@@ -110,7 +110,7 @@ describe("Notificaciones (e2e)", () => {
 		const res = await api(preferencias, { token: t.beto });
 		expect(res.status).toBe(200);
 		expect(await res.json()).toEqual(
-			["tareaAsignada", "estadoCambiado"].flatMap((evento) => [
+			["tareaAsignada", "mencion", "estadoCambiado"].flatMap((evento) => [
 				{ evento, canal: "correo", activo: true, personalizado: false },
 				{ evento, canal: "telegram", activo: false, personalizado: false },
 			]),
@@ -176,5 +176,34 @@ describe("Notificaciones (e2e)", () => {
 			body: [{ evento: "tareaAsignada", canal: "correo", activo: true }],
 		});
 		expect(await asignar("La quiero")).toHaveLength(1);
+	});
+
+	it("avisa a los mencionados nuevos con acceso, una sola vez", async () => {
+		const zoeId = (
+			await prisma.usuario.findUniqueOrThrow({
+				where: { email: "zoe@avisos.dev" },
+			})
+		).id;
+		const contenido = `Revisa esto [@Beto](mencion:${betoId}) y [@Zoe](mencion:${zoeId})`;
+		const { id } = await (
+			await api("/api/tareas", {
+				method: "POST",
+				token: t.ana,
+				body: { titulo: "Con mención", organizacionId: acme, contenido },
+			})
+		).json();
+		await api(`/api/tareas/${id}`, {
+			method: "PUT",
+			token: t.ana,
+			body: { contenido: `${contenido}\n\nOtra línea` },
+		});
+		await despacharEventos();
+
+		// zoe no es miembro de la organización: su mención se descarta.
+		expect(
+			await prisma.tareaMencion.findMany({ where: { tareaId: id } }),
+		).toEqual([{ tareaId: id, usuarioId: betoId }]);
+		expect(paraBuscar("beto@avisos.dev", "Te mencionaron")).toHaveLength(1);
+		expect(paraBuscar("zoe@avisos.dev", "Te mencionaron")).toEqual([]);
 	});
 });

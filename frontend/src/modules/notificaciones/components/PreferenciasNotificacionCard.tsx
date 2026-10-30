@@ -16,6 +16,7 @@ import { VinculoTelegram } from "./VinculoTelegram";
 
 const EVENTOS: Record<PreferenciaNotificacion["evento"], string> = {
 	tareaAsignada: "Te asignan una tarea",
+	mencion: "Te mencionan en una tarea",
 	estadoCambiado: "Cambia el estado de una tarea que creaste",
 };
 const CANALES: Record<PreferenciaNotificacion["canal"], string> = {

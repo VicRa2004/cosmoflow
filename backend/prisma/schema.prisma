@@ -44,6 +44,7 @@ model Usuario {
   organizaciones           MiembroOrganizacion[]
   preferenciasNotificacion PreferenciaNotificacion[]
   vinculoTelegram          VinculoTelegram?
+  mencionesTarea           TareaMencion[]
 
   @@map("usuario")
 }
@@ -274,6 +275,7 @@ model Tarea {
   proyecto     Proyecto?          @relation(fields: [organizacionId, proyectoId], references: [organizacionId, id], onDelete: Cascade)
   tags         TareaTag[]
   responsables TareaResponsable[]
+  menciones    TareaMencion[]
 
   /// Destino de la FK compuesta de `TareaResponsable`
   @@unique([organizacionId, id])
@@ -297,6 +299,20 @@ model TareaResponsable {
   @@id([tareaId, usuarioId])
   @@index([organizacionId, usuarioId])
   @@map("tarea_responsable")
+}
+
+/// Menciones del markdown (`[@Nombre](mencion:<id>)`, decisión 22), solo de quien tiene
+/// acceso a la tarea. Se sincronizan al guardar; sirven para avisar solo de las nuevas.
+model TareaMencion {
+  tareaId   Int @map("tme_fktarea")
+  usuarioId Int @map("tme_fkusuario")
+
+  tarea   Tarea   @relation(fields: [tareaId], references: [id], onDelete: Cascade)
+  usuario Usuario @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+
+  @@id([tareaId, usuarioId])
+  @@index([usuarioId])
+  @@map("tarea_mencion")
 }
 
 model TareaTag {

@@ -1,6 +1,7 @@
 /** Eventos que se pueden notificar (RN-92). Las preferencias se guardan con estos nombres. */
 export const EVENTOS_NOTIFICACION = [
 	"tareaAsignada",
+	"mencion",
 	"estadoCambiado",
 ] as const;
 export type EventoNotificacion = (typeof EVENTOS_NOTIFICACION)[number];

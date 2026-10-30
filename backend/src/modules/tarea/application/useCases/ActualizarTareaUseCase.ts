@@ -35,6 +35,7 @@ export class ActualizarTareaUseCase {
 			tarea.asignar(responsableIds);
 		}
 		tarea.actualizar(campos);
+		tarea.mencionar(contexto?.miembroIds ?? []);
 		await validarTarea(this.tareaRepository, tarea, contexto);
 		const actualizada = await this.uow.ejecutar(async () => {
 			const actualizada = await this.tareaRepository.actualizar(tarea);

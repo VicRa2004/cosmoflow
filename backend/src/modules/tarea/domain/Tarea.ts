@@ -3,6 +3,7 @@ import { EntityId } from "@/core/shared/domain/EntityId";
 import { TareaInvalidaError } from "./error/TareaInvalidaError";
 import { ResponsablesAsignadosEvent } from "./event/ResponsablesAsignadosEvent";
 import { TareaEstadoCambiadoEvent } from "./event/TareaEstadoCambiadoEvent";
+import { TareaMencionadosEvent } from "./event/TareaMencionadosEvent";
 
 export const ESTADOS_TAREA = [
 	"pendiente",
@@ -40,6 +41,13 @@ export interface UbicacionTarea {
 	proyectoId: number | null;
 }
 
+/** `[@Ana](mencion:12)` → 12: las menciones del markdown (decisión 22). */
+const extraerMenciones = (markdown: string): number[] => [
+	...new Set(
+		[...markdown.matchAll(/\]\(mencion:(\d+)\)/g)].map((m) => Number(m[1])),
+	),
+];
+
 const PERSONAL: UbicacionTarea = {
 	organizacionId: null,
 	equipoId: null,
@@ -55,6 +63,7 @@ export class Tarea extends Entity {
 	private datos: DatosTarea;
 	private ubicacion: UbicacionTarea;
 	private responsableIds: number[];
+	private mencionIds: number[];
 
 	private constructor(
 		id: EntityId,
@@ -62,12 +71,14 @@ export class Tarea extends Entity {
 		datos: DatosTarea,
 		ubicacion: UbicacionTarea,
 		responsableIds: number[],
+		mencionIds: number[],
 	) {
 		super(id);
 		this.usuarioId = usuarioId;
 		this.datos = Tarea.validar(datos);
 		this.ubicacion = ubicacion;
 		this.responsableIds = responsableIds;
+		this.mencionIds = mencionIds;
 	}
 
 	/** Sin `en`, personal; con él, compartida en esa organización, equipo o proyecto. */
@@ -81,6 +92,7 @@ export class Tarea extends Entity {
 			usuarioId,
 			Tarea.porDefecto(datos),
 			PERSONAL,
+			[],
 			[],
 		);
 		if (en) tarea.ubicacion = Tarea.ubicar(en);
@@ -119,6 +131,7 @@ export class Tarea extends Entity {
 		datos: DatosTarea,
 		ubicacion: UbicacionTarea = PERSONAL,
 		responsableIds: number[] = [],
+		mencionIds: number[] = [],
 	): Tarea {
 		return new Tarea(
 			new EntityId(id),
@@ -126,6 +139,7 @@ export class Tarea extends Entity {
 			datos,
 			ubicacion,
 			responsableIds,
+			mencionIds,
 		);
 	}
 
@@ -140,6 +154,30 @@ export class Tarea extends Entity {
 
 	getResponsableIds(): readonly number[] {
 		return this.responsableIds;
+	}
+
+	getMencionIds(): readonly number[] {
+		return this.mencionIds;
+	}
+
+	/**
+	 * Recalcula las menciones del contenido, solo de quien tiene acceso a la tarea (el
+	 * resto se descarta sin error). Llamar tras `actualizar`, con los miembros del destino.
+	 */
+	public mencionar(conAcceso: readonly number[]): void {
+		const mencionIds = extraerMenciones(this.datos.contenido).filter((id) =>
+			conAcceso.includes(id),
+		);
+		const nuevos = mencionIds.filter((id) => !this.mencionIds.includes(id));
+		this.mencionIds = mencionIds;
+		if (nuevos.length > 0 && this.id.isPersisted()) {
+			this.addDomainEvent(
+				new TareaMencionadosEvent({
+					tareaId: this.getId(),
+					usuarioIds: nuevos,
+				}),
+			);
+		}
 	}
 
 	esPersonal(): boolean {
@@ -174,15 +212,24 @@ export class Tarea extends Entity {
 		}
 	}
 
-	/** Tras guardarla por primera vez: sus responsables son todos nuevos. */
+	/** Tras guardarla por primera vez: sus responsables y menciones son todos nuevos. */
 	public agregarEventoCreada(): void {
-		if (this.responsableIds.length === 0) return;
-		this.addDomainEvent(
-			new ResponsablesAsignadosEvent({
-				tareaId: this.getId(),
-				usuarioIds: [...this.responsableIds],
-			}),
-		);
+		if (this.responsableIds.length > 0) {
+			this.addDomainEvent(
+				new ResponsablesAsignadosEvent({
+					tareaId: this.getId(),
+					usuarioIds: [...this.responsableIds],
+				}),
+			);
+		}
+		if (this.mencionIds.length > 0) {
+			this.addDomainEvent(
+				new TareaMencionadosEvent({
+					tareaId: this.getId(),
+					usuarioIds: [...this.mencionIds],
+				}),
+			);
+		}
 	}
 
 	getDatos(): DatosTarea {

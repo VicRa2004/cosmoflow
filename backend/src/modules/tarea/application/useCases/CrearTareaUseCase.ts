@@ -33,6 +33,7 @@ export class CrearTareaUseCase {
 				: undefined,
 		);
 		if (responsableIds) tarea.asignar(responsableIds);
+		tarea.mencionar(contexto?.miembroIds ?? []);
 		await validarTarea(this.tareaRepository, tarea, contexto);
 		// Tarea y evento en la misma transacción: con el outbox, o ambos o ninguno.
 		const creada = await this.uow.ejecutar(async () => {
