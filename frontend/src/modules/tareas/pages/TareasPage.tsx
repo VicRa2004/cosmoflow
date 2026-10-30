@@ -17,9 +17,7 @@ import {
 	type ContextoTareaSearch,
 	ETIQUETAS_ESTADO,
 } from "../schemas/tareaSchemas";
-import { useEquiposQuery } from "@/modules/equipos/hooks/useEquipos";
-import { useProyectosQuery } from "@/modules/proyectos/hooks/useProyectos";
-import { useOrganizacionQuery } from "@/modules/organizaciones/hooks/useOrganizacionesQuery";
+import { useNombresContexto } from "@/modules/organizaciones/hooks/useNombresContexto";
 
 /** «Tareas · Plataforma»: nombre del equipo, proyecto u organización de la lista. */
 function TituloContexto({
@@ -28,14 +26,12 @@ function TituloContexto({
 	proyectoId,
 }: Required<Pick<ContextoTareaSearch, "organizacionId">> &
 	ContextoTareaSearch) {
-	const { data: equipos } = useEquiposQuery(organizacionId);
-	const { data: proyectos } = useProyectosQuery(organizacionId);
-	const { data: organizacion } = useOrganizacionQuery(organizacionId);
-	const nombre = equipoId
-		? equipos?.find((e) => e.id === equipoId)?.nombre
-		: proyectoId
-			? proyectos?.find((p) => p.id === proyectoId)?.nombre
-			: organizacion?.nombre;
+	const { organizacion, grupo } = useNombresContexto({
+		organizacionId,
+		equipoId,
+		proyectoId,
+	});
+	const nombre = equipoId || proyectoId ? grupo : organizacion;
 	return <>Tareas · {nombre ?? "…"}</>;
 }
 
