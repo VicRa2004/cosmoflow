@@ -4,7 +4,7 @@ import type { TareaDto } from "../api/tareasApi";
 const diaLocal = (fecha: Date) => fecha.toLocaleDateString("sv-SE");
 
 /** "2026-11-15" → "15 nov 2026" (sin pasar por la zona horaria). */
-const formatearDia = (dia: string) =>
+export const formatearDia = (dia: string) =>
 	new Date(`${dia}T00:00`).toLocaleDateString("es-ES", {
 		day: "numeric",
 		month: "short",

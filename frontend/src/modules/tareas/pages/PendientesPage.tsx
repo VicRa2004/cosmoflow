@@ -10,7 +10,6 @@ import type { TareaDto } from "../api/tareasApi";
 import { TagsBadges } from "@/modules/tags/components/TagsBadges";
 import { VencimientoTarea } from "../components/celdas";
 import { MenuNuevo } from "../components/MenuNuevo";
-import { TareaLectura } from "../components/TareaLectura";
 import { useActualizarTareaMutation } from "../hooks/useTareasMutation";
 import { usePendientesQuery } from "../hooks/useTareasQuery";
 import { ETIQUETAS_ESTADO } from "../schemas/tareaSchemas";
@@ -20,7 +19,6 @@ export function PendientesPage() {
 	const nombre = useAuthStore((state) => state.usuario?.nombre);
 	const [pagina, setPagina] = useState(1);
 	const navigate = useNavigate();
-	const [leyendo, setLeyendo] = useState<TareaDto | null>(null);
 	const { data, isLoading, error } = usePendientesQuery(pagina);
 	const actualizar = useActualizarTareaMutation();
 
@@ -55,7 +53,9 @@ export function PendientesPage() {
 			celda: (fila) => (
 				<button
 					type="button"
-					onClick={() => setLeyendo(fila)}
+					onClick={() =>
+						navigate({ to: "/tareas/$id", params: { id: String(fila.id) } })
+					}
 					className="text-left font-medium text-tinta hover:text-indigo-400 hover:underline"
 				>
 					{fila.titulo}
@@ -116,14 +116,6 @@ export function PendientesPage() {
 						titulo="Nada pendiente"
 						descripcion="Crea una tarea y aparecerá aquí, ordenada por vencimiento."
 					/>
-				}
-			/>
-
-			<TareaLectura
-				tarea={leyendo}
-				onCerrar={() => setLeyendo(null)}
-				onEditar={(tarea) =>
-					navigate({ to: "/tareas/$id", params: { id: String(tarea.id) } })
 				}
 			/>
 		</div>

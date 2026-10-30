@@ -16,9 +16,13 @@ export function NotaEditorPage({
 	const navigate = useNavigate();
 	const puedeVolver = useCanGoBack();
 	const { data, error } = useNotaQuery(id);
-	// Vuelve a donde se abrió (lista o portada); si se entró por URL, a la lista.
+	// Vuelve a donde se abrió; si se entró por URL, a su lectura (o a la lista si es nueva).
 	const volver = () =>
-		puedeVolver ? router.history.back() : navigate({ to: "/notas" });
+		puedeVolver
+			? router.history.back()
+			: id === undefined
+				? navigate({ to: "/notas" })
+				: navigate({ to: "/notas/$id", params: { id: String(id) } });
 
 	if (error) throw error;
 	if (id !== undefined && !data) {

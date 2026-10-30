@@ -7,8 +7,6 @@ import { EncabezadoPagina } from "@/core/components/ui/EncabezadoPagina";
 import { ConfirmDialog } from "@/core/components/ui/ConfirmDialog";
 import { Input } from "@/core/components/ui/Input";
 import { Select } from "@/core/components/ui/Select";
-import { DialogoLectura } from "@/modules/adjuntos/components/DialogoLectura";
-import { TagsBadges } from "@/modules/tags/components/TagsBadges";
 import { useTagsDisponibles } from "@/modules/tags/hooks/useTagsDisponibles";
 import type { NotaDto } from "../api/notasApi";
 import { NotasTable } from "../components/NotasTable";
@@ -44,9 +42,10 @@ export function NotasPage({
 	const [tagId, setTagId] = useState("");
 	const { tags } = useTagsDisponibles(deProyecto ? organizacionId : undefined);
 	const navigate = useNavigate();
-	const editar = (nota: NotaDto) =>
+	const abrir = (nota: NotaDto) =>
 		navigate({ to: "/notas/$id", params: { id: String(nota.id) } });
-	const [leyendo, setLeyendo] = useState<NotaDto | null>(null);
+	const editar = (nota: NotaDto) =>
+		navigate({ to: "/notas/$id/editar", params: { id: String(nota.id) } });
 	const [eliminando, setEliminando] = useState<NotaDto | null>(null);
 	const eliminar = useEliminarNotaMutation();
 	const { data, isLoading, error } = useNotasQuery({
@@ -123,30 +122,9 @@ export function NotasPage({
 				isLoading={isLoading}
 				error={error}
 				onCambioPagina={setPagina}
-				onAbrir={setLeyendo}
+				onAbrir={abrir}
 				onEditar={editar}
 				onEliminar={setEliminando}
-			/>
-
-			<DialogoLectura
-				abierto={leyendo !== null}
-				onCerrar={() => setLeyendo(null)}
-				titulo={leyendo?.titulo ?? ""}
-				contenido={leyendo?.contenido ?? ""}
-				detalles={
-					leyendo &&
-					leyendo.tagIds.length > 0 && (
-						<TagsBadges
-							tagIds={leyendo.tagIds}
-							organizacionId={leyendo.organizacionId}
-						/>
-					)
-				}
-				onEditar={
-					leyendo && puede("notas:actualizar")
-						? () => editar(leyendo)
-						: undefined
-				}
 			/>
 
 			<ConfirmDialog

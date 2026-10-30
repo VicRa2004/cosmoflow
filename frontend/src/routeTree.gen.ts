@@ -31,6 +31,8 @@ import { Route as AuthenticatedOrganizacionesIdRouteImport } from './routes/_aut
 import { Route as AuthenticatedTareasIndexRouteImport } from './routes/_authenticated/tareas/index'
 import { Route as AuthenticatedTareasIdRouteImport } from './routes/_authenticated/tareas/$id'
 import { Route as AuthenticatedTareasNuevaRouteImport } from './routes/_authenticated/tareas/nueva'
+import { Route as AuthenticatedNotasIdEditarRouteImport } from './routes/_authenticated/notas/$id_.editar'
+import { Route as AuthenticatedTareasIdEditarRouteImport } from './routes/_authenticated/tareas/$id_.editar'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -145,6 +147,18 @@ const AuthenticatedTareasNuevaRoute =
     path: '/tareas/nueva',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
+const AuthenticatedNotasIdEditarRoute =
+  AuthenticatedNotasIdEditarRouteImport.update({
+    id: '/notas/$id_/editar',
+    path: '/notas/$id/editar',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedTareasIdEditarRoute =
+  AuthenticatedTareasIdEditarRouteImport.update({
+    id: '/tareas/$id_/editar',
+    path: '/tareas/$id/editar',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -168,6 +182,8 @@ export interface FileRoutesByFullPath {
   '/notas/': typeof AuthenticatedNotasIndexRoute
   '/organizaciones/': typeof AuthenticatedOrganizacionesIndexRoute
   '/tareas/': typeof AuthenticatedTareasIndexRoute
+  '/notas/$id/editar': typeof AuthenticatedNotasIdEditarRoute
+  '/tareas/$id/editar': typeof AuthenticatedTareasIdEditarRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -191,6 +207,8 @@ export interface FileRoutesByTo {
   '/notas': typeof AuthenticatedNotasIndexRoute
   '/organizaciones': typeof AuthenticatedOrganizacionesIndexRoute
   '/tareas': typeof AuthenticatedTareasIndexRoute
+  '/notas/$id/editar': typeof AuthenticatedNotasIdEditarRoute
+  '/tareas/$id/editar': typeof AuthenticatedTareasIdEditarRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -216,6 +234,8 @@ export interface FileRoutesById {
   '/_authenticated/notas/': typeof AuthenticatedNotasIndexRoute
   '/_authenticated/organizaciones/': typeof AuthenticatedOrganizacionesIndexRoute
   '/_authenticated/tareas/': typeof AuthenticatedTareasIndexRoute
+  '/_authenticated/notas/$id_/editar': typeof AuthenticatedNotasIdEditarRoute
+  '/_authenticated/tareas/$id_/editar': typeof AuthenticatedTareasIdEditarRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -241,6 +261,8 @@ export interface FileRouteTypes {
     | '/notas/'
     | '/organizaciones/'
     | '/tareas/'
+    | '/notas/$id/editar'
+    | '/tareas/$id/editar'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -264,6 +286,8 @@ export interface FileRouteTypes {
     | '/notas'
     | '/organizaciones'
     | '/tareas'
+    | '/notas/$id/editar'
+    | '/tareas/$id/editar'
   id:
     | '__root__'
     | '/'
@@ -288,6 +312,8 @@ export interface FileRouteTypes {
     | '/_authenticated/notas/'
     | '/_authenticated/organizaciones/'
     | '/_authenticated/tareas/'
+    | '/_authenticated/notas/$id_/editar'
+    | '/_authenticated/tareas/$id_/editar'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -457,6 +483,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedTareasNuevaRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/notas/$id_/editar': {
+      id: '/_authenticated/notas/$id_/editar'
+      path: '/notas/$id/editar'
+      fullPath: '/notas/$id/editar'
+      preLoaderRoute: typeof AuthenticatedNotasIdEditarRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/tareas/$id_/editar': {
+      id: '/_authenticated/tareas/$id_/editar'
+      path: '/tareas/$id/editar'
+      fullPath: '/tareas/$id/editar'
+      preLoaderRoute: typeof AuthenticatedTareasIdEditarRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
   }
 }
 
@@ -475,6 +515,8 @@ interface AuthenticatedRouteChildren {
   AuthenticatedNotasIndexRoute: typeof AuthenticatedNotasIndexRoute
   AuthenticatedOrganizacionesIndexRoute: typeof AuthenticatedOrganizacionesIndexRoute
   AuthenticatedTareasIndexRoute: typeof AuthenticatedTareasIndexRoute
+  AuthenticatedNotasIdEditarRoute: typeof AuthenticatedNotasIdEditarRoute
+  AuthenticatedTareasIdEditarRoute: typeof AuthenticatedTareasIdEditarRoute
 }
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
@@ -492,6 +534,8 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedNotasIndexRoute: AuthenticatedNotasIndexRoute,
   AuthenticatedOrganizacionesIndexRoute: AuthenticatedOrganizacionesIndexRoute,
   AuthenticatedTareasIndexRoute: AuthenticatedTareasIndexRoute,
+  AuthenticatedNotasIdEditarRoute: AuthenticatedNotasIdEditarRoute,
+  AuthenticatedTareasIdEditarRoute: AuthenticatedTareasIdEditarRoute,
 }
 
 const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(

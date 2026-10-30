@@ -12,12 +12,12 @@ const FUERA_DEL_MENU: Record<string, string> = { "/perfil": "Mi perfil" };
 
 /**
  * Organización, equipo o proyecto de las tareas y notas compartidas: de la URL en
- * listas y altas, de la tarea o nota (ya en caché) al editar. Sin él, son personales.
+ * listas y altas, de la tarea o nota (ya en caché) al leerla o editarla. Sin él, son personales.
  */
 function useContextoCompartido() {
 	const ruta = useRouterState({ select: (estado) => estado.location.pathname });
 	const search = useSearch({ strict: false });
-	const [, tipo, id] = ruta.match(/^\/(tareas|notas)\/(\d+)$/) ?? [];
+	const [, tipo, id] = ruta.match(/^\/(tareas|notas)\/(\d+)(\/editar)?$/) ?? [];
 	const { data: tarea } = useTareaQuery(
 		tipo === "tareas" ? Number(id) : undefined,
 	);

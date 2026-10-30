@@ -1,9 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { TareaEditorPage } from "@/modules/tareas/pages/TareaEditorPage";
+import { TareaLecturaPage } from "@/modules/tareas/pages/TareaLecturaPage";
 
 export const Route = createFileRoute("/_authenticated/tareas/$id")({
-	component: function EditarTarea() {
+	component: function LeerTarea() {
 		const { id } = Route.useParams();
-		return <TareaEditorPage id={Number(id)} />;
+		return <TareaLecturaPage id={Number(id)} />;
 	},
 });

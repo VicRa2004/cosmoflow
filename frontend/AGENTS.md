@@ -69,9 +69,9 @@ frontend/src/
 │   │   ├── components/             # RolCard, CrearRolForm, PermisosChecklist, AsignacionUsuarioPanel
 │   │   └── pages/                  # RolesPage.tsx
 │   │
-│   ├── adjuntos/                   # Imágenes y markdown: EditorMarkdown (WYSIWYG tipo Notion con Milkdown Crepe: menú «/», subir y pegar imágenes), ContenidoMarkdown y DialogoLectura (lectura de tareas y notas)
-│   ├── notas/                      # Notas personales: búsqueda en título y contenido, filtro por tag; alta y edición a página completa (NotaEditorPage)
-│   ├── tareas/                     # Tareas personales y PendientesPage (portada); alta y edición a página completa (TareaEditorPage)
+│   ├── adjuntos/                   # Imágenes y markdown: EditorMarkdown (WYSIWYG tipo Notion con Milkdown Crepe: menú «/», subir y pegar imágenes), ContenidoMarkdown y PaginaLectura (lectura de tareas y notas)
+│   ├── notas/                      # Notas personales: búsqueda en título y contenido, filtro por tag; lectura (NotaLecturaPage), alta y edición a página completa (NotaEditorPage)
+│   ├── tareas/                     # Tareas personales y PendientesPage (portada); lectura (TareaLecturaPage), alta y edición a página completa (TareaEditorPage)
 │   ├── tags/                       # Tags personales; SelectorTags, TagsBadges y useTagsDisponibles los usan tareas y notas
 │   │
 │   └── usuarios/                      # Módulo de Usuarios
@@ -94,8 +94,8 @@ frontend/src/
 │       ├── dashboard.tsx           # Vista /dashboard: pendientes por vencimiento (RN-43)
 │       ├── usuarios.tsx               # Vista /usuarios
 │       ├── roles.tsx               # Vista /roles
-│       ├── notas/                  # /notas (index), /notas/nueva y /notas/$id (editor)
-│       ├── tareas/                 # /tareas (index), /tareas/nueva y /tareas/$id (editor)
+│       ├── notas/                  # /notas (index), /notas/nueva, /notas/$id (lectura) y /notas/$id/editar
+│       ├── tareas/                 # /tareas (index), /tareas/nueva, /tareas/$id (lectura) y /tareas/$id/editar
 │       ├── tags.tsx                # Vista /tags (tags personales)
 │       └── perfil.tsx              # Vista /perfil
 │
