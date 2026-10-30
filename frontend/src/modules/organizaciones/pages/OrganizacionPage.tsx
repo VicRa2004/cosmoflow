@@ -13,6 +13,7 @@ import {
 import { ConfirmDialog } from "@/core/components/ui/ConfirmDialog";
 import { Spinner } from "@/core/components/ui/Spinner";
 import { EquiposCard } from "@/modules/equipos/components/EquiposCard";
+import { PreferenciasNotificacionCard } from "@/modules/notificaciones/components/PreferenciasNotificacionCard";
 import { ProyectosCard } from "@/modules/proyectos/components/ProyectosCard";
 import { AvatarOrganizacion } from "../components/AvatarOrganizacion";
 import { AvatarOrganizacionControles } from "../components/AvatarOrganizacionControles";
@@ -91,6 +92,10 @@ export function OrganizacionPage({ id }: { id: number }) {
 						/>
 					</CardContent>
 				</Card>
+			)}
+
+			{puedeEn(data, "organizacion:editar") && (
+				<PreferenciasNotificacionCard organizacionId={data.id} />
 			)}
 
 			{puedeEn(data, "miembros:invitar") && (

@@ -25,6 +25,8 @@ const EXENTOS: Record<string, string> = {
 	EventoOutbox: "técnica",
 	NotificacionEnviada: "técnica: claves de idempotencia que se purgan",
 	PreferenciaNotificacion: "ajuste del usuario; se sobrescribe, no se borra",
+	PreferenciaNotificacionOrganizacion:
+		"ajuste de la organización; se sobrescribe, no se borra",
 	Auditoria: "registro histórico, nunca se borra",
 	Adjunto: "sin endpoint de borrado; solo cambia con quién se comparte",
 	Invitacion: "cancelarla cambia su estado; nunca se borra",

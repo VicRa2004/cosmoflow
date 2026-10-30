@@ -8,6 +8,7 @@ const aviso = { asunto: "A", texto: "T", enlace: "/tareas/1" };
 
 const preparar = ({
 	guardadas = [] as Preferencia[],
+	deOrganizacion = [] as Preferencia[],
 	yaEnviado = false,
 	falla = false,
 } = {}) => {
@@ -20,6 +21,7 @@ const preparar = ({
 			})),
 		),
 		preferencias: mock(async () => guardadas),
+		preferenciasOrganizacion: mock(async () => deOrganizacion),
 		registrarEnvio: mock(async () => !yaEnviado),
 		anularEnvio: mock(async () => {}),
 	};
@@ -41,6 +43,7 @@ const notificar = (notificador: Notificador) =>
 		evento: "tareaAsignada",
 		usuarioIds: [ANA, BETO, BETO],
 		actorId: ANA,
+		organizacionId: 10,
 		clave: "tarea.responsablesAsignados:1:fecha",
 		aviso,
 	});
@@ -63,6 +66,22 @@ describe("Notificador", () => {
 		});
 		await notificar(notificador);
 		expect(correo.enviar).not.toHaveBeenCalled();
+	});
+
+	it("sin elección del usuario vale la de la organización; la del usuario gana (RN-92)", async () => {
+		const apagadoEnOrg: Preferencia[] = [
+			{ evento: "tareaAsignada", canal: "correo", activo: false },
+		];
+		const soloOrg = preparar({ deOrganizacion: apagadoEnOrg });
+		await notificar(soloOrg.notificador);
+		expect(soloOrg.correo.enviar).not.toHaveBeenCalled();
+
+		const ambos = preparar({
+			deOrganizacion: apagadoEnOrg,
+			guardadas: [{ evento: "tareaAsignada", canal: "correo", activo: true }],
+		});
+		await notificar(ambos.notificador);
+		expect(ambos.correo.enviar).toHaveBeenCalledTimes(1);
 	});
 
 	it("no repite un aviso ya enviado en un intento anterior del outbox", async () => {

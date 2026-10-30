@@ -15,3 +15,19 @@ export const preferenciaSchema = z
 export const preferenciasSchema = z
 	.array(preferenciaSchema)
 	.max(EVENTOS_NOTIFICACION.length * CANALES_NOTIFICACION.length);
+
+export const preferenciasUsuarioSchema = z.array(
+	preferenciaSchema
+		.extend({
+			/** `false`: no eligió; vale lo de cada organización o el valor por defecto. */
+			personalizado: z.boolean(),
+		})
+		.openapi("PreferenciaNotificacionUsuario"),
+);
+
+export const organizacionIdParamSchema = z.object({
+	organizacionId: z
+		.string()
+		.regex(/^\d+$/, "El ID debe ser un número válido")
+		.transform(Number),
+});

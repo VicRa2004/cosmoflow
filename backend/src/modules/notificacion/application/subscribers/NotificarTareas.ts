@@ -43,11 +43,13 @@ export class NotificarTareas {
 
 	private async onAsignada(event: DomainEvent): Promise<void> {
 		const { tareaId, usuarioIds } = event.data as ResponsablesAsignados;
-		const titulo = await this.repo.tituloTarea(tareaId);
-		if (titulo === null) return;
+		const tarea = await this.repo.tarea(tareaId);
+		if (tarea === null) return;
+		const { titulo, organizacionId } = tarea;
 		await this.notificador.notificar({
 			evento: "tareaAsignada",
 			usuarioIds,
+			organizacionId,
 			actorId: event.meta?.usuarioId,
 			clave: this.clave(event, tareaId),
 			aviso: {
@@ -61,11 +63,13 @@ export class NotificarTareas {
 	private async onEstadoCambiado(event: DomainEvent): Promise<void> {
 		const { tareaId, creadorId, anterior, nuevo } =
 			event.data as EstadoCambiado;
-		const titulo = await this.repo.tituloTarea(tareaId);
-		if (titulo === null) return;
+		const tarea = await this.repo.tarea(tareaId);
+		if (tarea === null) return;
+		const { titulo, organizacionId } = tarea;
 		await this.notificador.notificar({
 			evento: "estadoCambiado",
 			usuarioIds: [creadorId],
+			organizacionId,
 			actorId: event.meta?.usuarioId,
 			clave: this.clave(event, tareaId),
 			aviso: {

@@ -5,7 +5,10 @@ import {
 } from "@/core/shared/infrastructure/http/openapi";
 import type { AuthMiddleware } from "@/modules/auth";
 import type { NotificacionController } from "../controllers/NotificacionController";
-import { preferenciasSchema } from "../schemas/notificacionSchemas";
+import {
+	preferenciasSchema,
+	preferenciasUsuarioSchema,
+} from "../schemas/notificacionSchemas";
 
 const tags = ["Notificaciones"];
 const security = [{ bearerAuth: [] }];
@@ -28,7 +31,7 @@ export class NotificacionRouter {
 			security,
 			summary: "Obtener mis preferencias de notificación (evento × canal)",
 			responses: {
-				200: jsonResponse(preferenciasSchema, "Matriz completa"),
+				200: jsonResponse(preferenciasUsuarioSchema, "Matriz completa"),
 				401: errorResponse("No autenticado"),
 			},
 		});
@@ -47,7 +50,7 @@ export class NotificacionRouter {
 				},
 			},
 			responses: {
-				200: jsonResponse(preferenciasSchema, "Matriz completa"),
+				200: jsonResponse(preferenciasUsuarioSchema, "Matriz completa"),
 				400: errorResponse("Evento o canal desconocido"),
 				401: errorResponse("No autenticado"),
 			},

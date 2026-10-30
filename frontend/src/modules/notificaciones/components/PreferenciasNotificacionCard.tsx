@@ -20,16 +20,29 @@ const CANALES: Record<PreferenciaNotificacion["canal"], string> = {
 	correo: "Correo",
 };
 
-/** Qué avisos recibe el usuario y por qué canal; cada casilla se guarda al marcarla. */
-export function PreferenciasNotificacionCard() {
-	const { data: preferencias, error } = usePreferenciasNotificacionQuery();
-	const actualizar = useActualizarPreferenciasMutation();
+/**
+ * Qué avisos recibe el usuario y por qué canal; cada casilla se guarda al marcarla.
+ * Con `organizacionId`, los valores por defecto de esa organización para sus miembros.
+ */
+export function PreferenciasNotificacionCard({
+	organizacionId,
+}: {
+	organizacionId?: number;
+}) {
+	const deOrganizacion = organizacionId !== undefined;
+	const { data: preferencias, error } =
+		usePreferenciasNotificacionQuery(organizacionId);
+	const actualizar = useActualizarPreferenciasMutation(organizacionId);
 
 	return (
 		<Card className="space-y-4">
 			<CardHeader className="pb-0">
 				<CardTitle className="text-lg">Notificaciones</CardTitle>
-				<CardDescription>Nunca te avisamos de lo que haces tú.</CardDescription>
+				<CardDescription>
+					{deOrganizacion
+						? "Valores por defecto para los avisos de las tareas de esta organización. Lo que cada miembro elija en su perfil tiene prioridad."
+						: "Nunca te avisamos de lo que haces tú."}
+				</CardDescription>
 			</CardHeader>
 
 			{error ? (
@@ -47,7 +60,16 @@ export function PreferenciasNotificacionCard() {
 							key={evento}
 							className="flex flex-col gap-2 py-3 sm:flex-row sm:items-center sm:justify-between"
 						>
-							<span className="text-sm text-tinta-suave">{descripcion}</span>
+							<span className="text-sm text-tinta-suave">
+								{descripcion}
+								{preferencias.some(
+									(p) => p.evento === evento && p.personalizado === false,
+								) && (
+									<span className="block text-xs text-tinta-tenue">
+										Sin elegir: en cada organización vale lo que ella decida.
+									</span>
+								)}
+							</span>
 							<div className="flex gap-4">
 								{preferencias
 									.filter((p) => p.evento === evento)

@@ -6212,7 +6212,7 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "application/json": components["schemas"]["PreferenciaNotificacion"][];
+                        "application/json": components["schemas"]["PreferenciaNotificacionUsuario"][];
                     };
                 };
                 /** @description No autenticado */
@@ -6246,6 +6246,115 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
+                        "application/json": components["schemas"]["PreferenciaNotificacionUsuario"][];
+                    };
+                };
+                /** @description Evento o canal desconocido */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description No autenticado */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/organizaciones/{organizacionId}/notificaciones": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Valores por defecto de notificación de la organización */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    organizacionId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Matriz completa */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PreferenciaNotificacion"][];
+                    };
+                };
+                /** @description No autenticado */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Permiso denegado (requiere organizaciones:leer) */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Organización no encontrada */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        /** Cambiar los valores por defecto (organizacion:editar); la elección de cada miembro gana */
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    organizacionId: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["PreferenciaNotificacion"][];
+                };
+            };
+            responses: {
+                /** @description Matriz completa */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
                         "application/json": components["schemas"]["PreferenciaNotificacion"][];
                     };
                 };
@@ -6260,6 +6369,24 @@ export interface paths {
                 };
                 /** @description No autenticado */
                 401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Permiso denegado (requiere organizaciones:actualizar) */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Organización no encontrada */
+                404: {
                     headers: {
                         [name: string]: unknown;
                     };
@@ -6543,6 +6670,9 @@ export interface components {
         };
         /** @enum {string} */
         EstadoProyecto: "activo" | "en_pausa" | "terminado";
+        PreferenciaNotificacionUsuario: components["schemas"]["PreferenciaNotificacion"] & {
+            personalizado: boolean;
+        };
         PreferenciaNotificacion: {
             /**
              * @example tareaAsignada
@@ -6585,6 +6715,7 @@ export type RespuestaInvitacionDto = components['schemas']['RespuestaInvitacionD
 export type EquipoDto = components['schemas']['EquipoDto'];
 export type ProyectoDto = components['schemas']['ProyectoDto'];
 export type EstadoProyecto = components['schemas']['EstadoProyecto'];
+export type PreferenciaNotificacionUsuario = components['schemas']['PreferenciaNotificacionUsuario'];
 export type PreferenciaNotificacion = components['schemas']['PreferenciaNotificacion'];
 export type $defs = Record<string, never>;
 export type operations = Record<string, never>;

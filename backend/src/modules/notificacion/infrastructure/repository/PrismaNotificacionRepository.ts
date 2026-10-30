@@ -31,6 +31,36 @@ export class PrismaNotificacionRepository implements NotificacionRepository {
 		);
 	}
 
+	async preferenciasOrganizacion(
+		organizacionId: number,
+	): Promise<Preferencia[]> {
+		const filas = await prisma.preferenciaNotificacionOrganizacion.findMany({
+			where: { organizacionId },
+		});
+		return filas.map(({ evento, canal, activo }) => ({
+			evento,
+			canal,
+			activo,
+		})) as Preferencia[];
+	}
+
+	async guardarPreferenciasOrganizacion(
+		organizacionId: number,
+		preferencias: Preferencia[],
+	): Promise<void> {
+		await prisma.$transaction(
+			preferencias.map(({ evento, canal, activo }) =>
+				prisma.preferenciaNotificacionOrganizacion.upsert({
+					where: {
+						organizacionId_evento_canal: { organizacionId, evento, canal },
+					},
+					create: { organizacionId, evento, canal, activo },
+					update: { activo },
+				}),
+			),
+		);
+	}
+
 	async destinatarios(usuarioIds: number[]): Promise<Destinatario[]> {
 		const usuarios = await prisma.usuario.findMany({
 			where: { id: { in: usuarioIds }, isActivo: true, deletedAt: null },
@@ -43,12 +73,11 @@ export class PrismaNotificacionRepository implements NotificacionRepository {
 		}));
 	}
 
-	async tituloTarea(tareaId: number): Promise<string | null> {
-		const tarea = await prisma.tarea.findFirst({
+	async tarea(tareaId: number) {
+		return prisma.tarea.findFirst({
 			where: { id: tareaId, deletedAt: null },
-			select: { titulo: true },
+			select: { titulo: true, organizacionId: true },
 		});
-		return tarea?.titulo ?? null;
 	}
 
 	async registrarEnvio(clave: string): Promise<boolean> {

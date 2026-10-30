@@ -8,10 +8,17 @@ export interface NotificacionRepository {
 		usuarioId: number,
 		preferencias: Preferencia[],
 	): Promise<void>;
+	preferenciasOrganizacion(organizacionId: number): Promise<Preferencia[]>;
+	guardarPreferenciasOrganizacion(
+		organizacionId: number,
+		preferencias: Preferencia[],
+	): Promise<void>;
 	/** Usuarios activos y no borrados; los demás se omiten. */
 	destinatarios(usuarioIds: number[]): Promise<Destinatario[]>;
 	/** `null` si la tarea ya no existe o está borrada. */
-	tituloTarea(tareaId: number): Promise<string | null>;
+	tarea(
+		tareaId: number,
+	): Promise<{ titulo: string; organizacionId: number | null } | null>;
 	/** `false` si ya estaba registrado: otro intento ya lo envió. */
 	registrarEnvio(clave: string): Promise<boolean>;
 	anularEnvio(clave: string): Promise<void>;

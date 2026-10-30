@@ -6,7 +6,8 @@ import {
 import type { NotificacionRepository } from "../../domain/repository/NotificacionRepository";
 
 /**
- * Avisa por cada canal que el destinatario tenga activo para el evento. Nunca a
+ * Avisa por cada canal que el destinatario tenga activo para el evento (lo suyo y, si
+ * no eligió, lo de la organización de la tarea: RN-92). Nunca a
  * quien hizo la acción. Cada envío se registra con su clave antes de mandarlo, así
  * un reintento del outbox no lo repite; si el canal falla se anula y se reintenta.
  */
@@ -20,10 +21,13 @@ export class Notificador {
 		evento,
 		usuarioIds,
 		actorId,
+		organizacionId,
 		clave,
 		aviso,
 	}: {
 		evento: EventoNotificacion;
+		/** De la tarea; `null` si es personal. */
+		organizacionId: number | null;
 		usuarioIds: number[];
 		actorId?: number;
 		/** Identifica el suceso: igual en todos los reintentos del mismo evento. */
@@ -32,10 +36,15 @@ export class Notificador {
 	}): Promise<void> {
 		const ids = [...new Set(usuarioIds)].filter((id) => id !== actorId);
 		if (ids.length === 0) return;
+		const deOrganizacion =
+			organizacionId === null
+				? []
+				: await this.repo.preferenciasOrganizacion(organizacionId);
 
 		for (const destinatario of await this.repo.destinatarios(ids)) {
 			const preferencias = resolverPreferencias(
 				await this.repo.preferencias(destinatario.usuarioId),
+				deOrganizacion,
 			);
 			for (const canal of this.canales) {
 				const activo = preferencias.some(

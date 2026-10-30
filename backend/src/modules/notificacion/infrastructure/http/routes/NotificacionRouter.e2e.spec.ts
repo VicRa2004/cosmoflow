@@ -24,6 +24,7 @@ describe("Notificaciones (e2e)", () => {
 	const t: Record<string, string> = {};
 	let betoId: number;
 	let tareaId: number;
+	let acme: number;
 	const preferencias = "/api/notificaciones/preferencias";
 
 	beforeAll(async () => {
@@ -31,11 +32,11 @@ describe("Notificaciones (e2e)", () => {
 		// Eventos de otros e2e: sus ids de tarea se reutilizan tras el TRUNCATE.
 		await prisma.eventoOutbox.deleteMany();
 		await prisma.notificacionEnviada.deleteMany();
-		for (const quien of ["ana", "beto"]) {
+		for (const quien of ["ana", "beto", "zoe"]) {
 			await crearUsuario(`${quien}@avisos.dev`, "USUARIO");
 			t[quien] = await login(`${quien}@avisos.dev`);
 		}
-		const acme = (
+		acme = (
 			await (
 				await api("/api/organizaciones", {
 					method: "POST",
@@ -108,8 +109,18 @@ describe("Notificaciones (e2e)", () => {
 		const res = await api(preferencias, { token: t.beto });
 		expect(res.status).toBe(200);
 		expect(await res.json()).toEqual([
-			{ evento: "tareaAsignada", canal: "correo", activo: true },
-			{ evento: "estadoCambiado", canal: "correo", activo: true },
+			{
+				evento: "tareaAsignada",
+				canal: "correo",
+				activo: true,
+				personalizado: false,
+			},
+			{
+				evento: "estadoCambiado",
+				canal: "correo",
+				activo: true,
+				personalizado: false,
+			},
 		]);
 	});
 
@@ -121,5 +132,40 @@ describe("Notificaciones (e2e)", () => {
 		});
 		expect(res.status).toBe(400);
 		expect((await api(preferencias)).status).toBe(401);
+	});
+
+	it("la organización pone valores por defecto; la elección del miembro gana (RN-92)", async () => {
+		const deOrg = `/api/organizaciones/${acme}/notificaciones`;
+		const apagar = [
+			{ evento: "tareaAsignada", canal: "correo", activo: false },
+		];
+		const asignar = async (titulo: string) => {
+			await api("/api/tareas", {
+				method: "POST",
+				token: t.ana,
+				body: { titulo, organizacionId: acme, responsableIds: [betoId] },
+			});
+			await despacharEventos();
+			return paraBuscar("beto@avisos.dev", titulo);
+		};
+
+		const sinPermiso = await api(deOrg, {
+			method: "PUT",
+			token: t.beto,
+			body: apagar,
+		});
+		expect(sinPermiso.status).toBe(403);
+		expect((await api(deOrg, { token: t.zoe })).status).toBe(404);
+
+		const res = await api(deOrg, { method: "PUT", token: t.ana, body: apagar });
+		expect(res.status).toBe(200);
+		expect(await asignar("Silenciada")).toEqual([]);
+
+		await api(preferencias, {
+			method: "PUT",
+			token: t.beto,
+			body: [{ evento: "tareaAsignada", canal: "correo", activo: true }],
+		});
+		expect(await asignar("La quiero")).toHaveLength(1);
 	});
 });

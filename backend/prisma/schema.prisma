@@ -389,14 +389,15 @@ model Organizacion {
   /// Borrado lógico (RN-91)
   deletedAt   DateTime? @map("deleted_at")
 
-  miembros     MiembroOrganizacion[]
-  invitaciones Invitacion[]
-  roles        RolOrganizacion[]
-  tags         Tag[]
-  equipos      Equipo[]
-  proyectos    Proyecto[]
-  tareas       Tarea[]
-  adjuntos     Adjunto[]
+  miembros                 MiembroOrganizacion[]
+  invitaciones             Invitacion[]
+  roles                    RolOrganizacion[]
+  tags                     Tag[]
+  equipos                  Equipo[]
+  proyectos                Proyecto[]
+  tareas                   Tarea[]
+  adjuntos                 Adjunto[]
+  preferenciasNotificacion PreferenciaNotificacionOrganizacion[]
 
   @@map("organizacion")
 }
@@ -621,6 +622,20 @@ model PreferenciaNotificacion {
 
   @@id([usuarioId, evento, canal])
   @@map("preferencia_notificacion")
+}
+
+/// Valores por defecto de una organización para sus miembros (RN-92): valen en los
+/// avisos de sus tareas cuando el usuario no eligió. La preferencia del usuario gana.
+model PreferenciaNotificacionOrganizacion {
+  organizacionId Int     @map("pnor_fkorganizacion")
+  evento         String  @map("pnor_evento") @db.VarChar(50)
+  canal          String  @map("pnor_canal") @db.VarChar(20)
+  activo         Boolean @map("pnor_activo")
+
+  organizacion Organizacion @relation(fields: [organizacionId], references: [id], onDelete: Cascade)
+
+  @@id([organizacionId, evento, canal])
+  @@map("preferencia_notificacion_organizacion")
 }
 
 /// Avisos ya enviados: el outbox entrega «al menos una vez» y esto evita repetirlos.
