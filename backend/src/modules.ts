@@ -11,6 +11,7 @@ import { adjuntoModule } from "@/modules/adjunto/module";
 import { organizacionModule } from "@/modules/organizacion/module";
 import { equipoModule } from "@/modules/equipo/module";
 import { proyectoModule } from "@/modules/proyecto/module";
+import { notificacionModule } from "@/modules/notificacion/module";
 
 /**
  * Módulos activos, en orden de registro. Añadir o quitar un módulo = tocar esta lista
@@ -31,4 +32,5 @@ export const modules: AppModule[] = [
 	equipoModule,
 	// Después de `equipo`: sustituye su `BajaEquipo`.
 	proyectoModule,
+	notificacionModule,
 ];

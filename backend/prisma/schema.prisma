@@ -33,15 +33,16 @@ model Usuario {
   deletedAt DateTime? @map("deleted_at")
 
   // Relaciones N-a-N gestionadas por tablas intermedias explícitas
-  roles            UsuarioRol[]
-  permisosDirectos UsuarioPermiso[]
-  refreshTokens    RefreshToken[]
-  tokensCuenta     TokenCuenta[]
-  tags             Tag[]
-  tareas           Tarea[]
-  notas            Nota[]
-  adjuntos         Adjunto[]
-  organizaciones   MiembroOrganizacion[]
+  roles                    UsuarioRol[]
+  permisosDirectos         UsuarioPermiso[]
+  refreshTokens            RefreshToken[]
+  tokensCuenta             TokenCuenta[]
+  tags                     Tag[]
+  tareas                   Tarea[]
+  notas                    Nota[]
+  adjuntos                 Adjunto[]
+  organizaciones           MiembroOrganizacion[]
+  preferenciasNotificacion PreferenciaNotificacion[]
 
   @@map("usuario")
 }
@@ -261,9 +262,9 @@ model Tarea {
 
   /// Tarea compartida (RN-40): de la organización, de un equipo o de un proyecto
   /// (nunca de los dos). Sin organización es personal. CHECK en la migración.
-  organizacionId   Int?           @map("tar_fkorganizacion")
-  equipoId         Int?           @map("tar_fkequipo")
-  proyectoId       Int?           @map("tar_fkproyecto")
+  organizacionId Int? @map("tar_fkorganizacion")
+  equipoId       Int? @map("tar_fkequipo")
+  proyectoId     Int? @map("tar_fkproyecto")
 
   /// Quien la creó; en las personales, su dueño
   usuario      Usuario            @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
@@ -367,8 +368,8 @@ model Adjunto {
 
   usuario      Usuario       @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
   organizacion Organizacion? @relation(fields: [organizacionId], references: [id], onDelete: SetNull)
-  equipo   Equipo?   @relation(fields: [equipoId], references: [id], onDelete: SetNull)
-  proyecto Proyecto? @relation(fields: [proyectoId], references: [id], onDelete: SetNull)
+  equipo       Equipo?       @relation(fields: [equipoId], references: [id], onDelete: SetNull)
+  proyecto     Proyecto?     @relation(fields: [proyectoId], references: [id], onDelete: SetNull)
 
   @@index([usuarioId])
   @@map("adjunto")
@@ -498,7 +499,7 @@ model Equipo {
   /// Borrado lógico (RN-91)
   deletedAt      DateTime? @map("deleted_at")
 
-  organizacion Organizacion    @relation(fields: [organizacionId], references: [id], onDelete: Cascade)
+  organizacion Organizacion     @relation(fields: [organizacionId], references: [id], onDelete: Cascade)
   miembros     MiembroEquipo[]
   tags         EquipoTag[]
   proyectos    ProyectoEquipo[]
@@ -602,4 +603,31 @@ model IntegranteProyecto {
   @@id([proyectoId, usuarioId])
   @@index([organizacionId, usuarioId])
   @@map("integrante_proyecto")
+}
+
+// ─────────────────────────────────────────────
+//  Notificaciones (RN-92)
+// ─────────────────────────────────────────────
+
+/// Solo lo que el usuario cambia; sin fila, vale el valor por defecto del código.
+/// `evento` y `canal` se validan contra el catálogo en código (sin enum: añadir uno no migra).
+model PreferenciaNotificacion {
+  usuarioId Int     @map("pno_fkusuario")
+  evento    String  @map("pno_evento") @db.VarChar(50)
+  canal     String  @map("pno_canal") @db.VarChar(20)
+  activo    Boolean @map("pno_activo")
+
+  usuario Usuario @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+
+  @@id([usuarioId, evento, canal])
+  @@map("preferencia_notificacion")
+}
+
+/// Avisos ya enviados: el outbox entrega «al menos una vez» y esto evita repetirlos.
+model NotificacionEnviada {
+  clave     String   @id @map("nen_clave") @db.VarChar(255)
+  enviadaEn DateTime @default(now()) @map("nen_enviada_en")
+
+  @@index([enviadaEn])
+  @@map("notificacion_enviada")
 }

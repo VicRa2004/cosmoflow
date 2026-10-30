@@ -2,6 +2,7 @@ import { PerfilUsuarioCard } from "../components/PerfilUsuarioCard";
 import { CambiarPasswordForm } from "@/modules/auth/components/CambiarPasswordForm";
 import { SeguridadCuentaCard } from "@/modules/auth/components/SeguridadCuentaCard";
 import { EncabezadoPagina } from "@/core/components/ui/EncabezadoPagina";
+import { PreferenciasNotificacionCard } from "@/modules/notificaciones/components/PreferenciasNotificacionCard";
 
 export function PerfilPage() {
 	return (
@@ -12,6 +13,7 @@ export function PerfilPage() {
 			/>
 
 			<PerfilUsuarioCard />
+			<PreferenciasNotificacionCard />
 			<SeguridadCuentaCard />
 			<CambiarPasswordForm />
 		</div>

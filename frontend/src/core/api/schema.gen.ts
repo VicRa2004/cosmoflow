@@ -6189,6 +6189,93 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/notificaciones/preferencias": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Obtener mis preferencias de notificación (evento × canal) */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Matriz completa */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PreferenciaNotificacion"][];
+                    };
+                };
+                /** @description No autenticado */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        /** Cambiar mis preferencias; las no enviadas no cambian */
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["PreferenciaNotificacion"][];
+                };
+            };
+            responses: {
+                /** @description Matriz completa */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PreferenciaNotificacion"][];
+                    };
+                };
+                /** @description Evento o canal desconocido */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description No autenticado */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -6456,6 +6543,19 @@ export interface components {
         };
         /** @enum {string} */
         EstadoProyecto: "activo" | "en_pausa" | "terminado";
+        PreferenciaNotificacion: {
+            /**
+             * @example tareaAsignada
+             * @enum {string}
+             */
+            evento: "tareaAsignada" | "estadoCambiado";
+            /**
+             * @example correo
+             * @enum {string}
+             */
+            canal: "correo";
+            activo: boolean;
+        };
     };
     responses: never;
     parameters: never;
@@ -6485,5 +6585,6 @@ export type RespuestaInvitacionDto = components['schemas']['RespuestaInvitacionD
 export type EquipoDto = components['schemas']['EquipoDto'];
 export type ProyectoDto = components['schemas']['ProyectoDto'];
 export type EstadoProyecto = components['schemas']['EstadoProyecto'];
+export type PreferenciaNotificacion = components['schemas']['PreferenciaNotificacion'];
 export type $defs = Record<string, never>;
 export type operations = Record<string, never>;

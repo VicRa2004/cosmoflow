@@ -1,0 +1,72 @@
+import {
+	Card,
+	CardDescription,
+	CardHeader,
+	CardTitle,
+} from "@/core/components/ui/Card";
+import { Checkbox } from "@/core/components/ui/Checkbox";
+import { Spinner } from "@/core/components/ui/Spinner";
+import type { PreferenciaNotificacion } from "../api/notificacionesApi";
+import {
+	useActualizarPreferenciasMutation,
+	usePreferenciasNotificacionQuery,
+} from "../hooks/usePreferenciasNotificacion";
+
+const EVENTOS: Record<PreferenciaNotificacion["evento"], string> = {
+	tareaAsignada: "Te asignan una tarea",
+	estadoCambiado: "Cambia el estado de una tarea que creaste",
+};
+const CANALES: Record<PreferenciaNotificacion["canal"], string> = {
+	correo: "Correo",
+};
+
+/** Qué avisos recibe el usuario y por qué canal; cada casilla se guarda al marcarla. */
+export function PreferenciasNotificacionCard() {
+	const { data: preferencias, error } = usePreferenciasNotificacionQuery();
+	const actualizar = useActualizarPreferenciasMutation();
+
+	return (
+		<Card className="space-y-4">
+			<CardHeader className="pb-0">
+				<CardTitle className="text-lg">Notificaciones</CardTitle>
+				<CardDescription>Nunca te avisamos de lo que haces tú.</CardDescription>
+			</CardHeader>
+
+			{error ? (
+				<p className="text-sm text-rose-400">
+					No se pudieron cargar tus preferencias.
+				</p>
+			) : !preferencias ? (
+				<div className="flex justify-center py-4 text-tinta-tenue">
+					<Spinner />
+				</div>
+			) : (
+				<ul className="divide-y divide-borde">
+					{Object.entries(EVENTOS).map(([evento, descripcion]) => (
+						<li
+							key={evento}
+							className="flex flex-col gap-2 py-3 sm:flex-row sm:items-center sm:justify-between"
+						>
+							<span className="text-sm text-tinta-suave">{descripcion}</span>
+							<div className="flex gap-4">
+								{preferencias
+									.filter((p) => p.evento === evento)
+									.map((p) => (
+										<Checkbox
+											key={p.canal}
+											label={CANALES[p.canal]}
+											checked={p.activo}
+											disabled={actualizar.isPending}
+											onChange={(e) =>
+												actualizar.mutate([{ ...p, activo: e.target.checked }])
+											}
+										/>
+									))}
+							</div>
+						</li>
+					))}
+				</ul>
+			)}
+		</Card>
+	);
+}
