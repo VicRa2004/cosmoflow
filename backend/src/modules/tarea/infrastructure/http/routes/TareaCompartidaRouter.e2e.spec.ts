@@ -135,6 +135,22 @@ describe("Tareas de equipo y proyecto (e2e)", () => {
 		);
 	});
 
+	it("asignadas incluye lo asignado en cualquier contexto y nada ajeno", async () => {
+		const ids = async (token: string) =>
+			(
+				await (await api("/api/tareas?asignadas=true", { token })).json()
+			).datos.map((d: { id: number }) => d.id);
+		expect(await ids(t.caro)).toContain(tareaEquipo);
+		expect(await ids(t.zoe)).not.toContain(tareaEquipo);
+		expect(
+			(
+				await api(`/api/tareas?asignadas=true&equipoId=${equipo}`, {
+					token: t.caro,
+				})
+			).status,
+		).toBe(400);
+	});
+
 	it("aislamiento: quien no es de la organización recibe 404 (RN-90)", async () => {
 		expect(
 			(await api(`/api/tareas/${tareaEquipo}`, { token: t.zoe })).status,

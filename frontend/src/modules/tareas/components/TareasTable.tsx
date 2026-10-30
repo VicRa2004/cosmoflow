@@ -10,7 +10,13 @@ import { Badge, type BadgeProps } from "@/core/components/ui/Badge";
 import type { EstadoTarea, TareaDto } from "../api/tareasApi";
 import { ETIQUETAS_ESTADO, ETIQUETAS_PRIORIDAD } from "../schemas/tareaSchemas";
 import { TagsBadges } from "@/modules/tags/components/TagsBadges";
-import { VencimientoTarea } from "./celdas";
+import {
+	AccionAsignar,
+	DondeTarea,
+	esCompartida,
+	ResponsablesTarea,
+	VencimientoTarea,
+} from "./celdas";
 
 const VARIANTE_ESTADO: Record<EstadoTarea, BadgeProps["variant"]> = {
 	pendiente: "default",
@@ -28,6 +34,10 @@ interface TareasTableProps {
 	onAbrir: (fila: TareaDto) => void;
 	onEditar: (fila: TareaDto) => void;
 	onEliminar: (fila: TareaDto) => void;
+	/** Columna «Responsables» y acción «Asignar» (tareas compartidas). */
+	onAsignar?: (fila: TareaDto & { organizacionId: number }) => void;
+	/** Columna «Dónde», para listas que mezclan contextos. */
+	mostrarDonde?: boolean;
 }
 
 export function TareasTable({
@@ -38,6 +48,8 @@ export function TareasTable({
 	onAbrir,
 	onEditar,
 	onEliminar,
+	onAsignar,
+	mostrarDonde = false,
 }: TareasTableProps) {
 	const columnas: Columna<TareaDto>[] = [
 		{
@@ -52,6 +64,15 @@ export function TareasTable({
 				</button>
 			),
 		},
+		...(mostrarDonde
+			? [
+					{
+						cabecera: "Dónde",
+						celda: (fila: TareaDto) =>
+							esCompartida(fila) && <DondeTarea tarea={fila} />,
+					},
+				]
+			: []),
 		{
 			cabecera: "Estado",
 			celda: (fila) => (
@@ -68,6 +89,15 @@ export function TareasTable({
 			cabecera: "Vence",
 			celda: (fila) => <VencimientoTarea tarea={fila} />,
 		},
+		...(onAsignar
+			? [
+					{
+						cabecera: "Responsables",
+						celda: (fila: TareaDto) =>
+							esCompartida(fila) && <ResponsablesTarea tarea={fila} />,
+					},
+				]
+			: []),
 		{
 			cabecera: "Tags",
 			celda: (fila) => (
@@ -79,6 +109,9 @@ export function TareasTable({
 			className: "text-right",
 			celda: (fila) => (
 				<AccionesFila>
+					{onAsignar && esCompartida(fila) && (
+						<AccionAsignar tarea={fila} onAsignar={onAsignar} />
+					)}
 					<Button
 						variant="ghost"
 						size="sm"

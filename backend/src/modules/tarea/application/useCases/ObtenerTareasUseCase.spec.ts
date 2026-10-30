@@ -25,4 +25,23 @@ describe("ObtenerTareasUseCase", () => {
 		expect(result.datos).toMatchObject([{ titulo: "Ejemplo" }]);
 		expect(result.totalElementos).toBe(1);
 	});
+
+	it("con `asignadas`, busca aquellas en las que es responsable", async () => {
+		const repo = {
+			buscar: mock(async () => ({
+				datos: [],
+				pagina: 1,
+				totalElementos: 0,
+				totalPaginas: 0,
+			})),
+		};
+		const useCase = new ObtenerTareasUseCase(repo as never, {} as never);
+
+		await useCase.ejecutar(7, { pagina: 1, limite: 10, asignadas: true });
+
+		expect(repo.buscar).toHaveBeenCalledWith(
+			{ responsableId: 7 },
+			{ pagina: 1, limite: 10 },
+		);
+	});
 });

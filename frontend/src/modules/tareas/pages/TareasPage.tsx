@@ -1,13 +1,14 @@
 import { useNavigate } from "@tanstack/react-router";
-import { Plus, Search } from "lucide-react";
+import { Search } from "lucide-react";
 import { useState } from "react";
-import { usePermisos } from "@/core/auth/usePermisos";
-import { Button } from "@/core/components/ui/Button";
 import { EncabezadoPagina } from "@/core/components/ui/EncabezadoPagina";
 import { ConfirmDialog } from "@/core/components/ui/ConfirmDialog";
 import { Input } from "@/core/components/ui/Input";
 import { Select } from "@/core/components/ui/Select";
 import { destinoDe, type EstadoTarea, type TareaDto } from "../api/tareasApi";
+import { AsignarTareaDialog } from "../components/AsignarTareaDialog";
+import { MenuNuevo } from "../components/MenuNuevo";
+import { SelectorContextoTareas } from "../components/SelectorContextoTareas";
 import { TareasTable } from "../components/TareasTable";
 import { useEliminarTareaMutation } from "../hooks/useTareasMutation";
 import { useTagsDisponibles } from "@/modules/tags/hooks/useTagsDisponibles";
@@ -15,6 +16,7 @@ import { useTareasQuery } from "../hooks/useTareasQuery";
 import {
 	type ContextoTareaSearch,
 	ETIQUETAS_ESTADO,
+	type ListaTareasSearch,
 } from "../schemas/tareaSchemas";
 import { useNombresContexto } from "@/modules/organizaciones/hooks/useNombresContexto";
 
@@ -34,21 +36,30 @@ function TituloContexto({
 	return <>Tareas · {nombre ?? "…"}</>;
 }
 
-/** Sin `contexto`, las personales; con él, las de esa organización, equipo o proyecto. */
+/**
+ * Sin `contexto`, las personales; con él, las de esa organización, equipo o
+ * proyecto, o las asignadas. El selector cambia de una vista a otra.
+ */
 export function TareasPage({
 	contexto = {},
 }: {
-	contexto?: ContextoTareaSearch;
+	contexto?: ListaTareasSearch;
 }) {
-	const { organizacionId, equipoId, proyectoId } = contexto;
+	const { organizacionId, equipoId, proyectoId, asignadas } = contexto;
 	const enContexto = organizacionId !== undefined;
-	const { puede } = usePermisos();
 	const [pagina, setPagina] = useState(1);
 	const [busqueda, setBusqueda] = useState("");
 	const [estado, setEstado] = useState<EstadoTarea | "">("");
 	const [tagId, setTagId] = useState("");
-	const { tags } = useTagsDisponibles(enContexto ? organizacionId : undefined);
+	const { tags: tagsDisponibles } = useTagsDisponibles(
+		enContexto ? organizacionId : undefined,
+	);
+	// Las asignadas mezclan organizaciones: sin filtro de tag.
+	const tags = asignadas ? [] : tagsDisponibles;
 	const navigate = useNavigate();
+	const [asignando, setAsignando] = useState<
+		(TareaDto & { organizacionId: number }) | null
+	>(null);
 	const abrir = (tarea: TareaDto) =>
 		navigate({ to: "/tareas/$id", params: { id: String(tarea.id) } });
 	const editar = (tarea: TareaDto) =>
@@ -61,7 +72,9 @@ export function TareasPage({
 		busqueda: busqueda.trim() || undefined,
 		estado: estado || undefined,
 		tagId: tagId ? Number(tagId) : undefined,
-		...(enContexto && destinoDe({ organizacionId, equipoId, proyectoId })),
+		...(asignadas
+			? { asignadas }
+			: enContexto && destinoDe({ organizacionId, equipoId, proyectoId })),
 	});
 
 	return (
@@ -74,11 +87,23 @@ export function TareasPage({
 							equipoId={equipoId}
 							proyectoId={proyectoId}
 						/>
+					) : asignadas ? (
+						"Tareas · Asignadas a mí"
 					) : (
 						"Tareas"
 					)
 				}
 			>
+				<div className="w-full sm:w-56">
+					<SelectorContextoTareas
+						valor={contexto}
+						onChange={(search) => {
+							setPagina(1);
+							setTagId("");
+							navigate({ to: "/tareas", search });
+						}}
+					/>
+				</div>
 				<div className="w-full sm:w-44">
 					<Select
 						aria-label="Filtrar por estado"
@@ -128,19 +153,12 @@ export function TareasPage({
 					/>
 					<Search className="pointer-events-none absolute top-2.5 left-3 h-4 w-4 text-tinta-tenue" />
 				</div>
-				{puede("tareas:crear") && (
-					<Button
-						onClick={() =>
-							navigate({
-								to: "/tareas/nueva",
-								search: enContexto ? contexto : {},
-							})
-						}
-					>
-						<Plus className="h-4 w-4" />
-						Nueva
-					</Button>
-				)}
+				<MenuNuevo
+					soloTareas
+					contexto={
+						enContexto ? { organizacionId, equipoId, proyectoId } : undefined
+					}
+				/>
 			</EncabezadoPagina>
 
 			<TareasTable
@@ -151,7 +169,17 @@ export function TareasPage({
 				onAbrir={abrir}
 				onEditar={editar}
 				onEliminar={setEliminando}
+				onAsignar={enContexto || asignadas ? setAsignando : undefined}
+				mostrarDonde={asignadas}
 			/>
+
+			{asignando && (
+				<AsignarTareaDialog
+					key={asignando.id}
+					tarea={asignando}
+					onCerrar={() => setAsignando(null)}
+				/>
+			)}
 
 			<ConfirmDialog
 				abierto={eliminando !== null}

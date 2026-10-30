@@ -38,6 +38,13 @@ export const contextoTareaSearch = z.object({
 
 export type ContextoTareaSearch = z.infer<typeof contextoTareaSearch>;
 
+/** Lista de `/tareas`: un contexto, o `?asignadas=true` (en las que se es responsable). */
+export const listaTareasSearch = contextoTareaSearch.extend({
+	asignadas: z.literal(true).optional().catch(undefined),
+});
+
+export type ListaTareasSearch = z.infer<typeof listaTareasSearch>;
+
 /** `<input type="date">` da "" o `AAAA-MM-DD`; "" vacía la fecha. */
 const dia = z.string().transform((v) => v || null);
 

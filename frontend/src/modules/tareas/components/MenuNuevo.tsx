@@ -9,12 +9,12 @@ import {
 	Users,
 } from "lucide-react";
 import { type ReactNode, useRef } from "react";
-import { useAuthStore } from "@/core/auth/store";
 import { usePermisos } from "@/core/auth/usePermisos";
 import { Button } from "@/core/components/ui/Button";
-import { useEquiposQuery } from "@/modules/equipos/hooks/useEquipos";
+import { useNombresContexto } from "@/modules/organizaciones/hooks/useNombresContexto";
 import { useOrganizacionesQuery } from "@/modules/organizaciones/hooks/useOrganizacionesQuery";
-import { useProyectosQuery } from "@/modules/proyectos/hooks/useProyectos";
+import { useDestinosTareas } from "../hooks/useDestinosTareas";
+import type { ContextoTareaSearch } from "../schemas/tareaSchemas";
 
 const ID = "menu-nuevo";
 const opcion =
@@ -34,7 +34,7 @@ function Opcion({
 	cerrar,
 }: {
 	to: "/tareas/nueva" | "/notas/nueva";
-	search: Record<string, number>;
+	search: ContextoTareaSearch;
 	children: ReactNode;
 	cerrar: () => void;
 }) {
@@ -53,27 +53,12 @@ function OpcionesOrganizacion({
 	notas,
 	cerrar,
 }: Permisos & { organizacionId: number; nombre: string }) {
-	const yo = useAuthStore((s) => s.usuario?.id);
-	const { data: equipos = [] } = useEquiposQuery(organizacionId);
-	const { data: proyectos = [] } = useProyectosQuery(organizacionId);
-	// Mismo criterio que el backend: sin líder, cualquier miembro; si no, líder o delegado.
-	const misEquipos = equipos.filter((e) =>
-		e.miembros.some(
-			(m) =>
-				m.usuarioId === yo &&
-				(e.liderId === null || e.liderId === yo || m.puedeCrearTareas),
-		),
-	);
-	const miembroDe = new Set(
-		equipos
-			.filter((e) => e.miembros.some((m) => m.usuarioId === yo))
-			.map((e) => e.id),
-	);
-	const misProyectos = proyectos.filter(
-		(p) =>
-			(yo !== undefined && p.integranteIds.includes(yo)) ||
-			p.equipoIds.some((id) => miembroDe.has(id)),
-	);
+	const {
+		equipos,
+		proyectos: misProyectos,
+		puedeCrearEn,
+	} = useDestinosTareas(organizacionId);
+	const misEquipos = equipos.filter((e) => puedeCrearEn({ equipoId: e.id }));
 
 	return (
 		<>
@@ -127,8 +112,41 @@ function OpcionesOrganizacion({
 	);
 }
 
-/** «Nueva» con todos los destinos a un clic: personal, organización, equipo o proyecto. */
-export function MenuNuevo() {
+/** El destino que se está viendo, primero; solo si se puede crear ahí (RN-22). */
+function OpcionAqui({
+	contexto,
+	cerrar,
+}: {
+	contexto: Required<Pick<ContextoTareaSearch, "organizacionId">> &
+		ContextoTareaSearch;
+	cerrar: () => void;
+}) {
+	const { puedeCrearEn } = useDestinosTareas(contexto.organizacionId);
+	const { organizacion, grupo } = useNombresContexto(contexto);
+	const nombre = grupo ?? organizacion;
+	if (!nombre || !puedeCrearEn(contexto)) return null;
+	return (
+		<>
+			<Opcion to="/tareas/nueva" search={contexto} cerrar={cerrar}>
+				<Plus aria-hidden className={icono} />
+				<span className="truncate">Tarea en {nombre}</span>
+			</Opcion>
+			<hr className="-mx-1.5 my-1 border-borde" />
+		</>
+	);
+}
+
+/**
+ * «Nueva» con todos los destinos a un clic: personal, organización, equipo o proyecto.
+ * `soloTareas` quita las notas; `contexto`, el destino que se está viendo, va primero.
+ */
+export function MenuNuevo({
+	soloTareas = false,
+	contexto,
+}: {
+	soloTareas?: boolean;
+	contexto?: ContextoTareaSearch;
+} = {}) {
 	const { puede } = usePermisos();
 	const menu = useRef<HTMLDivElement>(null);
 	const cerrar = () => menu.current?.hidePopover();
@@ -140,7 +158,7 @@ export function MenuNuevo() {
 	});
 	const permisos = {
 		tareas: puede("tareas:crear"),
-		notas: puede("notas:crear"),
+		notas: !soloTareas && puede("notas:crear"),
 		cerrar,
 	};
 	if (!permisos.tareas && !permisos.notas) return null;
@@ -159,6 +177,12 @@ export function MenuNuevo() {
 				// Anclado al botón (anchor positioning); sin soporte, cae arriba a la derecha.
 				className="inset-auto top-[anchor(bottom)] right-[anchor(right)] m-0 mt-1 max-h-[70vh] w-72 overflow-y-auto rounded-lg border border-borde bg-superficie p-1.5 text-tinta shadow-flotante [position-anchor:--menu-nuevo]"
 			>
+				{permisos.tareas && contexto?.organizacionId && (
+					<OpcionAqui
+						contexto={{ ...contexto, organizacionId: contexto.organizacionId }}
+						cerrar={cerrar}
+					/>
+				)}
 				<p className="px-2 pt-1 pb-1 text-xs font-medium text-tinta-tenue">
 					Personal
 				</p>

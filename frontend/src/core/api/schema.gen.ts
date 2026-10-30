@@ -2762,6 +2762,7 @@ export interface paths {
                     organizacionId?: string;
                     equipoId?: string;
                     proyectoId?: string;
+                    asignadas?: "true";
                 };
                 header?: never;
                 path?: never;

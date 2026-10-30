@@ -1,4 +1,14 @@
+import { UserPlus } from "lucide-react";
+import { Button } from "@/core/components/ui/Button";
+import { useMiembrosQuery } from "@/modules/organizaciones/hooks/useMiembros";
+import { useNombresContexto } from "@/modules/organizaciones/hooks/useNombresContexto";
 import type { TareaDto } from "../api/tareasApi";
+import { useDestinosTareas } from "../hooks/useDestinosTareas";
+
+/** Una tarea con organización: compartida. */
+type TareaCompartida = TareaDto & { organizacionId: number };
+export const esCompartida = (tarea: TareaDto): tarea is TareaCompartida =>
+	tarea.organizacionId !== null;
 
 /** AAAA-MM-DD en hora local. */
 const diaLocal = (fecha: Date) => fecha.toLocaleDateString("sv-SE");
@@ -35,4 +45,48 @@ export function VencimientoTarea({ tarea }: { tarea: TareaDto }) {
 		return <span className="text-amber-400">Mañana</span>;
 	}
 	return <span>{formatearDia(dia)}</span>;
+}
+
+/** «Organización · Equipo»: dónde está una tarea compartida. */
+export function DondeTarea({ tarea }: { tarea: TareaCompartida }) {
+	const { organizacion, grupo } = useNombresContexto(tarea);
+	return (
+		<span className="text-tinta-suave">
+			{[organizacion, grupo].filter(Boolean).join(" · ") || "…"}
+		</span>
+	);
+}
+
+/** Nombres de los responsables, o «Sin asignar». */
+export function ResponsablesTarea({ tarea }: { tarea: TareaCompartida }) {
+	const { data: miembros = [] } = useMiembrosQuery(tarea.organizacionId);
+	if (tarea.responsableIds.length === 0) {
+		return <span className="text-tinta-tenue">Sin asignar</span>;
+	}
+	const nombres = tarea.responsableIds.map(
+		(id) => miembros.find((m) => m.usuarioId === id)?.nombre ?? "…",
+	);
+	return <span className="text-tinta-suave">{nombres.join(", ")}</span>;
+}
+
+/** Botón «Asignar», solo si se puede asignar en su destino (RN-22). */
+export function AccionAsignar({
+	tarea,
+	onAsignar,
+}: {
+	tarea: TareaCompartida;
+	onAsignar: (tarea: TareaCompartida) => void;
+}) {
+	const { puedeCrearEn } = useDestinosTareas(tarea.organizacionId);
+	if (!puedeCrearEn(tarea)) return null;
+	return (
+		<Button
+			variant="ghost"
+			size="sm"
+			onClick={() => onAsignar(tarea)}
+			aria-label="Asignar"
+		>
+			<UserPlus className="h-4 w-4" />
+		</Button>
+	);
 }

@@ -69,7 +69,10 @@ export const paginacionSchema = z.object({
 	limite: numero.optional().default(10),
 });
 
-/** Sin destino, las personales; `organizacionId` solo, las de la organización. */
+/**
+ * Sin destino, las personales; `organizacionId` solo, las de la organización;
+ * `asignadas=true`, en las que se es responsable.
+ */
 export const obtenerTareasSchema = paginacionSchema
 	.extend({
 		busqueda: z.string().trim().min(1).max(128).optional(),
@@ -78,8 +81,23 @@ export const obtenerTareasSchema = paginacionSchema
 		organizacionId: numero.optional(),
 		equipoId: numero.optional(),
 		proyectoId: numero.optional(),
+		asignadas: z
+			.literal("true")
+			.transform(() => true)
+			.optional(),
 	})
-	.refine(sinDosDestinos, unSoloDestino);
+	.refine(sinDosDestinos, unSoloDestino)
+	.refine(
+		(v) =>
+			!v.asignadas ||
+			[v.organizacionId, v.equipoId, v.proyectoId].every(
+				(d) => d === undefined,
+			),
+		{
+			message: "`asignadas` no se combina con un destino",
+			path: ["asignadas"],
+		},
+	);
 
 // ── Respuestas (sólo documentación OpenAPI) ──────────────────────────────────
 

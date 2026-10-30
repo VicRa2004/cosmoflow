@@ -71,7 +71,7 @@ frontend/src/
 │   │
 │   ├── adjuntos/                   # Imágenes y markdown: EditorMarkdown (WYSIWYG tipo Notion con Milkdown Crepe: menú «/», subir y pegar imágenes), ContenidoMarkdown y PaginaLectura (lectura de tareas y notas)
 │   ├── notas/                      # Notas personales: búsqueda en título y contenido, filtro por tag; lectura (NotaLecturaPage), alta y edición a página completa (NotaEditorPage)
-│   ├── tareas/                     # Tareas personales y PendientesPage (portada); lectura (TareaLecturaPage), alta y edición a página completa (TareaEditorPage)
+│   ├── tareas/                     # Tareas (selector: personales, asignadas a mí, organización, equipo o proyecto) y PendientesPage (portada); lectura (TareaLecturaPage), alta y edición a página completa (TareaEditorPage)
 │   ├── tags/                       # Tags personales; SelectorTags, TagsBadges y useTagsDisponibles los usan tareas y notas
 │   │
 │   └── usuarios/                      # Módulo de Usuarios

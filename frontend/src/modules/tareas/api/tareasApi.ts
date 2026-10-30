@@ -20,6 +20,8 @@ export interface ObtenerTareasParams {
 	tagId?: number;
 	/** Sin destino, las personales; `organizacionId` solo, las de la organización. */
 	organizacionId?: number;
+	/** En las que se es responsable, de cualquier contexto (sin destino). */
+	asignadas?: boolean;
 	equipoId?: number;
 	proyectoId?: number;
 }
