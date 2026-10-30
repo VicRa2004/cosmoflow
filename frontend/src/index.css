@@ -130,20 +130,20 @@
 /* Contenido markdown de tareas y notas (`ContenidoMarkdown`). */
 @layer components {
 	.markdown {
-		@apply space-y-3 text-sm leading-relaxed text-tinta-suave;
+		@apply space-y-3 text-base leading-relaxed text-tinta-suave;
 		overflow-wrap: anywhere;
 	}
 	.markdown :is(h1, h2, h3, h4) {
 		@apply font-semibold text-tinta;
 	}
 	.markdown h1 {
-		@apply text-xl;
+		@apply text-2xl;
 	}
 	.markdown h2 {
-		@apply text-lg;
+		@apply text-xl;
 	}
 	.markdown h3 {
-		@apply text-base;
+		@apply text-lg;
 	}
 	/* Al tomar notas, un salto de línea es un salto de línea. */
 	.markdown p {
@@ -212,7 +212,7 @@
 	--crepe-color-hover: var(--elevada);
 	--crepe-color-selected: var(--borde);
 	--crepe-color-inline-area: var(--elevada);
-	--crepe-base-font-size: 15px;
+	--crepe-base-font-size: 16px;
 	--crepe-font-title: var(--font-sans);
 	--crepe-font-default: var(--font-sans);
 	--crepe-font-code: var(--font-mono);

@@ -26,6 +26,14 @@ describe("ContenidoMarkdown", () => {
 		expect(salida).not.toContain("javascript:");
 	});
 
+	it("convierte los <br /> de Crepe en saltos, salvo dentro de código", () => {
+		const salida = html("a\n\n<br />\n\nb<br />c `x<br>y`");
+
+		expect(salida).toContain("<p>\u200b</p>");
+		expect(salida).toContain("b<br/>c <code>x&lt;br&gt;y</code>");
+		expect(html("```\n<br />\n```")).toContain("&lt;br /&gt;");
+	});
+
 	it("abre los enlaces externos en otra pestaña sin opener", () => {
 		expect(html("[web](https://ejemplo.com)")).toContain(
 			'target="_blank" rel="noopener noreferrer"',

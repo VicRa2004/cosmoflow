@@ -24,6 +24,25 @@ const components = {
 	},
 } satisfies MarkdownComponents;
 
+/**
+ * Crepe guarda las líneas vacías y los saltos con Shift+Enter como `<br />`, que sin
+ * `allowHtml` saldrían como texto: la línea vacía pasa a un párrafo con un espacio de
+ * ancho cero (el parser recorta el espacio duro) y el salto en línea a un salto de
+ * markdown (`\`). No toca el código.
+ */
+function convertirSaltos(markdown: string) {
+	return markdown
+		.split(/(```[\s\S]*?```|`[^`\n]*`)/)
+		.map((trozo, i) =>
+			i % 2
+				? trozo
+				: trozo
+						.replace(/^[ \t]*<br\s*\/?>[ \t]*$/gim, "\u200b")
+						.replace(/<br\s*\/?>\n?/gi, "\\\n"),
+		)
+		.join("");
+}
+
 /** Markdown de tareas y notas, con las imágenes privadas de `/api/adjuntos`. */
 export function ContenidoMarkdown({
 	children,
@@ -34,7 +53,7 @@ export function ContenidoMarkdown({
 }) {
 	return (
 		<div className={cn("markdown", className)}>
-			<Markdown components={components}>{children}</Markdown>
+			<Markdown components={components}>{convertirSaltos(children)}</Markdown>
 		</div>
 	);
 }
