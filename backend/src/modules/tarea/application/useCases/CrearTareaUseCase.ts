@@ -1,3 +1,5 @@
+import type { EventBus } from "@/core/shared/domain/events/EventBus";
+import type { UnitOfWork } from "@/core/shared/domain/UnitOfWork";
 import type { TareaRepository } from "../../domain/repository/TareaRepository";
 import { Tarea } from "../../domain/Tarea";
 import type { CrearTareaDto } from "../dtos/CrearTareaDto";
@@ -12,6 +14,8 @@ export class CrearTareaUseCase {
 	constructor(
 		private readonly tareaRepository: TareaRepository,
 		private readonly contextos: ContextosTarea,
+		private readonly eventBus: EventBus,
+		private readonly uow: UnitOfWork,
 	) {}
 
 	async ejecutar(usuarioId: number, dto: CrearTareaDto): Promise<TareaDto> {
@@ -30,6 +34,13 @@ export class CrearTareaUseCase {
 		);
 		if (responsableIds) tarea.asignar(responsableIds);
 		await validarTarea(this.tareaRepository, tarea, contexto);
-		return TareaMapper.toDto(await this.tareaRepository.crear(tarea));
+		// Tarea y evento en la misma transacción: con el outbox, o ambos o ninguno.
+		const creada = await this.uow.ejecutar(async () => {
+			const creada = await this.tareaRepository.crear(tarea);
+			creada.agregarEventoCreada();
+			await this.eventBus.publishAll(creada.pullDomainEvents());
+			return creada;
+		});
+		return TareaMapper.toDto(creada);
 	}
 }

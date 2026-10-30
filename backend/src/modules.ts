@@ -3,7 +3,7 @@ import { usuarioModule } from "@/core/usuario/module";
 import { authModule } from "@/modules/auth/module";
 import { autorizacionModule } from "@/modules/autorizacion/module";
 import { auditoriaModule } from "@/modules/auditoria/module";
-import { eventosModule } from "@/modules/eventos/module";
+import { eventosOutboxModule } from "@/modules/eventos-outbox/module";
 import { tagModule } from "@/modules/tag/module";
 import { tareaModule } from "@/modules/tarea/module";
 import { notaModule } from "@/modules/nota/module";
@@ -20,7 +20,7 @@ export const modules: AppModule[] = [
 	usuarioModule,
 	authModule,
 	autorizacionModule,
-	eventosModule,
+	eventosOutboxModule,
 	auditoriaModule,
 	tagModule,
 	tareaModule,

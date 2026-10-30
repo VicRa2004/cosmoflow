@@ -1,6 +1,8 @@
 import { Entity } from "@/core/shared/domain/Entity";
 import { EntityId } from "@/core/shared/domain/EntityId";
 import { TareaInvalidaError } from "./error/TareaInvalidaError";
+import { ResponsablesAsignadosEvent } from "./event/ResponsablesAsignadosEvent";
+import { TareaEstadoCambiadoEvent } from "./event/TareaEstadoCambiadoEvent";
 
 export const ESTADOS_TAREA = [
 	"pendiente",
@@ -158,7 +160,29 @@ export class Tarea extends Entity {
 		if (this.esPersonal() && responsableIds.length > 0) {
 			throw new TareaInvalidaError("Una tarea personal no tiene responsables");
 		}
-		this.responsableIds = [...new Set(responsableIds)];
+		const unicos = [...new Set(responsableIds)];
+		const nuevos = unicos.filter((id) => !this.responsableIds.includes(id));
+		this.responsableIds = unicos;
+		// Al crear aún no hay id: el caso de uso avisa tras guardar (`agregarEventoCreada`).
+		if (nuevos.length > 0 && this.id.isPersisted()) {
+			this.addDomainEvent(
+				new ResponsablesAsignadosEvent({
+					tareaId: this.getId(),
+					usuarioIds: nuevos,
+				}),
+			);
+		}
+	}
+
+	/** Tras guardarla por primera vez: sus responsables son todos nuevos. */
+	public agregarEventoCreada(): void {
+		if (this.responsableIds.length === 0) return;
+		this.addDomainEvent(
+			new ResponsablesAsignadosEvent({
+				tareaId: this.getId(),
+				usuarioIds: [...this.responsableIds],
+			}),
+		);
 	}
 
 	getDatos(): DatosTarea {
@@ -167,7 +191,18 @@ export class Tarea extends Entity {
 
 	/** `undefined` deja el campo como está; `null` vacía una fecha. */
 	public actualizar(cambios: Partial<DatosTarea>): void {
+		const anterior = this.datos.estado;
 		this.datos = Tarea.validar({ ...this.datos, ...sinIndefinidos(cambios) });
+		if (this.datos.estado !== anterior && this.id.isPersisted()) {
+			this.addDomainEvent(
+				new TareaEstadoCambiadoEvent({
+					tareaId: this.getId(),
+					creadorId: this.usuarioId,
+					anterior,
+					nuevo: this.datos.estado,
+				}),
+			);
+		}
 	}
 
 	private static validar(datos: DatosTarea): DatosTarea {

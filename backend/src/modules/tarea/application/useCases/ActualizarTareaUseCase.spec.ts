@@ -39,8 +39,11 @@ const preparar = (
 				: null,
 		),
 	};
+	const eventBus = { publish: mock(), publishAll: mock(async () => {}) };
+	const uow = { ejecutar: <T>(fn: () => Promise<T>) => fn() };
 	return {
 		repo,
+		eventBus,
 		useCase: new ActualizarTareaUseCase(
 			repo as never,
 			new ContextosTarea(
@@ -48,11 +51,43 @@ const preparar = (
 				{ contexto: mock(async () => null) },
 				{ contexto: mock(async () => null) },
 			),
+			eventBus,
+			uow,
 		),
 	};
 };
 
 describe("ActualizarTareaUseCase", () => {
+	it("publica los responsables nuevos y el cambio de estado", async () => {
+		const tarea = Tarea.reconstituir(
+			1,
+			OTRO,
+			deEquipo().getDatos(),
+			deEquipo().getUbicacion(),
+			[OTRO],
+		);
+		const { useCase, eventBus } = preparar(tarea);
+		await useCase.ejecutar(USUARIO, 1, {
+			estado: "completada",
+			responsableIds: [OTRO, USUARIO],
+		});
+		expect(eventBus.publishAll).toHaveBeenCalledWith([
+			expect.objectContaining({
+				eventName: "tarea.responsablesAsignados",
+				data: { tareaId: 1, usuarioIds: [USUARIO] },
+			}),
+			expect.objectContaining({
+				eventName: "tarea.estadoCambiado",
+				data: {
+					tareaId: 1,
+					creadorId: OTRO,
+					anterior: "pendiente",
+					nuevo: "completada",
+				},
+			}),
+		]);
+	});
+
 	it("actualiza solo los campos enviados", async () => {
 		const { useCase } = preparar(personal());
 		const dto = await useCase.ejecutar(USUARIO, 1, { estado: "completada" });

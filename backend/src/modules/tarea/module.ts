@@ -25,15 +25,17 @@ export const tareaModule: AppModule = {
 			container.get(PROYECTO_TOKENS.TareasProyecto),
 			container.get(ORGANIZACION_TOKENS.TareasOrganizacion),
 		);
+		const eventBus = container.get(TOKENS.EventBus);
+		const uow = container.get(TOKENS.UnitOfWork);
 		const router = new TareaRouter(
 			container.get(AUTH_TOKENS.AuthMiddleware),
 			container.get(TOKENS.PermisoGuard),
 			new TareaController({
-				crear: new CrearTareaUseCase(repo, contextos),
+				crear: new CrearTareaUseCase(repo, contextos, eventBus, uow),
 				obtenerTodos: new ObtenerTareasUseCase(repo, contextos),
 				obtenerPendientes: new ObtenerPendientesUseCase(repo),
 				obtenerUno: new ObtenerTareaUseCase(repo, contextos),
-				actualizar: new ActualizarTareaUseCase(repo, contextos),
+				actualizar: new ActualizarTareaUseCase(repo, contextos, eventBus, uow),
 				eliminar: new EliminarTareaUseCase(repo, contextos),
 				mover: new MoverTareaUseCase(
 					repo,

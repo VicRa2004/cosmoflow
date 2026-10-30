@@ -1,6 +1,13 @@
 import { beforeAll, describe, expect, it } from "bun:test";
 import { prisma } from "@/core/config/prisma";
-import { api, crearUsuario, login, PASSWORD, vaciarUsuarios } from "@/test/e2e";
+import {
+	api,
+	crearUsuario,
+	despacharEventos,
+	login,
+	PASSWORD,
+	vaciarUsuarios,
+} from "@/test/e2e";
 
 describe("Auditoría y borrado lógico (e2e)", () => {
 	let adminId: number;
@@ -9,6 +16,7 @@ describe("Auditoría y borrado lógico (e2e)", () => {
 	beforeAll(async () => {
 		await vaciarUsuarios();
 		await prisma.auditoria.deleteMany();
+		await prisma.eventoOutbox.deleteMany();
 		adminId = (await crearUsuario("admin@e2e.dev", "ADMIN")).id;
 		await crearUsuario("nobody@e2e.dev");
 		adminToken = await login("admin@e2e.dev");
@@ -28,6 +36,7 @@ describe("Auditoría y borrado lógico (e2e)", () => {
 		});
 		const { id } = await creado.json();
 		await api(`/api/usuarios/${id}`, { method: "DELETE", token: adminToken });
+		await despacharEventos();
 
 		const res = await api("/api/auditoria?evento=usuario.eliminado", {
 			token: adminToken,

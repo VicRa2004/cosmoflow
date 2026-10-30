@@ -1,3 +1,5 @@
+import type { EventBus } from "@/core/shared/domain/events/EventBus";
+import type { UnitOfWork } from "@/core/shared/domain/UnitOfWork";
 import { SinPermisoTareasError } from "../../domain/error/SinPermisoTareasError";
 import type { TareaRepository } from "../../domain/repository/TareaRepository";
 import type { ActualizarTareaDto } from "../dtos/ActualizarTareaDto";
@@ -12,6 +14,8 @@ export class ActualizarTareaUseCase {
 	constructor(
 		private readonly tareaRepository: TareaRepository,
 		private readonly contextos: ContextosTarea,
+		private readonly eventBus: EventBus,
+		private readonly uow: UnitOfWork,
 	) {}
 
 	async ejecutar(
@@ -32,6 +36,11 @@ export class ActualizarTareaUseCase {
 		}
 		tarea.actualizar(campos);
 		await validarTarea(this.tareaRepository, tarea, contexto);
-		return TareaMapper.toDto(await this.tareaRepository.actualizar(tarea));
+		const actualizada = await this.uow.ejecutar(async () => {
+			const actualizada = await this.tareaRepository.actualizar(tarea);
+			await this.eventBus.publishAll(tarea.pullDomainEvents());
+			return actualizada;
+		});
+		return TareaMapper.toDto(actualizada);
 	}
 }

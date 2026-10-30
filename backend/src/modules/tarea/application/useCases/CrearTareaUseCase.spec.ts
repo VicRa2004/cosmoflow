@@ -43,23 +43,34 @@ const preparar = ({
 				: null,
 		),
 	};
+	const eventBus = { publish: mock(), publishAll: mock(async () => {}) };
+	const uow = { ejecutar: <T>(fn: () => Promise<T>) => fn() };
 	return {
 		repo,
+		eventBus,
 		useCase: new CrearTareaUseCase(
 			repo as never,
 			new ContextosTarea(equipos, proyectos, organizaciones),
+			eventBus,
+			uow,
 		),
 	};
 };
 
 describe("CrearTareaUseCase", () => {
 	it("crea la tarea de la organización, sin equipo ni proyecto, con responsables de sus miembros", async () => {
-		const { useCase } = preparar();
+		const { useCase, eventBus } = preparar();
 		const tarea = await useCase.ejecutar(USUARIO, {
 			titulo: "Demo",
 			organizacionId: ORGANIZACION,
 			responsableIds: [9],
 		});
+		expect(eventBus.publishAll).toHaveBeenCalledWith([
+			expect.objectContaining({
+				eventName: "tarea.responsablesAsignados",
+				data: { tareaId: 1, usuarioIds: [9] },
+			}),
+		]);
 		expect(tarea).toMatchObject({
 			organizacionId: ORGANIZACION,
 			equipoId: null,

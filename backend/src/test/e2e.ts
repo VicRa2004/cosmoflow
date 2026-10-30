@@ -1,5 +1,7 @@
 import bcrypt from "bcrypt";
 import { prisma } from "@/core/config/prisma";
+import { container } from "@/core/shared/infrastructure/di/container";
+import { TOKENS } from "@/core/shared/infrastructure/di/tokens";
 import { app } from "@/core/shared/infrastructure/http/server";
 
 /** Helpers de los `*.e2e.spec.ts`: app real (contenedor DI + Prisma) contra la BD de test. */
@@ -16,6 +18,20 @@ let ultimaIp = 0;
  */
 export async function vaciarUsuarios(): Promise<void> {
 	await prisma.$executeRawUnsafe('TRUNCATE "usuario" RESTART IDENTITY CASCADE');
+}
+
+/**
+ * Con `eventos-outbox` los eventos se entregan desde el `Scheduler`, que en los e2e no
+ * arranca: esto los entrega ya. Con el bus en memoria no hace nada.
+ */
+export async function despacharEventos(): Promise<void> {
+	const bus = container.get(TOKENS.EventBus);
+	if (
+		"despacharPendientes" in bus &&
+		typeof bus.despacharPendientes === "function"
+	) {
+		while ((await bus.despacharPendientes()) > 0);
+	}
 }
 
 /** Crea un usuario directamente en BD, con el rol indicado o sin ninguno. */
