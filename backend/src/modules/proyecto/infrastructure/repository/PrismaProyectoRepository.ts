@@ -153,10 +153,15 @@ export class PrismaProyectoRepository implements ProyectoRepository {
 					where: { equipo: { deletedAt: null } },
 					select: { equipoId: true },
 				},
+				integrantes: { select: { usuarioId: true } },
 			},
 		});
 		return proyectos
-			.filter((p) => p.equipos.every((e) => e.equipoId === equipoId))
+			.filter(
+				(p) =>
+					p.integrantes.length === 0 &&
+					p.equipos.every((e) => e.equipoId === equipoId),
+			)
 			.map((p) => p.nombre);
 	}
 }

@@ -17,6 +17,6 @@ export interface ProyectoRepository {
 	sonEquipos(organizacionId: number, equipoIds: number[]): Promise<boolean>;
 	/** Todos son miembros de la organización. */
 	sonMiembros(organizacionId: number, usuarioIds: number[]): Promise<boolean>;
-	/** Nombres de los proyectos cuyo único equipo es este. */
+	/** Nombres de los proyectos cuyo único integrante es este equipo: sin otro equipo ni personas sueltas. */
 	proyectosSoloCon(organizacionId: number, equipoId: number): Promise<string[]>;
 }

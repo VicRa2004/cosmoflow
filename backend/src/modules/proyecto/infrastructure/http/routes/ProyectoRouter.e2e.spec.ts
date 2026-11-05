@@ -75,11 +75,12 @@ describe("Proyectos (e2e)", () => {
 		ajeno = await equipo(otra, t.zoe, [id.zoe, id.yan]);
 	});
 
-	it("crear exige un equipo de la organización y proyectos:crear (RN-31)", async () => {
+	it("crear exige un integrante de la organización y proyectos:crear (RN-31)", async () => {
 		const ruta = org(acme, "/proyectos");
 		expect(
 			(await post(ruta, t.ana, { nombre: "X", equipoIds: [] })).status,
 		).toBe(400);
+		expect((await post(ruta, t.ana, { nombre: "X" })).status).toBe(400);
 		expect(
 			(await post(ruta, t.ana, { nombre: "X", equipoIds: [ajeno] })).status,
 		).toBe(400);
@@ -113,7 +114,48 @@ describe("Proyectos (e2e)", () => {
 		expect(terminados).toEqual([]);
 	});
 
-	it("no se elimina el único equipo de un proyecto; con otro, sí", async () => {
+	it("un proyecto puede tener solo integrantes sueltos, sin equipo (RN-31)", async () => {
+		const crear = await post(org(acme, "/proyectos"), t.ana, {
+			nombre: "Solo personas",
+			integranteIds: [id.ana],
+		});
+		expect(crear.status).toBe(201);
+		const proyecto = await crear.json();
+		expect(proyecto).toMatchObject({ equipoIds: [], integranteIds: [id.ana] });
+		const borrar = await api(org(acme, `/proyectos/${proyecto.id}`), {
+			method: "DELETE",
+			token: t.ana,
+		});
+		expect(borrar.status).toBe(204);
+	});
+
+	it("se elimina el único equipo de un proyecto si le quedan personas (RN-31)", async () => {
+		const temporal = await (
+			await post(org(acme, "/equipos"), t.ana, {
+				nombre: "Temporal",
+				color: "#6366f1",
+				miembroIds: [id.ana, id.beto],
+			})
+		).json();
+		const proyecto = await (
+			await post(org(acme, "/proyectos"), t.ana, {
+				nombre: "Con persona",
+				equipoIds: [temporal.id],
+				integranteIds: [id.caro],
+			})
+		).json();
+		const borrar = await api(org(acme, `/equipos/${temporal.id}`), {
+			method: "DELETE",
+			token: t.ana,
+		});
+		expect(borrar.status).toBe(204);
+		await api(org(acme, `/proyectos/${proyecto.id}`), {
+			method: "DELETE",
+			token: t.ana,
+		});
+	});
+
+	it("no se elimina el único equipo de un proyecto sin personas; con otro, sí", async () => {
 		const [proyecto] = await (
 			await api(org(acme, "/proyectos"), { token: t.ana })
 		).json();

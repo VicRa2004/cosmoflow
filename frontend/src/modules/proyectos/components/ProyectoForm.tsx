@@ -22,7 +22,7 @@ interface ProyectoFormProps {
 	onGuardado: () => void;
 }
 
-/** Datos, estado, equipos (al menos uno) e integrantes sueltos. */
+/** Datos, estado y sus integrantes: equipos, personas sueltas o ambos (RN-31, 32). */
 export function ProyectoForm({
 	organizacionId,
 	inicial,
@@ -67,11 +67,11 @@ export function ProyectoForm({
 				<form.Field name="equipoIds">
 					{(campo) => (
 						<CasillasIds
-							leyenda="Equipos (al menos uno)"
+							leyenda="Equipos"
 							opciones={equipos.map((e) => ({ id: e.id, etiqueta: e.nombre }))}
 							valor={campo.state.value}
 							onChange={campo.handleChange}
-							vacio="Crea antes un equipo en la organización."
+							vacio="La organización aún no tiene equipos."
 							error={primerError(campo.state.meta.errors)}
 						/>
 					)}
@@ -79,13 +79,14 @@ export function ProyectoForm({
 				<form.Field name="integranteIds">
 					{(campo) => (
 						<CasillasIds
-							leyenda="Integrantes sueltos (opcional)"
+							leyenda="Personas sueltas"
 							opciones={miembros.map((m) => ({
 								id: m.usuarioId,
 								etiqueta: m.nombre,
 							}))}
 							valor={campo.state.value}
 							onChange={campo.handleChange}
+							error={primerError(campo.state.meta.errors)}
 						/>
 					)}
 				</form.Field>

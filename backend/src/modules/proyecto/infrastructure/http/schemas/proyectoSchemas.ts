@@ -13,7 +13,6 @@ const nombre = z
 const descripcion = z.string().trim().max(500, "Máximo 500 caracteres");
 const estado = z.enum(ESTADOS_PROYECTO).openapi("EstadoProyecto");
 const ids = z.array(z.number().int().positive()).max(500);
-const equipoIds = ids.min(1, "Un proyecto necesita al menos un equipo");
 
 export const organizacionIdParamSchema = z.object({ organizacionId: idParam });
 export const proyectoParamsSchema = organizacionIdParamSchema.extend({
@@ -24,7 +23,8 @@ export const crearProyectoSchema = z.object({
 	nombre,
 	descripcion: descripcion.optional().default(""),
 	estado: estado.optional().default("activo"),
-	equipoIds,
+	// RN-31 («al menos un equipo o una persona») la comprueba `Proyecto`.
+	equipoIds: ids.optional().default([]),
 	integranteIds: ids.optional().default([]),
 });
 
@@ -32,7 +32,7 @@ export const actualizarProyectoSchema = z.object({
 	nombre: nombre.optional(),
 	descripcion: descripcion.optional(),
 	estado: estado.optional(),
-	equipoIds: equipoIds.optional(),
+	equipoIds: ids.optional(),
 	integranteIds: ids.optional(),
 });
 

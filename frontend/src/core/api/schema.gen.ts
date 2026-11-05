@@ -5944,7 +5944,7 @@ export interface paths {
                         "application/json": components["schemas"]["ErrorResponse"];
                     };
                 };
-                /** @description Es el único equipo de algún proyecto (RN-31) */
+                /** @description Es el único integrante de algún proyecto (RN-31) */
                 409: {
                     headers: {
                         [name: string]: unknown;
@@ -6118,7 +6118,8 @@ export interface paths {
                         /** @default  */
                         descripcion?: string;
                         estado?: components["schemas"]["EstadoProyecto"];
-                        equipoIds: number[];
+                        /** @default [] */
+                        equipoIds?: number[];
                         /** @default [] */
                         integranteIds?: number[];
                     };

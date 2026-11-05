@@ -12,7 +12,7 @@ import { ProyectoMapper } from "../mappers/ProyectoMapper";
 import { buscarProyecto } from "./buscarProyecto";
 import { validarReferencias } from "./validarReferencias";
 
-/** Datos, estado, equipos (sin bajar de uno) e integrantes (`proyectos:editar`). */
+/** Datos, estado, equipos e integrantes, sin quedarse sin ninguno (`proyectos:editar`). */
 export class ActualizarProyectoUseCase {
 	constructor(
 		private readonly proyectoRepository: ProyectoRepository,

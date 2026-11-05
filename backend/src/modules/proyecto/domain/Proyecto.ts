@@ -16,7 +16,7 @@ interface DatosProyecto {
 
 export type CambiosProyecto = Partial<DatosProyecto>;
 
-/** Trabajo de una organización (RN-30) con al menos un equipo (RN-31). */
+/** Trabajo de una organización (RN-30) con al menos un integrante: un equipo o una persona suelta (RN-31). */
 export class Proyecto extends Entity {
 	private datos: DatosProyecto;
 
@@ -69,9 +69,12 @@ export class Proyecto extends Entity {
 
 	public actualizar(cambios: CambiosProyecto): void {
 		const equipoIds = [...new Set(cambios.equipoIds ?? this.datos.equipoIds)];
-		if (equipoIds.length === 0) {
+		const integranteIds = [
+			...new Set(cambios.integranteIds ?? this.datos.integranteIds),
+		];
+		if (equipoIds.length === 0 && integranteIds.length === 0) {
 			throw new ProyectoInvalidoError(
-				"Un proyecto necesita al menos un equipo",
+				"Un proyecto necesita al menos un integrante: un equipo o una persona",
 			);
 		}
 		this.datos = {
@@ -79,9 +82,7 @@ export class Proyecto extends Entity {
 			descripcion: cambios.descripcion ?? this.datos.descripcion,
 			estado: cambios.estado ?? this.datos.estado,
 			equipoIds,
-			integranteIds: [
-				...new Set(cambios.integranteIds ?? this.datos.integranteIds),
-			],
+			integranteIds,
 		};
 	}
 }

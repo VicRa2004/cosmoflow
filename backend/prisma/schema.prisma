@@ -608,7 +608,7 @@ enum EstadoProyecto {
   @@map("estado_proyecto")
 }
 
-/// Trabajo dentro de una organización (RN-30), con al menos un equipo (RN-31).
+/// Trabajo dentro de una organización (RN-30), con al menos un equipo o integrante suelto (RN-31).
 model Proyecto {
   id             Int            @id @default(autoincrement()) @map("pry_id")
   organizacionId Int            @map("pry_fkorganizacion")

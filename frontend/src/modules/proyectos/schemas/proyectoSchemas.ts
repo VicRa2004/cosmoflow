@@ -8,17 +8,22 @@ export const ETIQUETA_ESTADO: Record<EstadoProyecto, string> = {
 };
 
 /** Valida el formulario y lo convierte al cuerpo de la API (RN-31, 32). */
-export const proyectoFormSchema = z.object({
-	nombre: z
-		.string()
-		.trim()
-		.min(1, "Obligatorio")
-		.max(100, "Máximo 100 caracteres"),
-	descripcion: z.string().trim().max(500, "Máximo 500 caracteres"),
-	estado: z.enum(["activo", "en_pausa", "terminado"]),
-	equipoIds: z.array(z.number()).min(1, "Elige al menos un equipo"),
-	integranteIds: z.array(z.number()),
-});
+export const proyectoFormSchema = z
+	.object({
+		nombre: z
+			.string()
+			.trim()
+			.min(1, "Obligatorio")
+			.max(100, "Máximo 100 caracteres"),
+		descripcion: z.string().trim().max(500, "Máximo 500 caracteres"),
+		estado: z.enum(["activo", "en_pausa", "terminado"]),
+		equipoIds: z.array(z.number()),
+		integranteIds: z.array(z.number()),
+	})
+	.refine((d) => d.equipoIds.length + d.integranteIds.length > 0, {
+		message: "Elige al menos un equipo o una persona",
+		path: ["integranteIds"],
+	});
 
 export type ProyectoFormValues = z.input<typeof proyectoFormSchema>;
 
