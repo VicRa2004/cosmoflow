@@ -5,14 +5,18 @@ import { USUARIO_TOKENS } from "@/core/usuario";
 import { EmisorCorreosCuenta } from "./application/services/EmisorCorreosCuenta";
 import { EmisorSesion } from "./application/services/EmisorSesion";
 import { CambiarPasswordUseCase } from "./application/useCases/CambiarPasswordUseCase";
+import { AutenticarTokenPersonalUseCase } from "./application/useCases/AutenticarTokenPersonalUseCase";
 import { CerrarSesionesUseCase } from "./application/useCases/CerrarSesionesUseCase";
+import { CrearTokenPersonalUseCase } from "./application/useCases/CrearTokenPersonalUseCase";
 import { LoginGoogleUseCase } from "./application/useCases/LoginGoogleUseCase";
 import { LoginUseCase } from "./application/useCases/LoginUseCase";
 import { LogoutUseCase } from "./application/useCases/LogoutUseCase";
+import { ObtenerTokensPersonalesUseCase } from "./application/useCases/ObtenerTokensPersonalesUseCase";
 import { RefreshTokenUseCase } from "./application/useCases/RefreshTokenUseCase";
 import { ReenviarVerificacionUseCase } from "./application/useCases/ReenviarVerificacionUseCase";
 import { RegistroUseCase } from "./application/useCases/RegistroUseCase";
 import { RestablecerPasswordUseCase } from "./application/useCases/RestablecerPasswordUseCase";
+import { RevocarTokenPersonalUseCase } from "./application/useCases/RevocarTokenPersonalUseCase";
 import { SolicitarRecuperacionUseCase } from "./application/useCases/SolicitarRecuperacionUseCase";
 import { VerificarEmailUseCase } from "./application/useCases/VerificarEmailUseCase";
 import { CuentaController } from "./infrastructure/http/controllers/CuentaController";
@@ -21,10 +25,13 @@ import { LoginController } from "./infrastructure/http/controllers/LoginControll
 import { LogoutController } from "./infrastructure/http/controllers/LogoutController";
 import { RefreshTokenController } from "./infrastructure/http/controllers/RefreshTokenController";
 import { RegistroController } from "./infrastructure/http/controllers/RegistroController";
+import { TokenPersonalController } from "./infrastructure/http/controllers/TokenPersonalController";
 import { AuthMiddleware } from "./infrastructure/http/middlewares/authMiddleware";
 import { AuthRouter } from "./infrastructure/http/routes/AuthRouter";
+import { TokenPersonalRouter } from "./infrastructure/http/routes/TokenPersonalRouter";
 import { PrismaCuentaRepository } from "./infrastructure/repository/PrismaCuentaRepository";
 import { PrismaRefreshTokenRepository } from "./infrastructure/repository/PrismaRefreshTokenRepository";
+import { PrismaTokenPersonalRepository } from "./infrastructure/repository/PrismaTokenPersonalRepository";
 import { GoogleOAuthService } from "./infrastructure/service/GoogleOAuthService";
 import { JwtService } from "./infrastructure/service/JwtService";
 import { AUTH_TOKENS } from "./infrastructure/tokens";
@@ -33,6 +40,7 @@ import { AUTH_TOKENS } from "./infrastructure/tokens";
 const tokenService = new JwtService();
 const refreshTokenRepo = new PrismaRefreshTokenRepository();
 const cuentaRepo = new PrismaCuentaRepository();
+const tokenPersonalRepo = new PrismaTokenPersonalRepository();
 const google =
 	env.GOOGLE_CLIENT_ID && env.GOOGLE_CLIENT_SECRET
 		? new GoogleOAuthService(
@@ -46,7 +54,15 @@ export const authModule: AppModule = {
 	register(container) {
 		container.set(
 			AUTH_TOKENS.AuthMiddleware,
-			() => new AuthMiddleware(tokenService),
+			() =>
+				new AuthMiddleware(
+					tokenService,
+					new AutenticarTokenPersonalUseCase(
+						tokenService,
+						tokenPersonalRepo,
+						container.get(USUARIO_TOKENS.UsuarioRepository),
+					),
+				),
 		);
 	},
 	mount(app, container) {
@@ -117,6 +133,17 @@ export const authModule: AppModule = {
 			container.get(AUTH_TOKENS.AuthMiddleware),
 		);
 		app.route("/api/auth", router.router);
+		app.route(
+			"/api/tokens-personales",
+			new TokenPersonalRouter(
+				container.get(AUTH_TOKENS.AuthMiddleware),
+				new TokenPersonalController({
+					crear: new CrearTokenPersonalUseCase(tokenService, tokenPersonalRepo),
+					obtenerTodos: new ObtenerTokensPersonalesUseCase(tokenPersonalRepo),
+					revocar: new RevocarTokenPersonalUseCase(tokenPersonalRepo),
+				}),
+			).router,
+		);
 	},
 	onStart(container) {
 		container

@@ -1,13 +1,36 @@
 import { apiClient } from "@/core/api/client";
 import type { AuthResponse } from "@/core/auth/types";
 import type { AuthTokens } from "@/core/auth/types";
+import type { components } from "@/core/api/schema.gen";
 import type { LoginInput, RegistroInput } from "../schemas/authSchemas";
 
 interface Mensaje {
 	mensaje: string;
 }
 
+export type TokenPersonal = components["schemas"]["TokenPersonalDto"];
+type TokenPersonalCreado = components["schemas"]["TokenPersonalCreado"];
+
 export const authApi = {
+	async tokensPersonales(): Promise<TokenPersonal[]> {
+		const response = await apiClient.get<TokenPersonal[]>("/tokens-personales");
+		return response.data;
+	},
+
+	async crearTokenPersonal(data: {
+		nombre: string;
+	}): Promise<TokenPersonalCreado> {
+		const response = await apiClient.post<TokenPersonalCreado>(
+			"/tokens-personales",
+			data,
+		);
+		return response.data;
+	},
+
+	async revocarTokenPersonal(id: number): Promise<void> {
+		await apiClient.delete(`/tokens-personales/${id}`);
+	},
+
 	async login(credentials: LoginInput): Promise<AuthResponse> {
 		const response = await apiClient.post<AuthResponse>(
 			"/auth/login",

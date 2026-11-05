@@ -54,6 +54,14 @@ export const cambiarPasswordSchema = z
 		path: ["confirmacion"],
 	});
 
+export const tokenPersonalSchema = z.object({
+	nombre: z
+		.string()
+		.trim()
+		.min(1, "El nombre es obligatorio")
+		.max(100, "Máximo 100 caracteres"),
+});
+
 export type LoginInput = z.infer<typeof loginSchema>;
 export type RegistroInput = z.infer<typeof registroSchema>;
 export type RestablecerPasswordInput = z.infer<

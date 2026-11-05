@@ -10,6 +10,7 @@ RUN npm install -g pnpm@11.25.0
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 COPY backend/package.json backend/
 COPY frontend/package.json frontend/
+COPY mcp/package.json mcp/
 COPY backend/prisma backend/prisma
 COPY backend/prisma.config.ts backend/
 RUN pnpm install --frozen-lockfile
@@ -17,7 +18,7 @@ RUN pnpm install --frozen-lockfile
 COPY backend backend
 COPY frontend frontend
 RUN pnpm --filter frontend build \
-	&& rm -rf node_modules backend/node_modules frontend/node_modules \
+	&& rm -rf node_modules backend/node_modules frontend/node_modules mcp/node_modules \
 	&& pnpm install --frozen-lockfile --offline --filter backend...
 
 # 2. Runtime: sólo Bun. Se conservan las devDependencies del backend porque el CLI

@@ -23,6 +23,7 @@ const EXENTOS: Record<string, string> = {
 	// Técnicas: no son datos del usuario y caducan o se purgan solas.
 	RefreshToken: "técnica",
 	TokenCuenta: "técnica",
+	TokenPersonal: "técnica: revocarlo lo invalida (`revocadoEn`)",
 	EventoOutbox: "técnica",
 	NotificacionEnviada: "técnica: claves de idempotencia que se purgan",
 	VinculoTelegram: "técnica: desvincular borra el vínculo",

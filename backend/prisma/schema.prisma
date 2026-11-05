@@ -37,6 +37,7 @@ model Usuario {
   permisosDirectos         UsuarioPermiso[]
   refreshTokens            RefreshToken[]
   tokensCuenta             TokenCuenta[]
+  tokensPersonales         TokenPersonal[]
   tags                     Tag[]
   tareas                   Tarea[]
   notas                    Nota[]
@@ -162,6 +163,24 @@ model TokenCuenta {
 
   @@index([usuarioId, tipo])
   @@map("token_cuenta")
+}
+
+/// Token personal de larga duración para clientes de la API (servidor MCP).
+/// Se guarda el hash, nunca el token en claro. Revocar lo invalida al instante.
+model TokenPersonal {
+  id         Int       @id @default(autoincrement()) @map("tkp_id")
+  nombre     String    @map("tkp_nombre") @db.VarChar(100)
+  tokenHash  String    @unique @map("tkp_token_hash") @db.VarChar(128)
+  /// Últimos 4 caracteres, para reconocerlo en la lista
+  pista      String    @map("tkp_pista") @db.VarChar(4)
+  usuarioId  Int       @map("tkp_fkusuario")
+  revocadoEn DateTime? @map("tkp_revocado_en")
+  createdAt  DateTime  @default(now()) @map("tkp_created_at")
+
+  usuario Usuario @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+
+  @@index([usuarioId])
+  @@map("token_personal")
 }
 
 // ─────────────────────────────────────────────
