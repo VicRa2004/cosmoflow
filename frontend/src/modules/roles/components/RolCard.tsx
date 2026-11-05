@@ -53,12 +53,14 @@ export function RolCard({ rol, permisos }: RolCardProps) {
 				<Input
 					id={`rol-${rol.id}-nombre`}
 					label="Nombre"
+					placeholder="SOPORTE"
 					value={nombre}
 					onChange={(e) => setNombre(e.target.value)}
 				/>
 				<Input
 					id={`rol-${rol.id}-descripcion`}
 					label="Descripción"
+					placeholder="Opcional"
 					value={descripcion}
 					onChange={(e) => setDescripcion(e.target.value)}
 				/>

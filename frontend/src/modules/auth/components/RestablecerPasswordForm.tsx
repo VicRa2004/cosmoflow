@@ -27,6 +27,7 @@ export function RestablecerPasswordForm({ token }: { token: string }) {
 						<campo.CampoTexto
 							label="Nueva contraseña"
 							type="password"
+							placeholder="••••••••••••"
 							autoComplete="new-password"
 							helperText="Al menos 12 caracteres con mayúscula, número y símbolo."
 						/>
@@ -37,6 +38,7 @@ export function RestablecerPasswordForm({ token }: { token: string }) {
 						<campo.CampoTexto
 							label="Repite la contraseña"
 							type="password"
+							placeholder="La misma de arriba"
 							autoComplete="new-password"
 						/>
 					)}

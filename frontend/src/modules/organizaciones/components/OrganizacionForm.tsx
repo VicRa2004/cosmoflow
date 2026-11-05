@@ -42,11 +42,21 @@ export function OrganizacionForm({
 		<form.AppForm>
 			<form.Formulario className="space-y-4">
 				<form.AppField name="nombre">
-					{(campo) => <campo.CampoTexto label="Nombre" maxLength={100} />}
+					{(campo) => (
+						<campo.CampoTexto
+							label="Nombre"
+							placeholder="Ej.: Acme S.L."
+							maxLength={100}
+						/>
+					)}
 				</form.AppField>
 				<form.AppField name="descripcion">
 					{(campo) => (
-						<campo.CampoTexto label="Descripción (opcional)" maxLength={500} />
+						<campo.CampoTexto
+							label="Descripción (opcional)"
+							placeholder="¿A qué se dedica la organización?"
+							maxLength={500}
+						/>
 					)}
 				</form.AppField>
 				<form.AppField name="color">

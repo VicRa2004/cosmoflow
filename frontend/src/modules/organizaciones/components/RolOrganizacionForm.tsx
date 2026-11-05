@@ -65,7 +65,13 @@ export function RolOrganizacionForm({
 					</Select>
 				)}
 				<form.AppField name="nombre">
-					{(campo) => <campo.CampoTexto label="Nombre" maxLength={64} />}
+					{(campo) => (
+						<campo.CampoTexto
+							label="Nombre"
+							placeholder="Ej.: Coordinación"
+							maxLength={64}
+						/>
+					)}
 				</form.AppField>
 				<form.Field name="permisos">
 					{(campo) => (

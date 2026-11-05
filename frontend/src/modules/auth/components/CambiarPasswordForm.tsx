@@ -57,6 +57,7 @@ export function CambiarPasswordForm() {
 								<campo.CampoTexto
 									label={label}
 									type="password"
+									placeholder="••••••••••••"
 									autoComplete={auto}
 								/>
 							)}
