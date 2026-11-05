@@ -46,7 +46,7 @@ export function NotasTable({
 		{
 			cabecera: "Nota",
 			celda: (fila) => (
-				<div className="max-w-xl">
+				<div className="max-w-[calc(100vw-11rem)] sm:max-w-md lg:max-w-xl">
 					<button
 						type="button"
 						onClick={() => onAbrir(fila)}
@@ -64,13 +64,14 @@ export function NotasTable({
 		},
 		{
 			cabecera: "Tags",
+			className: "hidden sm:table-cell",
 			celda: (fila) => (
 				<TagsBadges tagIds={fila.tagIds} organizacionId={fila.organizacionId} />
 			),
 		},
 		{
 			cabecera: "Editada",
-			className: "whitespace-nowrap text-tinta-suave",
+			className: "hidden whitespace-nowrap text-tinta-suave sm:table-cell",
 			celda: (fila) => formatearFecha(fila.updatedAt),
 		},
 		{

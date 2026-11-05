@@ -87,7 +87,8 @@ export function Tabla<T>({
 
 	return (
 		<div className="space-y-4">
-			<div className="overflow-x-auto rounded-lg border border-borde bg-superficie">
+			{/* `relative`: sin él, el `sr-only` (absoluto) de una cabecera escapa del scroll y ensancha la página. */}
+			<div className="relative overflow-x-auto rounded-lg border border-borde bg-superficie">
 				<table className="w-full text-left text-sm" aria-label={etiqueta}>
 					<thead className="border-b border-borde text-xs text-tinta-tenue">
 						<tr>

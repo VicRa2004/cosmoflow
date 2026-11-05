@@ -38,7 +38,7 @@ export function UsuariosTable({
 		{
 			cabecera: "ID",
 			celda: (u) => `#${u.id}`,
-			className: "font-mono text-xs text-tinta-tenue",
+			className: "hidden font-mono text-xs text-tinta-tenue md:table-cell",
 		},
 		{
 			cabecera: "Usuario",
@@ -46,13 +46,23 @@ export function UsuariosTable({
 			celda: (u) => (
 				<div className="flex items-center gap-2.5">
 					<Avatar nombre={u.nombre} url={u.avatarUrl} />
-					<span>{u.nombre}</span>
+					<div className="min-w-0">
+						<p>{u.nombre}</p>
+						<p className="break-all text-xs font-normal text-tinta-tenue md:hidden">
+							{u.email}
+						</p>
+					</div>
 				</div>
 			),
 		},
-		{ cabecera: "Correo", celda: (u) => u.email },
+		{
+			cabecera: "Correo",
+			className: "hidden md:table-cell",
+			celda: (u) => u.email,
+		},
 		{
 			cabecera: "Rol",
+			className: "hidden sm:table-cell",
 			celda: (u) => (
 				<Badge variant={varianteRol(u.roles)} className="gap-1">
 					<Shield className="h-3 w-3" />
@@ -62,6 +72,7 @@ export function UsuariosTable({
 		},
 		{
 			cabecera: "Estado",
+			className: "hidden sm:table-cell",
 			celda: (u) => (
 				<Badge variant={u.isActivo ? "success" : "danger"}>
 					{u.isActivo ? "Activo" : "Inactivo"}
@@ -79,9 +90,10 @@ export function UsuariosTable({
 									variant="ghost"
 									size="sm"
 									onClick={() => onGestionarPermisos(u)}
+									aria-label={`Permisos de ${u.nombre}`}
 								>
 									<KeyRound className="h-3.5 w-3.5" />
-									Permisos
+									<span className="hidden sm:inline">Permisos</span>
 								</Button>
 							</AccionesFila>
 						),
