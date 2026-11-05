@@ -1,7 +1,12 @@
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import type { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
 import { z } from "zod";
-import type { Api } from "./api";
+
+export type Api = (
+	metodo: "GET" | "POST" | "PUT",
+	ruta: string,
+	cuerpo?: unknown,
+) => Promise<unknown>;
 
 const paginacion = {
 	pagina: z.number().int().positive().default(1),
@@ -32,7 +37,7 @@ const consulta = (valores: Record<string, string | number | undefined>) => {
 	return parametros.toString();
 };
 
-/** Todo pasa por la API REST con el token del usuario: mismos permisos, nunca más. */
+/** Todo pasa por la API REST con el token del usuario: mismos permisos y validaciones, nunca más. */
 export function registrarHerramientas(servidor: McpServer, api: Api): void {
 	servidor.registerTool(
 		"listar_pendientes",

@@ -53,6 +53,10 @@ const google =
 export const authModule: AppModule = {
 	register(container) {
 		container.set(
+			AUTH_TOKENS.CrearTokenPersonal,
+			() => new CrearTokenPersonalUseCase(tokenService, tokenPersonalRepo),
+		);
+		container.set(
 			AUTH_TOKENS.AuthMiddleware,
 			() =>
 				new AuthMiddleware(
@@ -138,7 +142,7 @@ export const authModule: AppModule = {
 			new TokenPersonalRouter(
 				container.get(AUTH_TOKENS.AuthMiddleware),
 				new TokenPersonalController({
-					crear: new CrearTokenPersonalUseCase(tokenService, tokenPersonalRepo),
+					crear: container.get(AUTH_TOKENS.CrearTokenPersonal),
 					obtenerTodos: new ObtenerTokensPersonalesUseCase(tokenPersonalRepo),
 					revocar: new RevocarTokenPersonalUseCase(tokenPersonalRepo),
 				}),

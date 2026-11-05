@@ -16,6 +16,7 @@ import { Route as RecuperarPasswordRouteImport } from './routes/recuperar-passwo
 import { Route as RegistroRouteImport } from './routes/registro'
 import { Route as RestablecerPasswordRouteImport } from './routes/restablecer-password'
 import { Route as VerificarEmailRouteImport } from './routes/verificar-email'
+import { Route as AuthenticatedAutorizarConexionRouteImport } from './routes/_authenticated/autorizar-conexion'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedInvitacionRouteImport } from './routes/_authenticated/invitacion'
 import { Route as AuthenticatedPerfilRouteImport } from './routes/_authenticated/perfil'
@@ -68,6 +69,12 @@ const VerificarEmailRoute = VerificarEmailRouteImport.update({
   path: '/verificar-email',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedAutorizarConexionRoute =
+  AuthenticatedAutorizarConexionRouteImport.update({
+    id: '/autorizar-conexion',
+    path: '/autorizar-conexion',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
@@ -167,6 +174,7 @@ export interface FileRoutesByFullPath {
   '/registro': typeof RegistroRoute
   '/restablecer-password': typeof RestablecerPasswordRoute
   '/verificar-email': typeof VerificarEmailRoute
+  '/autorizar-conexion': typeof AuthenticatedAutorizarConexionRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/invitacion': typeof AuthenticatedInvitacionRoute
   '/perfil': typeof AuthenticatedPerfilRoute
@@ -192,6 +200,7 @@ export interface FileRoutesByTo {
   '/registro': typeof RegistroRoute
   '/restablecer-password': typeof RestablecerPasswordRoute
   '/verificar-email': typeof VerificarEmailRoute
+  '/autorizar-conexion': typeof AuthenticatedAutorizarConexionRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/invitacion': typeof AuthenticatedInvitacionRoute
   '/perfil': typeof AuthenticatedPerfilRoute
@@ -219,6 +228,7 @@ export interface FileRoutesById {
   '/registro': typeof RegistroRoute
   '/restablecer-password': typeof RestablecerPasswordRoute
   '/verificar-email': typeof VerificarEmailRoute
+  '/_authenticated/autorizar-conexion': typeof AuthenticatedAutorizarConexionRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/invitacion': typeof AuthenticatedInvitacionRoute
   '/_authenticated/perfil': typeof AuthenticatedPerfilRoute
@@ -246,6 +256,7 @@ export interface FileRouteTypes {
     | '/registro'
     | '/restablecer-password'
     | '/verificar-email'
+    | '/autorizar-conexion'
     | '/dashboard'
     | '/invitacion'
     | '/perfil'
@@ -271,6 +282,7 @@ export interface FileRouteTypes {
     | '/registro'
     | '/restablecer-password'
     | '/verificar-email'
+    | '/autorizar-conexion'
     | '/dashboard'
     | '/invitacion'
     | '/perfil'
@@ -297,6 +309,7 @@ export interface FileRouteTypes {
     | '/registro'
     | '/restablecer-password'
     | '/verificar-email'
+    | '/_authenticated/autorizar-conexion'
     | '/_authenticated/dashboard'
     | '/_authenticated/invitacion'
     | '/_authenticated/perfil'
@@ -377,6 +390,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/verificar-email'
       preLoaderRoute: typeof VerificarEmailRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/autorizar-conexion': {
+      id: '/_authenticated/autorizar-conexion'
+      path: '/autorizar-conexion'
+      fullPath: '/autorizar-conexion'
+      preLoaderRoute: typeof AuthenticatedAutorizarConexionRouteImport
+      parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/dashboard': {
       id: '/_authenticated/dashboard'
@@ -501,6 +521,7 @@ declare module '@tanstack/react-router' {
 }
 
 interface AuthenticatedRouteChildren {
+  AuthenticatedAutorizarConexionRoute: typeof AuthenticatedAutorizarConexionRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedInvitacionRoute: typeof AuthenticatedInvitacionRoute
   AuthenticatedPerfilRoute: typeof AuthenticatedPerfilRoute
@@ -520,6 +541,7 @@ interface AuthenticatedRouteChildren {
 }
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
+  AuthenticatedAutorizarConexionRoute: AuthenticatedAutorizarConexionRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedInvitacionRoute: AuthenticatedInvitacionRoute,
   AuthenticatedPerfilRoute: AuthenticatedPerfilRoute,

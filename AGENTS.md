@@ -1,6 +1,6 @@
 # Reglas del Monorepo (Cosmoflow)
 
-Monorepo simple con tres carpetas: `backend/`, `frontend/` y `mcp/`. Sin `apps/` ni `packages/`.
+Monorepo simple con dos carpetas: `backend/` y `frontend/`. Sin `apps/` ni `packages/`.
 
 ## Stack
 
@@ -40,7 +40,6 @@ pnpm dev:frontend       # corre el frontend con Vite (puerto 5173)
 pnpm build:frontend     # compila el frontend para producción
 pnpm test:backend       # tests del backend con Bun
 pnpm test:frontend      # tests del frontend con Vitest
-pnpm test:mcp           # tests del servidor MCP con Bun
 pnpm test:e2e           # e2e del backend contra Postgres real (DATABASE_URL_TEST, se resetea)
 pnpm typecheck          # tsc --noEmit en backend y frontend
 pnpm gen:module <nombre> # módulo CRUD completo: backend + gen:api + frontend (ver skill crear-modulo)
@@ -92,12 +91,10 @@ El porqué de las reglas no negociables está en `docs/decisions/`. Leer el ADR 
 biome.json / package.json / pnpm-workspace.yaml  # raíz: lint + workspaces
 backend/   # Hono + Bun + Prisma (arquitectura hexagonal)
 frontend/  # Vite + React + TanStack Suite + Tailwind v4 (modular y core)
-mcp/       # Servidor MCP por stdio que consume la API REST con un token personal
 ```
 
 - `backend/` tiene sus reglas propias en `backend/AGENTS.md`. Leerlo antes de tocar `backend/`.
 - `frontend/` tiene sus reglas propias en `frontend/AGENTS.md`. Leerlo antes de tocar `frontend/`.
-- `mcp/` tiene sus reglas propias en `mcp/AGENTS.md`, con cómo conectarlo a Claude Code. Leerlo antes de tocar `mcp/`.
 - Docker vive en la raíz y está pensado para Dokploy: un único servicio `app` (backend que también sirve `frontend/dist`, un solo dominio, puerto `3000`). La BD **no** va en el compose: es un servicio aparte de Dokploy y llega por `DATABASE_URL`. El servicio `migrate` ejecuta `prisma migrate deploy` antes de cada arranque de `app`. En desarrollo: `pnpm db:up` (PostgreSQL de `docker-compose.dev.yml`) y `pnpm dev`.
 - Variables: `cp backend/.env.example backend/.env`.
 - Dependencias: Renovate (`renovate.json`) agrupa y fija versiones exactas; Prisma no pasa de `7.x` (ADR 0001).

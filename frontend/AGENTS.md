@@ -72,6 +72,7 @@ frontend/src/
 │   ├── adjuntos/                   # Imágenes y markdown: EditorMarkdown (WYSIWYG tipo Notion con Milkdown Crepe: menú «/», subir y pegar imágenes), ContenidoMarkdown y PaginaLectura (lectura de tareas y notas)
 │   ├── notas/                      # Notas personales: búsqueda en título y contenido, filtro por tag; lectura (NotaLecturaPage), alta y edición a página completa (NotaEditorPage)
 │   ├── tareas/                     # Tareas (selector: personales, asignadas a mí, organización, equipo o proyecto) y PendientesPage (portada); lectura (TareaLecturaPage), alta y edición a página completa (TareaEditorPage)
+│   ├── conexiones/                 # Conector MCP: pasos para conectar Claude en el perfil (ConectarClaudeCard) y pantalla de permiso OAuth (AutorizarConexionPage)
 │   ├── tags/                       # Tags personales; SelectorTags, TagsBadges y useTagsDisponibles los usan tareas y notas
 │   │
 │   └── usuarios/                      # Módulo de Usuarios
@@ -96,6 +97,7 @@ frontend/src/
 │       ├── roles.tsx               # Vista /roles
 │       ├── notas/                  # /notas (index), /notas/nueva, /notas/$id (lectura) y /notas/$id/editar
 │       ├── tareas/                 # /tareas (index), /tareas/nueva, /tareas/$id (lectura) y /tareas/$id/editar
+│       ├── autorizar-conexion.tsx  # Permiso OAuth del conector MCP
 │       ├── tags.tsx                # Vista /tags (tags personales)
 │       └── perfil.tsx              # Vista /perfil
 │

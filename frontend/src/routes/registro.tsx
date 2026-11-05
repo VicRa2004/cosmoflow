@@ -1,6 +1,7 @@
-import { createFileRoute, Navigate } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { z } from "zod";
 import { useAuthStore } from "@/core/auth/store";
+import { IrADestino } from "@/modules/auth/components/IrADestino";
 import { RegistroPage } from "@/modules/auth/pages/RegistroPage";
 import { redirectSchema } from "@/modules/auth/schemas/authSchemas";
 
@@ -14,7 +15,7 @@ function RegistroRouteComponent() {
 	const { redirect } = Route.useSearch();
 
 	if (isAuthenticated) {
-		return <Navigate to="/dashboard" replace />;
+		return <IrADestino destino={redirect} />;
 	}
 
 	return <RegistroPage destino={redirect} />;

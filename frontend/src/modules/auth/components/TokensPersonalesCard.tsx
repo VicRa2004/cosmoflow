@@ -1,7 +1,7 @@
-import { Check, Copy, KeyRound } from "lucide-react";
+import { KeyRound } from "lucide-react";
 import { useState } from "react";
-import { toast } from "sonner";
 import { useAppForm } from "@/core/components/form/useAppForm";
+import { BotonCopiar } from "@/core/components/ui/BotonCopiar";
 import { Button } from "@/core/components/ui/Button";
 import {
 	Card,
@@ -27,17 +27,6 @@ function TokenRecienCreado({
 	token: string;
 	onCerrar: () => void;
 }) {
-	const [copiado, setCopiado] = useState(false);
-
-	const copiar = async () => {
-		try {
-			await navigator.clipboard.writeText(token);
-			setCopiado(true);
-		} catch {
-			toast.error("No se pudo copiar: selecciónalo y cópialo a mano.");
-		}
-	};
-
 	return (
 		<div className="space-y-3 rounded-lg border border-borde p-4">
 			<p className="text-sm font-medium text-tinta-suave" role="status">
@@ -47,14 +36,7 @@ function TokenRecienCreado({
 				{token}
 			</code>
 			<div className="flex gap-2">
-				<Button variant="outline" size="sm" onClick={copiar}>
-					{copiado ? (
-						<Check className="h-4 w-4" />
-					) : (
-						<Copy className="h-4 w-4" />
-					)}
-					{copiado ? "Copiado" : "Copiar"}
-				</Button>
+				<BotonCopiar texto={token} />
 				<Button variant="ghost" size="sm" onClick={onCerrar}>
 					Ya lo he guardado
 				</Button>
@@ -63,7 +45,7 @@ function TokenRecienCreado({
 	);
 }
 
-/** Tokens para clientes de la API, como el servidor MCP (ver `mcp/AGENTS.md`). */
+/** Tokens para clientes de la API; las conexiones con Claude también aparecen aquí. */
 export function TokensPersonalesCard() {
 	const { data: tokens, error } = useTokensPersonalesQuery();
 	const crear = useCrearTokenPersonalMutation();
@@ -84,9 +66,8 @@ export function TokensPersonalesCard() {
 			<CardHeader className="pb-0">
 				<CardTitle className="text-lg">Tokens personales</CardTitle>
 				<CardDescription>
-					Conectan aplicaciones externas, como un asistente de IA, con tu
-					cuenta. Tienen tus mismos permisos y no caducan: revoca los que ya no
-					uses.
+					Dan acceso a tu cuenta con tus mismos permisos y no caducan. Aquí
+					también aparecen las conexiones con Claude: revoca las que ya no uses.
 				</CardDescription>
 			</CardHeader>
 
@@ -155,7 +136,7 @@ export function TokensPersonalesCard() {
 			<ConfirmDialog
 				abierto={aRevocar !== null}
 				titulo="Revocar token"
-				mensaje={`Lo que use «${aRevocar?.nombre}» dejará de funcionar al instante. Esta acción no se puede deshacer.`}
+				mensaje={`«${aRevocar?.nombre}» dejará de funcionar al instante. Esta acción no se puede deshacer.`}
 				textoConfirmar="Revocar"
 				peligroso
 				isLoading={revocar.isPending}

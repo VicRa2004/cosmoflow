@@ -1,7 +1,6 @@
 packages:
   - 'backend'
   - 'frontend'
-  - 'mcp'
 allowBuilds:
   '@prisma/engines': true
   '@swc/core': false

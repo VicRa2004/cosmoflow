@@ -1,13 +1,20 @@
 import { Button } from "@/core/components/ui/Button";
+import { guardarDestinoGoogle } from "../utils/destinoGoogle";
 
-/** Navegación completa (no fetch): el backend redirige a Google y vuelve a /login/google. */
-export function BotonGoogle() {
+/**
+ * Navegación completa (no fetch): el backend redirige a Google y vuelve a /login/google.
+ * `destino` sobrevive al viaje en `sessionStorage`; lo recoge la ruta de vuelta.
+ */
+export function BotonGoogle({ destino }: { destino?: string }) {
 	return (
 		<Button
 			variant="outline"
 			size="lg"
 			className="w-full"
-			onClick={() => window.location.assign("/api/auth/google")}
+			onClick={() => {
+				guardarDestinoGoogle(destino);
+				window.location.assign("/api/auth/google");
+			}}
 		>
 			<svg viewBox="0 0 24 24" className="h-4 w-4" aria-hidden="true">
 				<path

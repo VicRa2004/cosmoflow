@@ -26,7 +26,7 @@ export function LoginPage({
 					email y contraseña.
 				</p>
 			)}
-			<BotonGoogle />
+			<BotonGoogle destino={destino} />
 			<SeparadorO />
 			<LoginForm destino={destino} />
 			<div className="mt-3 text-right text-[13px]">

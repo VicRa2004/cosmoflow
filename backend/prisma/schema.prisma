@@ -38,6 +38,7 @@ model Usuario {
   refreshTokens            RefreshToken[]
   tokensCuenta             TokenCuenta[]
   tokensPersonales         TokenPersonal[]
+  codigosOAuth             CodigoOAuth[]
   tags                     Tag[]
   tareas                   Tarea[]
   notas                    Nota[]
@@ -181,6 +182,24 @@ model TokenPersonal {
 
   @@index([usuarioId])
   @@map("token_personal")
+}
+
+/// Código OAuth de un solo uso (conector MCP): se borra al canjearlo. Se guarda su hash.
+model CodigoOAuth {
+  id            Int      @id @default(autoincrement()) @map("cdo_id")
+  codigoHash    String   @unique @map("cdo_codigo_hash") @db.VarChar(128)
+  usuarioId     Int      @map("cdo_fkusuario")
+  clientId      String   @map("cdo_client_id") @db.VarChar(255)
+  redirectUri   String   @map("cdo_redirect_uri") @db.VarChar(2048)
+  codeChallenge String   @map("cdo_code_challenge") @db.VarChar(128)
+  expiraEn      DateTime @map("cdo_expira_en")
+  createdAt     DateTime @default(now()) @map("cdo_created_at")
+
+  usuario Usuario @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+
+  @@index([usuarioId])
+  @@index([expiraEn])
+  @@map("codigo_oauth")
 }
 
 // ─────────────────────────────────────────────

@@ -1,6 +1,7 @@
-import { createFileRoute, Navigate } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { z } from "zod";
 import { useAuthStore } from "@/core/auth/store";
+import { IrADestino } from "@/modules/auth/components/IrADestino";
 import { LoginPage } from "@/modules/auth/pages/LoginPage";
 import { redirectSchema } from "@/modules/auth/schemas/authSchemas";
 
@@ -18,7 +19,7 @@ function LoginRouteComponent() {
 	const { error, redirect } = Route.useSearch();
 
 	if (isAuthenticated) {
-		return <Navigate to="/dashboard" replace />;
+		return <IrADestino destino={redirect} />;
 	}
 
 	return <LoginPage errorGoogle={error === "google"} destino={redirect} />;

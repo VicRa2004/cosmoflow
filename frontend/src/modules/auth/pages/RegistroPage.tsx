@@ -10,7 +10,7 @@ export function RegistroPage({ destino }: { destino?: string }) {
 			title="Crea tu cuenta"
 			subtitle="Empieza a organizar tus tareas y notas."
 		>
-			<BotonGoogle />
+			<BotonGoogle destino={destino} />
 			<SeparadorO />
 			<RegistroForm destino={destino} />
 			<div className="mt-6 text-center text-xs text-tinta-tenue">

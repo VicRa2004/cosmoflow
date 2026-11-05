@@ -24,6 +24,7 @@
 	"description": "",
 	"dependencies": {
 		"@hono/zod-openapi": "1.6.3",
+		"@modelcontextprotocol/sdk": "1.32.2",
 		"@prisma/adapter-pg": "7.10.1",
 		"@prisma/client": "7.10.1",
 		"@scalar/hono-api-reference": "0.12.13",

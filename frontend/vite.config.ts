@@ -26,6 +26,9 @@ export default defineConfig({
 				target: process.env.VITE_API_URL || "http://localhost:3000",
 				changeOrigin: true,
 			},
+			// Conector MCP: `/mcp` y su descubrimiento OAuth van en la raíz del dominio.
+			"/mcp": process.env.VITE_API_URL || "http://localhost:3000",
+			"/.well-known": process.env.VITE_API_URL || "http://localhost:3000",
 		},
 	},
 });

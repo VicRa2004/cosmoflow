@@ -25,6 +25,7 @@ const EXENTOS: Record<string, string> = {
 	TokenCuenta: "técnica",
 	TokenPersonal: "técnica: revocarlo lo invalida (`revocadoEn`)",
 	EventoOutbox: "técnica",
+	CodigoOAuth: "técnica: de un solo uso y caduca en minutos",
 	NotificacionEnviada: "técnica: claves de idempotencia que se purgan",
 	VinculoTelegram: "técnica: desvincular borra el vínculo",
 	PreferenciaNotificacion: "ajuste del usuario; se sobrescribe, no se borra",
