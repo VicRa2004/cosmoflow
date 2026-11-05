@@ -2,6 +2,7 @@ import { Link, Outlet, useNavigate } from "@tanstack/react-router";
 import { ListTodo } from "lucide-react";
 import { Badge } from "@/core/components/ui/Badge";
 import { Button } from "@/core/components/ui/Button";
+import { Pestanas, pestanaProps } from "@/core/components/ui/Pestanas";
 import { Spinner } from "@/core/components/ui/Spinner";
 import { AvatarOrganizacion } from "../components/AvatarOrganizacion";
 import { useOrganizacionQuery } from "../hooks/useOrganizacionesQuery";
@@ -66,25 +67,13 @@ export function OrganizacionLayout({ id }: { id: number }) {
 				</div>
 			</header>
 
-			<nav
-				aria-label="Secciones de la organización"
-				className="flex flex-wrap gap-x-1 border-b border-borde"
-			>
+			<Pestanas etiqueta="Secciones de la organización">
 				{secciones.map(({ to, etiqueta }) => (
-					<Link
-						key={to}
-						to={to}
-						params={{ id: String(id) }}
-						className="whitespace-nowrap border-b-2 px-3 py-2 text-sm font-medium transition-colors"
-						activeProps={{ className: "border-indigo-500 text-tinta" }}
-						inactiveProps={{
-							className: "border-transparent text-tinta-tenue hover:text-tinta",
-						}}
-					>
+					<Link key={to} to={to} params={{ id: String(id) }} {...pestanaProps}>
 						{etiqueta}
 					</Link>
 				))}
-			</nav>
+			</Pestanas>
 
 			<OrganizacionContext.Provider value={data}>
 				<Outlet />

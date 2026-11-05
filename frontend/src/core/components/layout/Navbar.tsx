@@ -47,7 +47,10 @@ function useMigas() {
 		);
 		if (item) return { grupo: grupo.titulo, seccion: item.etiqueta };
 	}
-	return { grupo: undefined, seccion: FUERA_DEL_MENU[ruta] };
+	return {
+		grupo: undefined,
+		seccion: FUERA_DEL_MENU[ruta.match(/^\/[^/]*/)?.[0] ?? ""],
+	};
 }
 
 export function Navbar({ onAbrirMenu }: { onAbrirMenu: () => void }) {

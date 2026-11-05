@@ -101,7 +101,7 @@ export function AutorizarConexionPage({
 			</ul>
 			<p className="text-xs text-tinta-tenue">
 				Tendrá tus mismos permisos y la conexión no caduca. Puedes revocarla
-				cuando quieras desde tu perfil, en «Tokens personales».
+				cuando quieras desde tu perfil, en «Conexiones».
 			</p>
 
 			<div className="flex justify-end gap-2">

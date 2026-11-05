@@ -51,7 +51,7 @@ frontend/src/
 │   │   ├── form/                   # useAppForm + campos conectados a TanStack Form
 │   │   ├── layout/                 # MainLayout (Sidebar + Navbar), navegacion.ts (menú), MenuUsuario, AuthLayout, SelectorTema y Marca
 │   │   └── ui/                     # Primitivas: Button, Input, Select, Checkbox, Card, Badge, Spinner, Avatar,
-│   │                               #   Dialog, ConfirmDialog, Table (Tabla + Paginacion), EmptyState, EncabezadoPagina
+│   │                               #   Dialog, ConfirmDialog, Table (Tabla + Paginacion), EmptyState, EncabezadoPagina, Pestanas
 │   ├── router/                     # QueryClient, instancia del router y pantallas de error/404 (RouteFallbacks)
 │   ├── tema.ts                     # Tema claro/oscuro/sistema (data-tema en <html>)
 │   └── utils/                      # Utilidades transversales (cn.ts)
@@ -79,7 +79,7 @@ frontend/src/
 │       ├── api/                    # Llamadas a la API de usuarios (usuariosApi.ts)
 │       ├── components/             # Tablas y tarjetas (UsuariosTable.tsx, PerfilUsuarioCard.tsx)
 │       ├── hooks/                  # Custom hooks de TanStack Query (useUsuariosQuery.ts)
-│       └── pages/                  # Vistas del módulo (UsuariosPage.tsx, PerfilPage.tsx)
+│       └── pages/                  # Vistas del módulo (UsuariosPage.tsx y PerfilLayout.tsx: pestañas del perfil)
 │
 ├── routes/                         # Enrutamiento tipado basado en archivos (TanStack Router)
 │   ├── __root.tsx                  # Raíz con Toaster de Sonner y Outlet
@@ -99,7 +99,7 @@ frontend/src/
 │       ├── tareas/                 # /tareas (index), /tareas/nueva, /tareas/$id (lectura) y /tareas/$id/editar
 │       ├── autorizar-conexion.tsx  # Permiso OAuth del conector MCP
 │       ├── tags.tsx                # Vista /tags (tags personales)
-│       └── perfil.tsx              # Vista /perfil
+│       └── perfil/                 # /perfil (layout con pestañas): general, notificaciones, seguridad y conexiones
 │
 ├── routeTree.gen.ts                # Árbol de rutas generado automáticamente por TanStack Router
 ├── index.css                       # Directivas y tema base de Tailwind CSS v4
