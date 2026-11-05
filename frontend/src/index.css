@@ -130,20 +130,20 @@
 /* Contenido markdown de tareas y notas (`ContenidoMarkdown`). */
 @layer components {
 	.markdown {
-		@apply space-y-3 text-base leading-relaxed text-tinta-suave;
+		@apply space-y-3 text-lg leading-relaxed text-tinta-suave;
 		overflow-wrap: anywhere;
 	}
 	.markdown :is(h1, h2, h3, h4) {
 		@apply font-semibold text-tinta;
 	}
 	.markdown h1 {
-		@apply text-2xl;
+		@apply text-3xl;
 	}
 	.markdown h2 {
-		@apply text-xl;
+		@apply text-2xl;
 	}
 	.markdown h3 {
-		@apply text-lg;
+		@apply text-xl;
 	}
 	/* Al tomar notas, un salto de línea es un salto de línea. */
 	.markdown p {
@@ -176,7 +176,7 @@
 		@apply border-l-2 border-borde-fuerte pl-3 italic;
 	}
 	.markdown code {
-		@apply rounded bg-elevada px-1 py-0.5 font-mono text-xs;
+		@apply rounded bg-elevada px-1 py-0.5 font-mono text-[0.875em];
 	}
 	.markdown pre {
 		@apply overflow-x-auto rounded-lg bg-elevada p-3;
@@ -217,7 +217,7 @@
 	--crepe-color-hover: var(--elevada);
 	--crepe-color-selected: var(--borde);
 	--crepe-color-inline-area: var(--elevada);
-	--crepe-base-font-size: 16px;
+	--crepe-base-font-size: 18px;
 	--crepe-font-title: var(--font-sans);
 	--crepe-font-default: var(--font-sans);
 	--crepe-font-code: var(--font-mono);
