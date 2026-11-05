@@ -12,6 +12,11 @@ x-app: &app
     DATABASE_URL: ${DATABASE_URL:?Define DATABASE_URL}
     JWT_SECRET: ${JWT_SECRET:?Define JWT_SECRET (mínimo 32 caracteres)}
     APP_URL: ${APP_URL:?Define APP_URL (dominio público, base de los enlaces de los correos)}
+    SMTP_HOST: ${SMTP_HOST:-}
+    SMTP_PORT: ${SMTP_PORT:-}
+    SMTP_USER: ${SMTP_USER:-}
+    SMTP_PASS: ${SMTP_PASS:-}
+    SMTP_SECURE: ${SMTP_SECURE:-}
     RESEND_API_KEY: ${RESEND_API_KEY:-}
     MAIL_FROM: ${MAIL_FROM:-}
     # Con S3_BUCKET los archivos van a S3/R2; si no, al volumen `uploads`.

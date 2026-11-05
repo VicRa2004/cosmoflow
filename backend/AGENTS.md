@@ -70,7 +70,7 @@ Sin decoradores ni librería de DI (ADR [0006](../docs/decisions/0006-contenedor
 - **`module.ts` = composition root del módulo:** construye repos, casos de uso, controladores y router con `new` y pasa las dependencias por constructor. Fuera de `module.ts` (y de los tests) no se cablea nada.
 - **Contenedor (`DependencyContainer`, `src/core/shared/infrastructure/di/`):** solo para lo que se comparte entre módulos o se puede sustituir. Tokens tipados con `token<T>("Nombre")`; `container.set(TOKEN, () => new Impl())` en `register` y `container.get(TOKEN)` en `mount`/`onStart` (tipado, sin casts). Todo es singleton y se resuelve en diferido; registrar de nuevo un token lo sustituye.
 - **Tokens:** los compartidos del núcleo en `TOKENS` (`src/core/shared/infrastructure/di/tokens.ts`: `EventBus`, `PermisoGuard`, `Mailer`, `Scheduler`, `UnitOfWork`, `Almacenamiento`); los de cada módulo en su `infrastructure/tokens.ts` (`USUARIO_TOKENS`, `AUTH_TOKENS`), exportados por `index.ts`. Lo interno de un módulo no lleva token.
-- `container.ts` solo registra la infraestructura compartida (`EventBus`, guard por defecto, `Mailer`: Resend si hay `RESEND_API_KEY`, si no consola; `Scheduler`, `UnitOfWork`; `Almacenamiento`: S3 si hay `S3_BUCKET`, si no disco) y luego recorre `src/modules.ts`.
+- `container.ts` solo registra la infraestructura compartida (`EventBus`, guard por defecto, `Mailer`: SMTP si hay `SMTP_HOST`, si no Resend si hay `RESEND_API_KEY`, si no consola; `Scheduler`, `UnitOfWork`; `Almacenamiento`: S3 si hay `S3_BUCKET`, si no disco) y luego recorre `src/modules.ts`.
 
 ## Piezas de infraestructura del núcleo
 

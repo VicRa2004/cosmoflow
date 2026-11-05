@@ -57,8 +57,8 @@ Un login correcto o restablecer la contraseña reinician el contador.
   `recuperar_password` (1 h) y `verificar_email` (24 h). Pedir uno nuevo
   invalida los anteriores sin usar del mismo tipo.
 - `EmisorCorreosCuenta` genera el token y envía el enlace `${APP_URL}/<ruta>?token=…`
-  por el puerto `Mailer` (`TOKENS.Mailer`): `ResendMailer` si hay `RESEND_API_KEY`,
-  si no `ConsoleMailer` (en prod no imprime el cuerpo, para no filtrar enlaces).
+  por el puerto `Mailer` (`TOKENS.Mailer`): `SmtpMailer` si hay `SMTP_HOST`, si no
+  `ResendMailer` si hay `RESEND_API_KEY`, si no `ConsoleMailer` (en prod no imprime el cuerpo, para no filtrar enlaces).
 - El registro envía la verificación; un fallo del correo no deshace el registro.
   Verificar el email es informativo (`usuario.emailVerificado`): no bloquea el login.
 - En los e2e, `spyOn(container.get(TOKENS.Mailer), "enviar")` captura los enlaces.

@@ -24,7 +24,13 @@ const EnvSchema = z
 			.url("APP_URL debe ser una URL valida")
 			.default("http://localhost:5173")
 			.transform((url) => url.replace(/\/$/, "")),
-		// Sin RESEND_API_KEY los correos se escriben en consola (ConsoleMailer).
+		// Con SMTP_HOST se envía por SMTP; si no, por Resend; sin ninguno, a consola (ConsoleMailer).
+		SMTP_HOST: z.string().optional(),
+		SMTP_PORT: z.coerce.number("SMTP_PORT debe ser un numero").default(587),
+		SMTP_USER: z.string().optional(),
+		SMTP_PASS: z.string().optional(),
+		// true: TLS desde el inicio (puerto 465). false: STARTTLS si el servidor lo ofrece (puerto 587).
+		SMTP_SECURE: z.stringbool().default(false),
 		RESEND_API_KEY: z.string().optional(),
 		MAIL_FROM: z.string().default("Cosmoflow <no-reply@localhost>"),
 		// Sin S3_BUCKET los archivos van a disco en STORAGE_DIR (LocalAlmacenamiento).
@@ -68,6 +74,11 @@ const envPrev = {
 	JWT_SECRET: process.env.JWT_SECRET,
 	CORS_ORIGIN: process.env.CORS_ORIGIN,
 	APP_URL: process.env.APP_URL || undefined,
+	SMTP_HOST: process.env.SMTP_HOST || undefined,
+	SMTP_PORT: process.env.SMTP_PORT || undefined,
+	SMTP_USER: process.env.SMTP_USER || undefined,
+	SMTP_PASS: process.env.SMTP_PASS || undefined,
+	SMTP_SECURE: process.env.SMTP_SECURE || undefined,
 	RESEND_API_KEY: process.env.RESEND_API_KEY || undefined,
 	MAIL_FROM: process.env.MAIL_FROM || undefined,
 	STORAGE_DIR: process.env.STORAGE_DIR || undefined,

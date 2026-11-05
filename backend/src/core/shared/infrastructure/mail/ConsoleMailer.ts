@@ -10,7 +10,7 @@ export class ConsoleMailer implements Mailer {
 	async enviar({ para, asunto, texto }: Correo): Promise<void> {
 		if (this.isProd) {
 			console.warn(
-				`[Mailer] Correo "${asunto}" a ${para} NO enviado: define RESEND_API_KEY.`,
+				`[Mailer] Correo "${asunto}" a ${para} NO enviado: define SMTP_HOST o RESEND_API_KEY.`,
 			);
 			return;
 		}
