@@ -119,7 +119,7 @@ Parte frontend de la checklist de `backend/AGENTS.md` ("Cómo quitar un módulo"
 
 ## Skills
 
-Viven en `frontend/.agents/skills/` (TanStack Query/Router/Form/Table, Tailwind v4, diseño y guías web). Las transversales (`code-design-and-structure`, `optimal-test-design`, `typescript-advanced-types`) están en la raíz.
+Viven en `frontend/.agents/skills/` (TanStack Query/Router/Form/Table, Tailwind v4, diseño y guías web, y las propias `disenar-paginas` —una página o secciones con pestañas— y `disenar-formularios` —modal, página o varios pasos—). Las transversales (`code-design-and-structure`, `optimal-test-design`, `typescript-advanced-types`) están en la raíz.
 
 ---
 
