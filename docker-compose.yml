@@ -4,6 +4,10 @@ x-app: &app
   build:
     context: .
     dockerfile: backend/Dockerfile
+  # Red donde vive la BD de Dokploy. Dokploy solo conecta a Traefik los servicios
+  # con dominio, así que `migrate` no llegaría a la BD sin declararla aquí.
+  networks:
+    - dokploy-network
   environment:
     DATABASE_URL: ${DATABASE_URL:?Define DATABASE_URL}
     JWT_SECRET: ${JWT_SECRET:?Define JWT_SECRET (mínimo 32 caracteres)}
@@ -54,3 +58,7 @@ services:
 
 volumes:
   uploads:
+
+networks:
+  dokploy-network:
+    external: true

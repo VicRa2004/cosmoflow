@@ -134,7 +134,7 @@ Pensado para desplegar en **Dokploy** como servicio *Docker Compose*:
 
 Un solo contenedor sirve la API (`/api`), la documentación (`/docs`) y el frontend compilado, así que basta un dominio. En cada deploy el servicio `migrate` aplica las migraciones pendientes (`prisma migrate deploy`, nunca borra datos) antes de arrancar `app`. La imagen rechaza el `JWT_SECRET` de ejemplo.
 
-En local: `cp .env.example .env` y `docker compose up --build` (necesita una BD accesible desde el contenedor). Para desarrollo usa `pnpm db:up` + `pnpm dev`.
+En local: `cp .env.example .env`, `docker network create dokploy-network` (la primera vez; en Dokploy ya existe) y `docker compose up --build` (necesita una BD accesible desde el contenedor). Para desarrollo usa `pnpm db:up` + `pnpm dev`.
 
 ---
 
