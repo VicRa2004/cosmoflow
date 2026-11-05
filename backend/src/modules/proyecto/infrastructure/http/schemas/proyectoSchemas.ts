@@ -1,4 +1,5 @@
 import { z } from "@hono/zod-openapi";
+import { colorAcentoSchema } from "@/core/shared/infrastructure/http/openapi";
 import { ESTADOS_PROYECTO } from "../../../domain/Proyecto";
 
 const idParam = z
@@ -23,6 +24,7 @@ export const crearProyectoSchema = z.object({
 	nombre,
 	descripcion: descripcion.optional().default(""),
 	estado: estado.optional().default("activo"),
+	color: colorAcentoSchema.optional().default(null),
 	// RN-31 («al menos un equipo o una persona») la comprueba `Proyecto`.
 	equipoIds: ids.optional().default([]),
 	integranteIds: ids.optional().default([]),
@@ -32,6 +34,7 @@ export const actualizarProyectoSchema = z.object({
 	nombre: nombre.optional(),
 	descripcion: descripcion.optional(),
 	estado: estado.optional(),
+	color: colorAcentoSchema.optional(),
 	equipoIds: ids.optional(),
 	integranteIds: ids.optional(),
 });
@@ -46,6 +49,7 @@ export const proyectoDtoSchema = z
 		nombre: z.string().openapi({ example: "Lanzamiento v2" }),
 		descripcion: z.string().openapi({ example: "" }),
 		estado,
+		color: colorAcentoSchema,
 		equipoIds: z.array(z.number().int()),
 		integranteIds: z.array(z.number().int()),
 	})

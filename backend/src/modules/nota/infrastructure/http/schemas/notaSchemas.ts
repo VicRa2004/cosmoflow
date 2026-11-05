@@ -1,4 +1,5 @@
 import { z } from "@hono/zod-openapi";
+import { colorAcentoSchema } from "@/core/shared/infrastructure/http/openapi";
 
 const campos = {
 	titulo: z
@@ -7,6 +8,7 @@ const campos = {
 		.min(1, "El título es obligatorio")
 		.max(255, "Máximo 255 caracteres"),
 	contenido: z.string().max(100_000, "Contenido demasiado largo").optional(),
+	color: colorAcentoSchema.optional(),
 	tagIds: z.array(z.number().int().positive()).max(50).optional(),
 };
 
@@ -43,6 +45,7 @@ export const notaDtoSchema = z
 		id: z.number().int().openapi({ example: 1 }),
 		titulo: z.string().openapi({ example: "Ideas para el viaje" }),
 		contenido: z.string().openapi({ example: "## Lugares\n- Lisboa" }),
+		color: colorAcentoSchema,
 		tagIds: z.array(z.number().int()),
 		organizacionId: z.number().int().nullable(),
 		proyectoId: z.number().int().nullable(),

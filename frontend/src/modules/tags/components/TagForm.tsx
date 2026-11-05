@@ -37,7 +37,15 @@ export function TagForm({ inicial, organizacionId, onGuardado }: TagFormProps) {
 		<form.AppForm>
 			<form.Formulario className="space-y-4">
 				<form.AppField name="nombre">
-					{(campo) => <campo.CampoTexto label="Nombre" />}
+					{(campo) => (
+						<campo.CampoTexto
+							label="Nombre"
+							placeholder="Ej.: urgente, cliente, ideas"
+						/>
+					)}
+				</form.AppField>
+				<form.AppField name="color">
+					{(campo) => <campo.CampoColorAcento />}
 				</form.AppField>
 				<div className="flex justify-end">
 					<form.BotonEnviar>{inicial ? "Guardar" : "Crear"}</form.BotonEnviar>

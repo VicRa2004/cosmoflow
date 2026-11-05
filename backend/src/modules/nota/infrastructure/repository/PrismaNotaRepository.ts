@@ -23,6 +23,7 @@ export class PrismaNotaRepository implements NotaRepository {
 			{
 				titulo: raw.titulo,
 				contenido: raw.contenido,
+				color: raw.color,
 				tagIds: raw.tags.map((t) => t.tagId),
 			},
 			raw.updatedAt,
@@ -91,13 +92,14 @@ export class PrismaNotaRepository implements NotaRepository {
 	}
 
 	async crear(data: Nota): Promise<Nota> {
-		const { titulo, contenido, tagIds } = data.getDatos();
+		const { titulo, contenido, color, tagIds } = data.getDatos();
 		const registro = await prisma.nota.create({
 			data: {
 				usuarioId: data.getUsuarioId(),
 				...data.getProyecto(),
 				titulo,
 				contenido,
+				color,
 				tags: { create: tagIds.map((tagId) => ({ tagId })) },
 			},
 			include,
@@ -106,12 +108,13 @@ export class PrismaNotaRepository implements NotaRepository {
 	}
 
 	async actualizar(data: Nota): Promise<Nota> {
-		const { titulo, contenido, tagIds } = data.getDatos();
+		const { titulo, contenido, color, tagIds } = data.getDatos();
 		const registro = await prisma.nota.update({
 			where: { id: data.getId() },
 			data: {
 				titulo,
 				contenido,
+				color,
 				tags: { deleteMany: {}, create: tagIds.map((tagId) => ({ tagId })) },
 			},
 			include,

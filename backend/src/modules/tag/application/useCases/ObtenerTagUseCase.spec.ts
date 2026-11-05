@@ -18,6 +18,7 @@ describe("ObtenerTagUseCase", () => {
 		expect(await useCase.ejecutar({ usuarioId: 7 }, 1)).toEqual({
 			id: 1,
 			nombre: "Ejemplo",
+			color: null,
 		});
 	});
 

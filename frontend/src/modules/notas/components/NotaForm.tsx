@@ -70,6 +70,9 @@ export function NotaForm({
 						/>
 					)}
 				</form.AppField>
+				<form.AppField name="color">
+					{(campo) => <campo.CampoColorAcento />}
+				</form.AppField>
 				<form.AppField name="tagIds">
 					{(campo) => (
 						<SelectorTags

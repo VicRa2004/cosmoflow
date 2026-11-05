@@ -26,3 +26,10 @@ export const protectedErrorResponses = (permiso: string) => ({
 	401: errorResponse("No autenticado"),
 	403: errorResponse(`Permiso denegado (requiere ${permiso})`),
 });
+
+/** Color de acento opcional (#rrggbb) para destacar un elemento; `null` lo quita. */
+export const colorAcentoSchema = z
+	.string()
+	.regex(/^#[0-9a-fA-F]{6}$/, "El color debe ser hexadecimal (#rrggbb)")
+	.nullable()
+	.openapi({ example: "#f59e0b" });

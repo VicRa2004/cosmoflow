@@ -26,7 +26,7 @@ describe("CrearTagUseCase", () => {
 		expect(repo.crear.mock.calls[0]?.[0].getDueno()).toEqual({
 			usuarioId: USUARIO,
 		});
-		expect(result).toEqual({ id: 1, nombre: "urgente" });
+		expect(result).toEqual({ id: 1, nombre: "urgente", color: null });
 	});
 
 	it("rechaza un nombre que el usuario ya tiene", async () => {

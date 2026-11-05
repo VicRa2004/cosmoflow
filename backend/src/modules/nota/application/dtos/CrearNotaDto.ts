@@ -1,6 +1,7 @@
 export interface CamposNotaDto {
 	titulo: string;
 	contenido?: string;
+	color?: string | null;
 	tagIds?: number[];
 }
 

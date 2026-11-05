@@ -11,6 +11,7 @@ interface PrismaTagRecord {
 	usuarioId: number | null;
 	organizacionId: number | null;
 	nombre: string;
+	color: string | null;
 }
 
 /** El `where` del dueño. El CHECK `tag_un_solo_dueno` garantiza que el otro es null. */
@@ -25,7 +26,7 @@ export class PrismaTagRepository implements TagRepository {
 			raw.organizacionId !== null
 				? { organizacionId: raw.organizacionId }
 				: { usuarioId: raw.usuarioId as number };
-		return Tag.reconstituir(raw.id, dueno, raw.nombre);
+		return Tag.reconstituir(raw.id, dueno, raw.nombre, raw.color);
 	}
 
 	async buscar(
@@ -78,7 +79,11 @@ export class PrismaTagRepository implements TagRepository {
 
 	async crear(data: Tag): Promise<Tag> {
 		const registro = await prisma.tag.create({
-			data: { ...deDueno(data.getDueno()), nombre: data.getNombre() },
+			data: {
+				...deDueno(data.getDueno()),
+				nombre: data.getNombre(),
+				color: data.getColor(),
+			},
 		});
 		return this.toDomain(registro);
 	}
@@ -86,7 +91,7 @@ export class PrismaTagRepository implements TagRepository {
 	async actualizar(data: Tag): Promise<Tag> {
 		const registro = await prisma.tag.update({
 			where: { id: data.getId() },
-			data: { nombre: data.getNombre() },
+			data: { nombre: data.getNombre(), color: data.getColor() },
 		});
 		return this.toDomain(registro);
 	}

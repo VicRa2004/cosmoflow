@@ -5,6 +5,7 @@ export interface ProyectoDto {
 	nombre: string;
 	descripcion: string;
 	estado: EstadoProyecto;
+	color: string | null;
 	equipoIds: number[];
 	integranteIds: number[];
 }

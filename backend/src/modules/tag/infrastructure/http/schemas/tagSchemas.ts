@@ -1,4 +1,5 @@
 import { z } from "@hono/zod-openapi";
+import { colorAcentoSchema } from "@/core/shared/infrastructure/http/openapi";
 
 const nombre = z
 	.string()
@@ -6,9 +7,15 @@ const nombre = z
 	.min(1, "El nombre es obligatorio")
 	.max(64, "Máximo 64 caracteres");
 
-export const crearTagSchema = z.object({ nombre });
+export const crearTagSchema = z.object({
+	nombre,
+	color: colorAcentoSchema.optional(),
+});
 
-export const actualizarTagSchema = z.object({ nombre: nombre.optional() });
+export const actualizarTagSchema = z.object({
+	nombre: nombre.optional(),
+	color: colorAcentoSchema.optional(),
+});
 
 const idParam = z
 	.string()
@@ -34,6 +41,7 @@ export const tagDtoSchema = z
 	.object({
 		id: z.number().int().openapi({ example: 1 }),
 		nombre: z.string().openapi({ example: "urgente" }),
+		color: colorAcentoSchema,
 	})
 	.openapi("TagDto");
 

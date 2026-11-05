@@ -46,11 +46,21 @@ export function ProyectoForm({
 		<form.AppForm>
 			<form.Formulario className="space-y-4">
 				<form.AppField name="nombre">
-					{(campo) => <campo.CampoTexto label="Nombre" maxLength={100} />}
+					{(campo) => (
+						<campo.CampoTexto
+							label="Nombre"
+							placeholder="Ej.: Lanzamiento de la web"
+							maxLength={100}
+						/>
+					)}
 				</form.AppField>
 				<form.AppField name="descripcion">
 					{(campo) => (
-						<campo.CampoTexto label="Descripción (opcional)" maxLength={500} />
+						<campo.CampoTexto
+							label="Descripción (opcional)"
+							placeholder="¿De qué trata el proyecto?"
+							maxLength={500}
+						/>
 					)}
 				</form.AppField>
 				<form.AppField name="estado">
@@ -63,6 +73,9 @@ export function ProyectoForm({
 							))}
 						</campo.CampoSelect>
 					)}
+				</form.AppField>
+				<form.AppField name="color">
+					{(campo) => <campo.CampoColorAcento />}
 				</form.AppField>
 				<form.Field name="equipoIds">
 					{(campo) => (

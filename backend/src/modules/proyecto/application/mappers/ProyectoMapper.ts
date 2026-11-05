@@ -8,6 +8,7 @@ export const ProyectoMapper = {
 			nombre: proyecto.getNombre(),
 			descripcion: proyecto.getDescripcion(),
 			estado: proyecto.getEstado(),
+			color: proyecto.getColor(),
 			equipoIds: [...proyecto.getEquipoIds()],
 			integranteIds: [...proyecto.getIntegranteIds()],
 		};

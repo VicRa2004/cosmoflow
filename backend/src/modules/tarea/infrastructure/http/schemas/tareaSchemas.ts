@@ -1,4 +1,5 @@
 import { z } from "@hono/zod-openapi";
+import { colorAcentoSchema } from "@/core/shared/infrastructure/http/openapi";
 import { ESTADOS_TAREA, PRIORIDADES_TAREA } from "../../../domain/Tarea";
 
 const dia = z.iso
@@ -17,6 +18,7 @@ const campos = {
 	prioridad: z.enum(PRIORIDADES_TAREA).optional(),
 	fechaInicio: dia.optional(),
 	fechaVencimiento: dia.optional(),
+	color: colorAcentoSchema.optional(),
 	tagIds: z.array(z.number().int().positive()).max(50).optional(),
 	/** Solo en las compartidas (RN-44). */
 	responsableIds: z.array(z.number().int().positive()).max(50).optional(),
@@ -110,6 +112,7 @@ export const tareaDtoSchema = z
 		prioridad: z.enum(PRIORIDADES_TAREA),
 		fechaInicio: dia,
 		fechaVencimiento: dia,
+		color: colorAcentoSchema,
 		tagIds: z.array(z.number().int()),
 		organizacionId: z.number().int().nullable(),
 		equipoId: z.number().int().nullable(),

@@ -18,7 +18,9 @@ export class CrearTagUseCase {
 		if (await this.tagRepository.buscarPorNombre(dueno, dto.nombre)) {
 			throw new TagDuplicadoError();
 		}
-		const creado = await this.tagRepository.crear(Tag.crear(dueno, dto.nombre));
+		const creado = await this.tagRepository.crear(
+			Tag.crear(dueno, dto.nombre, dto.color),
+		);
 		return TagMapper.toDto(creado);
 	}
 }

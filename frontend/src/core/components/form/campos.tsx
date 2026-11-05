@@ -1,6 +1,8 @@
 import { type FormHTMLAttributes, type ReactNode, useId } from "react";
 import { Button, type ButtonProps } from "@/core/components/ui/Button";
 import { Checkbox, type CheckboxProps } from "@/core/components/ui/Checkbox";
+import { cn } from "@/core/utils/cn";
+import { COLORES_ACENTO } from "@/core/components/ui/PuntoColor";
 import { Input, type InputProps } from "@/core/components/ui/Input";
 import { Select, type SelectProps } from "@/core/components/ui/Select";
 import { useFieldContext, useFormContext } from "./contextos";
@@ -63,6 +65,46 @@ export function CampoCheckbox(props: Omit<CheckboxProps, Cableado>) {
 			error={useError()}
 			{...props}
 		/>
+	);
+}
+
+/** Color de acento opcional: una muestra de la paleta o "" (sin color). */
+export function CampoColorAcento({ label = "Color" }: { label?: string }) {
+	const campo = useFieldContext<string>();
+	const opciones = [{ valor: "", nombre: "Sin color" }, ...COLORES_ACENTO];
+	return (
+		<fieldset className="space-y-1.5">
+			<legend className="mb-1.5 text-[13px] font-medium text-tinta-suave">
+				{label}
+			</legend>
+			<div className="flex flex-wrap gap-2">
+				{opciones.map(({ valor, nombre }) => (
+					<label
+						key={nombre}
+						title={nombre}
+						className={cn(
+							"flex h-7 w-7 cursor-pointer items-center justify-center rounded-full border border-borde-fuerte ring-offset-2 ring-offset-superficie has-checked:ring-2 has-checked:ring-indigo-500 has-focus-visible:ring-2 has-focus-visible:ring-indigo-400",
+							!valor && "bg-superficie text-tinta-tenue",
+						)}
+						style={valor ? { backgroundColor: valor } : undefined}
+					>
+						<input
+							type="radio"
+							name={campo.name}
+							value={valor}
+							checked={campo.state.value === valor}
+							onChange={() => campo.handleChange(valor)}
+							onBlur={campo.handleBlur}
+							className="sr-only"
+						/>
+						<span className="sr-only">{nombre}</span>
+						{!valor && (
+							<span aria-hidden className="h-px w-4 rotate-45 bg-current" />
+						)}
+					</label>
+				))}
+			</div>
+		</fieldset>
 	);
 }
 

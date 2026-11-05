@@ -17,6 +17,7 @@ interface PrismaProyectoRecord {
 	nombre: string;
 	descripcion: string;
 	estado: EstadoProyecto;
+	color: string | null;
 	equipos: { equipoId: number }[];
 	integrantes: { usuarioId: number }[];
 }
@@ -27,6 +28,7 @@ export class PrismaProyectoRepository implements ProyectoRepository {
 			nombre: raw.nombre,
 			descripcion: raw.descripcion,
 			estado: raw.estado,
+			color: raw.color,
 			equipoIds: raw.equipos.map((e) => e.equipoId),
 			integranteIds: raw.integrantes.map((i) => i.usuarioId),
 		});
@@ -37,6 +39,7 @@ export class PrismaProyectoRepository implements ProyectoRepository {
 			nombre: proyecto.getNombre(),
 			descripcion: proyecto.getDescripcion(),
 			estado: proyecto.getEstado(),
+			color: proyecto.getColor(),
 			equipos: {
 				createMany: {
 					data: proyecto.getEquipoIds().map((equipoId) => ({ equipoId })),

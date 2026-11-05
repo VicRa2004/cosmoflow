@@ -134,6 +134,9 @@ export function TareaForm({
 						{(campo) => <campo.CampoTexto label="Vencimiento" type="date" />}
 					</form.AppField>
 				</div>
+				<form.AppField name="color">
+					{(campo) => <campo.CampoColorAcento />}
+				</form.AppField>
 				<form.AppField name="tagIds">
 					{(campo) => (
 						<SelectorTags

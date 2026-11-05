@@ -13,5 +13,5 @@ export function useTagsDisponibles(organizacionId?: number | null) {
 		organizacionId ?? undefined,
 	);
 	const tags = data?.datos ?? [];
-	return { tags, nombre: new Map(tags.map((t) => [t.id, t.nombre])) };
+	return { tags };
 }

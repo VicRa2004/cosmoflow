@@ -5,6 +5,8 @@ export interface DatosNota {
 	titulo: string;
 	/** Markdown. */
 	contenido: string;
+	/** Color de acento (#rrggbb) o `null`. */
+	color: string | null;
 	/** Personal: tags del dueño; de proyecto: de la organización (RN-60). */
 	tagIds: number[];
 }
@@ -39,7 +41,12 @@ export class Nota extends Entity {
 	/** Sin `proyecto`, personal. */
 	public static crear(
 		usuarioId: number,
-		datos: { titulo: string; contenido?: string; tagIds?: number[] },
+		datos: {
+			titulo: string;
+			contenido?: string;
+			color?: string | null;
+			tagIds?: number[];
+		},
 		proyecto: ProyectoNota | null = null,
 	): Nota {
 		return new Nota(
@@ -48,6 +55,7 @@ export class Nota extends Entity {
 			{
 				titulo: datos.titulo,
 				contenido: datos.contenido ?? "",
+				color: datos.color ?? null,
 				tagIds: datos.tagIds ?? [],
 			},
 			null,
@@ -82,11 +90,12 @@ export class Nota extends Entity {
 		return this.updatedAt;
 	}
 
-	/** `undefined` deja el campo como está. */
+	/** `undefined` deja el campo como está; `color: null` lo quita. */
 	public actualizar(cambios: Partial<DatosNota>): void {
 		this.datos = {
 			titulo: cambios.titulo ?? this.datos.titulo,
 			contenido: cambios.contenido ?? this.datos.contenido,
+			color: cambios.color === undefined ? this.datos.color : cambios.color,
 			tagIds: [...new Set(cambios.tagIds ?? this.datos.tagIds)],
 		};
 	}

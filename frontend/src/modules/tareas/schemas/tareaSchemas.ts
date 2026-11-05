@@ -57,6 +57,8 @@ export const tareaFormSchema = z
 		prioridad: z.enum(prioridades),
 		fechaInicio: dia,
 		fechaVencimiento: dia,
+		// "" = sin color: se envía `null` para quitarlo.
+		color: z.string().transform((v) => v || null),
 		tagIds: z.array(z.number()),
 		responsableIds: z.array(z.number()),
 	})
@@ -80,6 +82,7 @@ export const tareaFormVacio: TareaFormValues = {
 	prioridad: "media",
 	fechaInicio: "",
 	fechaVencimiento: "",
+	color: "",
 	tagIds: [],
 	responsableIds: [],
 };
@@ -91,6 +94,7 @@ export const tareaAFormValues = (dto: TareaDto): TareaFormValues => ({
 	prioridad: dto.prioridad,
 	fechaInicio: dto.fechaInicio ?? "",
 	fechaVencimiento: dto.fechaVencimiento ?? "",
+	color: dto.color ?? "",
 	tagIds: dto.tagIds,
 	responsableIds: dto.responsableIds,
 });

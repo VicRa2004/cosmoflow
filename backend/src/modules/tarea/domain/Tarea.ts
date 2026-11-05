@@ -25,6 +25,8 @@ export interface DatosTarea {
 	/** Día `YYYY-MM-DD` (sin hora: no depende de la zona horaria) o `null`. */
 	fechaInicio: string | null;
 	fechaVencimiento: string | null;
+	/** Color de acento (#rrggbb) o `null`. */
+	color: string | null;
 	/** Personal: tags del dueño; compartida: de la organización (RN-60). */
 	tagIds: number[];
 }
@@ -108,6 +110,7 @@ export class Tarea extends Entity {
 			prioridad: "media",
 			fechaInicio: null,
 			fechaVencimiento: null,
+			color: null,
 			tagIds: [],
 			...sinIndefinidos(datos),
 			titulo: datos.titulo,
@@ -236,7 +239,7 @@ export class Tarea extends Entity {
 		return { ...this.datos, tagIds: [...this.datos.tagIds] };
 	}
 
-	/** `undefined` deja el campo como está; `null` vacía una fecha. */
+	/** `undefined` deja el campo como está; `null` vacía una fecha o el color. */
 	public actualizar(cambios: Partial<DatosTarea>): void {
 		const anterior = this.datos.estado;
 		this.datos = Tarea.validar({ ...this.datos, ...sinIndefinidos(cambios) });

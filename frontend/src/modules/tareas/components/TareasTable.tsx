@@ -1,3 +1,4 @@
+import { PuntoColor } from "@/core/components/ui/PuntoColor";
 import { Pencil, Trash2 } from "lucide-react";
 import { Button } from "@/core/components/ui/Button";
 import {
@@ -58,8 +59,9 @@ export function TareasTable({
 				<button
 					type="button"
 					onClick={() => onAbrir(fila)}
-					className="text-left font-medium text-tinta hover:text-indigo-400 hover:underline"
+					className="flex items-center gap-2 text-left font-medium text-tinta hover:text-indigo-400 hover:underline"
 				>
+					<PuntoColor color={fila.color} />
 					{fila.titulo}
 				</button>
 			),

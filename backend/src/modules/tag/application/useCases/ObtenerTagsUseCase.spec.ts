@@ -22,7 +22,7 @@ describe("ObtenerTagsUseCase", () => {
 			{ pagina: 1, limite: 10 },
 		);
 
-		expect(result.datos).toEqual([{ id: 1, nombre: "Ejemplo" }]);
+		expect(result.datos).toEqual([{ id: 1, nombre: "Ejemplo", color: null }]);
 		expect(result.totalElementos).toBe(1);
 	});
 });

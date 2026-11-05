@@ -6,6 +6,7 @@ export const TagMapper = {
 		return {
 			id: tag.getId(),
 			nombre: tag.getNombre(),
+			color: tag.getColor(),
 		};
 	},
 };

@@ -2343,6 +2343,8 @@ export interface paths {
                 content: {
                     "application/json": {
                         nombre: string;
+                        /** @example #f59e0b */
+                        color?: string | null;
                     };
                 };
             };
@@ -2471,6 +2473,8 @@ export interface paths {
                 content: {
                     "application/json": {
                         nombre?: string;
+                        /** @example #f59e0b */
+                        color?: string | null;
                     };
                 };
             };
@@ -2669,6 +2673,8 @@ export interface paths {
                 content: {
                     "application/json": {
                         nombre: string;
+                        /** @example #f59e0b */
+                        color?: string | null;
                     };
                 };
             };
@@ -2799,6 +2805,8 @@ export interface paths {
                 content: {
                     "application/json": {
                         nombre?: string;
+                        /** @example #f59e0b */
+                        color?: string | null;
                     };
                 };
             };
@@ -3015,6 +3023,8 @@ export interface paths {
                          * @example 2026-11-15
                          */
                         fechaVencimiento?: string | null;
+                        /** @example #f59e0b */
+                        color?: string | null;
                         tagIds?: number[];
                         responsableIds?: number[];
                         organizacionId?: number;
@@ -3240,6 +3250,8 @@ export interface paths {
                          * @example 2026-11-15
                          */
                         fechaVencimiento?: string | null;
+                        /** @example #f59e0b */
+                        color?: string | null;
                         tagIds?: number[];
                         responsableIds?: number[];
                     };
@@ -3523,6 +3535,8 @@ export interface paths {
                     "application/json": {
                         titulo: string;
                         contenido?: string;
+                        /** @example #f59e0b */
+                        color?: string | null;
                         tagIds?: number[];
                         proyectoId?: number;
                     };
@@ -3654,6 +3668,8 @@ export interface paths {
                     "application/json": {
                         titulo?: string;
                         contenido?: string;
+                        /** @example #f59e0b */
+                        color?: string | null;
                         tagIds?: number[];
                     };
                 };
@@ -6118,6 +6134,11 @@ export interface paths {
                         /** @default  */
                         descripcion?: string;
                         estado?: components["schemas"]["EstadoProyecto"];
+                        /**
+                         * @default null
+                         * @example #f59e0b
+                         */
+                        color?: string | null;
                         /** @default [] */
                         equipoIds?: number[];
                         /** @default [] */
@@ -6254,6 +6275,8 @@ export interface paths {
                         nombre?: string;
                         descripcion?: string;
                         estado?: components["schemas"]["EstadoProyecto"];
+                        /** @example #f59e0b */
+                        color?: string | null;
                         equipoIds?: number[];
                         integranteIds?: number[];
                     };
@@ -7161,6 +7184,8 @@ export interface components {
             id: number;
             /** @example urgente */
             nombre: string;
+            /** @example #f59e0b */
+            color: string | null;
         };
         TareaDto: {
             /** @example 1 */
@@ -7183,6 +7208,8 @@ export interface components {
              * @example 2026-11-15
              */
             fechaVencimiento: string | null;
+            /** @example #f59e0b */
+            color: string | null;
             tagIds: number[];
             organizacionId: number | null;
             equipoId: number | null;
@@ -7199,6 +7226,8 @@ export interface components {
              *     - Lisboa
              */
             contenido: string;
+            /** @example #f59e0b */
+            color: string | null;
             tagIds: number[];
             organizacionId: number | null;
             proyectoId: number | null;
@@ -7324,6 +7353,8 @@ export interface components {
             /** @example  */
             descripcion: string;
             estado: components["schemas"]["EstadoProyecto"];
+            /** @example #f59e0b */
+            color: string | null;
             equipoIds: number[];
             integranteIds: number[];
         };

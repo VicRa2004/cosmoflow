@@ -17,6 +17,8 @@ export const proyectoFormSchema = z
 			.max(100, "Máximo 100 caracteres"),
 		descripcion: z.string().trim().max(500, "Máximo 500 caracteres"),
 		estado: z.enum(["activo", "en_pausa", "terminado"]),
+		// "" = sin color: se envía `null` para quitarlo.
+		color: z.string().transform((v) => v || null),
 		equipoIds: z.array(z.number()),
 		integranteIds: z.array(z.number()),
 	})
@@ -33,6 +35,7 @@ export const proyectoAFormValues = (
 	nombre: proyecto?.nombre ?? "",
 	descripcion: proyecto?.descripcion ?? "",
 	estado: proyecto?.estado ?? "activo",
+	color: proyecto?.color ?? "",
 	equipoIds: proyecto?.equipoIds ?? [],
 	integranteIds: proyecto?.integranteIds ?? [],
 });

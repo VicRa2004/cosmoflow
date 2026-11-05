@@ -10,16 +10,26 @@ export class Tag extends Entity {
 		id: EntityId,
 		private readonly dueno: DuenoTag,
 		private nombre: string,
+		private color: string | null = null,
 	) {
 		super(id);
 	}
 
-	public static crear(dueno: DuenoTag, nombre: string): Tag {
-		return new Tag(new EntityId(), dueno, nombre);
+	public static crear(
+		dueno: DuenoTag,
+		nombre: string,
+		color: string | null = null,
+	): Tag {
+		return new Tag(new EntityId(), dueno, nombre, color);
 	}
 
-	public static reconstituir(id: number, dueno: DuenoTag, nombre: string): Tag {
-		return new Tag(new EntityId(id), dueno, nombre);
+	public static reconstituir(
+		id: number,
+		dueno: DuenoTag,
+		nombre: string,
+		color: string | null = null,
+	): Tag {
+		return new Tag(new EntityId(id), dueno, nombre, color);
 	}
 
 	getDueno() {
@@ -30,7 +40,13 @@ export class Tag extends Entity {
 		return this.nombre;
 	}
 
-	public actualizar(cambios: { nombre?: string }): void {
+	getColor() {
+		return this.color;
+	}
+
+	/** `undefined` deja el campo como está; `color: null` lo quita. */
+	public actualizar(cambios: { nombre?: string; color?: string | null }): void {
 		if (cambios.nombre !== undefined) this.nombre = cambios.nombre;
+		if (cambios.color !== undefined) this.color = cambios.color;
 	}
 }

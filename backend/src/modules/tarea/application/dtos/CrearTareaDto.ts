@@ -7,6 +7,7 @@ export interface CamposTareaDto {
 	prioridad?: PrioridadTarea;
 	fechaInicio?: string | null;
 	fechaVencimiento?: string | null;
+	color?: string | null;
 	tagIds?: number[];
 	/** Solo en las compartidas (RN-44). */
 	responsableIds?: number[];

@@ -1,3 +1,4 @@
+import { PuntoColor } from "@/core/components/ui/PuntoColor";
 import { Pencil, Trash2 } from "lucide-react";
 import { Button } from "@/core/components/ui/Button";
 import {
@@ -33,7 +34,12 @@ export function TagsTable({
 		},
 		{
 			cabecera: "Nombre",
-			celda: (fila) => fila.nombre ?? "—",
+			celda: (fila) => (
+				<span className="flex items-center gap-2">
+					<PuntoColor color={fila.color} />
+					{fila.nombre ?? "—"}
+				</span>
+			),
 		},
 		{
 			cabecera: <span className="sr-only">Acciones</span>,

@@ -34,6 +34,7 @@ export class PrismaTareaRepository implements TareaRepository {
 				prioridad: raw.prioridad,
 				fechaInicio: aDia(raw.fechaInicio),
 				fechaVencimiento: aDia(raw.fechaVencimiento),
+				color: raw.color,
 				tagIds: raw.tags.map((t) => t.tagId),
 			},
 			{
@@ -54,6 +55,7 @@ export class PrismaTareaRepository implements TareaRepository {
 			prioridad: datos.prioridad,
 			fechaInicio: aFecha(datos.fechaInicio),
 			fechaVencimiento: aFecha(datos.fechaVencimiento),
+			color: datos.color,
 		};
 	}
 

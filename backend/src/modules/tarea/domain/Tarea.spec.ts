@@ -11,6 +11,7 @@ describe("Tarea", () => {
 			prioridad: "media",
 			fechaInicio: null,
 			fechaVencimiento: null,
+			color: null,
 			tagIds: [],
 		});
 	});

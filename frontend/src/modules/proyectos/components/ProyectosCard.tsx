@@ -1,3 +1,4 @@
+import { PuntoColor } from "@/core/components/ui/PuntoColor";
 import { ListTodo, NotebookPen, Pencil, Plus, Trash2 } from "lucide-react";
 import { useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
@@ -98,6 +99,7 @@ export function ProyectosCard({
 							>
 								<div className="min-w-0 flex-1 basis-full sm:basis-0">
 									<p className="flex items-center gap-2 font-medium text-tinta">
+										<PuntoColor color={proyecto.color} />
 										<span className="truncate">{proyecto.nombre}</span>
 										<Badge
 											variant={VARIANTE_ESTADO[proyecto.estado]}

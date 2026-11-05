@@ -249,6 +249,8 @@ model Tag {
   usuarioId      Int?      @map("tag_fkusuario")
   organizacionId Int?      @map("tag_fkorganizacion")
   nombre         String    @map("tag_nombre") @db.VarChar(64)
+  /// Color de acento opcional (#rrggbb) para destacarlo
+  color          String?   @map("tag_color") @db.VarChar(7)
   createdAt      DateTime  @default(now()) @map("created_at")
   updatedAt      DateTime? @updatedAt @map("updated_at")
   /// Borrado lógico (RN-91). El nombre único por usuario lo valida la aplicación
@@ -295,6 +297,8 @@ model Tarea {
   prioridad        PrioridadTarea @default(media) @map("tar_prioridad")
   fechaInicio      DateTime?      @map("tar_fecha_inicio") @db.Date
   fechaVencimiento DateTime?      @map("tar_fecha_vencimiento") @db.Date
+  /// Color de acento opcional (#rrggbb) para destacarla
+  color            String?        @map("tar_color") @db.VarChar(7)
   createdAt        DateTime       @default(now()) @map("created_at")
   updatedAt        DateTime?      @updatedAt @map("updated_at")
   /// Borrado lógico (RN-91)
@@ -373,6 +377,8 @@ model Nota {
   titulo    String    @map("not_titulo") @db.VarChar(255)
   /// Markdown
   contenido String    @default("") @map("not_contenido")
+  /// Color de acento opcional (#rrggbb) para destacarla
+  color     String?   @map("not_color") @db.VarChar(7)
   createdAt DateTime  @default(now()) @map("created_at")
   updatedAt DateTime  @default(now()) @updatedAt @map("updated_at")
   /// Borrado lógico (RN-91)
@@ -615,6 +621,8 @@ model Proyecto {
   nombre         String         @map("pry_nombre") @db.VarChar(100)
   descripcion    String         @default("") @map("pry_descripcion") @db.VarChar(500)
   estado         EstadoProyecto @default(activo) @map("pry_estado")
+  /// Color de acento opcional (#rrggbb) para destacarlo
+  color          String?        @map("pry_color") @db.VarChar(7)
   createdAt      DateTime       @default(now()) @map("created_at")
   updatedAt      DateTime?      @updatedAt @map("updated_at")
   /// Borrado lógico (RN-91)

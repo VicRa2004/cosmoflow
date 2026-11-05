@@ -9,6 +9,8 @@ interface DatosProyecto {
 	nombre: string;
 	descripcion: string;
 	estado: EstadoProyecto;
+	/** Color de acento (#rrggbb) o `null`. */
+	color: string | null;
 	equipoIds: number[];
 	/** Integrantes sueltos, además de los equipos (RN-32). */
 	integranteIds: number[];
@@ -59,6 +61,10 @@ export class Proyecto extends Entity {
 		return this.datos.estado;
 	}
 
+	getColor() {
+		return this.datos.color;
+	}
+
 	getEquipoIds(): readonly number[] {
 		return this.datos.equipoIds;
 	}
@@ -81,6 +87,8 @@ export class Proyecto extends Entity {
 			nombre: cambios.nombre ?? this.datos.nombre,
 			descripcion: cambios.descripcion ?? this.datos.descripcion,
 			estado: cambios.estado ?? this.datos.estado,
+			// `null` quita el color; `undefined` lo deja.
+			color: cambios.color === undefined ? this.datos.color : cambios.color,
 			equipoIds,
 			integranteIds,
 		};

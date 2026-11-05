@@ -26,6 +26,7 @@ describe("ActualizarTagUseCase", () => {
 		).toEqual({
 			id: 1,
 			nombre: "Nuevo",
+			color: null,
 		});
 	});
 
