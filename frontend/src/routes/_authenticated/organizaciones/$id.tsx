@@ -1,9 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { OrganizacionPage } from "@/modules/organizaciones/pages/OrganizacionPage";
+import { OrganizacionLayout } from "@/modules/organizaciones/pages/OrganizacionLayout";
 
 export const Route = createFileRoute("/_authenticated/organizaciones/$id")({
 	component: function VerOrganizacion() {
 		const { id } = Route.useParams();
-		return <OrganizacionPage key={id} id={Number(id)} />;
+		return <OrganizacionLayout key={id} id={Number(id)} />;
 	},
 });

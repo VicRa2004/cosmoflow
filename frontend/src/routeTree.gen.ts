@@ -33,7 +33,15 @@ import { Route as AuthenticatedTareasIndexRouteImport } from './routes/_authenti
 import { Route as AuthenticatedTareasIdRouteImport } from './routes/_authenticated/tareas/$id'
 import { Route as AuthenticatedTareasNuevaRouteImport } from './routes/_authenticated/tareas/nueva'
 import { Route as AuthenticatedNotasIdEditarRouteImport } from './routes/_authenticated/notas/$id_.editar'
+import { Route as AuthenticatedOrganizacionesIdIndexRouteImport } from './routes/_authenticated/organizaciones/$id/index'
+import { Route as AuthenticatedOrganizacionesIdAjustesRouteImport } from './routes/_authenticated/organizaciones/$id/ajustes'
+import { Route as AuthenticatedOrganizacionesIdMiembrosRouteImport } from './routes/_authenticated/organizaciones/$id/miembros'
+import { Route as AuthenticatedOrganizacionesIdProyectosRouteImport } from './routes/_authenticated/organizaciones/$id/proyectos'
+import { Route as AuthenticatedOrganizacionesIdRolesRouteImport } from './routes/_authenticated/organizaciones/$id/roles'
+import { Route as AuthenticatedOrganizacionesIdTagsRouteImport } from './routes/_authenticated/organizaciones/$id/tags'
 import { Route as AuthenticatedTareasIdEditarRouteImport } from './routes/_authenticated/tareas/$id_.editar'
+import { Route as AuthenticatedOrganizacionesIdEquiposIndexRouteImport } from './routes/_authenticated/organizaciones/$id/equipos/index'
+import { Route as AuthenticatedOrganizacionesIdEquiposEquipoIdRouteImport } from './routes/_authenticated/organizaciones/$id/equipos/$equipoId'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -160,11 +168,59 @@ const AuthenticatedNotasIdEditarRoute =
     path: '/notas/$id/editar',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
+const AuthenticatedOrganizacionesIdIndexRoute =
+  AuthenticatedOrganizacionesIdIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => AuthenticatedOrganizacionesIdRoute,
+  } as any)
+const AuthenticatedOrganizacionesIdAjustesRoute =
+  AuthenticatedOrganizacionesIdAjustesRouteImport.update({
+    id: '/ajustes',
+    path: '/ajustes',
+    getParentRoute: () => AuthenticatedOrganizacionesIdRoute,
+  } as any)
+const AuthenticatedOrganizacionesIdMiembrosRoute =
+  AuthenticatedOrganizacionesIdMiembrosRouteImport.update({
+    id: '/miembros',
+    path: '/miembros',
+    getParentRoute: () => AuthenticatedOrganizacionesIdRoute,
+  } as any)
+const AuthenticatedOrganizacionesIdProyectosRoute =
+  AuthenticatedOrganizacionesIdProyectosRouteImport.update({
+    id: '/proyectos',
+    path: '/proyectos',
+    getParentRoute: () => AuthenticatedOrganizacionesIdRoute,
+  } as any)
+const AuthenticatedOrganizacionesIdRolesRoute =
+  AuthenticatedOrganizacionesIdRolesRouteImport.update({
+    id: '/roles',
+    path: '/roles',
+    getParentRoute: () => AuthenticatedOrganizacionesIdRoute,
+  } as any)
+const AuthenticatedOrganizacionesIdTagsRoute =
+  AuthenticatedOrganizacionesIdTagsRouteImport.update({
+    id: '/tags',
+    path: '/tags',
+    getParentRoute: () => AuthenticatedOrganizacionesIdRoute,
+  } as any)
 const AuthenticatedTareasIdEditarRoute =
   AuthenticatedTareasIdEditarRouteImport.update({
     id: '/tareas/$id_/editar',
     path: '/tareas/$id/editar',
     getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedOrganizacionesIdEquiposIndexRoute =
+  AuthenticatedOrganizacionesIdEquiposIndexRouteImport.update({
+    id: '/equipos/',
+    path: '/equipos/',
+    getParentRoute: () => AuthenticatedOrganizacionesIdRoute,
+  } as any)
+const AuthenticatedOrganizacionesIdEquiposEquipoIdRoute =
+  AuthenticatedOrganizacionesIdEquiposEquipoIdRouteImport.update({
+    id: '/equipos/$equipoId',
+    path: '/equipos/$equipoId',
+    getParentRoute: () => AuthenticatedOrganizacionesIdRoute,
   } as any)
 
 export interface FileRoutesByFullPath {
@@ -184,14 +240,22 @@ export interface FileRoutesByFullPath {
   '/login/google': typeof LoginGoogleRoute
   '/notas/$id': typeof AuthenticatedNotasIdRoute
   '/notas/nueva': typeof AuthenticatedNotasNuevaRoute
-  '/organizaciones/$id': typeof AuthenticatedOrganizacionesIdRoute
+  '/organizaciones/$id': typeof AuthenticatedOrganizacionesIdRouteWithChildren
   '/tareas/$id': typeof AuthenticatedTareasIdRoute
   '/tareas/nueva': typeof AuthenticatedTareasNuevaRoute
   '/notas/': typeof AuthenticatedNotasIndexRoute
   '/organizaciones/': typeof AuthenticatedOrganizacionesIndexRoute
   '/tareas/': typeof AuthenticatedTareasIndexRoute
   '/notas/$id/editar': typeof AuthenticatedNotasIdEditarRoute
+  '/organizaciones/$id/ajustes': typeof AuthenticatedOrganizacionesIdAjustesRoute
+  '/organizaciones/$id/miembros': typeof AuthenticatedOrganizacionesIdMiembrosRoute
+  '/organizaciones/$id/proyectos': typeof AuthenticatedOrganizacionesIdProyectosRoute
+  '/organizaciones/$id/roles': typeof AuthenticatedOrganizacionesIdRolesRoute
+  '/organizaciones/$id/tags': typeof AuthenticatedOrganizacionesIdTagsRoute
   '/tareas/$id/editar': typeof AuthenticatedTareasIdEditarRoute
+  '/organizaciones/$id/': typeof AuthenticatedOrganizacionesIdIndexRoute
+  '/organizaciones/$id/equipos/$equipoId': typeof AuthenticatedOrganizacionesIdEquiposEquipoIdRoute
+  '/organizaciones/$id/equipos/': typeof AuthenticatedOrganizacionesIdEquiposIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -210,14 +274,21 @@ export interface FileRoutesByTo {
   '/login/google': typeof LoginGoogleRoute
   '/notas/$id': typeof AuthenticatedNotasIdRoute
   '/notas/nueva': typeof AuthenticatedNotasNuevaRoute
-  '/organizaciones/$id': typeof AuthenticatedOrganizacionesIdRoute
   '/tareas/$id': typeof AuthenticatedTareasIdRoute
   '/tareas/nueva': typeof AuthenticatedTareasNuevaRoute
   '/notas': typeof AuthenticatedNotasIndexRoute
   '/organizaciones': typeof AuthenticatedOrganizacionesIndexRoute
   '/tareas': typeof AuthenticatedTareasIndexRoute
   '/notas/$id/editar': typeof AuthenticatedNotasIdEditarRoute
+  '/organizaciones/$id/ajustes': typeof AuthenticatedOrganizacionesIdAjustesRoute
+  '/organizaciones/$id/miembros': typeof AuthenticatedOrganizacionesIdMiembrosRoute
+  '/organizaciones/$id/proyectos': typeof AuthenticatedOrganizacionesIdProyectosRoute
+  '/organizaciones/$id/roles': typeof AuthenticatedOrganizacionesIdRolesRoute
+  '/organizaciones/$id/tags': typeof AuthenticatedOrganizacionesIdTagsRoute
   '/tareas/$id/editar': typeof AuthenticatedTareasIdEditarRoute
+  '/organizaciones/$id': typeof AuthenticatedOrganizacionesIdIndexRoute
+  '/organizaciones/$id/equipos/$equipoId': typeof AuthenticatedOrganizacionesIdEquiposEquipoIdRoute
+  '/organizaciones/$id/equipos': typeof AuthenticatedOrganizacionesIdEquiposIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -238,14 +309,22 @@ export interface FileRoutesById {
   '/login_/google': typeof LoginGoogleRoute
   '/_authenticated/notas/$id': typeof AuthenticatedNotasIdRoute
   '/_authenticated/notas/nueva': typeof AuthenticatedNotasNuevaRoute
-  '/_authenticated/organizaciones/$id': typeof AuthenticatedOrganizacionesIdRoute
+  '/_authenticated/organizaciones/$id': typeof AuthenticatedOrganizacionesIdRouteWithChildren
   '/_authenticated/tareas/$id': typeof AuthenticatedTareasIdRoute
   '/_authenticated/tareas/nueva': typeof AuthenticatedTareasNuevaRoute
   '/_authenticated/notas/': typeof AuthenticatedNotasIndexRoute
   '/_authenticated/organizaciones/': typeof AuthenticatedOrganizacionesIndexRoute
   '/_authenticated/tareas/': typeof AuthenticatedTareasIndexRoute
   '/_authenticated/notas/$id_/editar': typeof AuthenticatedNotasIdEditarRoute
+  '/_authenticated/organizaciones/$id/ajustes': typeof AuthenticatedOrganizacionesIdAjustesRoute
+  '/_authenticated/organizaciones/$id/miembros': typeof AuthenticatedOrganizacionesIdMiembrosRoute
+  '/_authenticated/organizaciones/$id/proyectos': typeof AuthenticatedOrganizacionesIdProyectosRoute
+  '/_authenticated/organizaciones/$id/roles': typeof AuthenticatedOrganizacionesIdRolesRoute
+  '/_authenticated/organizaciones/$id/tags': typeof AuthenticatedOrganizacionesIdTagsRoute
   '/_authenticated/tareas/$id_/editar': typeof AuthenticatedTareasIdEditarRoute
+  '/_authenticated/organizaciones/$id/': typeof AuthenticatedOrganizacionesIdIndexRoute
+  '/_authenticated/organizaciones/$id/equipos/$equipoId': typeof AuthenticatedOrganizacionesIdEquiposEquipoIdRoute
+  '/_authenticated/organizaciones/$id/equipos/': typeof AuthenticatedOrganizacionesIdEquiposIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -273,7 +352,15 @@ export interface FileRouteTypes {
     | '/organizaciones/'
     | '/tareas/'
     | '/notas/$id/editar'
+    | '/organizaciones/$id/ajustes'
+    | '/organizaciones/$id/miembros'
+    | '/organizaciones/$id/proyectos'
+    | '/organizaciones/$id/roles'
+    | '/organizaciones/$id/tags'
     | '/tareas/$id/editar'
+    | '/organizaciones/$id/'
+    | '/organizaciones/$id/equipos/$equipoId'
+    | '/organizaciones/$id/equipos/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -292,14 +379,21 @@ export interface FileRouteTypes {
     | '/login/google'
     | '/notas/$id'
     | '/notas/nueva'
-    | '/organizaciones/$id'
     | '/tareas/$id'
     | '/tareas/nueva'
     | '/notas'
     | '/organizaciones'
     | '/tareas'
     | '/notas/$id/editar'
+    | '/organizaciones/$id/ajustes'
+    | '/organizaciones/$id/miembros'
+    | '/organizaciones/$id/proyectos'
+    | '/organizaciones/$id/roles'
+    | '/organizaciones/$id/tags'
     | '/tareas/$id/editar'
+    | '/organizaciones/$id'
+    | '/organizaciones/$id/equipos/$equipoId'
+    | '/organizaciones/$id/equipos'
   id:
     | '__root__'
     | '/'
@@ -326,7 +420,15 @@ export interface FileRouteTypes {
     | '/_authenticated/organizaciones/'
     | '/_authenticated/tareas/'
     | '/_authenticated/notas/$id_/editar'
+    | '/_authenticated/organizaciones/$id/ajustes'
+    | '/_authenticated/organizaciones/$id/miembros'
+    | '/_authenticated/organizaciones/$id/proyectos'
+    | '/_authenticated/organizaciones/$id/roles'
+    | '/_authenticated/organizaciones/$id/tags'
     | '/_authenticated/tareas/$id_/editar'
+    | '/_authenticated/organizaciones/$id/'
+    | '/_authenticated/organizaciones/$id/equipos/$equipoId'
+    | '/_authenticated/organizaciones/$id/equipos/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -510,6 +612,48 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedNotasIdEditarRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/organizaciones/$id/': {
+      id: '/_authenticated/organizaciones/$id/'
+      path: '/'
+      fullPath: '/organizaciones/$id/'
+      preLoaderRoute: typeof AuthenticatedOrganizacionesIdIndexRouteImport
+      parentRoute: typeof AuthenticatedOrganizacionesIdRoute
+    }
+    '/_authenticated/organizaciones/$id/ajustes': {
+      id: '/_authenticated/organizaciones/$id/ajustes'
+      path: '/ajustes'
+      fullPath: '/organizaciones/$id/ajustes'
+      preLoaderRoute: typeof AuthenticatedOrganizacionesIdAjustesRouteImport
+      parentRoute: typeof AuthenticatedOrganizacionesIdRoute
+    }
+    '/_authenticated/organizaciones/$id/miembros': {
+      id: '/_authenticated/organizaciones/$id/miembros'
+      path: '/miembros'
+      fullPath: '/organizaciones/$id/miembros'
+      preLoaderRoute: typeof AuthenticatedOrganizacionesIdMiembrosRouteImport
+      parentRoute: typeof AuthenticatedOrganizacionesIdRoute
+    }
+    '/_authenticated/organizaciones/$id/proyectos': {
+      id: '/_authenticated/organizaciones/$id/proyectos'
+      path: '/proyectos'
+      fullPath: '/organizaciones/$id/proyectos'
+      preLoaderRoute: typeof AuthenticatedOrganizacionesIdProyectosRouteImport
+      parentRoute: typeof AuthenticatedOrganizacionesIdRoute
+    }
+    '/_authenticated/organizaciones/$id/roles': {
+      id: '/_authenticated/organizaciones/$id/roles'
+      path: '/roles'
+      fullPath: '/organizaciones/$id/roles'
+      preLoaderRoute: typeof AuthenticatedOrganizacionesIdRolesRouteImport
+      parentRoute: typeof AuthenticatedOrganizacionesIdRoute
+    }
+    '/_authenticated/organizaciones/$id/tags': {
+      id: '/_authenticated/organizaciones/$id/tags'
+      path: '/tags'
+      fullPath: '/organizaciones/$id/tags'
+      preLoaderRoute: typeof AuthenticatedOrganizacionesIdTagsRouteImport
+      parentRoute: typeof AuthenticatedOrganizacionesIdRoute
+    }
     '/_authenticated/tareas/$id_/editar': {
       id: '/_authenticated/tareas/$id_/editar'
       path: '/tareas/$id/editar'
@@ -517,8 +661,58 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedTareasIdEditarRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/organizaciones/$id/equipos/': {
+      id: '/_authenticated/organizaciones/$id/equipos/'
+      path: '/equipos'
+      fullPath: '/organizaciones/$id/equipos/'
+      preLoaderRoute: typeof AuthenticatedOrganizacionesIdEquiposIndexRouteImport
+      parentRoute: typeof AuthenticatedOrganizacionesIdRoute
+    }
+    '/_authenticated/organizaciones/$id/equipos/$equipoId': {
+      id: '/_authenticated/organizaciones/$id/equipos/$equipoId'
+      path: '/equipos/$equipoId'
+      fullPath: '/organizaciones/$id/equipos/$equipoId'
+      preLoaderRoute: typeof AuthenticatedOrganizacionesIdEquiposEquipoIdRouteImport
+      parentRoute: typeof AuthenticatedOrganizacionesIdRoute
+    }
   }
 }
+
+interface AuthenticatedOrganizacionesIdRouteChildren {
+  AuthenticatedOrganizacionesIdAjustesRoute: typeof AuthenticatedOrganizacionesIdAjustesRoute
+  AuthenticatedOrganizacionesIdMiembrosRoute: typeof AuthenticatedOrganizacionesIdMiembrosRoute
+  AuthenticatedOrganizacionesIdProyectosRoute: typeof AuthenticatedOrganizacionesIdProyectosRoute
+  AuthenticatedOrganizacionesIdRolesRoute: typeof AuthenticatedOrganizacionesIdRolesRoute
+  AuthenticatedOrganizacionesIdTagsRoute: typeof AuthenticatedOrganizacionesIdTagsRoute
+  AuthenticatedOrganizacionesIdIndexRoute: typeof AuthenticatedOrganizacionesIdIndexRoute
+  AuthenticatedOrganizacionesIdEquiposEquipoIdRoute: typeof AuthenticatedOrganizacionesIdEquiposEquipoIdRoute
+  AuthenticatedOrganizacionesIdEquiposIndexRoute: typeof AuthenticatedOrganizacionesIdEquiposIndexRoute
+}
+
+const AuthenticatedOrganizacionesIdRouteChildren: AuthenticatedOrganizacionesIdRouteChildren =
+  {
+    AuthenticatedOrganizacionesIdAjustesRoute:
+      AuthenticatedOrganizacionesIdAjustesRoute,
+    AuthenticatedOrganizacionesIdMiembrosRoute:
+      AuthenticatedOrganizacionesIdMiembrosRoute,
+    AuthenticatedOrganizacionesIdProyectosRoute:
+      AuthenticatedOrganizacionesIdProyectosRoute,
+    AuthenticatedOrganizacionesIdRolesRoute:
+      AuthenticatedOrganizacionesIdRolesRoute,
+    AuthenticatedOrganizacionesIdTagsRoute:
+      AuthenticatedOrganizacionesIdTagsRoute,
+    AuthenticatedOrganizacionesIdIndexRoute:
+      AuthenticatedOrganizacionesIdIndexRoute,
+    AuthenticatedOrganizacionesIdEquiposEquipoIdRoute:
+      AuthenticatedOrganizacionesIdEquiposEquipoIdRoute,
+    AuthenticatedOrganizacionesIdEquiposIndexRoute:
+      AuthenticatedOrganizacionesIdEquiposIndexRoute,
+  }
+
+const AuthenticatedOrganizacionesIdRouteWithChildren =
+  AuthenticatedOrganizacionesIdRoute._addFileChildren(
+    AuthenticatedOrganizacionesIdRouteChildren,
+  )
 
 interface AuthenticatedRouteChildren {
   AuthenticatedAutorizarConexionRoute: typeof AuthenticatedAutorizarConexionRoute
@@ -530,7 +724,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedUsuariosRoute: typeof AuthenticatedUsuariosRoute
   AuthenticatedNotasIdRoute: typeof AuthenticatedNotasIdRoute
   AuthenticatedNotasNuevaRoute: typeof AuthenticatedNotasNuevaRoute
-  AuthenticatedOrganizacionesIdRoute: typeof AuthenticatedOrganizacionesIdRoute
+  AuthenticatedOrganizacionesIdRoute: typeof AuthenticatedOrganizacionesIdRouteWithChildren
   AuthenticatedTareasIdRoute: typeof AuthenticatedTareasIdRoute
   AuthenticatedTareasNuevaRoute: typeof AuthenticatedTareasNuevaRoute
   AuthenticatedNotasIndexRoute: typeof AuthenticatedNotasIndexRoute
@@ -550,7 +744,8 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedUsuariosRoute: AuthenticatedUsuariosRoute,
   AuthenticatedNotasIdRoute: AuthenticatedNotasIdRoute,
   AuthenticatedNotasNuevaRoute: AuthenticatedNotasNuevaRoute,
-  AuthenticatedOrganizacionesIdRoute: AuthenticatedOrganizacionesIdRoute,
+  AuthenticatedOrganizacionesIdRoute:
+    AuthenticatedOrganizacionesIdRouteWithChildren,
   AuthenticatedTareasIdRoute: AuthenticatedTareasIdRoute,
   AuthenticatedTareasNuevaRoute: AuthenticatedTareasNuevaRoute,
   AuthenticatedNotasIndexRoute: AuthenticatedNotasIndexRoute,

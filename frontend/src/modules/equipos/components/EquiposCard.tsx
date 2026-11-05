@@ -1,7 +1,6 @@
-import { ListTodo, Pencil, Plus, Trash2, UserCog } from "lucide-react";
-import { useNavigate } from "@tanstack/react-router";
+import { Link } from "@tanstack/react-router";
+import { ChevronRight, Plus } from "lucide-react";
 import { useState } from "react";
-import { useAuthStore } from "@/core/auth/store";
 import { Badge } from "@/core/components/ui/Badge";
 import { Button } from "@/core/components/ui/Button";
 import {
@@ -11,7 +10,6 @@ import {
 	CardHeader,
 	CardTitle,
 } from "@/core/components/ui/Card";
-import { ConfirmDialog } from "@/core/components/ui/ConfirmDialog";
 import { Dialog } from "@/core/components/ui/Dialog";
 import { Select } from "@/core/components/ui/Select";
 import { Paginacion, paginarLista } from "@/core/components/ui/Table";
@@ -20,20 +18,16 @@ import { AvatarOrganizacion } from "@/modules/organizaciones/components/AvatarOr
 import { useMiembrosQuery } from "@/modules/organizaciones/hooks/useMiembros";
 import { puedeEn } from "@/modules/organizaciones/utils/permisos";
 import { useTagsQuery } from "@/modules/tags/hooks/useTagsQuery";
-import type { EquipoDto } from "../api/equiposApi";
-import { useEquiposQuery, useGestionEquipos } from "../hooks/useEquipos";
-import { DelegadosForm } from "./DelegadosForm";
+import { useEquiposQuery } from "../hooks/useEquipos";
 import { EquipoForm } from "./EquipoForm";
 
-/** Equipos de la organización (RN-20 a 26): todos los ven; crear, editar y borrar según permisos. */
+/** Lista de equipos (RN-20 a 26): todos los ven; cada uno se gestiona en su página (`EquipoPage`). */
 export function EquiposCard({
 	organizacion,
 }: {
 	organizacion: OrganizacionDto;
 }) {
 	const organizacionId = organizacion.id;
-	const navigate = useNavigate();
-	const yo = useAuthStore((state) => state.usuario?.id);
 	const [tagId, setTagId] = useState<number>();
 	const { data: equipos } = useEquiposQuery(organizacionId, tagId);
 	const [pagina, setPagina] = useState(1);
@@ -47,12 +41,7 @@ export function EquiposCard({
 	const tags = paginaTags?.datos ?? [];
 	const nombreMiembro = new Map(miembros.map((m) => [m.usuarioId, m.nombre]));
 	const nombreTag = new Map(tags.map((t) => [t.id, t.nombre]));
-	const { eliminar } = useGestionEquipos(organizacionId);
-	/** `null` = cerrado; `"nuevo"` = alta; un DTO = edición. */
-	const [editando, setEditando] = useState<EquipoDto | "nuevo" | null>(null);
-	const [delegando, setDelegando] = useState<EquipoDto | null>(null);
-	const [borrando, setBorrando] = useState<EquipoDto | null>(null);
-	const puedeEditar = puedeEn(organizacion, "equipos:editar");
+	const [creando, setCreando] = useState(false);
 
 	return (
 		<Card>
@@ -65,7 +54,11 @@ export function EquiposCard({
 					</CardDescription>
 				</div>
 				{puedeEn(organizacion, "equipos:crear") && (
-					<Button size="sm" onClick={() => setEditando("nuevo")}>
+					<Button
+						size="sm"
+						className="shrink-0"
+						onClick={() => setCreando(true)}
+					>
 						<Plus className="h-4 w-4" />
 						Nuevo equipo
 					</Button>
@@ -97,78 +90,40 @@ export function EquiposCard({
 				) : (
 					<ul className="divide-y divide-borde">
 						{paginaEquipos.datos.map((equipo) => (
-							<li
-								key={equipo.id}
-								className="flex items-center gap-3 py-2.5 text-sm"
-							>
-								<AvatarOrganizacion
-									organizacion={{ ...equipo, avatarUrl: null }}
-								/>
-								<div className="min-w-0 flex-1">
-									<p className="truncate font-medium text-tinta">
-										{equipo.nombre}
-									</p>
-									<p className="truncate text-xs text-tinta-tenue">
-										{equipo.miembros.length} miembros
-										{equipo.liderId !== null &&
-											` · Líder: ${nombreMiembro.get(equipo.liderId) ?? "—"}`}
-									</p>
-									{equipo.tagIds.length > 0 && (
-										<div className="mt-1 flex flex-wrap gap-1">
-											{equipo.tagIds.map((id) => (
-												<Badge key={id}>{nombreTag.get(id) ?? "…"}</Badge>
-											))}
-										</div>
-									)}
-								</div>
-								<Button
-									variant="ghost"
-									size="sm"
-									aria-label={`Tareas de ${equipo.nombre}`}
-									title="Tareas"
-									onClick={() =>
-										navigate({
-											to: "/tareas",
-											search: { organizacionId, equipoId: equipo.id },
-										})
-									}
+							<li key={equipo.id}>
+								<Link
+									to="/organizaciones/$id/equipos/$equipoId"
+									params={{
+										id: String(organizacionId),
+										equipoId: String(equipo.id),
+									}}
+									className="flex items-center gap-3 py-2.5 text-sm hover:bg-elevada/50"
 								>
-									<ListTodo className="h-4 w-4" />
-								</Button>
-								{equipo.liderId !== null &&
-									(equipo.liderId === yo || puedeEditar) && (
-										<Button
-											variant="ghost"
-											size="sm"
-											aria-label={`Delegados de ${equipo.nombre}`}
-											title="Delegados"
-											onClick={() => setDelegando(equipo)}
-										>
-											<UserCog className="h-4 w-4" />
-										</Button>
-									)}
-								{puedeEditar && (
-									<Button
-										variant="ghost"
-										size="sm"
-										aria-label={`Editar el equipo ${equipo.nombre}`}
-										title="Editar"
-										onClick={() => setEditando(equipo)}
-									>
-										<Pencil className="h-4 w-4" />
-									</Button>
-								)}
-								{puedeEn(organizacion, "equipos:eliminar") && (
-									<Button
-										variant="dangerGhost"
-										size="sm"
-										aria-label={`Eliminar el equipo ${equipo.nombre}`}
-										title="Eliminar"
-										onClick={() => setBorrando(equipo)}
-									>
-										<Trash2 className="h-4 w-4" />
-									</Button>
-								)}
+									<AvatarOrganizacion
+										organizacion={{ ...equipo, avatarUrl: null }}
+									/>
+									<div className="min-w-0 flex-1">
+										<p className="truncate font-medium text-tinta">
+											{equipo.nombre}
+										</p>
+										<p className="truncate text-xs text-tinta-tenue">
+											{equipo.miembros.length} miembros
+											{equipo.liderId !== null &&
+												` · Líder: ${nombreMiembro.get(equipo.liderId) ?? "—"}`}
+										</p>
+										{equipo.tagIds.length > 0 && (
+											<div className="mt-1 flex flex-wrap gap-1">
+												{equipo.tagIds.map((id) => (
+													<Badge key={id}>{nombreTag.get(id) ?? "…"}</Badge>
+												))}
+											</div>
+										)}
+									</div>
+									<ChevronRight
+										aria-hidden
+										className="size-4 shrink-0 text-tinta-tenue"
+									/>
+								</Link>
 							</li>
 						))}
 					</ul>
@@ -179,51 +134,19 @@ export function EquiposCard({
 			</CardContent>
 
 			<Dialog
-				abierto={editando !== null}
-				onCerrar={() => setEditando(null)}
-				titulo={editando === "nuevo" ? "Nuevo equipo" : "Editar equipo"}
+				abierto={creando}
+				onCerrar={() => setCreando(false)}
+				titulo="Nuevo equipo"
 			>
-				{editando !== null && (
+				{creando && (
 					<EquipoForm
-						key={editando === "nuevo" ? "nuevo" : editando.id}
 						organizacionId={organizacionId}
-						inicial={editando === "nuevo" ? undefined : editando}
 						miembros={miembros}
 						tags={tags}
-						onGuardado={() => setEditando(null)}
+						onGuardado={() => setCreando(false)}
 					/>
 				)}
 			</Dialog>
-
-			<Dialog
-				abierto={delegando !== null}
-				onCerrar={() => setDelegando(null)}
-				titulo={`Delegados de «${delegando?.nombre ?? ""}»`}
-			>
-				{delegando !== null && (
-					<DelegadosForm
-						key={delegando.id}
-						organizacionId={organizacionId}
-						equipo={delegando}
-						nombre={nombreMiembro}
-						onGuardado={() => setDelegando(null)}
-					/>
-				)}
-			</Dialog>
-
-			<ConfirmDialog
-				abierto={borrando !== null}
-				titulo={`¿Eliminar el equipo «${borrando?.nombre ?? ""}»?`}
-				mensaje="Sus tareas pasan a la organización, con sus responsables. Sus miembros siguen en la organización."
-				textoConfirmar="Eliminar"
-				peligroso
-				isLoading={eliminar.isPending}
-				onCancelar={() => setBorrando(null)}
-				onConfirmar={() =>
-					borrando &&
-					eliminar.mutate(borrando.id, { onSuccess: () => setBorrando(null) })
-				}
-			/>
 		</Card>
 	);
 }

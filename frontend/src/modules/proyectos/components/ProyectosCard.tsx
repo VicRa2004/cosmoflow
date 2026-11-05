@@ -55,8 +55,8 @@ export function ProyectosCard({
 				<div>
 					<CardTitle>Proyectos</CardTitle>
 					<CardDescription>
-						Cada proyecto tiene al menos un equipo y, si hace falta, integrantes
-						sueltos.
+						Cada proyecto tiene al menos un integrante: un equipo o una persona
+						suelta.
 					</CardDescription>
 				</div>
 				{puedeEn(organizacion, "proyectos:crear") && (
@@ -94,73 +94,83 @@ export function ProyectosCard({
 						{paginaProyectos.datos.map((proyecto) => (
 							<li
 								key={proyecto.id}
-								className="flex items-center gap-3 py-2.5 text-sm"
+								className="flex flex-wrap items-center gap-x-3 gap-y-1 py-2.5 text-sm sm:flex-nowrap"
 							>
-								<div className="min-w-0 flex-1">
+								<div className="min-w-0 flex-1 basis-full sm:basis-0">
 									<p className="flex items-center gap-2 font-medium text-tinta">
 										<span className="truncate">{proyecto.nombre}</span>
-										<Badge variant={VARIANTE_ESTADO[proyecto.estado]}>
+										<Badge
+											variant={VARIANTE_ESTADO[proyecto.estado]}
+											className="shrink-0 whitespace-nowrap"
+										>
 											{ETIQUETA_ESTADO[proyecto.estado]}
 										</Badge>
 									</p>
 									<p className="truncate text-xs text-tinta-tenue">
-										{proyecto.equipoIds
-											.map((id) => nombreEquipo.get(id) ?? "…")
-											.join(", ")}
-										{proyecto.integranteIds.length > 0 &&
-											` · ${proyecto.integranteIds.length} sueltos`}
+										{[
+											...proyecto.equipoIds.map(
+												(id) => nombreEquipo.get(id) ?? "…",
+											),
+											...(proyecto.integranteIds.length > 0
+												? [
+														`${proyecto.integranteIds.length} ${proyecto.integranteIds.length === 1 ? "persona" : "personas"}`,
+													]
+												: []),
+										].join(" · ")}
 									</p>
 								</div>
-								<Button
-									variant="ghost"
-									size="sm"
-									aria-label={`Tareas de ${proyecto.nombre}`}
-									title="Tareas"
-									onClick={() =>
-										navigate({
-											to: "/tareas",
-											search: { organizacionId, proyectoId: proyecto.id },
-										})
-									}
-								>
-									<ListTodo className="h-4 w-4" />
-								</Button>
-								<Button
-									variant="ghost"
-									size="sm"
-									aria-label={`Notas de ${proyecto.nombre}`}
-									title="Notas"
-									onClick={() =>
-										navigate({
-											to: "/notas",
-											search: { organizacionId, proyectoId: proyecto.id },
-										})
-									}
-								>
-									<NotebookPen className="h-4 w-4" />
-								</Button>
-								{puedeEn(organizacion, "proyectos:editar") && (
+								<div className="ml-auto flex shrink-0 items-center gap-1">
 									<Button
 										variant="ghost"
 										size="sm"
-										aria-label={`Editar el proyecto ${proyecto.nombre}`}
-										title="Editar"
-										onClick={() => setEditando(proyecto)}
+										aria-label={`Tareas de ${proyecto.nombre}`}
+										title="Tareas"
+										onClick={() =>
+											navigate({
+												to: "/tareas",
+												search: { organizacionId, proyectoId: proyecto.id },
+											})
+										}
 									>
-										<Pencil className="h-4 w-4" />
+										<ListTodo className="h-4 w-4" />
 									</Button>
-								)}
-								{puedeEn(organizacion, "proyectos:eliminar") && (
 									<Button
-										variant="dangerGhost"
+										variant="ghost"
 										size="sm"
-										aria-label={`Eliminar el proyecto ${proyecto.nombre}`}
-										title="Eliminar"
-										onClick={() => setBorrando(proyecto)}
+										aria-label={`Notas de ${proyecto.nombre}`}
+										title="Notas"
+										onClick={() =>
+											navigate({
+												to: "/notas",
+												search: { organizacionId, proyectoId: proyecto.id },
+											})
+										}
 									>
-										<Trash2 className="h-4 w-4" />
+										<NotebookPen className="h-4 w-4" />
 									</Button>
-								)}
+									{puedeEn(organizacion, "proyectos:editar") && (
+										<Button
+											variant="ghost"
+											size="sm"
+											aria-label={`Editar el proyecto ${proyecto.nombre}`}
+											title="Editar"
+											onClick={() => setEditando(proyecto)}
+										>
+											<Pencil className="h-4 w-4" />
+										</Button>
+									)}
+									{puedeEn(organizacion, "proyectos:eliminar") && (
+										<Button
+											variant="dangerGhost"
+											size="sm"
+											aria-label={`Eliminar el proyecto ${proyecto.nombre}`}
+											title="Eliminar"
+											onClick={() => setBorrando(proyecto)}
+										>
+											<Trash2 className="h-4 w-4" />
+										</Button>
+									)}
+								</div>
 							</li>
 						))}
 					</ul>

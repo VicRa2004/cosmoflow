@@ -95,10 +95,10 @@ export function MiembrosCard({
 						return (
 							<li
 								key={miembro.usuarioId}
-								className="flex items-center gap-3 py-2.5 text-sm"
+								className="flex flex-wrap items-center gap-x-3 gap-y-1 py-2.5 text-sm sm:flex-nowrap"
 							>
 								<Avatar nombre={miembro.nombre} url={miembro.avatarUrl} />
-								<div className="min-w-0 flex-1">
+								<div className="min-w-0 flex-1 basis-[calc(100%-3.5rem)] sm:basis-0">
 									<p className="truncate font-medium text-tinta">
 										{miembro.nombre}
 										{soyYo && <span className="text-tinta-tenue"> (tú)</span>}
@@ -109,52 +109,54 @@ export function MiembrosCard({
 											` · ${miembro.roles.map((r) => r.nombre).join(", ")}`}
 									</p>
 								</div>
-								{miembro.isAdmin && (
-									<Badge variant="purple">Administrador</Badge>
-								)}
-								{soyYo && !miembro.isAdmin && (
-									<Button
-										variant="ghost"
-										size="sm"
-										onClick={() => setAccion({ tipo: "salir", miembro })}
-									>
-										<LogOut className="h-4 w-4" />
-										Salir
-									</Button>
-								)}
-								{puedeAsignar && !miembro.isAdmin && (
-									<Button
-										variant="ghost"
-										size="sm"
-										aria-label={`Roles de ${miembro.nombre}`}
-										title="Roles"
-										onClick={() => setAsignando(miembro)}
-									>
-										<Shield className="h-4 w-4" />
-									</Button>
-								)}
-								{organizacion.isAdmin && !soyYo && (
-									<Button
-										variant="ghost"
-										size="sm"
-										aria-label={`Hacer administrador a ${miembro.nombre}`}
-										title="Hacer administrador"
-										onClick={() => setAccion({ tipo: "delegar", miembro })}
-									>
-										<Crown className="h-4 w-4" />
-									</Button>
-								)}
-								{puedeExpulsar && !soyYo && !miembro.isAdmin && (
-									<Button
-										variant="dangerGhost"
-										size="sm"
-										aria-label={`Expulsar a ${miembro.nombre}`}
-										title="Expulsar"
-										onClick={() => setAccion({ tipo: "expulsar", miembro })}
-									>
-										<UserMinus className="h-4 w-4" />
-									</Button>
-								)}
+								<div className="ml-auto flex shrink-0 items-center gap-1">
+									{miembro.isAdmin && (
+										<Badge variant="purple">Administrador</Badge>
+									)}
+									{soyYo && !miembro.isAdmin && (
+										<Button
+											variant="ghost"
+											size="sm"
+											onClick={() => setAccion({ tipo: "salir", miembro })}
+										>
+											<LogOut className="h-4 w-4" />
+											Salir
+										</Button>
+									)}
+									{puedeAsignar && !miembro.isAdmin && (
+										<Button
+											variant="ghost"
+											size="sm"
+											aria-label={`Roles de ${miembro.nombre}`}
+											title="Roles"
+											onClick={() => setAsignando(miembro)}
+										>
+											<Shield className="h-4 w-4" />
+										</Button>
+									)}
+									{organizacion.isAdmin && !soyYo && (
+										<Button
+											variant="ghost"
+											size="sm"
+											aria-label={`Hacer administrador a ${miembro.nombre}`}
+											title="Hacer administrador"
+											onClick={() => setAccion({ tipo: "delegar", miembro })}
+										>
+											<Crown className="h-4 w-4" />
+										</Button>
+									)}
+									{puedeExpulsar && !soyYo && !miembro.isAdmin && (
+										<Button
+											variant="dangerGhost"
+											size="sm"
+											aria-label={`Expulsar a ${miembro.nombre}`}
+											title="Expulsar"
+											onClick={() => setAccion({ tipo: "expulsar", miembro })}
+										>
+											<UserMinus className="h-4 w-4" />
+										</Button>
+									)}
+								</div>
 							</li>
 						);
 					})}
