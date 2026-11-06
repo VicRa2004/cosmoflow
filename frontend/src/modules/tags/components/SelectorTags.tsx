@@ -1,5 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import { Checkbox } from "@/core/components/ui/Checkbox";
+import { PuntoColor } from "@/core/components/ui/PuntoColor";
 import { useTagsDisponibles } from "../hooks/useTagsDisponibles";
 
 interface SelectorTagsProps {
@@ -36,7 +37,12 @@ export function SelectorTags({
 					{tags.map((tag) => (
 						<Checkbox
 							key={tag.id}
-							label={tag.nombre}
+							label={
+								<span className="flex items-center gap-1.5">
+									<PuntoColor color={tag.color} className="h-2 w-2" />
+									{tag.nombre}
+								</span>
+							}
 							checked={marcados.has(tag.id)}
 							onChange={(e) =>
 								onChange(

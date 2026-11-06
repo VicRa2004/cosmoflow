@@ -20,10 +20,12 @@ export function Sidebar({
 	onAlternar,
 	onNavegar,
 }: SidebarProps) {
-	const { puede } = usePermisos();
+	const { puede, esAdmin } = usePermisos();
 	const grupos = NAVEGACION.map((grupo) => ({
 		...grupo,
-		items: grupo.items.filter((item) => puede(item.permiso)),
+		items: grupo.items.filter(
+			(item) => puede(item.permiso) && (!item.soloAdmin || esAdmin),
+		),
 	})).filter((grupo) => grupo.items.length > 0);
 
 	return (

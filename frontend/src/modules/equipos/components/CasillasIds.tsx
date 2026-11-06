@@ -1,4 +1,5 @@
 import { Checkbox } from "@/core/components/ui/Checkbox";
+import { PuntoColor } from "@/core/components/ui/PuntoColor";
 
 /** Primer error de un `form.Field` sin campo cableado (issue de Zod o texto). */
 export const primerError = (errores: unknown[]) => {
@@ -12,7 +13,7 @@ export const primerError = (errores: unknown[]) => {
 
 interface CasillasIdsProps {
 	leyenda: string;
-	opciones: { id: number; etiqueta: string }[];
+	opciones: { id: number; etiqueta: string; color?: string | null }[];
 	valor: number[];
 	onChange: (valor: number[]) => void;
 	vacio?: string;
@@ -37,10 +38,15 @@ export function CasillasIds({
 				<p className="text-xs text-tinta-tenue">{vacio}</p>
 			)}
 			<div className="grid max-h-48 gap-2 overflow-y-auto sm:grid-cols-2">
-				{opciones.map(({ id, etiqueta }) => (
+				{opciones.map(({ id, etiqueta, color }) => (
 					<Checkbox
 						key={id}
-						label={etiqueta}
+						label={
+							<span className="flex items-center gap-1.5">
+								<PuntoColor color={color} className="h-2 w-2" />
+								{etiqueta}
+							</span>
+						}
 						checked={valor.includes(id)}
 						onChange={(e) =>
 							onChange(

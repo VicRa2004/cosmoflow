@@ -17,7 +17,7 @@ function IndexComponent() {
 
 /** Aterriza en la primera sección del menú que el usuario puede ver; si no tiene ninguna, en su perfil. */
 function PrimeraSeccion() {
-	const { puede, listo } = usePermisos();
+	const { puede, esAdmin, listo } = usePermisos();
 
 	if (!listo) {
 		return (
@@ -26,8 +26,8 @@ function PrimeraSeccion() {
 			</div>
 		);
 	}
-	const primera = NAVEGACION.flatMap((grupo) => grupo.items).find((item) =>
-		puede(item.permiso),
+	const primera = NAVEGACION.flatMap((grupo) => grupo.items).find(
+		(item) => puede(item.permiso) && (!item.soloAdmin || esAdmin),
 	);
 	return <Navigate to={primera?.to ?? "/perfil"} replace />;
 }

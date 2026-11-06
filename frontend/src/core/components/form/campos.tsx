@@ -69,10 +69,20 @@ export function CampoCheckbox(props: Omit<CheckboxProps, Cableado>) {
 	);
 }
 
-/** Color de acento opcional: una muestra de la paleta o "" (sin color). */
-export function CampoColorAcento({ label = "Color" }: { label?: string }) {
+/** Selector de color de la app: una muestra de la paleta, uno personalizado o "" (sin color, si `opcional`). */
+export function CampoColorAcento({
+	label = "Color",
+	opcional = true,
+}: {
+	label?: string;
+	/** `false` cuando el color es obligatorio (equipos, organizaciones): sin la opción «Sin color». */
+	opcional?: boolean;
+}) {
 	const campo = useFieldContext<string>();
-	const opciones = [{ valor: "", nombre: "Sin color" }, ...COLORES_ACENTO];
+	const opciones = [
+		...(opcional ? [{ valor: "", nombre: "Sin color" }] : []),
+		...COLORES_ACENTO,
+	];
 	const valor = campo.state.value;
 	// Un color fuera de la paleta (elegido con el selector nativo).
 	const personalizado =

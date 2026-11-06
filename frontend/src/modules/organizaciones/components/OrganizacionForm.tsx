@@ -60,13 +60,7 @@ export function OrganizacionForm({
 					)}
 				</form.AppField>
 				<form.AppField name="color">
-					{(campo) => (
-						<campo.CampoTexto
-							label="Color"
-							type="color"
-							className="w-16 cursor-pointer p-1"
-						/>
-					)}
+					{(campo) => <campo.CampoColorAcento opcional={false} />}
 				</form.AppField>
 				<div className="flex justify-end">
 					<form.BotonEnviar>{inicial ? "Guardar" : "Crear"}</form.BotonEnviar>

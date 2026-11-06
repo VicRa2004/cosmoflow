@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { isAxiosError } from "axios";
 import { apiClient } from "@/core/api/client";
 import type { PermisoDto } from "@/core/api/schema.gen";
+import { useAuthStore } from "./store";
 
 const TODOS = "todos";
 
@@ -29,8 +30,13 @@ export function usePermisos() {
 	const puede = (permiso?: string) =>
 		!permiso || data === TODOS || (data?.has(permiso) ?? false);
 
+	/** Rol ADMIN de la sesión: algunas vistas lo exigen además del permiso. */
+	const esAdmin = useAuthStore(
+		(s) => s.usuario?.roles.includes("ADMIN") ?? false,
+	);
+
 	/** `true` cuando ya se sabe qué puede (o la consulta falló). */
 	const listo = data !== undefined || isError;
 
-	return { puede, listo };
+	return { puede, esAdmin, listo };
 }

@@ -16,6 +16,8 @@ export interface ItemNavegacion {
 	icono: LucideIcon;
 	/** `recurso:accion` necesario para verlo; sin él lo ve cualquier usuario. */
 	permiso?: string;
+	/** Además del permiso, exige el rol ADMIN (vistas de administración global). */
+	soloAdmin?: boolean;
 }
 
 interface GrupoNavegacion {
@@ -57,6 +59,7 @@ export const NAVEGACION: GrupoNavegacion[] = [
 				etiqueta: "Usuarios",
 				icono: Users,
 				permiso: "usuarios:leer",
+				soloAdmin: true,
 			},
 			{
 				to: "/roles",

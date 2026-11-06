@@ -58,13 +58,7 @@ export function EquipoForm({
 					)}
 				</form.AppField>
 				<form.AppField name="color">
-					{(campo) => (
-						<campo.CampoTexto
-							label="Color"
-							type="color"
-							className="w-16 cursor-pointer p-1"
-						/>
-					)}
+					{(campo) => <campo.CampoColorAcento opcional={false} />}
 				</form.AppField>
 				<form.Field name="miembroIds">
 					{(campo) => (
@@ -111,7 +105,11 @@ export function EquipoForm({
 					{(campo) => (
 						<CasillasIds
 							leyenda="Tags"
-							opciones={tags.map((t) => ({ id: t.id, etiqueta: t.nombre }))}
+							opciones={tags.map((t) => ({
+								id: t.id,
+								etiqueta: t.nombre,
+								color: t.color,
+							}))}
 							valor={campo.state.value}
 							onChange={campo.handleChange}
 							vacio="La organización aún no tiene tags."

@@ -4,11 +4,14 @@ import { useState } from "react";
 import { useAuthStore } from "@/core/auth/store";
 import { EncabezadoPagina } from "@/core/components/ui/EncabezadoPagina";
 import { EmptyState } from "@/core/components/ui/EmptyState";
+import { PuntoColor } from "@/core/components/ui/PuntoColor";
 import { type Columna, Tabla } from "@/core/components/ui/Table";
 import type { TareaDto } from "../api/tareasApi";
 import { TagsBadges } from "@/modules/tags/components/TagsBadges";
 import {
+	DondeTarea,
 	EstadoBadge,
+	esCompartida,
 	InicioTarea,
 	PrioridadBadge,
 	VencimientoTarea,
@@ -59,11 +62,21 @@ export function PendientesPage() {
 					onClick={() =>
 						navigate({ to: "/tareas/$id", params: { id: String(fila.id) } })
 					}
-					className="text-left font-medium text-tinta hover:text-indigo-400 hover:underline"
+					className="flex items-center gap-2 text-left font-medium text-tinta hover:text-indigo-400 hover:underline"
 				>
+					<PuntoColor color={fila.color} />
 					{fila.titulo}
 				</button>
 			),
+		},
+		{
+			cabecera: "Dónde",
+			celda: (fila) =>
+				esCompartida(fila) ? (
+					<DondeTarea tarea={fila} />
+				) : (
+					<span className="text-tinta-tenue">Personal</span>
+				),
 		},
 		{
 			cabecera: "Inicio",

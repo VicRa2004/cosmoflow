@@ -2,6 +2,7 @@ import { Pencil, Plus, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { Badge } from "@/core/components/ui/Badge";
 import { Button } from "@/core/components/ui/Button";
+import { PuntoColor } from "@/core/components/ui/PuntoColor";
 import {
 	Card,
 	CardContent,
@@ -57,7 +58,10 @@ export function TagsOrganizacionCard({
 					<ul className="flex flex-wrap gap-2">
 						{tags?.map((tag) => (
 							<li key={tag.id} className="flex items-center gap-1">
-								<Badge>{tag.nombre}</Badge>
+								<Badge className="gap-1.5">
+									<PuntoColor color={tag.color} className="h-2 w-2" />
+									{tag.nombre}
+								</Badge>
 								{puedeGestionar && (
 									<>
 										<Button
