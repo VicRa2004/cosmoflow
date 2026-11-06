@@ -1,3 +1,4 @@
+import { Pipette } from "lucide-react";
 import { type FormHTMLAttributes, type ReactNode, useId } from "react";
 import { Button, type ButtonProps } from "@/core/components/ui/Button";
 import { Checkbox, type CheckboxProps } from "@/core/components/ui/Checkbox";
@@ -72,6 +73,10 @@ export function CampoCheckbox(props: Omit<CheckboxProps, Cableado>) {
 export function CampoColorAcento({ label = "Color" }: { label?: string }) {
 	const campo = useFieldContext<string>();
 	const opciones = [{ valor: "", nombre: "Sin color" }, ...COLORES_ACENTO];
+	const valor = campo.state.value;
+	// Un color fuera de la paleta (elegido con el selector nativo).
+	const personalizado =
+		valor !== "" && !COLORES_ACENTO.some((c) => c.valor === valor);
 	return (
 		<fieldset className="space-y-1.5">
 			<legend className="mb-1.5 text-[13px] font-medium text-tinta-suave">
@@ -103,6 +108,26 @@ export function CampoColorAcento({ label = "Color" }: { label?: string }) {
 						)}
 					</label>
 				))}
+				<label
+					title="Personalizado"
+					className={cn(
+						"relative flex h-7 w-7 cursor-pointer items-center justify-center rounded-full border border-borde-fuerte ring-offset-2 ring-offset-superficie has-focus-visible:ring-2 has-focus-visible:ring-indigo-400",
+						personalizado
+							? "text-white ring-2 ring-indigo-500"
+							: "bg-superficie text-tinta-tenue",
+					)}
+					style={personalizado ? { backgroundColor: valor } : undefined}
+				>
+					<input
+						type="color"
+						value={personalizado ? valor : "#888888"}
+						onChange={(e) => campo.handleChange(e.target.value)}
+						onBlur={campo.handleBlur}
+						className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
+					/>
+					<span className="sr-only">Color personalizado</span>
+					<Pipette aria-hidden className="h-3.5 w-3.5 drop-shadow" />
+				</label>
 			</div>
 		</fieldset>
 	);

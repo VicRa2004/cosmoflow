@@ -22,6 +22,14 @@ type PrismaTareaRecord = Prisma.TareaGetPayload<{ include: typeof include }>;
 const aDia = (fecha: Date | null) => fecha?.toISOString().slice(0, 10) ?? null;
 const aFecha = (dia: string | null) => (dia ? new Date(dia) : null);
 
+/** Vencimiento más próximo (sin fecha al final) y, a igual fecha, prioridad (RN-43). */
+const ORDEN_POR_VENCIMIENTO: Prisma.TareaOrderByWithRelationInput[] = [
+	{ fechaVencimiento: { sort: "asc", nulls: "last" } },
+	// El enum de Postgres ordena por declaración: baja < media < alta.
+	{ prioridad: "desc" },
+	{ id: "asc" },
+];
+
 export class PrismaTareaRepository implements TareaRepository {
 	private toDomain(raw: PrismaTareaRecord): Tarea {
 		return Tarea.reconstituir(
@@ -80,7 +88,7 @@ export class PrismaTareaRepository implements TareaRepository {
 				...(estado && { estado }),
 				...(tagId && { tags: { some: { tagId, tag: { deletedAt: null } } } }),
 			},
-			[{ createdAt: "desc" }, { id: "desc" }],
+			ORDEN_POR_VENCIMIENTO,
 			pagina,
 			limite,
 		);
@@ -99,12 +107,7 @@ export class PrismaTareaRepository implements TareaRepository {
 				deletedAt: null,
 				estado: { in: ["pendiente", "en_progreso"] },
 			},
-			[
-				{ fechaVencimiento: { sort: "asc", nulls: "last" } },
-				// El enum de Postgres ordena por declaración: baja < media < alta.
-				{ prioridad: "desc" },
-				{ id: "asc" },
-			],
+			ORDEN_POR_VENCIMIENTO,
 			pagina,
 			limite,
 		);

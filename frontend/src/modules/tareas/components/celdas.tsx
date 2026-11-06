@@ -1,9 +1,38 @@
 import { UserPlus } from "lucide-react";
+import { Badge, type BadgeProps } from "@/core/components/ui/Badge";
 import { Button } from "@/core/components/ui/Button";
 import { useMiembrosQuery } from "@/modules/organizaciones/hooks/useMiembros";
 import { useNombresContexto } from "@/modules/organizaciones/hooks/useNombresContexto";
-import type { TareaDto } from "../api/tareasApi";
+import type { EstadoTarea, PrioridadTarea, TareaDto } from "../api/tareasApi";
 import { useDestinosTareas } from "../hooks/useDestinosTareas";
+import { ETIQUETAS_ESTADO, ETIQUETAS_PRIORIDAD } from "../schemas/tareaSchemas";
+
+const VARIANTE_ESTADO: Record<EstadoTarea, BadgeProps["variant"]> = {
+	pendiente: "default",
+	en_progreso: "purple",
+	completada: "success",
+	cancelada: "warning",
+};
+
+const VARIANTE_PRIORIDAD: Record<PrioridadTarea, BadgeProps["variant"]> = {
+	baja: "default",
+	media: "warning",
+	alta: "danger",
+};
+
+export const EstadoBadge = ({ estado }: { estado: EstadoTarea }) => (
+	<Badge variant={VARIANTE_ESTADO[estado]}>{ETIQUETAS_ESTADO[estado]}</Badge>
+);
+
+export const PrioridadBadge = ({
+	prioridad,
+}: {
+	prioridad: PrioridadTarea;
+}) => (
+	<Badge variant={VARIANTE_PRIORIDAD[prioridad]}>
+		{ETIQUETAS_PRIORIDAD[prioridad]}
+	</Badge>
+);
 
 /** Una tarea con organización: compartida. */
 type TareaCompartida = TareaDto & { organizacionId: number };
@@ -20,6 +49,14 @@ export const formatearDia = (dia: string) =>
 		month: "short",
 		year: "numeric",
 	});
+
+/** Fecha de inicio, o «Sin fecha». */
+export const InicioTarea = ({ tarea }: { tarea: TareaDto }) =>
+	tarea.fechaInicio ? (
+		<span>{formatearDia(tarea.fechaInicio)}</span>
+	) : (
+		<span className="text-tinta-tenue">Sin fecha</span>
+	);
 
 /** Vencimiento con aviso si está vencida o vence hoy/mañana y sigue abierta. */
 export function VencimientoTarea({ tarea }: { tarea: TareaDto }) {

@@ -3,16 +3,19 @@ import { Circle, CircleCheck, ListTodo } from "lucide-react";
 import { useState } from "react";
 import { useAuthStore } from "@/core/auth/store";
 import { EncabezadoPagina } from "@/core/components/ui/EncabezadoPagina";
-import { Badge } from "@/core/components/ui/Badge";
 import { EmptyState } from "@/core/components/ui/EmptyState";
 import { type Columna, Tabla } from "@/core/components/ui/Table";
 import type { TareaDto } from "../api/tareasApi";
 import { TagsBadges } from "@/modules/tags/components/TagsBadges";
-import { VencimientoTarea } from "../components/celdas";
+import {
+	EstadoBadge,
+	InicioTarea,
+	PrioridadBadge,
+	VencimientoTarea,
+} from "../components/celdas";
 import { MenuNuevo } from "../components/MenuNuevo";
 import { useActualizarTareaMutation } from "../hooks/useTareasMutation";
 import { usePendientesQuery } from "../hooks/useTareasQuery";
-import { ETIQUETAS_ESTADO } from "../schemas/tareaSchemas";
 
 /** Portada: lo que queda por hacer, lo que vence antes primero (RN-43). */
 export function PendientesPage() {
@@ -63,20 +66,20 @@ export function PendientesPage() {
 			),
 		},
 		{
+			cabecera: "Inicio",
+			celda: (fila) => <InicioTarea tarea={fila} />,
+		},
+		{
 			cabecera: "Vence",
 			celda: (fila) => <VencimientoTarea tarea={fila} />,
 		},
 		{
 			cabecera: "Estado",
-			celda: (fila) =>
-				fila.estado === "en_progreso" && (
-					<Badge variant="purple">{ETIQUETAS_ESTADO[fila.estado]}</Badge>
-				),
+			celda: (fila) => <EstadoBadge estado={fila.estado} />,
 		},
 		{
 			cabecera: "Prioridad",
-			celda: (fila) =>
-				fila.prioridad === "alta" && <Badge variant="danger">Alta</Badge>,
+			celda: (fila) => <PrioridadBadge prioridad={fila.prioridad} />,
 		},
 		{
 			cabecera: "Tags",

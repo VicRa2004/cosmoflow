@@ -75,17 +75,25 @@ export const tareaFormSchema = z
 
 export type TareaFormValues = z.input<typeof tareaFormSchema>;
 
-export const tareaFormVacio: TareaFormValues = {
+/** AAAA-MM-DD en hora local, `dias` después de hoy. */
+const diaDesdeHoy = (dias: number) => {
+	const fecha = new Date();
+	fecha.setDate(fecha.getDate() + dias);
+	return fecha.toLocaleDateString("sv-SE");
+};
+
+/** Una tarea nueva empieza hoy y vence a los 4 días. */
+export const tareaFormVacio = (): TareaFormValues => ({
 	titulo: "",
 	contenido: "",
 	estado: "pendiente",
 	prioridad: "media",
-	fechaInicio: "",
-	fechaVencimiento: "",
+	fechaInicio: diaDesdeHoy(0),
+	fechaVencimiento: diaDesdeHoy(4),
 	color: "",
 	tagIds: [],
 	responsableIds: [],
-};
+});
 
 export const tareaAFormValues = (dto: TareaDto): TareaFormValues => ({
 	titulo: dto.titulo,

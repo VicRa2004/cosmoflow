@@ -12,6 +12,9 @@ export function TagsBadges({
 }) {
 	const { tags } = useTagsDisponibles(organizacionId);
 	const porId = new Map(tags.map((t) => [t.id, t]));
+	if (tagIds.length === 0) {
+		return <span className="text-tinta-tenue">Sin tags</span>;
+	}
 	return (
 		<div className="flex flex-wrap gap-1">
 			{tagIds.map((id) => (

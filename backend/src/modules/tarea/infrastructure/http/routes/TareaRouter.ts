@@ -65,6 +65,8 @@ export class TareaRouter {
 			tags,
 			security,
 			summary: "Listar tareas (paginado)",
+			description:
+				"Por vencimiento más próximo (sin fecha al final) y, a igual fecha, por prioridad.",
 			request: { query: obtenerTareasSchema },
 			responses: {
 				200: jsonResponse(tareaPaginaSchema, "Lista paginada"),

@@ -7,24 +7,18 @@ import {
 	type Pagina,
 	Tabla,
 } from "@/core/components/ui/Table";
-import { Badge, type BadgeProps } from "@/core/components/ui/Badge";
-import type { EstadoTarea, TareaDto } from "../api/tareasApi";
-import { ETIQUETAS_ESTADO, ETIQUETAS_PRIORIDAD } from "../schemas/tareaSchemas";
+import type { TareaDto } from "../api/tareasApi";
 import { TagsBadges } from "@/modules/tags/components/TagsBadges";
 import {
 	AccionAsignar,
 	DondeTarea,
+	EstadoBadge,
 	esCompartida,
+	InicioTarea,
+	PrioridadBadge,
 	ResponsablesTarea,
 	VencimientoTarea,
 } from "./celdas";
-
-const VARIANTE_ESTADO: Record<EstadoTarea, BadgeProps["variant"]> = {
-	pendiente: "default",
-	en_progreso: "purple",
-	completada: "success",
-	cancelada: "warning",
-};
 
 interface TareasTableProps {
 	pagina?: Pagina<TareaDto>;
@@ -77,15 +71,15 @@ export function TareasTable({
 			: []),
 		{
 			cabecera: "Estado",
-			celda: (fila) => (
-				<Badge variant={VARIANTE_ESTADO[fila.estado]}>
-					{ETIQUETAS_ESTADO[fila.estado]}
-				</Badge>
-			),
+			celda: (fila) => <EstadoBadge estado={fila.estado} />,
 		},
 		{
 			cabecera: "Prioridad",
-			celda: (fila) => ETIQUETAS_PRIORIDAD[fila.prioridad],
+			celda: (fila) => <PrioridadBadge prioridad={fila.prioridad} />,
+		},
+		{
+			cabecera: "Inicio",
+			celda: (fila) => <InicioTarea tarea={fila} />,
 		},
 		{
 			cabecera: "Vence",

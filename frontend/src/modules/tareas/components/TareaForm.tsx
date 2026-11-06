@@ -52,7 +52,7 @@ export function TareaForm({
 			: undefined;
 
 	const form = useAppForm({
-		defaultValues: inicial ? tareaAFormValues(inicial) : tareaFormVacio,
+		defaultValues: inicial ? tareaAFormValues(inicial) : tareaFormVacio(),
 		validators: { onSubmit: tareaFormSchema },
 		onSubmit: async ({ value }) => {
 			const { responsableIds, ...datos } = tareaFormSchema.parse(value);

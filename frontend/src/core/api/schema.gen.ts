@@ -2929,7 +2929,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Listar tareas (paginado) */
+        /**
+         * Listar tareas (paginado)
+         * @description Por vencimiento más próximo (sin fecha al final) y, a igual fecha, por prioridad.
+         */
         get: {
             parameters: {
                 query?: {
