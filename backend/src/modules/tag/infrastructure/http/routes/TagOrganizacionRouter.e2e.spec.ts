@@ -59,7 +59,7 @@ describe("Tags de organización (e2e)", () => {
 		const { id } = await crear.json();
 
 		const lista = await (await api(tags(acme), { token: t.beto })).json();
-		expect(lista.datos).toEqual([{ id, nombre: "backend" }]);
+		expect(lista.datos).toEqual([{ id, nombre: "backend", color: null }]);
 
 		const porBeto = await api(tags(acme), {
 			method: "POST",

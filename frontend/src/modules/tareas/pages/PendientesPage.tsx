@@ -1,5 +1,5 @@
 import { useNavigate } from "@tanstack/react-router";
-import { Circle, CircleCheck, ListTodo } from "lucide-react";
+import { ListTodo } from "lucide-react";
 import { useState } from "react";
 import { useAuthStore } from "@/core/auth/store";
 import {
@@ -14,14 +14,13 @@ import type { TareaDto } from "../api/tareasApi";
 import { TagsBadges } from "@/modules/tags/components/TagsBadges";
 import {
 	DondeTarea,
-	EstadoBadge,
 	esCompartida,
 	InicioTarea,
 	PrioridadBadge,
 	VencimientoTarea,
 } from "../components/celdas";
+import { BotonCompletar } from "../components/BotonCompletar";
 import { MenuNuevo } from "../components/MenuNuevo";
-import { useActualizarTareaMutation } from "../hooks/useTareasMutation";
 import { usePendientesQuery } from "../hooks/useTareasQuery";
 
 /** Portada: lo que queda por hacer, lo que vence antes primero (RN-43). */
@@ -30,35 +29,9 @@ export function PendientesPage() {
 	const [pagina, setPagina] = useState(1);
 	const navigate = useNavigate();
 	const { data, isLoading, error } = usePendientesQuery(pagina);
-	const actualizar = useActualizarTareaMutation();
 	const { data: preferencias } = usePreferenciasQuery();
 
 	const columnas: Columna<TareaDto>[] = [
-		{
-			cabecera: <span className="sr-only">Completar</span>,
-			className: "w-10",
-			celda: (fila) => {
-				const completando =
-					actualizar.isPending && actualizar.variables?.id === fila.id;
-				return (
-					<button
-						type="button"
-						aria-label={`Completar «${fila.titulo}»`}
-						disabled={completando}
-						onClick={() =>
-							actualizar.mutate({
-								id: fila.id,
-								datos: { estado: "completada" },
-							})
-						}
-						className="group rounded-full text-tinta-tenue hover:text-emerald-400 focus-visible:outline-2 focus-visible:outline-indigo-500 disabled:opacity-50"
-					>
-						<Circle className="h-5 w-5 group-hover:hidden" />
-						<CircleCheck className="hidden h-5 w-5 group-hover:block" />
-					</button>
-				);
-			},
-		},
 		{
 			cabecera: "Tarea",
 			celda: (fila) => (
@@ -92,10 +65,6 @@ export function PendientesPage() {
 			celda: (fila) => <VencimientoTarea tarea={fila} />,
 		},
 		{
-			cabecera: "Estado",
-			celda: (fila) => <EstadoBadge estado={fila.estado} />,
-		},
-		{
 			cabecera: "Prioridad",
 			celda: (fila) => <PrioridadBadge prioridad={fila.prioridad} />,
 		},
@@ -104,6 +73,11 @@ export function PendientesPage() {
 			celda: (fila) => (
 				<TagsBadges tagIds={fila.tagIds} organizacionId={fila.organizacionId} />
 			),
+		},
+		{
+			cabecera: <span className="sr-only">Acción</span>,
+			className: "text-right",
+			celda: (fila) => <BotonCompletar tarea={fila} />,
 		},
 	];
 

@@ -159,6 +159,12 @@ describe("Proyectos (e2e)", () => {
 		const [proyecto] = await (
 			await api(org(acme, "/proyectos"), { token: t.ana })
 		).json();
+		// Sin caro, a «Lanzamiento» solo le queda «plataforma».
+		await api(org(acme, `/proyectos/${proyecto.id}`), {
+			method: "PUT",
+			token: t.ana,
+			body: { integranteIds: [] },
+		});
 		const borrar = await api(org(acme, `/equipos/${plataforma}`), {
 			method: "DELETE",
 			token: t.ana,
@@ -168,7 +174,11 @@ describe("Proyectos (e2e)", () => {
 		await api(org(acme, `/proyectos/${proyecto.id}`), {
 			method: "PUT",
 			token: t.ana,
-			body: { equipoIds: [plataforma, movil], estado: "en_pausa" },
+			body: {
+				equipoIds: [plataforma, movil],
+				integranteIds: [id.caro],
+				estado: "en_pausa",
+			},
 		});
 		expect(
 			(

@@ -19,6 +19,7 @@ import {
 	ResponsablesTarea,
 	VencimientoTarea,
 } from "./celdas";
+import { BotonCompletar } from "./BotonCompletar";
 
 interface TareasTableProps {
 	pagina?: Pagina<TareaDto>;
@@ -126,6 +127,11 @@ export function TareasTable({
 					</Button>
 				</AccionesFila>
 			),
+		},
+		{
+			cabecera: <span className="sr-only">Acción</span>,
+			className: "text-right",
+			celda: (fila) => <BotonCompletar tarea={fila} />,
 		},
 	];
 
