@@ -1,5 +1,5 @@
 import { Link, useNavigate } from "@tanstack/react-router";
-import { LogOut, UserRound } from "lucide-react";
+import { LogOut, Settings, UserRound } from "lucide-react";
 import { useRef } from "react";
 import { toast } from "sonner";
 import { useAuthStore } from "@/core/auth/store";
@@ -63,6 +63,10 @@ export function MenuUsuario() {
 				<Link to="/perfil" onClick={cerrar} className={opcion}>
 					<UserRound aria-hidden className="size-4 text-tinta-tenue" />
 					Mi perfil
+				</Link>
+				<Link to="/configuracion" onClick={cerrar} className={opcion}>
+					<Settings aria-hidden className="size-4 text-tinta-tenue" />
+					Configuración
 				</Link>
 				<button type="button" onClick={handleLogout} className={opcion}>
 					<LogOut aria-hidden className="size-4 text-tinta-tenue" />

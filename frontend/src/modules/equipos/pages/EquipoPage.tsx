@@ -22,6 +22,7 @@ import { AvatarOrganizacion } from "@/modules/organizaciones/components/AvatarOr
 import { useMiembrosQuery } from "@/modules/organizaciones/hooks/useMiembros";
 import { puedeEn } from "@/modules/organizaciones/utils/permisos";
 import { useTagsQuery } from "@/modules/tags/hooks/useTagsQuery";
+import { EstadisticasTareas } from "@/modules/tareas/components/EstadisticasTareas";
 import { DelegadosForm } from "../components/DelegadosForm";
 import { EquipoForm } from "../components/EquipoForm";
 import { useEquiposQuery, useGestionEquipos } from "../hooks/useEquipos";
@@ -153,6 +154,12 @@ export function EquipoPage({
 					)}
 				</div>
 			</header>
+
+			<EstadisticasTareas
+				destino={{ equipoId: equipo.id }}
+				titulo="Tareas del equipo"
+				nombres={nombreMiembro}
+			/>
 
 			<Card>
 				<CardHeader>

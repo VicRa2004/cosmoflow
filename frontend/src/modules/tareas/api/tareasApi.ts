@@ -9,6 +9,8 @@ export type ActualizarTareaInput =
 type TareasPagina =
 	paths["/api/tareas"]["get"]["responses"][200]["content"]["application/json"];
 
+export type EstadisticasTareasDto =
+	components["schemas"]["EstadisticasTareasDto"];
 export type EstadoTarea = TareaDto["estado"];
 export type PrioridadTarea = TareaDto["prioridad"];
 
@@ -56,6 +58,14 @@ export const tareasApi = {
 		const response = await apiClient.get<TareasPagina>("/tareas/pendientes", {
 			params,
 		});
+		return response.data;
+	},
+
+	async estadisticas(destino: DestinoTarea): Promise<EstadisticasTareasDto> {
+		const response = await apiClient.get<EstadisticasTareasDto>(
+			"/tareas/estadisticas",
+			{ params: destino },
+		);
 		return response.data;
 	},
 

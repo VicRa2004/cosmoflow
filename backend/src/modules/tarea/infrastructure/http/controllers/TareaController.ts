@@ -5,10 +5,12 @@ import type { EliminarTareaUseCase } from "../../../application/useCases/Elimina
 import type { ObtenerTareaUseCase } from "../../../application/useCases/ObtenerTareaUseCase";
 import type { ObtenerPendientesUseCase } from "../../../application/useCases/ObtenerPendientesUseCase";
 import type { ObtenerTareasUseCase } from "../../../application/useCases/ObtenerTareasUseCase";
+import type { ObtenerEstadisticasTareasUseCase } from "../../../application/useCases/ObtenerEstadisticasTareasUseCase";
 import type { MoverTareaUseCase } from "../../../application/useCases/MoverTareaUseCase";
 import {
 	actualizarTareaSchema,
 	crearTareaSchema,
+	estadisticasTareasSchema,
 	moverTareaSchema,
 	obtenerTareasSchema,
 	paginacionSchema,
@@ -30,6 +32,7 @@ export class TareaController extends BaseController {
 			actualizar: ActualizarTareaUseCase;
 			eliminar: EliminarTareaUseCase;
 			mover: MoverTareaUseCase;
+			estadisticas: ObtenerEstadisticasTareasUseCase;
 		},
 	) {
 		super();
@@ -62,6 +65,15 @@ export class TareaController extends BaseController {
 					c.get("usuario").id,
 					dto,
 				),
+			);
+		});
+
+	estadisticas = (c: Context<AuthEnv>): Promise<Response> =>
+		this.executeSafely(c, async () => {
+			const destino = validate(estadisticasTareasSchema, c.req.query());
+			return this.ok(
+				c,
+				await this.useCases.estadisticas.ejecutar(c.get("usuario").id, destino),
 			);
 		});
 

@@ -138,22 +138,25 @@ function OpcionAqui({
 
 /**
  * «Nueva» con todos los destinos a un clic: personal, organización, equipo o proyecto.
- * `soloTareas` quita las notas; `contexto`, el destino que se está viendo, va primero.
+ * `soloTareas` quita las notas; `contexto`, el destino que se está viendo, va primero;
+ * `organizaciones`, cuántas (las más recientes) se listan.
  */
 export function MenuNuevo({
 	soloTareas = false,
 	contexto,
+	organizaciones: limite = 10,
 }: {
 	soloTareas?: boolean;
 	contexto?: ContextoTareaSearch;
+	organizaciones?: number;
 } = {}) {
 	const { puede } = usePermisos();
 	const menu = useRef<HTMLDivElement>(null);
 	const cerrar = () => menu.current?.hidePopover();
-	// shortcut: las 10 organizaciones más recientes, para no disparar peticiones de equipos y proyectos; paginar si se queda corto.
+	// shortcut: solo las `limite` más recientes, para no disparar peticiones de equipos y proyectos de todas; paginar si se queda corto.
 	const { data: organizaciones } = useOrganizacionesQuery({
 		pagina: 1,
-		limite: 10,
+		limite,
 		orden: "recientes",
 	});
 	const permisos = {

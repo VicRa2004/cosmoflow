@@ -17,6 +17,7 @@ import { Route as RegistroRouteImport } from './routes/registro'
 import { Route as RestablecerPasswordRouteImport } from './routes/restablecer-password'
 import { Route as VerificarEmailRouteImport } from './routes/verificar-email'
 import { Route as AuthenticatedAutorizarConexionRouteImport } from './routes/_authenticated/autorizar-conexion'
+import { Route as AuthenticatedConfiguracionRouteImport } from './routes/_authenticated/configuracion'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedInvitacionRouteImport } from './routes/_authenticated/invitacion'
 import { Route as AuthenticatedPerfilRouteImport } from './routes/_authenticated/perfil'
@@ -40,6 +41,7 @@ import { Route as AuthenticatedTareasNuevaRouteImport } from './routes/_authenti
 import { Route as AuthenticatedNotasIdEditarRouteImport } from './routes/_authenticated/notas/$id_.editar'
 import { Route as AuthenticatedOrganizacionesIdIndexRouteImport } from './routes/_authenticated/organizaciones/$id/index'
 import { Route as AuthenticatedOrganizacionesIdAjustesRouteImport } from './routes/_authenticated/organizaciones/$id/ajustes'
+import { Route as AuthenticatedOrganizacionesIdEstadisticasRouteImport } from './routes/_authenticated/organizaciones/$id/estadisticas'
 import { Route as AuthenticatedOrganizacionesIdMiembrosRouteImport } from './routes/_authenticated/organizaciones/$id/miembros'
 import { Route as AuthenticatedOrganizacionesIdProyectosRouteImport } from './routes/_authenticated/organizaciones/$id/proyectos'
 import { Route as AuthenticatedOrganizacionesIdRolesRouteImport } from './routes/_authenticated/organizaciones/$id/roles'
@@ -86,6 +88,12 @@ const AuthenticatedAutorizarConexionRoute =
   AuthenticatedAutorizarConexionRouteImport.update({
     id: '/autorizar-conexion',
     path: '/autorizar-conexion',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedConfiguracionRoute =
+  AuthenticatedConfiguracionRouteImport.update({
+    id: '/configuracion',
+    path: '/configuracion',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
 const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
@@ -215,6 +223,12 @@ const AuthenticatedOrganizacionesIdAjustesRoute =
     path: '/ajustes',
     getParentRoute: () => AuthenticatedOrganizacionesIdRoute,
   } as any)
+const AuthenticatedOrganizacionesIdEstadisticasRoute =
+  AuthenticatedOrganizacionesIdEstadisticasRouteImport.update({
+    id: '/estadisticas',
+    path: '/estadisticas',
+    getParentRoute: () => AuthenticatedOrganizacionesIdRoute,
+  } as any)
 const AuthenticatedOrganizacionesIdMiembrosRoute =
   AuthenticatedOrganizacionesIdMiembrosRouteImport.update({
     id: '/miembros',
@@ -266,6 +280,7 @@ export interface FileRoutesByFullPath {
   '/restablecer-password': typeof RestablecerPasswordRoute
   '/verificar-email': typeof VerificarEmailRoute
   '/autorizar-conexion': typeof AuthenticatedAutorizarConexionRoute
+  '/configuracion': typeof AuthenticatedConfiguracionRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/invitacion': typeof AuthenticatedInvitacionRoute
   '/perfil': typeof AuthenticatedPerfilRouteWithChildren
@@ -288,6 +303,7 @@ export interface FileRoutesByFullPath {
   '/tareas/': typeof AuthenticatedTareasIndexRoute
   '/notas/$id/editar': typeof AuthenticatedNotasIdEditarRoute
   '/organizaciones/$id/ajustes': typeof AuthenticatedOrganizacionesIdAjustesRoute
+  '/organizaciones/$id/estadisticas': typeof AuthenticatedOrganizacionesIdEstadisticasRoute
   '/organizaciones/$id/miembros': typeof AuthenticatedOrganizacionesIdMiembrosRoute
   '/organizaciones/$id/proyectos': typeof AuthenticatedOrganizacionesIdProyectosRoute
   '/organizaciones/$id/roles': typeof AuthenticatedOrganizacionesIdRolesRoute
@@ -305,6 +321,7 @@ export interface FileRoutesByTo {
   '/restablecer-password': typeof RestablecerPasswordRoute
   '/verificar-email': typeof VerificarEmailRoute
   '/autorizar-conexion': typeof AuthenticatedAutorizarConexionRoute
+  '/configuracion': typeof AuthenticatedConfiguracionRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/invitacion': typeof AuthenticatedInvitacionRoute
   '/roles': typeof AuthenticatedRolesRoute
@@ -325,6 +342,7 @@ export interface FileRoutesByTo {
   '/tareas': typeof AuthenticatedTareasIndexRoute
   '/notas/$id/editar': typeof AuthenticatedNotasIdEditarRoute
   '/organizaciones/$id/ajustes': typeof AuthenticatedOrganizacionesIdAjustesRoute
+  '/organizaciones/$id/estadisticas': typeof AuthenticatedOrganizacionesIdEstadisticasRoute
   '/organizaciones/$id/miembros': typeof AuthenticatedOrganizacionesIdMiembrosRoute
   '/organizaciones/$id/proyectos': typeof AuthenticatedOrganizacionesIdProyectosRoute
   '/organizaciones/$id/roles': typeof AuthenticatedOrganizacionesIdRolesRoute
@@ -344,6 +362,7 @@ export interface FileRoutesById {
   '/restablecer-password': typeof RestablecerPasswordRoute
   '/verificar-email': typeof VerificarEmailRoute
   '/_authenticated/autorizar-conexion': typeof AuthenticatedAutorizarConexionRoute
+  '/_authenticated/configuracion': typeof AuthenticatedConfiguracionRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/invitacion': typeof AuthenticatedInvitacionRoute
   '/_authenticated/perfil': typeof AuthenticatedPerfilRouteWithChildren
@@ -366,6 +385,7 @@ export interface FileRoutesById {
   '/_authenticated/tareas/': typeof AuthenticatedTareasIndexRoute
   '/_authenticated/notas/$id_/editar': typeof AuthenticatedNotasIdEditarRoute
   '/_authenticated/organizaciones/$id/ajustes': typeof AuthenticatedOrganizacionesIdAjustesRoute
+  '/_authenticated/organizaciones/$id/estadisticas': typeof AuthenticatedOrganizacionesIdEstadisticasRoute
   '/_authenticated/organizaciones/$id/miembros': typeof AuthenticatedOrganizacionesIdMiembrosRoute
   '/_authenticated/organizaciones/$id/proyectos': typeof AuthenticatedOrganizacionesIdProyectosRoute
   '/_authenticated/organizaciones/$id/roles': typeof AuthenticatedOrganizacionesIdRolesRoute
@@ -385,6 +405,7 @@ export interface FileRouteTypes {
     | '/restablecer-password'
     | '/verificar-email'
     | '/autorizar-conexion'
+    | '/configuracion'
     | '/dashboard'
     | '/invitacion'
     | '/perfil'
@@ -407,6 +428,7 @@ export interface FileRouteTypes {
     | '/tareas/'
     | '/notas/$id/editar'
     | '/organizaciones/$id/ajustes'
+    | '/organizaciones/$id/estadisticas'
     | '/organizaciones/$id/miembros'
     | '/organizaciones/$id/proyectos'
     | '/organizaciones/$id/roles'
@@ -424,6 +446,7 @@ export interface FileRouteTypes {
     | '/restablecer-password'
     | '/verificar-email'
     | '/autorizar-conexion'
+    | '/configuracion'
     | '/dashboard'
     | '/invitacion'
     | '/roles'
@@ -444,6 +467,7 @@ export interface FileRouteTypes {
     | '/tareas'
     | '/notas/$id/editar'
     | '/organizaciones/$id/ajustes'
+    | '/organizaciones/$id/estadisticas'
     | '/organizaciones/$id/miembros'
     | '/organizaciones/$id/proyectos'
     | '/organizaciones/$id/roles'
@@ -462,6 +486,7 @@ export interface FileRouteTypes {
     | '/restablecer-password'
     | '/verificar-email'
     | '/_authenticated/autorizar-conexion'
+    | '/_authenticated/configuracion'
     | '/_authenticated/dashboard'
     | '/_authenticated/invitacion'
     | '/_authenticated/perfil'
@@ -484,6 +509,7 @@ export interface FileRouteTypes {
     | '/_authenticated/tareas/'
     | '/_authenticated/notas/$id_/editar'
     | '/_authenticated/organizaciones/$id/ajustes'
+    | '/_authenticated/organizaciones/$id/estadisticas'
     | '/_authenticated/organizaciones/$id/miembros'
     | '/_authenticated/organizaciones/$id/proyectos'
     | '/_authenticated/organizaciones/$id/roles'
@@ -561,6 +587,13 @@ declare module '@tanstack/react-router' {
       path: '/autorizar-conexion'
       fullPath: '/autorizar-conexion'
       preLoaderRoute: typeof AuthenticatedAutorizarConexionRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/configuracion': {
+      id: '/_authenticated/configuracion'
+      path: '/configuracion'
+      fullPath: '/configuracion'
+      preLoaderRoute: typeof AuthenticatedConfiguracionRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/dashboard': {
@@ -724,6 +757,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedOrganizacionesIdAjustesRouteImport
       parentRoute: typeof AuthenticatedOrganizacionesIdRoute
     }
+    '/_authenticated/organizaciones/$id/estadisticas': {
+      id: '/_authenticated/organizaciones/$id/estadisticas'
+      path: '/estadisticas'
+      fullPath: '/organizaciones/$id/estadisticas'
+      preLoaderRoute: typeof AuthenticatedOrganizacionesIdEstadisticasRouteImport
+      parentRoute: typeof AuthenticatedOrganizacionesIdRoute
+    }
     '/_authenticated/organizaciones/$id/miembros': {
       id: '/_authenticated/organizaciones/$id/miembros'
       path: '/miembros'
@@ -798,6 +838,7 @@ const AuthenticatedPerfilRouteWithChildren =
 
 interface AuthenticatedOrganizacionesIdRouteChildren {
   AuthenticatedOrganizacionesIdAjustesRoute: typeof AuthenticatedOrganizacionesIdAjustesRoute
+  AuthenticatedOrganizacionesIdEstadisticasRoute: typeof AuthenticatedOrganizacionesIdEstadisticasRoute
   AuthenticatedOrganizacionesIdMiembrosRoute: typeof AuthenticatedOrganizacionesIdMiembrosRoute
   AuthenticatedOrganizacionesIdProyectosRoute: typeof AuthenticatedOrganizacionesIdProyectosRoute
   AuthenticatedOrganizacionesIdRolesRoute: typeof AuthenticatedOrganizacionesIdRolesRoute
@@ -811,6 +852,8 @@ const AuthenticatedOrganizacionesIdRouteChildren: AuthenticatedOrganizacionesIdR
   {
     AuthenticatedOrganizacionesIdAjustesRoute:
       AuthenticatedOrganizacionesIdAjustesRoute,
+    AuthenticatedOrganizacionesIdEstadisticasRoute:
+      AuthenticatedOrganizacionesIdEstadisticasRoute,
     AuthenticatedOrganizacionesIdMiembrosRoute:
       AuthenticatedOrganizacionesIdMiembrosRoute,
     AuthenticatedOrganizacionesIdProyectosRoute:
@@ -834,6 +877,7 @@ const AuthenticatedOrganizacionesIdRouteWithChildren =
 
 interface AuthenticatedRouteChildren {
   AuthenticatedAutorizarConexionRoute: typeof AuthenticatedAutorizarConexionRoute
+  AuthenticatedConfiguracionRoute: typeof AuthenticatedConfiguracionRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedInvitacionRoute: typeof AuthenticatedInvitacionRoute
   AuthenticatedPerfilRoute: typeof AuthenticatedPerfilRouteWithChildren
@@ -854,6 +898,7 @@ interface AuthenticatedRouteChildren {
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedAutorizarConexionRoute: AuthenticatedAutorizarConexionRoute,
+  AuthenticatedConfiguracionRoute: AuthenticatedConfiguracionRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedInvitacionRoute: AuthenticatedInvitacionRoute,
   AuthenticatedPerfilRoute: AuthenticatedPerfilRouteWithChildren,

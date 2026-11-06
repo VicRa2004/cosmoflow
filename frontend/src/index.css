@@ -127,23 +127,65 @@
 	}
 }
 
+/* Preferencias de /configuracion (`core/preferencias.ts`): `data-*` en <html>. */
+:root {
+	--md-tamano: 1.125rem;
+	--md-interlineado: 1.625;
+	--md-fuente: var(--font-sans);
+	--md-color: var(--tinta-suave);
+}
+:root[data-md-color="intenso"] {
+	--md-color: var(--tinta);
+}
+:root[data-md-fuente="sistema"] {
+	--md-fuente: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+:root[data-ui-tamano="pequeno"] {
+	font-size: 87.5%;
+}
+:root[data-ui-tamano="grande"] {
+	font-size: 112.5%;
+}
+:root[data-md-tamano="pequeno"] {
+	--md-tamano: 1rem;
+}
+:root[data-md-tamano="grande"] {
+	--md-tamano: 1.3125rem;
+}
+:root[data-md-interlineado="compacto"] {
+	--md-interlineado: 1.45;
+}
+:root[data-md-interlineado="amplio"] {
+	--md-interlineado: 1.9;
+}
+:root[data-md-fuente="serif"] {
+	--md-fuente: ui-serif, Georgia, Cambria, "Times New Roman", serif;
+}
+:root[data-md-fuente="mono"] {
+	--md-fuente: var(--font-mono);
+}
+
 /* Contenido markdown de tareas y notas (`ContenidoMarkdown`). */
 @layer components {
 	.markdown {
-		@apply space-y-3 text-lg leading-relaxed text-tinta-suave;
+		@apply space-y-3;
+		color: var(--md-color);
+		font-family: var(--md-fuente);
+		font-size: var(--md-tamano);
+		line-height: var(--md-interlineado);
 		overflow-wrap: anywhere;
 	}
 	.markdown :is(h1, h2, h3, h4) {
 		@apply font-semibold text-tinta;
 	}
 	.markdown h1 {
-		@apply text-3xl;
+		font-size: 1.67em;
 	}
 	.markdown h2 {
-		@apply text-2xl;
+		font-size: 1.33em;
 	}
 	.markdown h3 {
-		@apply text-xl;
+		font-size: 1.11em;
 	}
 	/* Al tomar notas, un salto de línea es un salto de línea. */
 	.markdown p {
@@ -217,9 +259,9 @@
 	--crepe-color-hover: var(--elevada);
 	--crepe-color-selected: var(--borde);
 	--crepe-color-inline-area: var(--elevada);
-	--crepe-base-font-size: 18px;
-	--crepe-font-title: var(--font-sans);
-	--crepe-font-default: var(--font-sans);
+	--crepe-base-font-size: var(--md-tamano);
+	--crepe-font-title: var(--md-fuente);
+	--crepe-font-default: var(--md-fuente);
 	--crepe-font-code: var(--font-mono);
 	--crepe-shadow-1: var(--sombra-flotante);
 	--crepe-shadow-2: var(--sombra-flotante);

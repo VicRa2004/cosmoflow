@@ -11,6 +11,9 @@ import {
 import { routeTree } from "./routeTree.gen";
 import "@fontsource-variable/inter";
 import "./index.css";
+import { aplicarPreferenciasGuardadas } from "@/modules/configuracion/aplicarPreferencias";
+
+aplicarPreferenciasGuardadas();
 
 const router = createRouter({
 	routeTree,

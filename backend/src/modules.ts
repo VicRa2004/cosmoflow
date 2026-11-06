@@ -12,6 +12,7 @@ import { organizacionModule } from "@/modules/organizacion/module";
 import { equipoModule } from "@/modules/equipo/module";
 import { proyectoModule } from "@/modules/proyecto/module";
 import { notificacionModule } from "@/modules/notificacion/module";
+import { preferenciaModule } from "@/modules/preferencia/module";
 import { mcpModule } from "@/modules/mcp/module";
 
 /**
@@ -34,5 +35,6 @@ export const modules: AppModule[] = [
 	// Después de `equipo`: sustituye su `BajaEquipo`.
 	proyectoModule,
 	notificacionModule,
+	preferenciaModule,
 	mcpModule,
 ];

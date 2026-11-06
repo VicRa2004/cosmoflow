@@ -27,6 +27,7 @@ export function OrganizacionLayout({ id }: { id: number }) {
 		{ to: "/organizaciones/$id/proyectos", etiqueta: "Proyectos" },
 		{ to: "/organizaciones/$id/equipos", etiqueta: "Equipos" },
 		{ to: "/organizaciones/$id/miembros", etiqueta: "Miembros" },
+		{ to: "/organizaciones/$id/estadisticas", etiqueta: "Estadísticas" },
 		...(puedeEn(data, "roles:gestionar")
 			? [{ to: "/organizaciones/$id/roles", etiqueta: "Roles" } as const]
 			: []),

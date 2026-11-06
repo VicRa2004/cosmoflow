@@ -73,6 +73,7 @@ frontend/src/
 │   ├── notas/                      # Notas personales: búsqueda en título y contenido, filtro por tag; lectura (NotaLecturaPage), alta y edición a página completa (NotaEditorPage)
 │   ├── tareas/                     # Tareas (selector: personales, asignadas a mí, organización, equipo o proyecto) y PendientesPage (portada); lectura (TareaLecturaPage), alta y edición a página completa (TareaEditorPage)
 │   ├── conexiones/                 # Conector MCP: pasos para conectar Claude en el perfil (ConectarClaudeCard) y pantalla de permiso OAuth (AutorizarConexionPage)
+│   ├── configuracion/              # /configuracion: preferencias de interfaz guardadas en la cuenta (Query; `aplicarPreferencias` las pone como `data-*` en <html> y guarda copia local para pintar sin parpadeo)
 │   ├── tags/                       # Tags personales; SelectorTags, TagsBadges y useTagsDisponibles los usan tareas y notas
 │   │
 │   └── usuarios/                      # Módulo de Usuarios
@@ -99,6 +100,7 @@ frontend/src/
 │       ├── tareas/                 # /tareas (index), /tareas/nueva, /tareas/$id (lectura) y /tareas/$id/editar
 │       ├── autorizar-conexion.tsx  # Permiso OAuth del conector MCP
 │       ├── tags.tsx                # Vista /tags (tags personales)
+│       ├── configuracion.tsx       # Vista /configuracion (enlace en MenuUsuario)
 │       └── perfil/                 # /perfil (layout con pestañas): general, notificaciones, seguridad y conexiones
 │
 ├── routeTree.gen.ts                # Árbol de rutas generado automáticamente por TanStack Router

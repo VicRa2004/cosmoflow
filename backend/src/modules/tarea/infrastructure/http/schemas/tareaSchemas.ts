@@ -101,6 +101,19 @@ export const obtenerTareasSchema = paginacionSchema
 		},
 	);
 
+/** Una organización (sin equipo ni proyecto), un equipo o un proyecto. */
+export const estadisticasTareasSchema = z
+	.object({
+		organizacionId: numero.optional(),
+		equipoId: numero.optional(),
+		proyectoId: numero.optional(),
+	})
+	.refine(sinDosDestinos, unSoloDestino)
+	.refine(
+		(v) => v.organizacionId ?? v.equipoId ?? v.proyectoId,
+		"Indica organizacionId, equipoId o proyectoId",
+	);
+
 // ── Respuestas (sólo documentación OpenAPI) ──────────────────────────────────
 
 export const tareaDtoSchema = z
@@ -127,3 +140,30 @@ export const tareaPaginaSchema = z.object({
 	totalElementos: z.number().int().openapi({ example: 10 }),
 	totalPaginas: z.number().int().openapi({ example: 1 }),
 });
+
+const conteo = z.number().int().openapi({ example: 3 });
+
+export const estadisticasTareasDtoSchema = z
+	.object({
+		total: conteo,
+		porEstado: z.object({
+			pendiente: conteo,
+			en_progreso: conteo,
+			completada: conteo,
+			cancelada: conteo,
+		}),
+		abiertasPorPrioridad: z.object({
+			baja: conteo,
+			media: conteo,
+			alta: conteo,
+		}),
+		vencidas: conteo,
+		porResponsable: z.array(
+			z.object({
+				usuarioId: z.number().int(),
+				abiertas: conteo,
+				completadas: conteo,
+			}),
+		),
+	})
+	.openapi("EstadisticasTareasDto");

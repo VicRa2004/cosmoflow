@@ -45,6 +45,7 @@ model Usuario {
   adjuntos                 Adjunto[]
   organizaciones           MiembroOrganizacion[]
   preferenciasNotificacion PreferenciaNotificacion[]
+  preferenciaInterfaz      PreferenciaInterfaz?
   vinculoTelegram          VinculoTelegram?
   mencionesTarea           TareaMencion[]
 
@@ -685,6 +686,18 @@ model PreferenciaNotificacion {
 
   @@id([usuarioId, evento, canal])
   @@map("preferencia_notificacion")
+}
+
+/// Preferencias de interfaz del usuario (markdown, apariencia, Pendientes). JSON: el
+/// frontend añade opciones sin migraciones; las que faltan toman su valor por defecto.
+model PreferenciaInterfaz {
+  usuarioId Int       @id @map("pin_fkusuario")
+  datos     Json      @map("pin_datos")
+  updatedAt DateTime? @updatedAt @map("updated_at")
+
+  usuario Usuario @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+
+  @@map("preferencia_interfaz")
 }
 
 /// Valores por defecto de una organización para sus miembros (RN-92): valen en los

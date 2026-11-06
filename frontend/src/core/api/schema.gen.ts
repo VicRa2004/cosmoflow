@@ -3167,6 +3167,85 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/tareas/estadisticas": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Estadísticas de las tareas de una organización, equipo o proyecto
+         * @description `organizacionId` solo cuenta las de la organización, sin equipo ni proyecto.
+         */
+        get: {
+            parameters: {
+                query?: {
+                    organizacionId?: string;
+                    equipoId?: string;
+                    proyectoId?: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Recuentos */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["EstadisticasTareasDto"];
+                    };
+                };
+                /** @description Parámetros inválidos */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description No autenticado */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Permiso denegado (requiere tareas:leer) */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Organización, equipo o proyecto no encontrado */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/tareas/{id}": {
         parameters: {
             query?: never;
@@ -6728,6 +6807,106 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/preferencias": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Obtener mis preferencias de interfaz */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Todas, con las predeterminadas */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PreferenciasInterfaz"];
+                    };
+                };
+                /** @description No autenticado */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        /** Cambiar mis preferencias de interfaz; las no enviadas no cambian */
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        tamanoInterfaz?: "pequeno" | "normal" | "grande";
+                        /** @enum {string} */
+                        markdownFuente?: "inter" | "sistema" | "serif" | "mono";
+                        /** @enum {string} */
+                        markdownTamano?: "pequeno" | "normal" | "grande";
+                        /** @enum {string} */
+                        markdownInterlineado?: "compacto" | "normal" | "amplio";
+                        /** @enum {string} */
+                        markdownColor?: "suave" | "intenso";
+                        pendientesNotas?: boolean;
+                        pendientesOrganizaciones?: number | null;
+                    };
+                };
+            };
+            responses: {
+                /** @description Todas, ya guardadas */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PreferenciasInterfaz"];
+                    };
+                };
+                /** @description Opción o valor desconocido */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description No autenticado */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/mcp": {
         parameters: {
             query?: never;
@@ -7219,6 +7398,37 @@ export interface components {
             proyectoId: number | null;
             responsableIds: number[];
         };
+        EstadisticasTareasDto: {
+            /** @example 3 */
+            total: number;
+            porEstado: {
+                /** @example 3 */
+                pendiente: number;
+                /** @example 3 */
+                en_progreso: number;
+                /** @example 3 */
+                completada: number;
+                /** @example 3 */
+                cancelada: number;
+            };
+            abiertasPorPrioridad: {
+                /** @example 3 */
+                baja: number;
+                /** @example 3 */
+                media: number;
+                /** @example 3 */
+                alta: number;
+            };
+            /** @example 3 */
+            vencidas: number;
+            porResponsable: {
+                usuarioId: number;
+                /** @example 3 */
+                abiertas: number;
+                /** @example 3 */
+                completadas: number;
+            }[];
+        };
         NotaDto: {
             /** @example 1 */
             id: number;
@@ -7387,6 +7597,20 @@ export interface components {
             /** @example https://t.me/cosmoflow_bot?start=abc123 */
             enlace: string;
         };
+        PreferenciasInterfaz: {
+            /** @enum {string} */
+            tamanoInterfaz: "pequeno" | "normal" | "grande";
+            /** @enum {string} */
+            markdownFuente: "inter" | "sistema" | "serif" | "mono";
+            /** @enum {string} */
+            markdownTamano: "pequeno" | "normal" | "grande";
+            /** @enum {string} */
+            markdownInterlineado: "compacto" | "normal" | "amplio";
+            /** @enum {string} */
+            markdownColor: "suave" | "intenso";
+            pendientesNotas: boolean;
+            pendientesOrganizaciones: number | null;
+        };
         DestinoConexion: {
             /** @example Claude */
             nombre: string;
@@ -7415,6 +7639,7 @@ export type AsignacionUsuario = components['schemas']['AsignacionUsuario'];
 export type RegistroAuditoria = components['schemas']['RegistroAuditoria'];
 export type TagDto = components['schemas']['TagDto'];
 export type TareaDto = components['schemas']['TareaDto'];
+export type EstadisticasTareasDto = components['schemas']['EstadisticasTareasDto'];
 export type NotaDto = components['schemas']['NotaDto'];
 export type AdjuntoDto = components['schemas']['AdjuntoDto'];
 export type OrganizacionDto = components['schemas']['OrganizacionDto'];
@@ -7432,6 +7657,7 @@ export type PreferenciaNotificacionUsuario = components['schemas']['PreferenciaN
 export type PreferenciaNotificacion = components['schemas']['PreferenciaNotificacion'];
 export type EstadoTelegram = components['schemas']['EstadoTelegram'];
 export type EnlaceTelegram = components['schemas']['EnlaceTelegram'];
+export type PreferenciasInterfaz = components['schemas']['PreferenciasInterfaz'];
 export type DestinoConexion = components['schemas']['DestinoConexion'];
 export type ConexionAutorizada = components['schemas']['ConexionAutorizada'];
 export type $defs = Record<string, never>;

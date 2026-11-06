@@ -10,6 +10,8 @@ import { TareaController } from "../controllers/TareaController";
 import {
 	actualizarTareaSchema,
 	crearTareaSchema,
+	estadisticasTareasDtoSchema,
+	estadisticasTareasSchema,
 	moverTareaSchema,
 	obtenerTareasSchema,
 	paginacionSchema,
@@ -100,6 +102,29 @@ export class TareaRouter {
 			"/pendientes",
 			guard.handle(recurso, "leer"),
 			controller.obtenerPendientes,
+		);
+
+		docs.registerPath({
+			method: "get",
+			path: "/estadisticas",
+			tags,
+			security,
+			summary:
+				"Estadísticas de las tareas de una organización, equipo o proyecto",
+			description:
+				"`organizacionId` solo cuenta las de la organización, sin equipo ni proyecto.",
+			request: { query: estadisticasTareasSchema },
+			responses: {
+				200: jsonResponse(estadisticasTareasDtoSchema, "Recuentos"),
+				400: errorResponse("Parámetros inválidos"),
+				...protectedErrorResponses(`${recurso}:leer`),
+				404: errorResponse("Organización, equipo o proyecto no encontrado"),
+			},
+		});
+		this.router.get(
+			"/estadisticas",
+			guard.handle(recurso, "leer"),
+			controller.estadisticas,
 		);
 
 		docs.registerPath({

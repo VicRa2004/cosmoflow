@@ -2,6 +2,10 @@ import { useNavigate } from "@tanstack/react-router";
 import { Circle, CircleCheck, ListTodo } from "lucide-react";
 import { useState } from "react";
 import { useAuthStore } from "@/core/auth/store";
+import {
+	limiteOrganizacionesPendientes,
+	usePreferenciasQuery,
+} from "@/modules/configuracion/hooks/usePreferencias";
 import { EncabezadoPagina } from "@/core/components/ui/EncabezadoPagina";
 import { EmptyState } from "@/core/components/ui/EmptyState";
 import { PuntoColor } from "@/core/components/ui/PuntoColor";
@@ -27,6 +31,7 @@ export function PendientesPage() {
 	const navigate = useNavigate();
 	const { data, isLoading, error } = usePendientesQuery(pagina);
 	const actualizar = useActualizarTareaMutation();
+	const { data: preferencias } = usePreferenciasQuery();
 
 	const columnas: Columna<TareaDto>[] = [
 		{
@@ -115,7 +120,10 @@ export function PendientesPage() {
 					</>
 				}
 			>
-				<MenuNuevo />
+				<MenuNuevo
+					soloTareas={!preferencias?.pendientesNotas}
+					organizaciones={limiteOrganizacionesPendientes(preferencias)}
+				/>
 			</EncabezadoPagina>
 
 			<Tabla

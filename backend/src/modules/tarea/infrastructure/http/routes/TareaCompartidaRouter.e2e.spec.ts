@@ -135,6 +135,30 @@ describe("Tareas de equipo y proyecto (e2e)", () => {
 		);
 	});
 
+	it("estadísticas del equipo: solo para sus miembros", async () => {
+		const res = await api(`/api/tareas/estadisticas?equipoId=${equipo}`, {
+			token: t.caro,
+		});
+		expect(res.status).toBe(200);
+		expect(await res.json()).toMatchObject({
+			total: 1,
+			porEstado: { en_progreso: 1, pendiente: 0 },
+			abiertasPorPrioridad: { media: 1 },
+			vencidas: 0,
+			porResponsable: [{ usuarioId: id.caro, abiertas: 1, completadas: 0 }],
+		});
+		expect(
+			(
+				await api(`/api/tareas/estadisticas?equipoId=${equipo}`, {
+					token: t.zoe,
+				})
+			).status,
+		).toBe(404);
+		expect(
+			(await api("/api/tareas/estadisticas", { token: t.caro })).status,
+		).toBe(400);
+	});
+
 	it("asignadas incluye lo asignado en cualquier contexto y nada ajeno", async () => {
 		const ids = async (token: string) =>
 			(

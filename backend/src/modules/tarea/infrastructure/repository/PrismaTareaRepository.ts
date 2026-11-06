@@ -3,11 +3,17 @@ import type { Paginacion } from "@/core/shared/domain/Paginacion";
 import type { Prisma } from "@/generated/prisma/client";
 import type {
 	AmbitoTareas,
+	EstadisticasTareas,
 	GrupoTareas,
 	TareaFiltros,
 	TareaRepository,
 } from "../../domain/repository/TareaRepository";
-import { type DatosTarea, Tarea } from "../../domain/Tarea";
+import {
+	type DatosTarea,
+	ESTADOS_TAREA,
+	PRIORIDADES_TAREA,
+	Tarea,
+} from "../../domain/Tarea";
 
 // Los tags borrados siguen en `tarea_tag`, pero ya no forman parte de la tarea.
 const include = {
@@ -21,6 +27,18 @@ type PrismaTareaRecord = Prisma.TareaGetPayload<{ include: typeof include }>;
 /** `@db.Date` llega como medianoche UTC: el día ISO es su parte de fecha. */
 const aDia = (fecha: Date | null) => fecha?.toISOString().slice(0, 10) ?? null;
 const aFecha = (dia: string | null) => (dia ? new Date(dia) : null);
+
+const ABIERTAS = { in: ["pendiente" as const, "en_progreso" as const] };
+
+/** Las personales son las suyas sin organización: las que movió ya no. */
+const dondeAmbito = (ambito: AmbitoTareas): Prisma.TareaWhereInput =>
+	"usuarioId" in ambito
+		? { usuarioId: ambito.usuarioId, organizacionId: null }
+		: "responsableId" in ambito
+			? { responsables: { some: { usuarioId: ambito.responsableId } } }
+			: "organizacionId" in ambito
+				? { ...ambito, equipoId: null, proyectoId: null }
+				: ambito;
 
 /** Vencimiento más próximo (sin fecha al final) y, a igual fecha, prioridad (RN-43). */
 const ORDEN_POR_VENCIMIENTO: Prisma.TareaOrderByWithRelationInput[] = [
@@ -73,14 +91,7 @@ export class PrismaTareaRepository implements TareaRepository {
 	): Promise<Paginacion<Tarea>> {
 		return this.paginar(
 			{
-				// Las personales son las suyas sin organización: las que movió ya no.
-				...("usuarioId" in ambito
-					? { usuarioId: ambito.usuarioId, organizacionId: null }
-					: "responsableId" in ambito
-						? { responsables: { some: { usuarioId: ambito.responsableId } } }
-						: "organizacionId" in ambito
-							? { ...ambito, equipoId: null, proyectoId: null }
-							: ambito),
+				...dondeAmbito(ambito),
 				deletedAt: null,
 				...(busqueda && {
 					titulo: { contains: busqueda, mode: "insensitive" },
@@ -135,6 +146,76 @@ export class PrismaTareaRepository implements TareaRepository {
 			pagina,
 			totalElementos,
 			totalPaginas: Math.ceil(totalElementos / limite),
+		};
+	}
+
+	async contar(
+		ambito: { organizacionId: number } | GrupoTareas,
+	): Promise<EstadisticasTareas> {
+		const where = { ...dondeAmbito(ambito), deletedAt: null };
+		const abiertas = { ...where, estado: ABIERTAS };
+		const porUsuario = (tarea: Prisma.TareaWhereInput) =>
+			prisma.tareaResponsable.groupBy({
+				by: ["usuarioId"],
+				where: { tarea },
+				_count: true,
+			});
+		const [estados, prioridades, vencidas, abiertasDe, completadasDe] =
+			await prisma.$transaction([
+				prisma.tarea.groupBy({
+					by: ["estado"],
+					where,
+					_count: true,
+					orderBy: { estado: "asc" },
+				}),
+				prisma.tarea.groupBy({
+					by: ["prioridad"],
+					where: abiertas,
+					_count: true,
+					orderBy: { prioridad: "asc" },
+				}),
+				prisma.tarea.count({
+					where: {
+						...abiertas,
+						// Hoy como medianoche UTC, igual que llega `@db.Date`.
+						fechaVencimiento: { lt: aFecha(aDia(new Date())) ?? undefined },
+					},
+				}),
+				porUsuario(abiertas),
+				porUsuario({ ...where, estado: "completada" }),
+			]);
+
+		const porEstado = Object.fromEntries(
+			ESTADOS_TAREA.map((e) => [
+				e,
+				estados.find((g) => g.estado === e)?._count ?? 0,
+			]),
+		) as EstadisticasTareas["porEstado"];
+		const usuarios = new Map<
+			number,
+			{ abiertas: number; completadas: number }
+		>();
+		for (const g of abiertasDe)
+			usuarios.set(g.usuarioId, { abiertas: g._count, completadas: 0 });
+		for (const g of completadasDe)
+			usuarios.set(g.usuarioId, {
+				abiertas: usuarios.get(g.usuarioId)?.abiertas ?? 0,
+				completadas: g._count,
+			});
+
+		return {
+			total: Object.values(porEstado).reduce((a, b) => a + b, 0),
+			porEstado,
+			abiertasPorPrioridad: Object.fromEntries(
+				PRIORIDADES_TAREA.map((p) => [
+					p,
+					prioridades.find((g) => g.prioridad === p)?._count ?? 0,
+				]),
+			) as EstadisticasTareas["abiertasPorPrioridad"],
+			vencidas,
+			porResponsable: [...usuarios]
+				.map(([usuarioId, n]) => ({ usuarioId, ...n }))
+				.sort((a, b) => b.abiertas - a.abiertas),
 		};
 	}
 

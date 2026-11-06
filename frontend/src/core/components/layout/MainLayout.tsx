@@ -1,5 +1,6 @@
 import { type ReactNode, useRef, useState } from "react";
 import { cn } from "@/core/utils/cn";
+import { useAplicarPreferencias } from "@/modules/configuracion/hooks/usePreferencias";
 import { Navbar } from "./Navbar";
 import { PaletaComandos } from "./PaletaComandos";
 import { Sidebar } from "./Sidebar";
@@ -18,6 +19,7 @@ export function MainLayout({ children }: { children: ReactNode }) {
 	const [colapsado, setColapsado] = useState(leerColapsado);
 	const [paleta, setPaleta] = useState(false);
 	const cajon = useRef<HTMLDialogElement>(null);
+	useAplicarPreferencias();
 
 	const alternar = () => {
 		setColapsado(!colapsado);

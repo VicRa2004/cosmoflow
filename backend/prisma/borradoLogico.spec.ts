@@ -29,6 +29,7 @@ const EXENTOS: Record<string, string> = {
 	NotificacionEnviada: "técnica: claves de idempotencia que se purgan",
 	VinculoTelegram: "técnica: desvincular borra el vínculo",
 	PreferenciaNotificacion: "ajuste del usuario; se sobrescribe, no se borra",
+	PreferenciaInterfaz: "ajuste del usuario; se sobrescribe, no se borra",
 	PreferenciaNotificacionOrganizacion:
 		"ajuste de la organización; se sobrescribe, no se borra",
 	Auditoria: "registro histórico, nunca se borra",

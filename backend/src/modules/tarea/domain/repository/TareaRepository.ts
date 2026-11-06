@@ -1,5 +1,5 @@
 import type { Paginacion } from "@/core/shared/domain/Paginacion";
-import type { EstadoTarea, Tarea } from "../Tarea";
+import type { EstadoTarea, PrioridadTarea, Tarea } from "../Tarea";
 
 export interface TareaFiltros {
 	pagina: number;
@@ -20,6 +20,21 @@ export type AmbitoTareas =
 	| { organizacionId: number }
 	| { equipoId: number }
 	| { proyectoId: number };
+
+/** Recuento de las tareas vivas de una organización, equipo o proyecto. */
+export interface EstadisticasTareas {
+	total: number;
+	porEstado: Record<EstadoTarea, number>;
+	/** Solo las abiertas (pendientes y en progreso). */
+	abiertasPorPrioridad: Record<PrioridadTarea, number>;
+	/** Abiertas con vencimiento anterior a hoy. */
+	vencidas: number;
+	porResponsable: {
+		usuarioId: number;
+		abiertas: number;
+		completadas: number;
+	}[];
+}
 
 /** Un equipo o un proyecto concreto. */
 export type GrupoTareas = { equipoId: number } | { proyectoId: number };
@@ -42,6 +57,9 @@ export interface TareaRepository {
 		usuarioId: number,
 		paginacion: { pagina: number; limite: number },
 	) => Promise<Paginacion<Tarea>>;
+	contar: (
+		ambito: { organizacionId: number } | GrupoTareas,
+	) => Promise<EstadisticasTareas>;
 	buscarPorId: (id: number) => Promise<Tarea | null>;
 	/** `true` si todos son tags vivos (no borrados) de ese dueño. */
 	sonTagsDe: (
