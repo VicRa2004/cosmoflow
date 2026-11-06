@@ -3,6 +3,7 @@ import { Button } from "@/core/components/ui/Button";
 import { EditorMarkdown } from "@/modules/adjuntos/components/EditorMarkdown";
 import { SelectorTags } from "@/modules/tags/components/SelectorTags";
 import { useAppForm } from "@/core/components/form/useAppForm";
+import { useAtajoGuardar } from "@/core/components/form/useAtajoGuardar";
 import type { NotaDto } from "../api/notasApi";
 import {
 	useActualizarNotaMutation,
@@ -41,13 +42,19 @@ export function NotaForm({
 	const form = useAppForm({
 		defaultValues: inicial ? notaAFormValues(inicial) : notaFormVacio,
 		validators: { onSubmit: notaFormSchema },
-		onSubmit: async ({ value }) => {
+		// `quedarse`: Ctrl+S al editar guarda sin salir; el botón sí sale.
+		onSubmitMeta: { quedarse: false },
+		onSubmit: async ({ value, meta }) => {
 			const datos = notaFormSchema.parse(value);
 			if (inicial) await actualizar.mutateAsync({ id: inicial.id, datos });
 			else
 				await crear.mutateAsync(proyectoId ? { ...datos, proyectoId } : datos);
-			onGuardado();
+			if (!meta.quedarse) onGuardado();
 		},
+	});
+	useAtajoGuardar(() => {
+		if (!form.state.isSubmitting)
+			form.handleSubmit({ quedarse: !!inicial }).catch(() => {});
 	});
 
 	return (

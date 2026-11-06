@@ -2,6 +2,7 @@ import { ArrowLeft, FolderInput } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/core/components/ui/Button";
 import { useAppForm } from "@/core/components/form/useAppForm";
+import { useAtajoGuardar } from "@/core/components/form/useAtajoGuardar";
 import { destinoDe, type TareaDto } from "../api/tareasApi";
 import { CampoResponsables } from "./CampoResponsables";
 import { EditorTarea } from "./EditorTarea";
@@ -54,7 +55,9 @@ export function TareaForm({
 	const form = useAppForm({
 		defaultValues: inicial ? tareaAFormValues(inicial) : tareaFormVacio(),
 		validators: { onSubmit: tareaFormSchema },
-		onSubmit: async ({ value }) => {
+		// `quedarse`: Ctrl+S al editar guarda sin salir; el botón sí sale.
+		onSubmitMeta: { quedarse: false },
+		onSubmit: async ({ value, meta }) => {
 			const { responsableIds, ...datos } = tareaFormSchema.parse(value);
 			if (inicial) {
 				// Solo si cambian: sin ser líder ni delegado, enviarlos daría 403 (RN-22).
@@ -68,8 +71,12 @@ export function TareaForm({
 					destino ? { ...datos, ...destino, responsableIds } : datos,
 				);
 			}
-			onGuardado();
+			if (!meta.quedarse) onGuardado();
 		},
+	});
+	useAtajoGuardar(() => {
+		if (!form.state.isSubmitting)
+			form.handleSubmit({ quedarse: !!inicial }).catch(() => {});
 	});
 
 	return (

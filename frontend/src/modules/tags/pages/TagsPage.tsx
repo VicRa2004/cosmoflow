@@ -1,5 +1,6 @@
 import { Plus, Search } from "lucide-react";
-import { useState } from "react";
+import { useNavigate } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
 import { usePermisos } from "@/core/auth/usePermisos";
 import { Button } from "@/core/components/ui/Button";
 import { EncabezadoPagina } from "@/core/components/ui/EncabezadoPagina";
@@ -12,7 +13,7 @@ import { TagsTable } from "../components/TagsTable";
 import { useEliminarTagMutation } from "../hooks/useTagsMutation";
 import { useTagsQuery } from "../hooks/useTagsQuery";
 
-export function TagsPage() {
+export function TagsPage({ nuevo }: { nuevo?: boolean }) {
 	const { puede } = usePermisos();
 	const [pagina, setPagina] = useState(1);
 	const [busqueda, setBusqueda] = useState("");
@@ -20,6 +21,12 @@ export function TagsPage() {
 	const [editando, setEditando] = useState<TagDto | "nuevo" | null>(null);
 	const [eliminando, setEliminando] = useState<TagDto | null>(null);
 	const eliminar = useEliminarTagMutation();
+	const navigate = useNavigate();
+	useEffect(() => {
+		if (!nuevo) return;
+		setEditando("nuevo");
+		navigate({ to: "/tags", search: {}, replace: true });
+	}, [nuevo, navigate]);
 	const { data, isLoading, error } = useTagsQuery({
 		pagina,
 		limite: 10,

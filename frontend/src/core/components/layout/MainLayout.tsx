@@ -1,6 +1,7 @@
 import { type ReactNode, useRef, useState } from "react";
 import { cn } from "@/core/utils/cn";
 import { Navbar } from "./Navbar";
+import { PaletaComandos } from "./PaletaComandos";
 import { Sidebar } from "./Sidebar";
 
 const CLAVE_COLAPSADO = "sidebar-colapsado";
@@ -64,6 +65,7 @@ export function MainLayout({ children }: { children: ReactNode }) {
 					{children}
 				</main>
 			</div>
+			<PaletaComandos />
 		</div>
 	);
 }
