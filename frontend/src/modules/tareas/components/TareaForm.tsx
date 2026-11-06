@@ -1,6 +1,7 @@
 import { ArrowLeft, FolderInput } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/core/components/ui/Button";
+import { Kbd } from "@/core/components/ui/Kbd";
 import { useAppForm } from "@/core/components/form/useAppForm";
 import { useAtajoGuardar } from "@/core/components/form/useAtajoGuardar";
 import { destinoDe, type TareaDto } from "../api/tareasApi";
@@ -98,7 +99,13 @@ export function TareaForm({
 								Mover a una organización
 							</Button>
 						)}
-						<form.BotonEnviar>{inicial ? "Guardar" : "Crear"}</form.BotonEnviar>
+						<form.BotonEnviar>
+							{inicial ? "Guardar" : "Crear"}
+							<Kbd
+								tecla="S"
+								className="border-white/25 bg-white/15 text-white"
+							/>
+						</form.BotonEnviar>
 					</div>
 				</div>
 				<form.AppField name="titulo">

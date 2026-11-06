@@ -1,6 +1,7 @@
 import { useRouterState, useSearch } from "@tanstack/react-router";
-import { ChevronRight, Menu } from "lucide-react";
+import { ChevronRight, Menu, Search } from "lucide-react";
 import { Button } from "@/core/components/ui/Button";
+import { Kbd } from "@/core/components/ui/Kbd";
 import { useNotaQuery } from "@/modules/notas/hooks/useNotasQuery";
 import { MigasContexto } from "@/modules/organizaciones/components/MigasContexto";
 import { useTareaQuery } from "@/modules/tareas/hooks/useTareasQuery";
@@ -53,7 +54,13 @@ function useMigas() {
 	};
 }
 
-export function Navbar({ onAbrirMenu }: { onAbrirMenu: () => void }) {
+export function Navbar({
+	onAbrirMenu,
+	onAbrirPaleta,
+}: {
+	onAbrirMenu: () => void;
+	onAbrirPaleta: () => void;
+}) {
 	const { grupo, seccion } = useMigas();
 	const contexto = useContextoCompartido();
 
@@ -87,6 +94,17 @@ export function Navbar({ onAbrirMenu }: { onAbrirMenu: () => void }) {
 					)}
 				</ol>
 			</nav>
+			<Button
+				variant="ghost"
+				size="sm"
+				onClick={onAbrirPaleta}
+				aria-label="Ir a… (Ctrl+K)"
+				className="text-tinta-tenue"
+			>
+				<Search className="size-4" />
+				<span className="hidden sm:inline">Ir a…</span>
+				<Kbd tecla="K" />
+			</Button>
 			<SelectorTema />
 			<MenuUsuario />
 		</header>

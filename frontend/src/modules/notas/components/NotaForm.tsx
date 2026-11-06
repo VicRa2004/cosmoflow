@@ -1,5 +1,6 @@
 import { ArrowLeft } from "lucide-react";
 import { Button } from "@/core/components/ui/Button";
+import { Kbd } from "@/core/components/ui/Kbd";
 import { EditorMarkdown } from "@/modules/adjuntos/components/EditorMarkdown";
 import { SelectorTags } from "@/modules/tags/components/SelectorTags";
 import { useAppForm } from "@/core/components/form/useAppForm";
@@ -65,7 +66,10 @@ export function NotaForm({
 						<ArrowLeft className="h-4 w-4" />
 						Volver
 					</Button>
-					<form.BotonEnviar>{inicial ? "Guardar" : "Crear"}</form.BotonEnviar>
+					<form.BotonEnviar>
+						{inicial ? "Guardar" : "Crear"}
+						<Kbd tecla="S" className="border-white/25 bg-white/15 text-white" />
+					</form.BotonEnviar>
 				</div>
 				<form.AppField name="titulo">
 					{(campo) => (

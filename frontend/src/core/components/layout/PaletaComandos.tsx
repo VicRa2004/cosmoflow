@@ -7,7 +7,13 @@ import {
 	StickyNote,
 	Tag,
 } from "lucide-react";
-import { useEffect, useId, useState } from "react";
+import {
+	type Dispatch,
+	type SetStateAction,
+	useEffect,
+	useId,
+	useState,
+} from "react";
 import { usePermisos } from "@/core/auth/usePermisos";
 import { Dialog } from "@/core/components/ui/Dialog";
 import { Input } from "@/core/components/ui/Input";
@@ -25,9 +31,13 @@ const normalizar = (texto: string) =>
 	texto.normalize("NFD").replace(/\p{M}/gu, "").toLowerCase();
 
 /** Ctrl+K (⌘K): salta a tareas, notas, tags u organizaciones, o crea tareas, notas y tags. */
-export function PaletaComandos() {
-	const [abierta, setAbierta] = useState(false);
-
+export function PaletaComandos({
+	abierta,
+	setAbierta,
+}: {
+	abierta: boolean;
+	setAbierta: Dispatch<SetStateAction<boolean>>;
+}) {
 	useEffect(() => {
 		const onTecla = (e: KeyboardEvent) => {
 			if (!(e.ctrlKey || e.metaKey) || e.key.toLowerCase() !== "k") return;
@@ -37,7 +47,7 @@ export function PaletaComandos() {
 		// En captura: gana al atajo de enlace del editor markdown.
 		window.addEventListener("keydown", onTecla, true);
 		return () => window.removeEventListener("keydown", onTecla, true);
-	}, []);
+	}, [setAbierta]);
 
 	return (
 		<Dialog abierto={abierta} onCerrar={() => setAbierta(false)} titulo="Ir a…">
@@ -136,7 +146,9 @@ function ListaComandos({ onElegido }: { onElegido: () => void }) {
 	return (
 		<div className="space-y-3">
 			<Input
-				autoFocus
+				// `showModal()` enfoca el primer control con el atributo `autofocus`
+				// (sin él, la X); el `autoFocus` de React no lo pinta en el DOM.
+				ref={(input) => input?.setAttribute("autofocus", "")}
 				role="combobox"
 				aria-label="Buscar comando u organización"
 				aria-expanded
