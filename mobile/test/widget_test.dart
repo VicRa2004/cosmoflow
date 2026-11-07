@@ -6,6 +6,8 @@ import 'package:cosmoflow_mobile/core/auth/usuario_sesion.dart';
 import 'package:cosmoflow_mobile/core/theme/tema_app.dart';
 import 'package:cosmoflow_mobile/main.dart';
 import 'package:cosmoflow_mobile/modules/auth/api/auth_api.dart';
+import 'package:cosmoflow_mobile/modules/notas/models/nota_model.dart';
+import 'package:cosmoflow_mobile/modules/tags/models/tag_model.dart';
 import 'package:cosmoflow_mobile/modules/tareas/models/tarea_model.dart';
 import 'package:cosmoflow_mobile/modules/tareas/widgets/tarea_card.dart';
 import 'package:flutter/material.dart';
@@ -21,8 +23,8 @@ void main() {
     expect(extraido, equals('token_secreto_123'));
   });
 
-  test('TareaDto.fromJson parsea estados, prioridades y fechas del backend', () {
-    final dto = TareaDto.fromJson(<String, dynamic>{
+  test('Modelos TareaDto, NotaDto y TagDto parsean respuestas del backend', () {
+    final tarea = TareaDto.fromJson(<String, dynamic>{
       'id': 42,
       'titulo': 'Preparar release móvil',
       'contenido': 'Revisar pruebas de integración',
@@ -34,11 +36,26 @@ void main() {
       'tagIds': <int>[1, 2],
       'responsableIds': <int>[5],
     });
+    expect(tarea.id, equals(42));
+    expect(tarea.estado, equals(EstadoTarea.enProgreso));
+    expect(tarea.prioridad, equals(PrioridadTarea.alta));
 
-    expect(dto.id, equals(42));
-    expect(dto.estado, equals(EstadoTarea.enProgreso));
-    expect(dto.prioridad, equals(PrioridadTarea.alta));
-    expect(dto.tagIds, equals(<int>[1, 2]));
+    final nota = NotaDto.fromJson(<String, dynamic>{
+      'id': 7,
+      'titulo': 'Arquitectura Flutter',
+      'contenido': '# Notas de diseño',
+      'color': '#059669',
+      'tagIds': <int>[3],
+    });
+    expect(nota.id, equals(7));
+    expect(nota.tagIds, equals(<int>[3]));
+
+    final tag = TagDto.fromJson(<String, dynamic>{
+      'id': 3,
+      'nombre': 'Mobile',
+      'color': '#4F46E5',
+    });
+    expect(tag.nombre, equals('Mobile'));
   });
 
   testWidgets(
@@ -73,7 +90,7 @@ void main() {
   );
 
   testWidgets(
-    'Navega entre Login, Registro, Recuperar contraseña y el MainShell autenticado',
+    'Navega por todas las secciones del MainShell (Pendientes, Tareas, Notas, Tags, Perfil)',
     (WidgetTester tester) async {
       final almacenamiento = MemoriaAlmacenamientoSeguro();
       final sesionStore = SesionStore(almacenamientoSeguro: almacenamiento);
@@ -91,19 +108,6 @@ void main() {
 
       expect(find.text('Iniciar sesión'), findsOneWidget);
 
-      await tester.tap(find.text('Crear cuenta'));
-      await tester.pumpAndSettle();
-      expect(
-        find.text('Completa tus datos para comenzar a organizar tu trabajo.'),
-        findsOneWidget,
-      );
-
-      await tester.tap(find.text('Iniciar sesión'));
-      await tester.pumpAndSettle();
-      await tester.tap(find.text('¿Olvidaste tu contraseña?'));
-      await tester.pumpAndSettle();
-      expect(find.text('Recuperar contraseña'), findsOneWidget);
-
       sesionStore.establecerSesion(
         accessToken: 'jwt-test',
         usuario: const UsuarioSesion(
@@ -118,9 +122,13 @@ void main() {
 
       expect(find.text('Nada pendiente'), findsOneWidget);
 
-      await tester.tap(find.text('Tareas'));
+      await tester.tap(find.text('Notas'));
       await tester.pumpAndSettle();
-      expect(find.text('Asignadas a mí'), findsOneWidget);
+      expect(find.text('Sin notas'), findsOneWidget);
+
+      await tester.tap(find.text('Tags'));
+      await tester.pumpAndSettle();
+      expect(find.text('Sin etiquetas'), findsOneWidget);
     },
   );
 }

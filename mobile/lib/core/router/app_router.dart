@@ -4,8 +4,10 @@ import '../../modules/auth/pages/login_page.dart';
 import '../../modules/auth/pages/recuperar_password_page.dart';
 import '../../modules/auth/pages/registro_page.dart';
 import '../../modules/dashboard/pages/dashboard_page.dart';
+import '../../modules/notas/api/notas_api.dart';
 import '../../modules/notas/pages/notas_page.dart';
 import '../../modules/perfil/pages/perfil_page.dart';
+import '../../modules/tags/api/tags_api.dart';
 import '../../modules/tags/pages/tags_page.dart';
 import '../../modules/tareas/api/tareas_api.dart';
 import '../../modules/tareas/pages/tareas_page.dart';
@@ -23,6 +25,8 @@ GoRouter crearAppRouter({
   required SesionStore sesionStore,
   required AuthApi authApi,
   required TareasApi tareasApi,
+  required NotasApi notasApi,
+  required TagsApi tagsApi,
   bool cargarDatosIniciales = true,
 }) {
   return GoRouter(
@@ -80,11 +84,20 @@ GoRouter crearAppRouter({
           ),
           GoRoute(
             path: '/notas',
-            builder: (context, state) => const NotasPage(),
+            builder: (context, state) => NotasPage(
+              sesionStore: sesionStore,
+              notasApi: notasApi,
+              tagsApi: tagsApi,
+              cargarAlIniciar: cargarDatosIniciales,
+            ),
           ),
           GoRoute(
             path: '/tags',
-            builder: (context, state) => const TagsPage(),
+            builder: (context, state) => TagsPage(
+              sesionStore: sesionStore,
+              tagsApi: tagsApi,
+              cargarAlIniciar: cargarDatosIniciales,
+            ),
           ),
           GoRoute(
             path: '/perfil',
