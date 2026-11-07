@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import '../../../core/theme/colores_noche_indigo.dart';
 import '../api/auth_api.dart';
 
@@ -162,7 +163,25 @@ class _LoginPageState extends State<LoginPage> {
                       },
                     ),
                     const SizedBox(height: 16),
-                    Text('Contraseña', style: textTheme.labelMedium),
+                    Wrap(
+                      alignment: WrapAlignment.spaceBetween,
+                      crossAxisAlignment: WrapCrossAlignment.center,
+                      spacing: 8,
+                      runSpacing: 4,
+                      children: <Widget>[
+                        Text('Contraseña', style: textTheme.labelMedium),
+                        GestureDetector(
+                          onTap: () => context.go('/recuperar-password'),
+                          child: Text(
+                            '¿Olvidaste tu contraseña?',
+                            style: textTheme.bodySmall?.copyWith(
+                              color: colores.indigoMarca,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
                     const SizedBox(height: 6),
                     TextFormField(
                       controller: _passwordController,
@@ -192,6 +211,22 @@ class _LoginPageState extends State<LoginPage> {
                               ),
                             )
                           : const Text('Entrar'),
+                    ),
+                    const SizedBox(height: 16),
+                    Wrap(
+                      alignment: WrapAlignment.center,
+                      crossAxisAlignment: WrapCrossAlignment.center,
+                      spacing: 4,
+                      children: <Widget>[
+                        Text(
+                          '¿No tienes cuenta?',
+                          style: textTheme.bodySmall,
+                        ),
+                        TextButton(
+                          onPressed: () => context.go('/registro'),
+                          child: const Text('Crear cuenta'),
+                        ),
+                      ],
                     ),
                   ],
                 ),
