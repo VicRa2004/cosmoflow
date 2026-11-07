@@ -7,6 +7,7 @@ import '../../modules/dashboard/pages/dashboard_page.dart';
 import '../../modules/notas/pages/notas_page.dart';
 import '../../modules/perfil/pages/perfil_page.dart';
 import '../../modules/tags/pages/tags_page.dart';
+import '../../modules/tareas/api/tareas_api.dart';
 import '../../modules/tareas/pages/tareas_page.dart';
 import '../auth/sesion_store.dart';
 import '../layout/main_shell.dart';
@@ -21,6 +22,8 @@ const Set<String> _rutasPublicas = <String>{
 GoRouter crearAppRouter({
   required SesionStore sesionStore,
   required AuthApi authApi,
+  required TareasApi tareasApi,
+  bool cargarDatosIniciales = true,
 }) {
   return GoRouter(
     initialLocation: '/dashboard',
@@ -63,11 +66,17 @@ GoRouter crearAppRouter({
             path: '/dashboard',
             builder: (context, state) => DashboardPage(
               sesionStore: sesionStore,
+              tareasApi: tareasApi,
+              cargarAlIniciar: cargarDatosIniciales,
             ),
           ),
           GoRoute(
             path: '/tareas',
-            builder: (context, state) => const TareasPage(),
+            builder: (context, state) => TareasPage(
+              sesionStore: sesionStore,
+              tareasApi: tareasApi,
+              cargarAlIniciar: cargarDatosIniciales,
+            ),
           ),
           GoRoute(
             path: '/notas',
