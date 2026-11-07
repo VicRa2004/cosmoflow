@@ -129,6 +129,15 @@ void main() {
       await tester.tap(find.text('Tags'));
       await tester.pumpAndSettle();
       expect(find.text('Sin etiquetas'), findsOneWidget);
+
+      await tester.tap(find.text('Perfil'));
+      await tester.pumpAndSettle();
+      expect(find.text('Email verificado'), findsOneWidget);
+      expect(find.text('Seguridad de la cuenta'), findsOneWidget);
+
+      await tester.tap(find.text('Oscuro'));
+      await tester.pumpAndSettle();
+      expect(sesionStore.modoTema, equals(ThemeMode.dark));
     },
   );
 }

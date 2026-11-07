@@ -60,6 +60,46 @@ class AuthApi {
         'Si el correo está registrado, recibirás un enlace para restablecer tu contraseña.';
   }
 
+  /// Cambia la contraseña actual (`PUT /api/auth/password`).
+  /// El backend emite un nuevo `accessToken` + cookie `refresh_token` y revoca el resto de sesiones.
+  Future<void> cambiarPassword({
+    required String passwordActual,
+    required String passwordNueva,
+  }) async {
+    final response = await apiClient.dio.put<Map<String, dynamic>>(
+      '/auth/password',
+      data: <String, dynamic>{
+        'passwordActual': passwordActual,
+        'passwordNueva': passwordNueva,
+      },
+    );
+
+    final nuevoToken = response.data?['accessToken'] as String?;
+    if (nuevoToken != null && nuevoToken.isNotEmpty) {
+      apiClient.sesionStore.actualizarAccessToken(nuevoToken);
+    }
+  }
+
+  /// Reenvía el correo de verificación de email (`POST /api/auth/verificar-email/reenviar`).
+  Future<String> reenviarVerificacionEmail() async {
+    final response = await apiClient.dio.post<Map<String, dynamic>>(
+      '/auth/verificar-email/reenviar',
+    );
+    return response.data?['mensaje'] as String? ??
+        'Correo de verificación enviado.';
+  }
+
+  /// Cierra todas las sesiones activas de la cuenta (`POST /api/auth/logout-todas`).
+  Future<void> cerrarTodasLasSesiones() async {
+    try {
+      await apiClient.dio.post<Map<String, dynamic>>('/auth/logout-todas');
+    } on DioException {
+      // Aunque falle la red, limpiamos la sesión local.
+    } finally {
+      await apiClient.sesionStore.limpiarSesion();
+    }
+  }
+
   /// Restaura la sesión al abrir la app si existe un `refresh_token` guardado.
   Future<bool> restaurarSesion() async {
     final restaurada = await apiClient.authInterceptor.intentarRefresh();
