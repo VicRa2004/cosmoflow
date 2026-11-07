@@ -16,3 +16,9 @@ backend/uploads
 # Impeccable: bocetos y comps de rondas de decisión (descartables)
 frontend/.impeccable/mocks
 frontend/.impeccable/review
+
+# Mobile (Flutter)
+mobile/.dart_tool/
+mobile/build/
+mobile/ios/Pods/
+mobile/android/.gradle/
