@@ -72,6 +72,9 @@ export function MenuUsuario() {
 					<LogOut aria-hidden className="size-4 text-tinta-tenue" />
 					Cerrar sesión
 				</button>
+				<p className="px-2 pt-1.5 pb-1 text-xs text-tinta-tenue">
+					Cosmoflow v{import.meta.env.VITE_APP_VERSION}
+				</p>
 			</div>
 		</>
 	);

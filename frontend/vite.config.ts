@@ -1,3 +1,4 @@
+import { readFileSync } from "node:fs";
 import path from "node:path";
 import tailwindcss from "@tailwindcss/vite";
 import { tanstackRouter } from "@tanstack/router-plugin/vite";
@@ -5,7 +6,15 @@ import react from "@vitejs/plugin-react";
 import { defineConfig } from "vite";
 
 // https://vite.dev/config/
+// Versión única del monorepo: la del package.json raíz (la que marca el tag vX.Y.Z).
+const { version } = JSON.parse(
+	readFileSync(path.resolve(import.meta.dirname, "../package.json"), "utf8"),
+);
+
 export default defineConfig({
+	define: {
+		"import.meta.env.VITE_APP_VERSION": JSON.stringify(version),
+	},
 	plugins: [
 		tanstackRouter({
 			target: "react",

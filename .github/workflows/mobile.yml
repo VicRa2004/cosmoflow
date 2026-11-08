@@ -1,0 +1,59 @@
+name: APK Android
+
+# Al subir un tag vX.Y.Z compila el APK y lo publica en un Release de GitHub.
+# A mano (Actions → APK Android → Run workflow) deja el APK como artefacto del run.
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  apk:
+    runs-on: ubuntu-24.04
+    defaults:
+      run:
+        working-directory: mobile
+    steps:
+      - uses: actions/checkout@v7
+      - name: Versión (tag = package.json = pubspec.yaml)
+        id: version
+        run: |
+          VERSION=$(node -p "require('../package.json').version")
+          PUBSPEC=$(sed -n 's/^version: \([^+]*\).*/\1/p' pubspec.yaml)
+          [ "$VERSION" = "$PUBSPEC" ] || { echo "package.json ($VERSION) ≠ pubspec.yaml ($PUBSPEC)"; exit 1; }
+          if [ "$GITHUB_REF_TYPE" = tag ] && [ "$GITHUB_REF_NAME" != "v$VERSION" ]; then
+            echo "El tag $GITHUB_REF_NAME no coincide con la versión $VERSION"; exit 1
+          fi
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: 17
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - run: flutter pub get
+      - run: dart analyze
+      - run: flutter test
+      # shortcut: firmado con la clave debug de Flutter; vale para instalar y probar, no para Play Store.
+      - name: Compilar APK
+        run: |
+          flutter build apk --release \
+            --build-name=${{ steps.version.outputs.version }} \
+            --build-number=${{ github.run_number }} \
+            --dart-define=APP_VERSION=${{ steps.version.outputs.version }}
+          mv build/app/outputs/flutter-apk/app-release.apk cosmoflow-${{ steps.version.outputs.version }}.apk
+      - uses: actions/upload-artifact@v5
+        with:
+          name: cosmoflow-${{ steps.version.outputs.version }}-apk
+          path: mobile/cosmoflow-*.apk
+      - name: Release de GitHub
+        if: github.ref_type == 'tag'
+        uses: softprops/action-gh-release@v2
+        with:
+          files: mobile/cosmoflow-*.apk
+          generate_release_notes: true

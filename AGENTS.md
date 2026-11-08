@@ -61,6 +61,12 @@ Bun solo ejecuta el backend: `dev`, `test`, `start`, `scripts/*`, `prisma.seed`.
 
 - **Cierre de tarea:** `pnpm verify` (debe pasar). El CI ejecuta además `prisma migrate deploy`, `pnpm test:e2e` (Postgres real) y el build de la imagen Docker con smoke test de `/health`.
 
+## Versiones y releases
+
+Una sola versión SemVer para todo el monorepo, empezando en `0.0.1`. Vive en `package.json` (raíz, `backend/`, `frontend/`) y en `mobile/pubspec.yaml` (`X.Y.Z+1`); la web la muestra en el menú de usuario y la app en Perfil.
+
+Para publicar: subir la versión en esos cuatro archivos, commit, y `git tag vX.Y.Z && git push --tags`. El workflow `APK Android` (`.github/workflows/mobile.yml`) comprueba que tag y archivos coinciden, compila el APK y lo adjunta a un Release de GitHub. También se puede lanzar a mano desde Actions (deja el APK como artefacto).
+
 ## Idioma del código
 
 El código se escribe en **español** para que lo lea cualquiera del equipo; solo lo estándar o técnico queda en inglés.

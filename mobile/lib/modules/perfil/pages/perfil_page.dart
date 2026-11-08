@@ -4,6 +4,9 @@ import '../../../core/theme/colores_noche_indigo.dart';
 import '../../auth/api/auth_api.dart';
 import '../widgets/cambiar_password_dialog.dart';
 
+// La inyecta el build (`--dart-define=APP_VERSION=…`); en `flutter run` queda `dev`.
+const _version = String.fromEnvironment('APP_VERSION', defaultValue: 'dev');
+
 /// Vista `/perfil` con datos de cuenta, tema (Claro / Oscuro / Sistema) y seguridad.
 class PerfilPage extends StatefulWidget {
   const PerfilPage({
@@ -262,6 +265,10 @@ class _PerfilPageState extends State<PerfilPage> {
               ],
             ),
           ),
+        ),
+        const SizedBox(height: 24),
+        Center(
+          child: Text('Cosmoflow v$_version', style: textTheme.bodySmall),
         ),
       ],
     );
