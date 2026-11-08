@@ -1,10 +1,19 @@
 import { useCanGoBack, useNavigate, useRouter } from "@tanstack/react-router";
+import { usePermisos } from "@/core/auth/usePermisos";
 import { Spinner } from "@/core/components/ui/Spinner";
+import { AccionesNota } from "../components/AccionesNota";
 import { NotaForm } from "../components/NotaForm";
 import { useNotaQuery } from "../hooks/useNotasQuery";
 import type { ContextoNotaSearch } from "../schemas/notaSchemas";
+import { NotaLecturaPage } from "./NotaLecturaPage";
 
-/** Alta (sin `id`, en `contexto` si viene) o edición de una nota a página completa. */
+const spinner = (
+	<div className="flex justify-center py-16 text-tinta-tenue">
+		<Spinner />
+	</div>
+);
+
+/** Panel derecho de la bóveda: alta (sin `id`) o la nota lista para escribir. */
 export function NotaEditorPage({
 	id,
 	contexto,
@@ -15,30 +24,40 @@ export function NotaEditorPage({
 	const router = useRouter();
 	const navigate = useNavigate();
 	const puedeVolver = useCanGoBack();
+	const { puede, listo } = usePermisos();
 	const { data, error } = useNotaQuery(id);
-	// Vuelve a donde se abrió; si se entró por URL, a su lectura (o a la lista si es nueva).
-	const volver = () =>
-		puedeVolver
-			? router.history.back()
-			: id === undefined
-				? navigate({ to: "/notas" })
-				: navigate({ to: "/notas/$id", params: { id: String(id) } });
+	const ambito = {
+		organizacionId: data?.organizacionId ?? contexto?.organizacionId,
+		proyectoId: data?.proyectoId ?? contexto?.proyectoId,
+	};
+	const aLaLista = () => navigate({ to: "/notas", search: ambito });
+	const volver = () => (puedeVolver ? router.history.back() : aLaLista());
 
 	if (error) throw error;
-	if (id !== undefined && !data) {
+	if (id === undefined) {
 		return (
-			<div className="flex justify-center py-16 text-tinta-tenue">
-				<Spinner />
-			</div>
+			<NotaForm
+				contexto={contexto}
+				onVolver={volver}
+				onCreada={(nota) =>
+					navigate({
+						to: "/notas/$id",
+						params: { id: String(nota.id) },
+						search: ambito,
+						replace: true,
+					})
+				}
+			/>
 		);
 	}
+	if (!listo || !data) return spinner;
+	if (!puede("notas:actualizar")) return <NotaLecturaPage id={id} />;
 	return (
 		<NotaForm
-			key={id ?? "nueva"}
+			key={id}
 			inicial={data}
-			contexto={contexto}
-			onGuardado={volver}
-			onVolver={volver}
+			onVolver={aLaLista}
+			acciones={<AccionesNota nota={data} onEliminada={aLaLista} />}
 		/>
 	);
 }

@@ -1,25 +1,16 @@
 import { useCanGoBack, useNavigate, useRouter } from "@tanstack/react-router";
-import { Download, Pencil, Trash2 } from "lucide-react";
-import { useState } from "react";
-import { usePermisos } from "@/core/auth/usePermisos";
-import { Button } from "@/core/components/ui/Button";
-import { ConfirmDialog } from "@/core/components/ui/ConfirmDialog";
 import { Spinner } from "@/core/components/ui/Spinner";
 import { PaginaLectura } from "@/modules/adjuntos/components/PaginaLectura";
 import { TagsBadges } from "@/modules/tags/components/TagsBadges";
-import { useEliminarNotaMutation } from "../hooks/useNotasMutation";
+import { AccionesNota } from "../components/AccionesNota";
 import { useNotaQuery } from "../hooks/useNotasQuery";
-import { descargarNotaMd } from "../utils/exportar";
 
-/** Lectura de una nota: tags, contenido y las acciones que permita el usuario. */
+/** Lectura de una nota, para quien no tiene permiso de editarla. */
 export function NotaLecturaPage({ id }: { id: number }) {
 	const router = useRouter();
 	const navigate = useNavigate();
 	const puedeVolver = useCanGoBack();
-	const { puede } = usePermisos();
 	const { data: nota, error } = useNotaQuery(id);
-	const eliminar = useEliminarNotaMutation();
-	const [eliminando, setEliminando] = useState(false);
 	// Vuelve a donde se abrió; si se entró por URL, a la lista.
 	const volver = () =>
 		puedeVolver ? router.history.back() : navigate({ to: "/notas" });
@@ -33,74 +24,27 @@ export function NotaLecturaPage({ id }: { id: number }) {
 		);
 	}
 	return (
-		<>
-			<PaginaLectura
-				onVolver={volver}
-				titulo={nota.titulo}
-				contenido={nota.contenido}
-				ambito={
-					nota.organizacionId && nota.proyectoId
-						? {
-								organizacionId: nota.organizacionId,
-								proyectoId: nota.proyectoId,
-							}
-						: undefined
-				}
-				detalles={
-					nota.tagIds.length > 0 && (
-						<TagsBadges
-							tagIds={nota.tagIds}
-							organizacionId={nota.organizacionId}
-						/>
-					)
-				}
-				acciones={
-					<>
-						<Button
-							variant="ghost"
-							size="sm"
-							onClick={() => descargarNotaMd(nota)}
-						>
-							<Download className="h-4 w-4" />
-							.md
-						</Button>
-						{puede("notas:eliminar") && (
-							<Button
-								variant="dangerGhost"
-								size="sm"
-								onClick={() => setEliminando(true)}
-							>
-								<Trash2 className="h-4 w-4" />
-								Eliminar
-							</Button>
-						)}
-						{puede("notas:actualizar") && (
-							<Button
-								size="sm"
-								onClick={() =>
-									navigate({
-										to: "/notas/$id/editar",
-										params: { id: String(id) },
-									})
-								}
-							>
-								<Pencil className="h-4 w-4" />
-								Editar
-							</Button>
-						)}
-					</>
-				}
-			/>
-			<ConfirmDialog
-				abierto={eliminando}
-				titulo="¿Eliminar nota?"
-				mensaje="Esta acción no se puede deshacer."
-				textoConfirmar="Eliminar"
-				peligroso
-				isLoading={eliminar.isPending}
-				onCancelar={() => setEliminando(false)}
-				onConfirmar={() => eliminar.mutate(id, { onSuccess: volver })}
-			/>
-		</>
+		<PaginaLectura
+			onVolver={volver}
+			titulo={nota.titulo}
+			contenido={nota.contenido}
+			ambito={
+				nota.organizacionId && nota.proyectoId
+					? {
+							organizacionId: nota.organizacionId,
+							proyectoId: nota.proyectoId,
+						}
+					: undefined
+			}
+			detalles={
+				nota.tagIds.length > 0 && (
+					<TagsBadges
+						tagIds={nota.tagIds}
+						organizacionId={nota.organizacionId}
+					/>
+				)
+			}
+			acciones={<AccionesNota nota={nota} onEliminada={volver} />}
+		/>
 	);
 }

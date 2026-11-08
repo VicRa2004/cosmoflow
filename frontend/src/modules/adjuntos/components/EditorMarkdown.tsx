@@ -1,11 +1,25 @@
 import { Crepe } from "@milkdown/crepe";
 import "@milkdown/crepe/theme/common/style.css";
-import { useEffect, useRef } from "react";
+import { useEffect, useLayoutEffect, useRef } from "react";
 import { useFieldContext } from "@/core/components/form/contextos";
 import { cn } from "@/core/utils/cn";
 import { type AmbitoAdjunto, adjuntosApi } from "../api/adjuntosApi";
-import { type Mencionable, marcarMenciones } from "../editor/pluginMenciones";
-import { useMenciones } from "../editor/useMenciones";
+import {
+	CONSULTA_MENCION,
+	enlacesPegables,
+	filtrarMencionables,
+	insertarMencion,
+	type Mencionable,
+	marcarEnlaces,
+} from "../editor/pluginMenciones";
+import { useMenuEditor } from "../editor/useMenuEditor";
+import { reglaWikilink, useWikilinks } from "../editor/useWikilinks";
+import {
+	convertirWikilinks,
+	fueraDeCodigo,
+	restaurarWikilinks,
+} from "../editor/wikilinks";
+import type { AmbitoWikilinks } from "./ContenidoMarkdown";
 import { useSubirAdjuntoMutation } from "../hooks/useSubirAdjuntoMutation";
 
 interface EditorMarkdownProps {
@@ -16,12 +30,15 @@ interface EditorMarkdownProps {
 	ambito?: AmbitoAdjunto;
 	/** Con ella, `@` abre el menú para mencionar a una de estas personas. */
 	mencionables?: Mencionable[];
+	/** Dónde buscar las notas de los `[[wikilinks]]`; sin él, en las personales. */
+	wikilinks?: AmbitoWikilinks;
 }
 
 /**
  * Campo markdown tipo Notion (Milkdown Crepe): `/` abre el menú de bloques, al
  * seleccionar texto sale la barra de formato e insertar o pegar una imagen la sube
- * a `/api/adjuntos` y, con `mencionables`, `@` menciona a alguien. Guarda markdown.
+ * a `/api/adjuntos`, `[[` enlaza una nota y, con `mencionables`, `@` menciona a
+ * alguien. Guarda markdown.
  * Va dentro de `form.AppField`.
  */
 export function EditorMarkdown({
@@ -30,6 +47,7 @@ export function EditorMarkdown({
 	className,
 	ambito,
 	mencionables,
+	wikilinks,
 }: EditorMarkdownProps) {
 	const campo = useFieldContext<string>();
 	const raiz = useRef<HTMLFieldSetElement>(null);
@@ -39,13 +57,30 @@ export function EditorMarkdown({
 	subirRef.current = subir.mutateAsync;
 	const cambiarRef = useRef(campo.handleChange);
 	cambiarRef.current = campo.handleChange;
-	const menciones = useMenciones(raiz, mencionables);
+	const menciones = useMenuEditor(raiz, {
+		activo: !!mencionables,
+		patron: CONSULTA_MENCION,
+		etiqueta: "Mencionar a",
+		opciones: (texto) => filtrarMencionables(mencionables ?? [], texto),
+		insertar: insertarMencion,
+	});
+	const enlacesNotas = useWikilinks(raiz, wikilinks);
+	const volcarRef = useRef<(() => void) | null>(null);
+	// Layout: corre antes que los efectos de limpieza del formulario, que guardan al salir.
+	useLayoutEffect(() => () => volcarRef.current?.(), []);
 
 	// biome-ignore lint/correctness/useExhaustiveDependencies: el valor inicial se lee una vez; después manda el editor
 	useEffect(() => {
+		// Crepe normaliza el documento al abrirlo: eso no cuenta como un cambio del usuario.
+		let tocado = false;
+		for (const evento of ["keydown", "pointerdown", "paste", "drop"])
+			raiz.current?.addEventListener(evento, () => (tocado = true), {
+				capture: true,
+				once: true,
+			});
 		const crepe = new Crepe({
 			root: raiz.current,
-			defaultValue: campo.state.value,
+			defaultValue: fueraDeCodigo(campo.state.value, convertirWikilinks),
 			features: { [Crepe.Feature.Latex]: false },
 			featureConfigs: {
 				[Crepe.Feature.Placeholder]: {
@@ -100,12 +135,23 @@ export function EditorMarkdown({
 			},
 		});
 		if (menciones.plugin) crepe.editor.use(menciones.plugin);
-		marcarMenciones(crepe.editor);
+		if (enlacesNotas.plugin) crepe.editor.use(enlacesNotas.plugin);
+		crepe.editor.use(reglaWikilink).use(enlacesPegables);
+		marcarEnlaces(crepe.editor);
 		crepe.on((api) =>
-			api.markdownUpdated((_ctx, markdown) => cambiarRef.current(markdown)),
+			api.markdownUpdated((_ctx, markdown) => {
+				if (tocado) cambiarRef.current(restaurarWikilinks(markdown));
+			}),
 		);
 		const creado = crepe.create();
+		// Milkdown avisa con 200 ms de retraso: al salir se recoge lo último escrito.
+		creado.then(() => {
+			volcarRef.current = () => {
+				if (tocado) cambiarRef.current(restaurarWikilinks(crepe.getMarkdown()));
+			};
+		});
 		return () => {
+			volcarRef.current = null;
 			creado.then(() => crepe.destroy());
 		};
 	}, []);
@@ -119,6 +165,7 @@ export function EditorMarkdown({
 				className={cn("editor-markdown min-w-0", className)}
 			/>
 			{menciones.menu}
+			{enlacesNotas.menu}
 		</>
 	);
 }

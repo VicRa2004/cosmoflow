@@ -6,21 +6,37 @@ export const notasKeys = {
 	lists: () => [...notasKeys.all, "list"] as const,
 	list: (params: ObtenerNotasParams) => [...notasKeys.lists(), params] as const,
 	detalle: (id: number) => [...notasKeys.all, "detalle", id] as const,
+	explorador: () => [...notasKeys.all, "explorador"] as const,
 };
 
-export function useNotasQuery(params: ObtenerNotasParams = {}) {
+export function useNotasQuery(params: ObtenerNotasParams = {}, activa = true) {
 	return useQuery({
 		queryKey: notasKeys.list(params),
-		queryFn: () => notasApi.obtenerTodos(params),
+		queryFn: activa ? () => notasApi.obtenerTodos(params) : skipToken,
 		// Mantiene la página anterior visible mientras llega la siguiente.
 		placeholderData: keepPreviousData,
 	});
 }
 
-/** Sin `id` no pide nada (alta). */
+/** Todas las notas que encajan: el árbol del explorador se monta en el cliente. */
+export function useExploradorNotas(params: ObtenerNotasParams) {
+	return useQuery({
+		queryKey: [...notasKeys.explorador(), params],
+		// shortcut: trae también el contenido de cada nota; con miles, pasar a un endpoint de índice.
+		queryFn: () => notasApi.obtenerTodas(params),
+		placeholderData: keepPreviousData,
+	});
+}
+
+/**
+ * Sin `id` no pide nada (alta). El editor solo lee el valor inicial: sin caché al
+ * reabrir ni refresco al volver a la pestaña, para no autoguardar sobre datos viejos.
+ */
 export function useNotaQuery(id?: number) {
 	return useQuery({
 		queryKey: notasKeys.detalle(id ?? 0),
 		queryFn: id === undefined ? skipToken : () => notasApi.obtenerUno(id),
+		gcTime: 0,
+		refetchOnWindowFocus: false,
 	});
 }

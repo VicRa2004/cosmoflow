@@ -1,6 +1,7 @@
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
-import { ContenidoMarkdown, convertirWikilinks } from "./ContenidoMarkdown";
+import { convertirWikilinks } from "../editor/wikilinks";
+import { ContenidoMarkdown } from "./ContenidoMarkdown";
 
 const html = (markdown: string) =>
 	renderToStaticMarkup(<ContenidoMarkdown>{markdown}</ContenidoMarkdown>);
@@ -53,7 +54,7 @@ describe("ContenidoMarkdown", () => {
 				"[[Plan (Q1)]] y [[Plan#Fase 2|el plan]] ![[foto.png]]",
 			),
 		).toBe(
-			"[Plan (Q1)](wikilink:Plan%20%28Q1%29) y [el plan](wikilink:Plan) ![[foto.png]]",
+			"[Plan (Q1)](wikilink:Plan%20%28Q1%29) y [el plan](wikilink:Plan%23Fase%202) ![[foto.png]]",
 		);
 	});
 });

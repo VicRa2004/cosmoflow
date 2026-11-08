@@ -52,7 +52,7 @@ export function WikilinkPage({
 								{
 									onSuccess: (creada) =>
 										navigate({
-											to: "/notas/$id/editar",
+											to: "/notas/$id",
 											params: { id: String(creada.id) },
 											replace: true,
 										}),

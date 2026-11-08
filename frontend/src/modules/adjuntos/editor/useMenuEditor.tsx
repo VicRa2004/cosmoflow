@@ -2,47 +2,66 @@ import type { EditorView } from "@milkdown/kit/prose/view";
 import { type RefObject, useEffect, useRef, useState } from "react";
 import { cn } from "@/core/utils/cn";
 import {
-	type ConsultaMencion,
-	filtrarMencionables,
-	insertarMencion,
+	type ConsultaEditor,
 	type Mencionable,
-	pluginMenciones,
+	pluginConsulta,
 } from "./pluginMenciones";
 
+interface MenuEditorOpciones {
+	/** Sin él, no hay plugin ni menú. */
+	activo: boolean;
+	/** Qué abre el menú; el primer grupo es el texto por el que filtrar. */
+	patron: RegExp;
+	etiqueta: string;
+	opciones: (texto: string) => Mencionable[];
+	/** Lo escrito, o `null` con el menú cerrado (para pedir las opciones al servidor). */
+	onTexto?: (texto: string | null) => void;
+	insertar: (
+		view: EditorView,
+		consulta: ConsultaEditor,
+		opcion: Mencionable,
+	) => void;
+}
+
 /**
- * Autocompletado de `@` en el editor: devuelve el plugin (o `null` si no hay a quién
- * mencionar) y el menú. Las teclas se capturan en `raiz` antes que ProseMirror, para
+ * Autocompletado en el editor (`@`, `[[`): devuelve el plugin (o `null` si no está
+ * activo) y el menú. Las teclas se capturan en `raiz` antes que ProseMirror, para
  * que Enter elija y no parta el párrafo.
  */
-export function useMenciones(
+export function useMenuEditor(
 	raiz: RefObject<HTMLElement | null>,
-	mencionables: Mencionable[] | undefined,
+	{
+		activo,
+		patron,
+		etiqueta,
+		opciones: opcionesDe,
+		onTexto,
+		insertar,
+	}: MenuEditorOpciones,
 ) {
 	const [abierta, setAbierta] = useState<{
-		consulta: ConsultaMencion;
+		consulta: ConsultaEditor;
 		view: EditorView;
 	} | null>(null);
 	const [indice, setIndice] = useState(0);
-	const opciones =
-		abierta && mencionables
-			? filtrarMencionables(mencionables, abierta.consulta.texto)
-			: [];
+	const opciones = abierta ? opcionesDe(abierta.consulta.texto) : [];
 	const actual = useRef({ abierta, opciones, indice });
 	actual.current = { abierta, opciones, indice };
 
 	// El editor se crea una vez: el plugin también.
 	const [plugin] = useState(() =>
-		mencionables
-			? pluginMenciones((consulta, view) => {
+		activo
+			? pluginConsulta(patron, (consulta, view) => {
 					setAbierta(consulta && { consulta, view });
+					onTexto?.(consulta?.texto ?? null);
 					setIndice(0);
 				})
 			: null,
 	);
 
-	const elegir = (mencionable: Mencionable) => {
+	const elegir = (opcion: Mencionable) => {
 		const { abierta } = actual.current;
-		if (abierta) insertarMencion(abierta.view, abierta.consulta, mencionable);
+		if (abierta) insertar(abierta.view, abierta.consulta, opcion);
 		setAbierta(null);
 	};
 	const elegirRef = useRef(elegir);
@@ -73,7 +92,7 @@ export function useMenciones(
 		abierta && opciones.length > 0 ? (
 			<div
 				role="listbox"
-				aria-label="Mencionar a"
+				aria-label={etiqueta}
 				style={{ left: abierta.consulta.x, top: abierta.consulta.y + 4 }}
 				className="fixed z-50 min-w-48 overflow-hidden rounded-md border border-borde bg-superficie py-1 shadow-flotante"
 			>

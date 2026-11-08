@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { usePermisos } from "@/core/auth/usePermisos";
 import { ConfirmDialog } from "@/core/components/ui/ConfirmDialog";
-import type { CarpetaDto } from "../api/notasApi";
+import type { CarpetaDto, NotaDto } from "../api/notasApi";
+import type { ContextoNotaSearch } from "../schemas/notaSchemas";
 import { useEliminarCarpetaMutation } from "../hooks/useCarpetas";
 import { useDescargarCarpeta } from "../hooks/useDescargarCarpeta";
 import { ArbolCarpetas } from "./ArbolCarpetas";
@@ -9,14 +10,21 @@ import { CarpetaDialog } from "./CarpetaDialog";
 
 interface PanelCarpetasProps {
 	carpetas: CarpetaDto[];
+	notas: NotaDto[];
+	notaAbierta?: number;
+	/** Contexto con el que se abren las notas. */
+	searchNota: ContextoNotaSearch;
 	proyectoId?: number;
 	seleccionada?: number;
 	onSeleccionar: (carpetaId?: number) => void;
 }
 
-/** Árbol de carpetas con crear, editar, eliminar y descargar. */
+/** Árbol de carpetas y notas con crear, editar, eliminar y descargar. */
 export function PanelCarpetas({
 	carpetas,
+	notas,
+	notaAbierta,
+	searchNota,
 	proyectoId,
 	seleccionada,
 	onSeleccionar,
@@ -31,9 +39,12 @@ export function PanelCarpetas({
 	const descargar = useDescargarCarpeta(carpetas, proyectoId);
 
 	return (
-		<aside className="rounded-lg border border-borde bg-superficie p-2 lg:sticky lg:top-20 lg:max-h-[calc(100vh-7rem)] lg:overflow-y-auto">
+		<>
 			<ArbolCarpetas
 				carpetas={carpetas}
+				notas={notas}
+				notaAbierta={notaAbierta}
+				searchNota={searchNota}
 				seleccionada={seleccionada}
 				onSeleccionar={onSeleccionar}
 				editable={puede("notas:crear")}
@@ -69,6 +80,6 @@ export function PanelCarpetas({
 					})
 				}
 			/>
-		</aside>
+		</>
 	);
 }

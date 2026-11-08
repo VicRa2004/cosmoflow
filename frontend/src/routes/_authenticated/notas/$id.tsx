@@ -1,9 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { NotaLecturaPage } from "@/modules/notas/pages/NotaLecturaPage";
+import { NotaEditorPage } from "@/modules/notas/pages/NotaEditorPage";
 
 export const Route = createFileRoute("/_authenticated/notas/$id")({
-	component: function LeerNota() {
+	component: function Nota() {
 		const { id } = Route.useParams();
-		return <NotaLecturaPage id={Number(id)} />;
+		return <NotaEditorPage id={Number(id)} />;
 	},
 });

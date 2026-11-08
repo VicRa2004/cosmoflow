@@ -20,6 +20,7 @@ import { Route as AuthenticatedAutorizarConexionRouteImport } from './routes/_au
 import { Route as AuthenticatedConfiguracionRouteImport } from './routes/_authenticated/configuracion'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedInvitacionRouteImport } from './routes/_authenticated/invitacion'
+import { Route as AuthenticatedNotasRouteRouteImport } from './routes/_authenticated/notas/route'
 import { Route as AuthenticatedPerfilRouteImport } from './routes/_authenticated/perfil'
 import { Route as AuthenticatedRolesRouteImport } from './routes/_authenticated/roles'
 import { Route as AuthenticatedTagsRouteImport } from './routes/_authenticated/tags'
@@ -39,7 +40,6 @@ import { Route as AuthenticatedPerfilSeguridadRouteImport } from './routes/_auth
 import { Route as AuthenticatedTareasIndexRouteImport } from './routes/_authenticated/tareas/index'
 import { Route as AuthenticatedTareasIdRouteImport } from './routes/_authenticated/tareas/$id'
 import { Route as AuthenticatedTareasNuevaRouteImport } from './routes/_authenticated/tareas/nueva'
-import { Route as AuthenticatedNotasIdEditarRouteImport } from './routes/_authenticated/notas/$id_.editar'
 import { Route as AuthenticatedOrganizacionesIdIndexRouteImport } from './routes/_authenticated/organizaciones/$id/index'
 import { Route as AuthenticatedOrganizacionesIdAjustesRouteImport } from './routes/_authenticated/organizaciones/$id/ajustes'
 import { Route as AuthenticatedOrganizacionesIdEstadisticasRouteImport } from './routes/_authenticated/organizaciones/$id/estadisticas'
@@ -107,6 +107,11 @@ const AuthenticatedInvitacionRoute = AuthenticatedInvitacionRouteImport.update({
   path: '/invitacion',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedNotasRouteRoute = AuthenticatedNotasRouteRouteImport.update({
+  id: '/notas',
+  path: '/notas',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
 const AuthenticatedPerfilRoute = AuthenticatedPerfilRouteImport.update({
   id: '/perfil',
   path: '/perfil',
@@ -133,25 +138,25 @@ const LoginGoogleRoute = LoginGoogleRouteImport.update({
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedNotasIndexRoute = AuthenticatedNotasIndexRouteImport.update({
-  id: '/notas/',
-  path: '/notas/',
-  getParentRoute: () => AuthenticatedRoute,
+  id: '/',
+  path: '/',
+  getParentRoute: () => AuthenticatedNotasRouteRoute,
 } as any)
 const AuthenticatedNotasIdRoute = AuthenticatedNotasIdRouteImport.update({
-  id: '/notas/$id',
-  path: '/notas/$id',
-  getParentRoute: () => AuthenticatedRoute,
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => AuthenticatedNotasRouteRoute,
 } as any)
 const AuthenticatedNotasEnlaceRoute =
   AuthenticatedNotasEnlaceRouteImport.update({
-    id: '/notas/enlace',
-    path: '/notas/enlace',
-    getParentRoute: () => AuthenticatedRoute,
+    id: '/enlace',
+    path: '/enlace',
+    getParentRoute: () => AuthenticatedNotasRouteRoute,
   } as any)
 const AuthenticatedNotasNuevaRoute = AuthenticatedNotasNuevaRouteImport.update({
-  id: '/notas/nueva',
-  path: '/notas/nueva',
-  getParentRoute: () => AuthenticatedRoute,
+  id: '/nueva',
+  path: '/nueva',
+  getParentRoute: () => AuthenticatedNotasRouteRoute,
 } as any)
 const AuthenticatedOrganizacionesIndexRoute =
   AuthenticatedOrganizacionesIndexRouteImport.update({
@@ -210,12 +215,6 @@ const AuthenticatedTareasNuevaRoute =
   AuthenticatedTareasNuevaRouteImport.update({
     id: '/tareas/nueva',
     path: '/tareas/nueva',
-    getParentRoute: () => AuthenticatedRoute,
-  } as any)
-const AuthenticatedNotasIdEditarRoute =
-  AuthenticatedNotasIdEditarRouteImport.update({
-    id: '/notas/$id_/editar',
-    path: '/notas/$id/editar',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
 const AuthenticatedOrganizacionesIdIndexRoute =
@@ -286,6 +285,7 @@ export interface FileRoutesByFullPath {
   '/registro': typeof RegistroRoute
   '/restablecer-password': typeof RestablecerPasswordRoute
   '/verificar-email': typeof VerificarEmailRoute
+  '/notas': typeof AuthenticatedNotasRouteRouteWithChildren
   '/autorizar-conexion': typeof AuthenticatedAutorizarConexionRoute
   '/configuracion': typeof AuthenticatedConfiguracionRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
@@ -309,7 +309,6 @@ export interface FileRoutesByFullPath {
   '/organizaciones/': typeof AuthenticatedOrganizacionesIndexRoute
   '/perfil/': typeof AuthenticatedPerfilIndexRoute
   '/tareas/': typeof AuthenticatedTareasIndexRoute
-  '/notas/$id/editar': typeof AuthenticatedNotasIdEditarRoute
   '/organizaciones/$id/ajustes': typeof AuthenticatedOrganizacionesIdAjustesRoute
   '/organizaciones/$id/estadisticas': typeof AuthenticatedOrganizacionesIdEstadisticasRoute
   '/organizaciones/$id/miembros': typeof AuthenticatedOrganizacionesIdMiembrosRoute
@@ -349,7 +348,6 @@ export interface FileRoutesByTo {
   '/organizaciones': typeof AuthenticatedOrganizacionesIndexRoute
   '/perfil': typeof AuthenticatedPerfilIndexRoute
   '/tareas': typeof AuthenticatedTareasIndexRoute
-  '/notas/$id/editar': typeof AuthenticatedNotasIdEditarRoute
   '/organizaciones/$id/ajustes': typeof AuthenticatedOrganizacionesIdAjustesRoute
   '/organizaciones/$id/estadisticas': typeof AuthenticatedOrganizacionesIdEstadisticasRoute
   '/organizaciones/$id/miembros': typeof AuthenticatedOrganizacionesIdMiembrosRoute
@@ -370,6 +368,7 @@ export interface FileRoutesById {
   '/registro': typeof RegistroRoute
   '/restablecer-password': typeof RestablecerPasswordRoute
   '/verificar-email': typeof VerificarEmailRoute
+  '/_authenticated/notas': typeof AuthenticatedNotasRouteRouteWithChildren
   '/_authenticated/autorizar-conexion': typeof AuthenticatedAutorizarConexionRoute
   '/_authenticated/configuracion': typeof AuthenticatedConfiguracionRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
@@ -393,7 +392,6 @@ export interface FileRoutesById {
   '/_authenticated/organizaciones/': typeof AuthenticatedOrganizacionesIndexRoute
   '/_authenticated/perfil/': typeof AuthenticatedPerfilIndexRoute
   '/_authenticated/tareas/': typeof AuthenticatedTareasIndexRoute
-  '/_authenticated/notas/$id_/editar': typeof AuthenticatedNotasIdEditarRoute
   '/_authenticated/organizaciones/$id/ajustes': typeof AuthenticatedOrganizacionesIdAjustesRoute
   '/_authenticated/organizaciones/$id/estadisticas': typeof AuthenticatedOrganizacionesIdEstadisticasRoute
   '/_authenticated/organizaciones/$id/miembros': typeof AuthenticatedOrganizacionesIdMiembrosRoute
@@ -414,6 +412,7 @@ export interface FileRouteTypes {
     | '/registro'
     | '/restablecer-password'
     | '/verificar-email'
+    | '/notas'
     | '/autorizar-conexion'
     | '/configuracion'
     | '/dashboard'
@@ -437,7 +436,6 @@ export interface FileRouteTypes {
     | '/organizaciones/'
     | '/perfil/'
     | '/tareas/'
-    | '/notas/$id/editar'
     | '/organizaciones/$id/ajustes'
     | '/organizaciones/$id/estadisticas'
     | '/organizaciones/$id/miembros'
@@ -477,7 +475,6 @@ export interface FileRouteTypes {
     | '/organizaciones'
     | '/perfil'
     | '/tareas'
-    | '/notas/$id/editar'
     | '/organizaciones/$id/ajustes'
     | '/organizaciones/$id/estadisticas'
     | '/organizaciones/$id/miembros'
@@ -497,6 +494,7 @@ export interface FileRouteTypes {
     | '/registro'
     | '/restablecer-password'
     | '/verificar-email'
+    | '/_authenticated/notas'
     | '/_authenticated/autorizar-conexion'
     | '/_authenticated/configuracion'
     | '/_authenticated/dashboard'
@@ -520,7 +518,6 @@ export interface FileRouteTypes {
     | '/_authenticated/organizaciones/'
     | '/_authenticated/perfil/'
     | '/_authenticated/tareas/'
-    | '/_authenticated/notas/$id_/editar'
     | '/_authenticated/organizaciones/$id/ajustes'
     | '/_authenticated/organizaciones/$id/estadisticas'
     | '/_authenticated/organizaciones/$id/miembros'
@@ -623,6 +620,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedInvitacionRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/notas': {
+      id: '/_authenticated/notas'
+      path: '/notas'
+      fullPath: '/notas'
+      preLoaderRoute: typeof AuthenticatedNotasRouteRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/perfil': {
       id: '/_authenticated/perfil'
       path: '/perfil'
@@ -660,31 +664,31 @@ declare module '@tanstack/react-router' {
     }
     '/_authenticated/notas/': {
       id: '/_authenticated/notas/'
-      path: '/notas'
+      path: '/'
       fullPath: '/notas/'
       preLoaderRoute: typeof AuthenticatedNotasIndexRouteImport
-      parentRoute: typeof AuthenticatedRoute
+      parentRoute: typeof AuthenticatedNotasRouteRoute
     }
     '/_authenticated/notas/$id': {
       id: '/_authenticated/notas/$id'
-      path: '/notas/$id'
+      path: '/$id'
       fullPath: '/notas/$id'
       preLoaderRoute: typeof AuthenticatedNotasIdRouteImport
-      parentRoute: typeof AuthenticatedRoute
+      parentRoute: typeof AuthenticatedNotasRouteRoute
     }
     '/_authenticated/notas/enlace': {
       id: '/_authenticated/notas/enlace'
-      path: '/notas/enlace'
+      path: '/enlace'
       fullPath: '/notas/enlace'
       preLoaderRoute: typeof AuthenticatedNotasEnlaceRouteImport
-      parentRoute: typeof AuthenticatedRoute
+      parentRoute: typeof AuthenticatedNotasRouteRoute
     }
     '/_authenticated/notas/nueva': {
       id: '/_authenticated/notas/nueva'
-      path: '/notas/nueva'
+      path: '/nueva'
       fullPath: '/notas/nueva'
       preLoaderRoute: typeof AuthenticatedNotasNuevaRouteImport
-      parentRoute: typeof AuthenticatedRoute
+      parentRoute: typeof AuthenticatedNotasRouteRoute
     }
     '/_authenticated/organizaciones/': {
       id: '/_authenticated/organizaciones/'
@@ -754,13 +758,6 @@ declare module '@tanstack/react-router' {
       path: '/tareas/nueva'
       fullPath: '/tareas/nueva'
       preLoaderRoute: typeof AuthenticatedTareasNuevaRouteImport
-      parentRoute: typeof AuthenticatedRoute
-    }
-    '/_authenticated/notas/$id_/editar': {
-      id: '/_authenticated/notas/$id_/editar'
-      path: '/notas/$id/editar'
-      fullPath: '/notas/$id/editar'
-      preLoaderRoute: typeof AuthenticatedNotasIdEditarRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/organizaciones/$id/': {
@@ -836,6 +833,26 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface AuthenticatedNotasRouteRouteChildren {
+  AuthenticatedNotasIdRoute: typeof AuthenticatedNotasIdRoute
+  AuthenticatedNotasEnlaceRoute: typeof AuthenticatedNotasEnlaceRoute
+  AuthenticatedNotasNuevaRoute: typeof AuthenticatedNotasNuevaRoute
+  AuthenticatedNotasIndexRoute: typeof AuthenticatedNotasIndexRoute
+}
+
+const AuthenticatedNotasRouteRouteChildren: AuthenticatedNotasRouteRouteChildren =
+  {
+    AuthenticatedNotasIdRoute: AuthenticatedNotasIdRoute,
+    AuthenticatedNotasEnlaceRoute: AuthenticatedNotasEnlaceRoute,
+    AuthenticatedNotasNuevaRoute: AuthenticatedNotasNuevaRoute,
+    AuthenticatedNotasIndexRoute: AuthenticatedNotasIndexRoute,
+  }
+
+const AuthenticatedNotasRouteRouteWithChildren =
+  AuthenticatedNotasRouteRoute._addFileChildren(
+    AuthenticatedNotasRouteRouteChildren,
+  )
+
 interface AuthenticatedPerfilRouteChildren {
   AuthenticatedPerfilConexionesRoute: typeof AuthenticatedPerfilConexionesRoute
   AuthenticatedPerfilGeneralRoute: typeof AuthenticatedPerfilGeneralRoute
@@ -896,6 +913,7 @@ const AuthenticatedOrganizacionesIdRouteWithChildren =
   )
 
 interface AuthenticatedRouteChildren {
+  AuthenticatedNotasRouteRoute: typeof AuthenticatedNotasRouteRouteWithChildren
   AuthenticatedAutorizarConexionRoute: typeof AuthenticatedAutorizarConexionRoute
   AuthenticatedConfiguracionRoute: typeof AuthenticatedConfiguracionRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
@@ -904,20 +922,16 @@ interface AuthenticatedRouteChildren {
   AuthenticatedRolesRoute: typeof AuthenticatedRolesRoute
   AuthenticatedTagsRoute: typeof AuthenticatedTagsRoute
   AuthenticatedUsuariosRoute: typeof AuthenticatedUsuariosRoute
-  AuthenticatedNotasIdRoute: typeof AuthenticatedNotasIdRoute
-  AuthenticatedNotasEnlaceRoute: typeof AuthenticatedNotasEnlaceRoute
-  AuthenticatedNotasNuevaRoute: typeof AuthenticatedNotasNuevaRoute
   AuthenticatedOrganizacionesIdRoute: typeof AuthenticatedOrganizacionesIdRouteWithChildren
   AuthenticatedTareasIdRoute: typeof AuthenticatedTareasIdRoute
   AuthenticatedTareasNuevaRoute: typeof AuthenticatedTareasNuevaRoute
-  AuthenticatedNotasIndexRoute: typeof AuthenticatedNotasIndexRoute
   AuthenticatedOrganizacionesIndexRoute: typeof AuthenticatedOrganizacionesIndexRoute
   AuthenticatedTareasIndexRoute: typeof AuthenticatedTareasIndexRoute
-  AuthenticatedNotasIdEditarRoute: typeof AuthenticatedNotasIdEditarRoute
   AuthenticatedTareasIdEditarRoute: typeof AuthenticatedTareasIdEditarRoute
 }
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
+  AuthenticatedNotasRouteRoute: AuthenticatedNotasRouteRouteWithChildren,
   AuthenticatedAutorizarConexionRoute: AuthenticatedAutorizarConexionRoute,
   AuthenticatedConfiguracionRoute: AuthenticatedConfiguracionRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
@@ -926,17 +940,12 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedRolesRoute: AuthenticatedRolesRoute,
   AuthenticatedTagsRoute: AuthenticatedTagsRoute,
   AuthenticatedUsuariosRoute: AuthenticatedUsuariosRoute,
-  AuthenticatedNotasIdRoute: AuthenticatedNotasIdRoute,
-  AuthenticatedNotasEnlaceRoute: AuthenticatedNotasEnlaceRoute,
-  AuthenticatedNotasNuevaRoute: AuthenticatedNotasNuevaRoute,
   AuthenticatedOrganizacionesIdRoute:
     AuthenticatedOrganizacionesIdRouteWithChildren,
   AuthenticatedTareasIdRoute: AuthenticatedTareasIdRoute,
   AuthenticatedTareasNuevaRoute: AuthenticatedTareasNuevaRoute,
-  AuthenticatedNotasIndexRoute: AuthenticatedNotasIndexRoute,
   AuthenticatedOrganizacionesIndexRoute: AuthenticatedOrganizacionesIndexRoute,
   AuthenticatedTareasIndexRoute: AuthenticatedTareasIndexRoute,
-  AuthenticatedNotasIdEditarRoute: AuthenticatedNotasIdEditarRoute,
   AuthenticatedTareasIdEditarRoute: AuthenticatedTareasIdEditarRoute,
 }
 

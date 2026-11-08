@@ -2,6 +2,11 @@ import { Markdown, type MarkdownComponents } from "@tanstack/markdown/react";
 import { Link } from "@tanstack/react-router";
 import { useMemo } from "react";
 import { cn } from "@/core/utils/cn";
+import {
+	convertirWikilinks,
+	fueraDeCodigo,
+	tituloDeWikilink,
+} from "../editor/wikilinks";
 import { ImagenAdjunto } from "./ImagenAdjunto";
 
 /** Dónde se buscan las notas de los wikilinks: sin proyecto, las personales. */
@@ -31,7 +36,7 @@ const crearComponents = (ambito: AmbitoWikilinks) =>
 					<Link
 						to="/notas/enlace"
 						search={{
-							titulo: decodeURIComponent(href.slice("wikilink:".length)),
+							titulo: tituloDeWikilink(href),
 							...ambito,
 						}}
 						className="wikilink"
@@ -63,38 +68,17 @@ const urlTransform = (
 	kind === "link" && /^(mencion:\d+$|wikilink:)/.test(url) ? url : porDefecto;
 
 /**
- * `[[Título]]`, `[[Título|alias]]` y `[[Título#sección]]` → enlace `wikilink:`.
- * Los embebidos (`![[...]]`) se quedan como texto.
- */
-export const convertirWikilinks = (markdown: string) =>
-	markdown.replace(
-		/(?<!!)\[\[([^[\]|#^]+)(?:[#^][^[\]|]*)?(?:\|([^[\]]+))?\]\]/g,
-		(_, titulo: string, alias?: string) => {
-			const destino = encodeURIComponent(titulo.trim()).replace(
-				/[()]/g,
-				(c) => `%${c.charCodeAt(0).toString(16)}`,
-			);
-			return `[${(alias ?? titulo).trim()}](wikilink:${destino})`;
-		},
-	);
-
-/**
  * Crepe guarda las líneas vacías y los saltos con Shift+Enter como `<br />`, que sin
  * `allowHtml` saldrían como texto: la línea vacía pasa a un párrafo con un espacio de
  * ancho cero (el parser recorta el espacio duro) y el salto en línea a un salto de
  * markdown (`\`). No toca el código.
  */
 function convertirSaltos(markdown: string) {
-	return markdown
-		.split(/(```[\s\S]*?```|`[^`\n]*`)/)
-		.map((trozo, i) =>
-			i % 2
-				? trozo
-				: convertirWikilinks(trozo)
-						.replace(/^[ \t]*<br\s*\/?>[ \t]*$/gim, "\u200b")
-						.replace(/<br\s*\/?>\n?/gi, "\\\n"),
-		)
-		.join("");
+	return fueraDeCodigo(markdown, (trozo) =>
+		convertirWikilinks(trozo)
+			.replace(/^[ \t]*<br\s*\/?>[ \t]*$/gim, "\u200b")
+			.replace(/<br\s*\/?>\n?/gi, "\\\n"),
+	);
 }
 
 /** Markdown de tareas y notas, con las imágenes privadas de `/api/adjuntos` y wikilinks. */

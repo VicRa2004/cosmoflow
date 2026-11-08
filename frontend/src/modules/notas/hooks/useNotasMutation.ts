@@ -1,7 +1,11 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/core/api/client";
-import { type ActualizarNotaInput, notasApi } from "../api/notasApi";
+import {
+	type ActualizarNotaInput,
+	type NotaDto,
+	notasApi,
+} from "../api/notasApi";
 import { notasKeys } from "./useNotasQuery";
 
 const onError = (error: unknown) => toast.error(getErrorMessage(error));
@@ -23,14 +27,22 @@ export function useCrearNotaMutation() {
 	});
 }
 
-export function useActualizarNotaMutation() {
-	const invalidar = useInvalidar();
+/**
+ * Autoguardado: sin avisos y actualizando la caché a mano, para no volver a pedir la
+ * bóveda en cada pausa al escribir. `scope`: los guardados van en orden, de uno en uno.
+ */
+export function useAutoguardarNotaMutation() {
+	const queryClient = useQueryClient();
 	return useMutation({
 		mutationFn: ({ id, datos }: { id: number; datos: ActualizarNotaInput }) =>
 			notasApi.actualizar(id, datos),
-		onSuccess: () => {
-			toast.success("Nota guardada");
-			return invalidar();
+		scope: { id: "autoguardado-notas" },
+		onSuccess: (nota) => {
+			queryClient.setQueryData(notasKeys.detalle(nota.id), nota);
+			queryClient.setQueriesData<NotaDto[]>(
+				{ queryKey: notasKeys.explorador() },
+				(notas) => notas?.map((n) => (n.id === nota.id ? nota : n)),
+			);
 		},
 		onError,
 	});

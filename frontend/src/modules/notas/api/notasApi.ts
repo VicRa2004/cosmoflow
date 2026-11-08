@@ -41,6 +41,16 @@ export const notasApi = {
 		return response.data;
 	},
 
+	/** Todas las páginas de una búsqueda. */
+	async obtenerTodas(params: ObtenerNotasParams = {}): Promise<NotaDto[]> {
+		const notas: NotaDto[] = [];
+		for (let pagina = 1; ; pagina++) {
+			const res = await this.obtenerTodos({ ...params, pagina, limite: 100 });
+			notas.push(...res.datos);
+			if (pagina >= res.totalPaginas) return notas;
+		}
+	},
+
 	async obtenerUno(id: number): Promise<NotaDto> {
 		const response = await apiClient.get<NotaDto>(`/notas/${id}`);
 		return response.data;

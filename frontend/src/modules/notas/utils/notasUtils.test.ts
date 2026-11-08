@@ -1,7 +1,12 @@
 import { strFromU8 } from "fflate";
 import { describe, expect, it } from "vitest";
 import type { CarpetaDto, NotaDto } from "../api/notasApi";
-import { ordenEnArbol, rutaDe, subarbol } from "./arbolCarpetas";
+import {
+	filasExplorador,
+	ordenEnArbol,
+	rutaDe,
+	subarbol,
+} from "./arbolCarpetas";
 import { archivosZip } from "./exportar";
 import { enLotes, leerArchivosObsidian } from "./obsidian";
 
@@ -83,5 +88,50 @@ describe("leerArchivosObsidian", () => {
 
 	it("trocea en lotes", () => {
 		expect(enLotes([1, 2, 3, 4, 5], 2)).toEqual([[1, 2], [3, 4], [5]]);
+	});
+});
+
+describe("filasExplorador", () => {
+	const carpetas = [
+		{ id: 1, nombre: "A", padreId: null },
+		{ id: 2, nombre: "B", padreId: 1 },
+		{ id: 3, nombre: "C", padreId: null },
+	];
+	const nota = (titulo: string, carpetaId: number | null) => ({
+		titulo,
+		carpetaId,
+	});
+	const notas = [
+		nota("zeta", null),
+		nota("en A", 1),
+		nota("en B", 2),
+		nota("huérfana", 99),
+	];
+	const nombres = (plegadas?: Set<number>) =>
+		filasExplorador(carpetas, notas, plegadas).map((f) =>
+			f.tipo === "carpeta"
+				? `${f.nivel}:${f.carpeta.nombre}/`
+				: `${f.nivel}:${f.nota.titulo}`,
+		);
+
+	it("pone las subcarpetas antes que las notas de cada nivel", () => {
+		expect(nombres()).toEqual([
+			"0:A/",
+			"1:B/",
+			"2:en B",
+			"1:en A",
+			"0:C/",
+			"0:huérfana",
+			"0:zeta",
+		]);
+	});
+
+	it("oculta el contenido de las plegadas", () => {
+		expect(nombres(new Set([1]))).toEqual([
+			"0:A/",
+			"0:C/",
+			"0:huérfana",
+			"0:zeta",
+		]);
 	});
 });

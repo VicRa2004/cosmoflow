@@ -5,18 +5,8 @@ import { type CarpetaDto, type NotaDto, notasApi } from "../api/notasApi";
 import { archivosZip, descargarZip } from "../utils/exportar";
 
 // shortcut: trae todas las notas del ámbito y filtra en el cliente; con miles de notas, pasar a un endpoint de exportación.
-async function todasLasNotas(proyectoId?: number): Promise<NotaDto[]> {
-	const notas: NotaDto[] = [];
-	for (let pagina = 1; ; pagina++) {
-		const res = await notasApi.obtenerTodos({
-			pagina,
-			limite: 100,
-			proyectoId,
-		});
-		notas.push(...res.datos);
-		if (pagina >= res.totalPaginas) return notas;
-	}
-}
+const todasLasNotas = (proyectoId?: number): Promise<NotaDto[]> =>
+	notasApi.obtenerTodas({ proyectoId });
 
 /** Descarga una carpeta (con subcarpetas) o todo el ámbito como `.zip` de `.md`. */
 export function useDescargarCarpeta(

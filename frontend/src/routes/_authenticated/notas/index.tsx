@@ -1,10 +1,15 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { NotasPage } from "@/modules/notas/pages/NotasPage";
-import { contextoNotaSearch } from "@/modules/notas/schemas/notaSchemas";
+import { FileText } from "lucide-react";
+import { EmptyState } from "@/core/components/ui/EmptyState";
 
 export const Route = createFileRoute("/_authenticated/notas/")({
-	validateSearch: contextoNotaSearch,
-	component: function Notas() {
-		return <NotasPage contexto={Route.useSearch()} />;
+	component: function SinNotaAbierta() {
+		return (
+			<EmptyState
+				icono={FileText}
+				titulo="Ninguna nota abierta"
+				descripcion="Elige una en el explorador o crea una nueva."
+			/>
+		);
 	},
 });
