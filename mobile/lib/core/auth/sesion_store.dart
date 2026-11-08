@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'almacenamiento_seguro.dart';
 import 'usuario_sesion.dart';
@@ -5,7 +6,7 @@ import 'usuario_sesion.dart';
 /// Estado reactivo de la sesión, permisos efectivos y preferencias de tema transversal.
 class SesionStore extends ChangeNotifier {
   SesionStore({AlmacenamientoSeguro? almacenamientoSeguro})
-      : _almacenamiento = almacenamientoSeguro ?? FlutterAlmacenamientoSeguro();
+    : _almacenamiento = almacenamientoSeguro ?? FlutterAlmacenamientoSeguro();
 
   final AlmacenamientoSeguro _almacenamiento;
 
@@ -14,11 +15,17 @@ class SesionStore extends ChangeNotifier {
   Set<String> _permisos = const <String>{};
   bool _todosLosPermisos = true;
   ThemeMode _modoTema = ThemeMode.system;
+  bool _sinConexion = false;
 
   String? get accessToken => _accessToken;
   UsuarioSesion? get usuario => _usuario;
   ThemeMode get modoTema => _modoTema;
-  bool get isAutenticado => _accessToken != null && _usuario != null;
+  bool get isAutenticado =>
+      _usuario != null && (_accessToken != null || _sinConexion);
+
+  /// Entró sin red con el último usuario: puede crear notas y tareas, que se
+  /// sincronizan al recuperar la sesión.
+  bool get sinConexion => _sinConexion;
   bool get esAdmin => _usuario?.roles.contains('ADMIN') ?? false;
 
   AlmacenamientoSeguro get almacenamiento => _almacenamiento;
@@ -37,6 +44,15 @@ class SesionStore extends ChangeNotifier {
   }) {
     _accessToken = accessToken;
     _usuario = usuario;
+    _sinConexion = false;
+    _almacenamiento.guardarUsuario(jsonEncode(usuario.toJson()));
+    notifyListeners();
+  }
+
+  /// Sesión local sin token: el refresh no llegó al servidor por falta de red.
+  void entrarSinConexion(UsuarioSesion usuario) {
+    _usuario = usuario;
+    _sinConexion = true;
     notifyListeners();
   }
 
@@ -59,7 +75,9 @@ class SesionStore extends ChangeNotifier {
     _usuario = null;
     _permisos = const <String>{};
     _todosLosPermisos = true;
+    _sinConexion = false;
     await _almacenamiento.eliminarRefreshToken();
+    await _almacenamiento.guardarUsuario(null);
     notifyListeners();
   }
 

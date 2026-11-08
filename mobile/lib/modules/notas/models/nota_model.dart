@@ -7,6 +7,7 @@ class NotaDto {
     this.color,
     this.tagIds = const <int>[],
     this.proyectoId,
+    this.carpetaId,
   });
 
   final int id;
@@ -15,6 +16,7 @@ class NotaDto {
   final String? color;
   final List<int> tagIds;
   final int? proyectoId;
+  final int? carpetaId;
 
   factory NotaDto.fromJson(Map<String, dynamic> json) {
     final tagIdsRaw = json['tagIds'];
@@ -29,6 +31,7 @@ class NotaDto {
       color: json['color'] as String?,
       tagIds: listaTags,
       proyectoId: (json['proyectoId'] as num?)?.toInt(),
+      carpetaId: (json['carpetaId'] as num?)?.toInt(),
     );
   }
 }
@@ -51,9 +54,9 @@ class PaginaNotas {
     final datosRaw = json['datos'];
     final lista = datosRaw is List
         ? datosRaw
-            .whereType<Map<String, dynamic>>()
-            .map(NotaDto.fromJson)
-            .toList(growable: false)
+              .whereType<Map<String, dynamic>>()
+              .map(NotaDto.fromJson)
+              .toList(growable: false)
         : const <NotaDto>[];
 
     return PaginaNotas(

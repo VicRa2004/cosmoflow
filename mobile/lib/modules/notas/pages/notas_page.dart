@@ -1,12 +1,17 @@
 import 'package:flutter/material.dart';
 import '../../../core/auth/sesion_store.dart';
+import '../../../core/offline/aviso_pendientes.dart';
 import '../../../core/theme/colores_noche_indigo.dart';
 import '../../tags/api/tags_api.dart';
 import '../../tags/models/tag_model.dart';
 import '../api/notas_api.dart';
+import '../models/carpeta_model.dart';
 import '../models/nota_model.dart';
+import '../widgets/nota_card.dart';
+import '../widgets/notas_vacias.dart';
 import '../widgets/nota_detalle_sheet.dart';
 import '../widgets/nota_form_dialog.dart';
+import '../widgets/selector_carpeta.dart';
 
 /// Vista `/notas` con buscador, filtro por tag, lectura y edición.
 class NotasPage extends StatefulWidget {
@@ -33,6 +38,8 @@ class _NotasPageState extends State<NotasPage> {
   List<NotaDto> _notas = const <NotaDto>[];
   List<TagDto> _tagsDisponibles = const <TagDto>[];
   int? _tagIdSeleccionado;
+  List<CarpetaDto> _carpetas = const <CarpetaDto>[];
+  int? _carpetaId;
   bool _isCargando = false;
   String? _mensajeError;
 
@@ -61,8 +68,10 @@ class _NotasPageState extends State<NotasPage> {
         widget.notasApi.obtenerTodos(
           busqueda: _busquedaController.text,
           tagId: _tagIdSeleccionado,
+          carpetaId: _carpetaId,
         ),
         widget.tagsApi.obtenerTodos(),
+        widget.notasApi.obtenerCarpetas(),
       ]);
 
       final paginaNotas = futuros[0] as PaginaNotas;
@@ -72,6 +81,7 @@ class _NotasPageState extends State<NotasPage> {
         setState(() {
           _notas = paginaNotas.datos;
           _tagsDisponibles = paginaTags.datos;
+          _carpetas = futuros[2] as List<CarpetaDto>;
         });
       }
     } catch (_) {
@@ -92,15 +102,21 @@ class _NotasPageState extends State<NotasPage> {
   Future<void> _crearNota() async {
     final valores = await showDialog<NotaFormValores>(
       context: context,
-      builder: (_) => NotaFormDialog(tagsDisponibles: _tagsDisponibles),
+      builder: (_) => NotaFormDialog(
+        tagsDisponibles: _tagsDisponibles,
+        carpetas: _carpetas,
+        carpetaInicial: _carpetaId,
+      ),
     );
     if (valores == null) return;
 
-    await widget.notasApi.crear(
+    final creada = await widget.notasApi.crear(
       titulo: valores.titulo,
       contenido: valores.contenido,
       tagIds: valores.tagIds,
+      carpetaId: valores.carpetaId,
     );
+    if (mounted) avisarSiEncolada(context, creada);
     await _cargarDatos();
   }
 
@@ -125,6 +141,7 @@ class _NotasPageState extends State<NotasPage> {
             builder: (_) => NotaFormDialog(
               notaInicial: nota,
               tagsDisponibles: _tagsDisponibles,
+              carpetas: _carpetas,
             ),
           );
           if (valores == null) return;
@@ -134,6 +151,7 @@ class _NotasPageState extends State<NotasPage> {
             contenido: valores.contenido,
             color: nota.color,
             tagIds: valores.tagIds,
+            carpetaId: valores.carpetaId,
           );
           await _cargarDatos();
         },
@@ -198,6 +216,18 @@ class _NotasPageState extends State<NotasPage> {
               ),
             ),
           ),
+          if (_carpetas.isNotEmpty) ...<Widget>[
+            const SizedBox(height: 12),
+            SelectorCarpeta(
+              carpetas: _carpetas,
+              valor: _carpetaId,
+              textoNinguna: 'Todas las carpetas',
+              onChanged: (id) {
+                setState(() => _carpetaId = id);
+                _cargarDatos();
+              },
+            ),
+          ],
           if (_tagsDisponibles.isNotEmpty) ...<Widget>[
             const SizedBox(height: 12),
             Wrap(
@@ -227,6 +257,12 @@ class _NotasPageState extends State<NotasPage> {
             ),
           ],
           const SizedBox(height: 20),
+          avisoPendientes(
+            cola: widget.notasApi.cola,
+            usuarioId: widget.sesionStore.usuario?.id,
+            ruta: '/notas',
+            onSincronizado: _cargarDatos,
+          ),
           if (_isCargando)
             const Padding(
               padding: EdgeInsets.symmetric(vertical: 40),
@@ -254,62 +290,15 @@ class _NotasPageState extends State<NotasPage> {
               ),
             )
           else if (_notas.isEmpty)
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(24),
-                child: Column(
-                  children: <Widget>[
-                    Icon(
-                      Icons.sticky_note_2_outlined,
-                      size: 32,
-                      color: colores.tintaTenue,
-                    ),
-                    const SizedBox(height: 12),
-                    Text('Sin notas', style: textTheme.titleMedium),
-                    const SizedBox(height: 4),
-                    Text(
-                      'Crea una nota para guardar apuntes e ideas.',
-                      textAlign: TextAlign.center,
-                      style: textTheme.bodyMedium?.copyWith(
-                        color: colores.tintaTenue,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            )
+            const NotasVacias()
           else
             for (final nota in _notas) ...<Widget>[
-              Card(
-                child: InkWell(
-                  borderRadius: BorderRadius.circular(8),
-                  onTap: () => _abrirDetalle(nota),
-                  child: Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: <Widget>[
-                        Text(
-                          nota.titulo,
-                          style: textTheme.bodyMedium?.copyWith(
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                        if (nota.contenido.trim().isNotEmpty) ...<Widget>[
-                          const SizedBox(height: 6),
-                          Text(
-                            nota.contenido.trim(),
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                            style: textTheme.bodySmall?.copyWith(
-                              color: colores.tintaTenue,
-                            ),
-                          ),
-                        ],
-                      ],
-                    ),
-                  ),
-                ),
+              NotaCard(
+                nota: nota,
+                carpeta: _carpetaId == null
+                    ? _carpetas.where((c) => c.id == nota.carpetaId).firstOrNull
+                    : null,
+                onTap: () => _abrirDetalle(nota),
               ),
               const SizedBox(height: 10),
             ],

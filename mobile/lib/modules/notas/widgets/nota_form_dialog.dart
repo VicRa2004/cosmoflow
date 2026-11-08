@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import '../../tags/models/tag_model.dart';
+import '../models/carpeta_model.dart';
 import '../models/nota_model.dart';
+import 'selector_carpeta.dart';
 
 /// Valores devueltos por el formulario de crear o editar nota.
 class NotaFormValores {
@@ -8,11 +10,13 @@ class NotaFormValores {
     required this.titulo,
     required this.contenido,
     this.tagIds = const <int>[],
+    this.carpetaId,
   });
 
   final String titulo;
   final String contenido;
   final List<int> tagIds;
+  final int? carpetaId;
 }
 
 /// Diálogo modal para crear o editar una nota personal.
@@ -21,10 +25,16 @@ class NotaFormDialog extends StatefulWidget {
     super.key,
     this.notaInicial,
     this.tagsDisponibles = const <TagDto>[],
+    this.carpetas = const <CarpetaDto>[],
+    this.carpetaInicial,
   });
 
   final NotaDto? notaInicial;
   final List<TagDto> tagsDisponibles;
+  final List<CarpetaDto> carpetas;
+
+  /// Al crear: la carpeta abierta en la lista.
+  final int? carpetaInicial;
 
   @override
   State<NotaFormDialog> createState() => _NotaFormDialogState();
@@ -35,15 +45,18 @@ class _NotaFormDialogState extends State<NotaFormDialog> {
   late final TextEditingController _tituloController;
   late final TextEditingController _contenidoController;
   late final Set<int> _tagsSeleccionados;
+  late int? _carpetaId;
 
   @override
   void initState() {
     super.initState();
     final inicial = widget.notaInicial;
     _tituloController = TextEditingController(text: inicial?.titulo ?? '');
-    _contenidoController =
-        TextEditingController(text: inicial?.contenido ?? '');
+    _contenidoController = TextEditingController(
+      text: inicial?.contenido ?? '',
+    );
     _tagsSeleccionados = Set<int>.from(inicial?.tagIds ?? const <int>[]);
+    _carpetaId = inicial != null ? inicial.carpetaId : widget.carpetaInicial;
   }
 
   @override
@@ -62,6 +75,7 @@ class _NotaFormDialogState extends State<NotaFormDialog> {
         titulo: _tituloController.text.trim(),
         contenido: _contenidoController.text,
         tagIds: _tagsSeleccionados.toList(growable: false),
+        carpetaId: _carpetaId,
       ),
     );
   }
@@ -112,6 +126,17 @@ class _NotaFormDialogState extends State<NotaFormDialog> {
                     hintText: 'Escribe tus apuntes aquí...',
                   ),
                 ),
+                if (widget.carpetas.isNotEmpty) ...<Widget>[
+                  const SizedBox(height: 12),
+                  Text('Carpeta', style: textTheme.labelMedium),
+                  const SizedBox(height: 6),
+                  SelectorCarpeta(
+                    carpetas: widget.carpetas,
+                    valor: _carpetaId,
+                    textoNinguna: 'Sin carpeta',
+                    onChanged: (id) => setState(() => _carpetaId = id),
+                  ),
+                ],
                 if (widget.tagsDisponibles.isNotEmpty) ...<Widget>[
                   const SizedBox(height: 12),
                   Text('Tags', style: textTheme.labelMedium),

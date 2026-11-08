@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:dio/dio.dart';
 import '../../../core/api/api_client.dart';
 import '../../../core/auth/permisos_service.dart';
@@ -5,26 +6,18 @@ import '../../../core/auth/usuario_sesion.dart';
 
 /// Cliente de API del módulo de Autenticación (`/api/auth/*`).
 class AuthApi {
-  AuthApi({
-    required this.apiClient,
-    PermisosService? permisosService,
-  }) : _permisosService =
-            permisosService ?? PermisosService(apiClient: apiClient);
+  AuthApi({required this.apiClient, PermisosService? permisosService})
+    : _permisosService =
+          permisosService ?? PermisosService(apiClient: apiClient);
 
   final ApiClient apiClient;
   final PermisosService _permisosService;
 
   /// Inicia sesión con email y contraseña (`POST /api/auth/login`).
-  Future<void> login({
-    required String email,
-    required String password,
-  }) async {
+  Future<void> login({required String email, required String password}) async {
     final response = await apiClient.dio.post<Map<String, dynamic>>(
       '/auth/login',
-      data: <String, dynamic>{
-        'email': email.trim(),
-        'password': password,
-      },
+      data: <String, dynamic>{'email': email.trim(), 'password': password},
     );
 
     await _procesarRespuestaSesion(response.data);
@@ -103,10 +96,19 @@ class AuthApi {
   /// Restaura la sesión al abrir la app si existe un refresh token guardado.
   Future<bool> restaurarSesion() async {
     final restaurada = await apiClient.authInterceptor.intentarRefresh();
-    if (restaurada) {
+    if (restaurada == true) {
       await _permisosService.cargarPermisosMios();
+      return true;
     }
-    return restaurada;
+    // Sin red: entra con el último usuario para crear notas y tareas sin conexión.
+    final sesion = apiClient.sesionStore;
+    final usuario = await sesion.almacenamiento.leerUsuario();
+    if (restaurada == null && usuario != null && !sesion.isAutenticado) {
+      sesion.entrarSinConexion(
+        UsuarioSesion.fromJson(jsonDecode(usuario) as Map<String, dynamic>),
+      );
+    }
+    return false;
   }
 
   /// Cierra la sesión actual (`POST /api/auth/logout`) y limpia el almacenamiento seguro.

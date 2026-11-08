@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../core/auth/sesion_store.dart';
+import '../../../core/offline/aviso_pendientes.dart';
 import '../../../core/theme/colores_noche_indigo.dart';
 import '../../tareas/api/tareas_api.dart';
 import '../../tareas/models/tarea_model.dart';
@@ -74,7 +75,7 @@ class _DashboardPageState extends State<DashboardPage> {
     );
     if (valores == null) return;
 
-    await widget.tareasApi.crear(
+    final creada = await widget.tareasApi.crear(
       titulo: valores.titulo,
       contenido: valores.contenido,
       estado: valores.estado,
@@ -82,6 +83,7 @@ class _DashboardPageState extends State<DashboardPage> {
       fechaInicio: valores.fechaInicio,
       fechaVencimiento: valores.fechaVencimiento,
     );
+    if (mounted) avisarSiEncolada(context, creada);
     await _cargarPendientes();
   }
 
@@ -110,23 +112,21 @@ class _DashboardPageState extends State<DashboardPage> {
             builder: (_) => TareaFormDialog(tareaInicial: tarea),
           );
           if (valores == null) return;
-          await widget.tareasApi.actualizar(
-            tarea.id,
-            <String, dynamic>{
-              'titulo': valores.titulo,
-              'contenido': valores.contenido,
-              'estado': valores.estado.valorApi,
-              'prioridad': valores.prioridad.valorApi,
-              'fechaInicio':
-                  valores.fechaInicio != null && valores.fechaInicio!.isNotEmpty
-                      ? valores.fechaInicio
-                      : null,
-              'fechaVencimiento': valores.fechaVencimiento != null &&
-                      valores.fechaVencimiento!.isNotEmpty
-                  ? valores.fechaVencimiento
-                  : null,
-            },
-          );
+          await widget.tareasApi.actualizar(tarea.id, <String, dynamic>{
+            'titulo': valores.titulo,
+            'contenido': valores.contenido,
+            'estado': valores.estado.valorApi,
+            'prioridad': valores.prioridad.valorApi,
+            'fechaInicio':
+                valores.fechaInicio != null && valores.fechaInicio!.isNotEmpty
+                ? valores.fechaInicio
+                : null,
+            'fechaVencimiento':
+                valores.fechaVencimiento != null &&
+                    valores.fechaVencimiento!.isNotEmpty
+                ? valores.fechaVencimiento
+                : null,
+          });
           await _cargarPendientes();
         },
         onEliminar: () async {
@@ -186,6 +186,12 @@ class _DashboardPageState extends State<DashboardPage> {
             ],
           ),
           const SizedBox(height: 20),
+          avisoPendientes(
+            cola: widget.tareasApi.cola,
+            usuarioId: widget.sesionStore.usuario?.id,
+            ruta: '/tareas',
+            onSincronizado: _cargarPendientes,
+          ),
           if (_isCargando)
             const Padding(
               padding: EdgeInsets.symmetric(vertical: 40),

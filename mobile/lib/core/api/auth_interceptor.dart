@@ -14,18 +14,19 @@ class AuthInterceptor extends Interceptor {
     required this.sesionStore,
     required this.dioPrincipal,
     Dio? dioRefresh,
-  }) : _dioRefresh = dioRefresh ??
-            Dio(
-              BaseOptions(
-                baseUrl: dioPrincipal.options.baseUrl,
-                connectTimeout: dioPrincipal.options.connectTimeout,
-                receiveTimeout: dioPrincipal.options.receiveTimeout,
-                headers: <String, dynamic>{
-                  'Content-Type': 'application/json',
-                  'X-Client-Platform': 'mobile',
-                },
-              ),
-            );
+  }) : _dioRefresh =
+           dioRefresh ??
+           Dio(
+             BaseOptions(
+               baseUrl: dioPrincipal.options.baseUrl,
+               connectTimeout: dioPrincipal.options.connectTimeout,
+               receiveTimeout: dioPrincipal.options.receiveTimeout,
+               headers: <String, dynamic>{
+                 'Content-Type': 'application/json',
+                 'X-Client-Platform': 'mobile',
+               },
+             ),
+           );
 
   final SesionStore sesionStore;
   final Dio dioPrincipal;
@@ -132,7 +133,7 @@ class AuthInterceptor extends Interceptor {
     _refreshEnCurso = completer;
 
     try {
-      final exito = await intentarRefresh();
+      final exito = await intentarRefresh() ?? false;
       completer.complete(exito);
       return exito;
     } catch (_) {
@@ -144,7 +145,8 @@ class AuthInterceptor extends Interceptor {
   }
 
   /// Llama a `POST /auth/refresh` con el refresh token guardado y actualiza `SesionStore`.
-  Future<bool> intentarRefresh() async {
+  /// `null` si no hubo respuesta del servidor (sin red): la sesión puede seguir siendo válida.
+  Future<bool?> intentarRefresh() async {
     final refreshToken = await sesionStore.almacenamiento.leerRefreshToken();
     if (refreshToken == null || refreshToken.isEmpty) {
       return false;
@@ -154,9 +156,7 @@ class AuthInterceptor extends Interceptor {
       final response = await _dioRefresh.post<Map<String, dynamic>>(
         '/auth/refresh',
         options: Options(
-          headers: <String, dynamic>{
-            'X-Refresh-Token': refreshToken,
-          },
+          headers: <String, dynamic>{'X-Refresh-Token': refreshToken},
         ),
       );
 
@@ -175,8 +175,8 @@ class AuthInterceptor extends Interceptor {
         usuario: UsuarioSesion.fromJson(usuarioJson),
       );
       return true;
-    } on DioException {
-      return false;
+    } on DioException catch (e) {
+      return e.response == null ? null : false;
     }
   }
 }

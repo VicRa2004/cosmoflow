@@ -1,7 +1,9 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'core/api/api_client.dart';
 import 'core/auth/sesion_store.dart';
+import 'core/offline/cola_sin_conexion.dart';
 import 'core/router/app_router.dart';
 import 'core/theme/tema_app.dart';
 import 'modules/auth/api/auth_api.dart';
@@ -15,8 +17,9 @@ void main() {
   final sesionStore = SesionStore();
   final apiClient = ApiClient(sesionStore: sesionStore);
   final authApi = AuthApi(apiClient: apiClient);
-  final tareasApi = TareasApi(apiClient: apiClient);
-  final notasApi = NotasApi(apiClient: apiClient);
+  final cola = ColaSinConexion(apiClient: apiClient);
+  final tareasApi = TareasApi(apiClient: apiClient, cola: cola);
+  final notasApi = NotasApi(apiClient: apiClient, cola: cola);
   final tagsApi = TagsApi(apiClient: apiClient);
 
   runApp(
@@ -26,6 +29,7 @@ void main() {
       tareasApi: tareasApi,
       notasApi: notasApi,
       tagsApi: tagsApi,
+      cola: cola,
     ),
   );
 }
@@ -39,6 +43,7 @@ class CosmoflowMobileApp extends StatefulWidget {
     this.tareasApi,
     this.notasApi,
     this.tagsApi,
+    this.cola,
     this.restaurarAlIniciar = true,
   });
 
@@ -47,14 +52,20 @@ class CosmoflowMobileApp extends StatefulWidget {
   final TareasApi? tareasApi;
   final NotasApi? notasApi;
   final TagsApi? tagsApi;
+
+  /// Notas y tareas creadas sin conexión; sin ella no hay modo offline.
+  final ColaSinConexion? cola;
   final bool restaurarAlIniciar;
 
   @override
   State<CosmoflowMobileApp> createState() => _CosmoflowMobileAppState();
 }
 
-class _CosmoflowMobileAppState extends State<CosmoflowMobileApp> {
+class _CosmoflowMobileAppState extends State<CosmoflowMobileApp>
+    with WidgetsBindingObserver {
   late final GoRouter _router;
+  Timer? _reintentos;
+  bool _sincronizando = false;
 
   @override
   void initState() {
@@ -73,12 +84,43 @@ class _CosmoflowMobileAppState extends State<CosmoflowMobileApp> {
       cargarDatosIniciales: widget.restaurarAlIniciar,
     );
     if (widget.restaurarAlIniciar) {
-      widget.authApi.restaurarSesion();
+      widget.authApi.restaurarSesion().then((_) => _sincronizar());
+    }
+    final cola = widget.cola;
+    if (cola != null) {
+      cola.cargar();
+      WidgetsBinding.instance.addObserver(this);
+      _reintentos = Timer.periodic(
+        const Duration(seconds: 30),
+        (_) => _sincronizar(),
+      );
+    }
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) _sincronizar();
+  }
+
+  /// Si se entró sin conexión, primero recupera la sesión real; luego envía la cola.
+  /// De una en una: dos refresh en paralelo revocarían la sesión (el backend rota el token).
+  Future<void> _sincronizar() async {
+    final cola = widget.cola;
+    final sesion = widget.sesionStore;
+    if (cola == null || !sesion.isAutenticado || _sincronizando) return;
+    _sincronizando = true;
+    try {
+      if (sesion.sinConexion && !await widget.authApi.restaurarSesion()) return;
+      await cola.sincronizar();
+    } finally {
+      _sincronizando = false;
     }
   }
 
   @override
   void dispose() {
+    _reintentos?.cancel();
+    WidgetsBinding.instance.removeObserver(this);
     _router.dispose();
     super.dispose();
   }

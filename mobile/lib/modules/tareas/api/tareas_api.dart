@@ -1,11 +1,15 @@
 import '../../../core/api/api_client.dart';
+import '../../../core/offline/cola_sin_conexion.dart';
 import '../models/tarea_model.dart';
 
 /// Cliente de API para `/api/tareas` y `/api/tareas/pendientes`.
 class TareasApi {
-  const TareasApi({required this.apiClient});
+  const TareasApi({required this.apiClient, this.cola});
 
   final ApiClient apiClient;
+
+  /// Con ella, crear sin red guarda la tarea para sincronizarla después.
+  final ColaSinConexion? cola;
 
   /// Obtiene las tareas pendientes ordenadas por vencimiento (`GET /api/tareas/pendientes`).
   Future<PaginaTareas> obtenerPendientes({
@@ -14,10 +18,7 @@ class TareasApi {
   }) async {
     final response = await apiClient.dio.get<Map<String, dynamic>>(
       '/tareas/pendientes',
-      queryParameters: <String, dynamic>{
-        'pagina': pagina,
-        'limite': limite,
-      },
+      queryParameters: <String, dynamic>{'pagina': pagina, 'limite': limite},
     );
     return PaginaTareas.fromJson(response.data ?? const <String, dynamic>{});
   }
@@ -30,10 +31,7 @@ class TareasApi {
     EstadoTarea? estado,
     bool asignadas = false,
   }) async {
-    final query = <String, dynamic>{
-      'pagina': pagina,
-      'limite': limite,
-    };
+    final query = <String, dynamic>{'pagina': pagina, 'limite': limite};
     if (busqueda != null && busqueda.trim().isNotEmpty) {
       query['busqueda'] = busqueda.trim();
     }
@@ -52,7 +50,8 @@ class TareasApi {
   }
 
   /// Crea una tarea nueva (`POST /api/tareas`).
-  Future<TareaDto> crear({
+  /// `null`: sin conexión, quedó en la cola y se enviará al recuperarla.
+  Future<TareaDto?> crear({
     required String titulo,
     String contenido = '',
     EstadoTarea estado = EstadoTarea.pendiente,
@@ -61,25 +60,29 @@ class TareasApi {
     String? fechaVencimiento,
     String? color,
   }) async {
-    final response = await apiClient.dio.post<Map<String, dynamic>>(
-      '/tareas',
-      data: <String, dynamic>{
-        'titulo': titulo.trim(),
-        'contenido': contenido,
-        'estado': estado.valorApi,
-        'prioridad': prioridad.valorApi,
-        'fechaInicio':
-            (fechaInicio != null && fechaInicio.isNotEmpty) ? fechaInicio : null,
-        'fechaVencimiento':
-            (fechaVencimiento != null && fechaVencimiento.isNotEmpty)
-                ? fechaVencimiento
-                : null,
-        'color': (color != null && color.isNotEmpty) ? color : null,
-        'tagIds': const <int>[],
-        'responsableIds': const <int>[],
-      },
-    );
-    return TareaDto.fromJson(response.data!);
+    final datos = <String, dynamic>{
+      'titulo': titulo.trim(),
+      'contenido': contenido,
+      'estado': estado.valorApi,
+      'prioridad': prioridad.valorApi,
+      'fechaInicio': (fechaInicio != null && fechaInicio.isNotEmpty)
+          ? fechaInicio
+          : null,
+      'fechaVencimiento':
+          (fechaVencimiento != null && fechaVencimiento.isNotEmpty)
+          ? fechaVencimiento
+          : null,
+      'color': (color != null && color.isNotEmpty) ? color : null,
+      'tagIds': const <int>[],
+      'responsableIds': const <int>[],
+    };
+    final respuesta = cola == null
+        ? (await apiClient.dio.post<Map<String, dynamic>>(
+            '/tareas',
+            data: datos,
+          )).data
+        : await cola!.crearOEncolar('/tareas', datos);
+    return respuesta == null ? null : TareaDto.fromJson(respuesta);
   }
 
   /// Actualiza campos de una tarea existente (`PUT /api/tareas/{id}`).
@@ -96,10 +99,9 @@ class TareasApi {
     final nuevoEstado = tarea.estado == EstadoTarea.completada
         ? EstadoTarea.pendiente
         : EstadoTarea.completada;
-    return actualizar(
-      tarea.id,
-      <String, dynamic>{'estado': nuevoEstado.valorApi},
-    );
+    return actualizar(tarea.id, <String, dynamic>{
+      'estado': nuevoEstado.valorApi,
+    });
   }
 
   /// Elimina una tarea (`DELETE /api/tareas/{id}`).

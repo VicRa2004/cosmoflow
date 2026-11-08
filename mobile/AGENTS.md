@@ -33,6 +33,7 @@ mobile/lib/
 ├── core/                           # Base transversal y compartida
 │   ├── api/                        # Cliente HTTP (Dio), interceptor JWT + cookie refresh_token y modelos OpenAPI
 │   ├── auth/                       # Estado de sesión, almacenamiento seguro (Keychain/Keystore) y permisos efectivos
+│   ├── offline/                    # ColaSinConexion (altas de notas y tareas sin red, en SharedPreferences) y AvisoPendientes
 │   ├── router/                     # Configuración de GoRouter y guardián de rutas autenticadas
 │   ├── theme/                      # Sistema de diseño «Noche índigo» (ThemeData claro/oscuro, tokens de color y tipografía)
 │   └── widgets/                    # Primitivas reutilizables (botones, inputs, tarjetas, badges, diálogos)
@@ -40,7 +41,7 @@ mobile/lib/
 ├── modules/                        # Lógica de dominio modular (en español)
 │   ├── auth/                       # Login, Registro, Recuperar contraseña
 │   ├── tareas/                     # Pendientes y Tareas
-│   ├── notas/                      # Notas personales y lectura/edición markdown
+│   ├── notas/                      # Notas personales: carpetas (filtrar y asignar), lectura/edición markdown
 │   ├── tags/                       # Etiquetas personales
 │   └── perfil/                     # Perfil de usuario, seguridad y preferencias
 │
@@ -66,3 +67,8 @@ mobile/lib/
   - **Superficies y bordes:** Separación mediante bordes finos de `1px` (`BorderSide(width: 1)`) en lugar de sombras de elevación (`elevation: 0` en tarjetas; sombra únicamente en diálogos y menús flotantes).
   - **Radios:** `6px` para controles (botones, inputs, badges) y `8px` para tarjetas y diálogos.
   - **Temas:** Soporte completo para tema claro, oscuro y sistema usando tokens semánticos (`fondo`, `superficie`, `elevada`, `borde`, `tinta`, `tintaSuave`, `tintaTenue`).
+
+### 4. Sin conexión (básico)
+- Crear notas y tareas sin red: `NotasApi`/`TareasApi.crear` usan `ColaSinConexion.crearOEncolar`, que devuelve `null` si la guardó en la cola (la página avisa con `avisarSiEncolada` y muestra `avisoPendientes`).
+- Si al abrir la app el refresh no llega al servidor (`intentarRefresh` devuelve `null`), `restaurarSesion` entra en **sesión sin conexión** con el último usuario guardado (`SesionStore.sinConexion`, sin token). Un refresh rechazado (401) no entra.
+- `main.dart` sincroniza al restaurar la sesión, al volver a primer plano y cada 30 s, de una en una (dos refresh en paralelo revocarían la sesión). Solo se crean offline; editar, borrar y leer necesitan red.
