@@ -2,6 +2,7 @@ import { apiClient } from "@/core/api/client";
 import type { components, paths } from "@/core/api/schema.gen";
 
 export type NotaDto = components["schemas"]["NotaDto"];
+export type NotaIndiceDto = components["schemas"]["NotaIndiceDto"];
 export type CrearNotaInput =
 	paths["/api/notas"]["post"]["requestBody"]["content"]["application/json"];
 export type ActualizarNotaInput =
@@ -35,6 +36,11 @@ export interface ObtenerNotasParams {
 	proyectoId?: number;
 }
 
+export type ObtenerIndiceParams = Omit<
+	ObtenerNotasParams,
+	"pagina" | "limite" | "carpetaId" | "titulo"
+>;
+
 export const notasApi = {
 	async obtenerTodos(params: ObtenerNotasParams = {}): Promise<NotasPagina> {
 		const response = await apiClient.get<NotasPagina>("/notas", { params });
@@ -49,6 +55,13 @@ export const notasApi = {
 			notas.push(...res.datos);
 			if (pagina >= res.totalPaginas) return notas;
 		}
+	},
+
+	async obtenerIndice(params: ObtenerIndiceParams): Promise<NotaIndiceDto[]> {
+		const response = await apiClient.get<NotaIndiceDto[]>("/notas/indice", {
+			params,
+		});
+		return response.data;
 	},
 
 	async obtenerUno(id: number): Promise<NotaDto> {

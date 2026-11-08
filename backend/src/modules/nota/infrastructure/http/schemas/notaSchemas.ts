@@ -52,6 +52,13 @@ export const obtenerNotasSchema = z.object({
 	proyectoId: numero.optional(),
 });
 
+export const obtenerIndiceNotasSchema = obtenerNotasSchema.omit({
+	pagina: true,
+	limite: true,
+	carpetaId: true,
+	titulo: true,
+});
+
 /** Ruta de carpetas desde el destino; sin `proyectoId`, personales. */
 export const importarNotasSchema = z.object({
 	proyectoId: z.number().int().positive().optional(),
@@ -88,6 +95,15 @@ export const notaDtoSchema = z
 		createdAt: z.iso.datetime().openapi({ example: "2026-10-27T10:00:00Z" }),
 	})
 	.openapi("NotaDto");
+
+export const notaIndiceDtoSchema = z
+	.object({
+		id: z.number().int().openapi({ example: 1 }),
+		titulo: z.string().openapi({ example: "Ideas para el viaje" }),
+		color: colorAcentoSchema,
+		carpetaId: z.number().int().nullable(),
+	})
+	.openapi("NotaIndiceDto");
 
 export const resultadoImportacionSchema = z
 	.object({

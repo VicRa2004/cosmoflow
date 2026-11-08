@@ -1,4 +1,4 @@
-import { OpenAPIHono } from "@hono/zod-openapi";
+import { OpenAPIHono, z } from "@hono/zod-openapi";
 import {
 	errorResponse,
 	jsonResponse,
@@ -11,9 +11,11 @@ import {
 	actualizarNotaSchema,
 	crearNotaSchema,
 	importarNotasSchema,
+	obtenerIndiceNotasSchema,
 	obtenerNotasSchema,
 	notaDtoSchema,
 	notaIdSchema,
+	notaIndiceDtoSchema,
 	notaPaginaSchema,
 	resultadoImportacionSchema,
 } from "../schemas/notaSchemas";
@@ -100,6 +102,28 @@ export class NotaRouter {
 			"/",
 			guard.handle(recurso, "leer"),
 			controller.obtenerTodos,
+		);
+
+		// Antes de `/:id`, que la capturaría.
+		docs.registerPath({
+			method: "get",
+			path: "/indice",
+			tags,
+			security,
+			summary:
+				"Todas las notas del ámbito sin contenido (explorador), con los filtros del listado",
+			request: { query: obtenerIndiceNotasSchema },
+			responses: {
+				200: jsonResponse(z.array(notaIndiceDtoSchema), "Índice de notas"),
+				400: errorResponse("Parámetros inválidos"),
+				404: errorResponse("Proyecto no encontrado"),
+				...protectedErrorResponses(`${recurso}:leer`),
+			},
+		});
+		this.router.get(
+			"/indice",
+			guard.handle(recurso, "leer"),
+			controller.obtenerIndice,
 		);
 
 		docs.registerPath({

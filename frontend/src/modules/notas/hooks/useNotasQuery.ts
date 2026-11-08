@@ -1,5 +1,9 @@
 import { keepPreviousData, skipToken, useQuery } from "@tanstack/react-query";
-import { type ObtenerNotasParams, notasApi } from "../api/notasApi";
+import {
+	type ObtenerIndiceParams,
+	type ObtenerNotasParams,
+	notasApi,
+} from "../api/notasApi";
 
 export const notasKeys = {
 	all: ["notas"] as const,
@@ -19,11 +23,10 @@ export function useNotasQuery(params: ObtenerNotasParams = {}, activa = true) {
 }
 
 /** Todas las notas que encajan: el árbol del explorador se monta en el cliente. */
-export function useExploradorNotas(params: ObtenerNotasParams) {
+export function useExploradorNotas(params: ObtenerIndiceParams) {
 	return useQuery({
 		queryKey: [...notasKeys.explorador(), params],
-		// shortcut: trae también el contenido de cada nota; con miles, pasar a un endpoint de índice.
-		queryFn: () => notasApi.obtenerTodas(params),
+		queryFn: () => notasApi.obtenerIndice(params),
 		placeholderData: keepPreviousData,
 	});
 }

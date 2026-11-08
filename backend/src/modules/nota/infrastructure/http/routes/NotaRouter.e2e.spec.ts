@@ -54,6 +54,33 @@ describe("Notas personales (e2e)", () => {
 		expect(titulos(porTag)).toEqual(["Lisboa"]);
 	});
 
+	it("el índice trae todas las notas del dueño, sin contenido y con filtros", async () => {
+		const indice = await (
+			await api("/api/notas/indice", { token: ana })
+		).json();
+		expect(indice.map((n: { titulo: string }) => n.titulo)).toEqual([
+			"Lisboa",
+			"Compra",
+		]);
+		expect(Object.keys(indice[0]).sort()).toEqual([
+			"carpetaId",
+			"color",
+			"id",
+			"titulo",
+		]);
+
+		const porContenido = await (
+			await api("/api/notas/indice?busqueda=TRANVÍA", { token: ana })
+		).json();
+		expect(porContenido).toHaveLength(1);
+		expect(
+			await (await api("/api/notas/indice", { token: beto })).json(),
+		).toEqual([]);
+		expect(
+			(await api("/api/notas/indice?proyectoId=999999", { token: ana })).status,
+		).toBe(404);
+	});
+
 	it("una nota personal solo la ve su dueño (404) y no admite tags ajenos (400)", async () => {
 		const [nota] = (await (await api("/api/notas", { token: ana })).json())
 			.datos;

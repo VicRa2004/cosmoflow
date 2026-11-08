@@ -12,6 +12,7 @@ import { EliminarCarpetaUseCase } from "./application/useCases/EliminarCarpetaUs
 import { EliminarNotaUseCase } from "./application/useCases/EliminarNotaUseCase";
 import { ImportarNotasUseCase } from "./application/useCases/ImportarNotasUseCase";
 import { ObtenerCarpetasUseCase } from "./application/useCases/ObtenerCarpetasUseCase";
+import { ObtenerIndiceNotasUseCase } from "./application/useCases/ObtenerIndiceNotasUseCase";
 import { ObtenerNotaUseCase } from "./application/useCases/ObtenerNotaUseCase";
 import { ObtenerNotasUseCase } from "./application/useCases/ObtenerNotasUseCase";
 import { CarpetaController } from "./infrastructure/http/controllers/CarpetaController";
@@ -44,6 +45,7 @@ export const notaModule: AppModule = {
 			new NotaController({
 				crear: new CrearNotaUseCase(repo, proyectos),
 				obtenerTodos: new ObtenerNotasUseCase(repo, proyectos),
+				obtenerIndice: new ObtenerIndiceNotasUseCase(repo, proyectos),
 				obtenerUno: new ObtenerNotaUseCase(proyectos),
 				actualizar: new ActualizarNotaUseCase(repo, proyectos),
 				eliminar: new EliminarNotaUseCase(repo, proyectos),

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { usePermisos } from "@/core/auth/usePermisos";
 import { ConfirmDialog } from "@/core/components/ui/ConfirmDialog";
-import type { CarpetaDto, NotaDto } from "../api/notasApi";
+import type { CarpetaDto, NotaIndiceDto } from "../api/notasApi";
 import type { ContextoNotaSearch } from "../schemas/notaSchemas";
 import { useEliminarCarpetaMutation } from "../hooks/useCarpetas";
 import { useDescargarCarpeta } from "../hooks/useDescargarCarpeta";
@@ -10,7 +10,7 @@ import { CarpetaDialog } from "./CarpetaDialog";
 
 interface PanelCarpetasProps {
 	carpetas: CarpetaDto[];
-	notas: NotaDto[];
+	notas: NotaIndiceDto[];
 	notaAbierta?: number;
 	/** Contexto con el que se abren las notas. */
 	searchNota: ContextoNotaSearch;

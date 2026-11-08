@@ -11,13 +11,13 @@ import { useState } from "react";
 import { Button } from "@/core/components/ui/Button";
 import { PuntoColor } from "@/core/components/ui/PuntoColor";
 import { cn } from "@/core/utils/cn";
-import type { CarpetaDto, NotaDto } from "../api/notasApi";
+import type { CarpetaDto, NotaIndiceDto } from "../api/notasApi";
 import type { ContextoNotaSearch } from "../schemas/notaSchemas";
 import { filasExplorador } from "../utils/arbolCarpetas";
 
 interface ArbolCarpetasProps {
 	carpetas: CarpetaDto[];
-	notas: NotaDto[];
+	notas: NotaIndiceDto[];
 	notaAbierta?: number;
 	searchNota: ContextoNotaSearch;
 	/** Donde se crean las notas nuevas; sin ella, en la raíz. */
@@ -41,7 +41,7 @@ export function FilaNota({
 	search,
 	nivel = 0,
 }: {
-	nota: NotaDto;
+	nota: NotaIndiceDto;
 	abierta: boolean;
 	search: ContextoNotaSearch;
 	nivel?: number;

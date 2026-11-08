@@ -3777,6 +3777,86 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/notas/indice": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Todas las notas del ámbito sin contenido (explorador), con los filtros del listado */
+        get: {
+            parameters: {
+                query?: {
+                    busqueda?: string;
+                    tagId?: string;
+                    creadaDesde?: string;
+                    creadaHasta?: string;
+                    editadaDesde?: string;
+                    editadaHasta?: string;
+                    proyectoId?: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Índice de notas */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["NotaIndiceDto"][];
+                    };
+                };
+                /** @description Parámetros inválidos */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description No autenticado */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Permiso denegado (requiere notas:leer) */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Proyecto no encontrado */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/notas/{id}": {
         parameters: {
             query?: never;
@@ -7829,6 +7909,15 @@ export interface components {
             /** @example 3 */
             carpetas: number;
         };
+        NotaIndiceDto: {
+            /** @example 1 */
+            id: number;
+            /** @example Ideas para el viaje */
+            titulo: string;
+            /** @example #f59e0b */
+            color: string | null;
+            carpetaId: number | null;
+        };
         CarpetaDto: {
             /** @example 1 */
             id: number;
@@ -8034,6 +8123,7 @@ export type TareaDto = components['schemas']['TareaDto'];
 export type EstadisticasTareasDto = components['schemas']['EstadisticasTareasDto'];
 export type NotaDto = components['schemas']['NotaDto'];
 export type ResultadoImportacionDto = components['schemas']['ResultadoImportacionDto'];
+export type NotaIndiceDto = components['schemas']['NotaIndiceDto'];
 export type CarpetaDto = components['schemas']['CarpetaDto'];
 export type AdjuntoDto = components['schemas']['AdjuntoDto'];
 export type OrganizacionDto = components['schemas']['OrganizacionDto'];

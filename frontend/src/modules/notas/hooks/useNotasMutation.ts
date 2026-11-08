@@ -3,7 +3,7 @@ import { toast } from "sonner";
 import { getErrorMessage } from "@/core/api/client";
 import {
 	type ActualizarNotaInput,
-	type NotaDto,
+	type NotaIndiceDto,
 	notasApi,
 } from "../api/notasApi";
 import { notasKeys } from "./useNotasQuery";
@@ -39,9 +39,13 @@ export function useAutoguardarNotaMutation() {
 		scope: { id: "autoguardado-notas" },
 		onSuccess: (nota) => {
 			queryClient.setQueryData(notasKeys.detalle(nota.id), nota);
-			queryClient.setQueriesData<NotaDto[]>(
+			const { id, titulo, color, carpetaId } = nota;
+			queryClient.setQueriesData<NotaIndiceDto[]>(
 				{ queryKey: notasKeys.explorador() },
-				(notas) => notas?.map((n) => (n.id === nota.id ? nota : n)),
+				(notas) =>
+					notas?.map((n) =>
+						n.id === id ? { id, titulo, color, carpetaId } : n,
+					),
 			);
 		},
 		onError,

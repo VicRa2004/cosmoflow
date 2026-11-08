@@ -17,6 +17,19 @@ export interface NotaFiltros {
 	editadaHasta?: Date;
 }
 
+export type NotaIndiceFiltros = Omit<
+	NotaFiltros,
+	"pagina" | "limite" | "carpetaId" | "titulo"
+>;
+
+/** Una nota sin su contenido. */
+export interface NotaIndice {
+	id: number;
+	titulo: string;
+	color: string | null;
+	carpetaId: number | null;
+}
+
 /** Las personales de un usuario o las de un proyecto. */
 export type AmbitoNotas = { usuarioId: number } | { proyectoId: number };
 
@@ -30,6 +43,11 @@ export interface NotaRepository {
 		ambito: AmbitoNotas,
 		filtros: NotaFiltros,
 	) => Promise<Paginacion<Nota>>;
+	/** Como `buscar`, pero todas y sin contenido. */
+	buscarIndice: (
+		ambito: AmbitoNotas,
+		filtros: NotaIndiceFiltros,
+	) => Promise<NotaIndice[]>;
 	buscarPorId: (id: number) => Promise<Nota | null>;
 	/** `true` si todos son tags vivos (no borrados) de ese dueño. */
 	sonTagsDe: (

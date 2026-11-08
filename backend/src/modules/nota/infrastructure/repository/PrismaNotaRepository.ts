@@ -5,6 +5,8 @@ import { Nota } from "../../domain/Nota";
 import type {
 	AmbitoNotas,
 	NotaFiltros,
+	NotaIndice,
+	NotaIndiceFiltros,
 	NotaRepository,
 } from "../../domain/repository/NotaRepository";
 
@@ -20,6 +22,39 @@ const whereAmbito = (ambito: AmbitoNotas) =>
 	"usuarioId" in ambito
 		? { usuarioId: ambito.usuarioId, proyectoId: null }
 		: ambito;
+
+const orden = [
+	{ updatedAt: "desc" },
+	{ id: "desc" },
+] satisfies Prisma.NotaOrderByWithRelationInput[];
+
+const whereDe = (
+	ambito: AmbitoNotas,
+	{
+		busqueda,
+		tagId,
+		carpetaId,
+		titulo,
+		creadaDesde,
+		creadaHasta,
+		editadaDesde,
+		editadaHasta,
+	}: Omit<NotaFiltros, "pagina" | "limite">,
+): Prisma.NotaWhereInput => ({
+	...whereAmbito(ambito),
+	deletedAt: null,
+	...(carpetaId && { carpetaId }),
+	...(titulo && { titulo: { equals: titulo, mode: "insensitive" } }),
+	createdAt: { gte: creadaDesde, lte: creadaHasta },
+	updatedAt: { gte: editadaDesde, lte: editadaHasta },
+	...(busqueda && {
+		OR: [
+			{ titulo: { contains: busqueda, mode: "insensitive" } },
+			{ contenido: { contains: busqueda, mode: "insensitive" } },
+		],
+	}),
+	...(tagId && { tags: { some: { tagId, tag: { deletedAt: null } } } }),
+});
 
 export class PrismaNotaRepository implements NotaRepository {
 	private toDomain(raw: PrismaNotaRecord): Nota {
@@ -43,40 +78,15 @@ export class PrismaNotaRepository implements NotaRepository {
 
 	async buscar(
 		ambito: AmbitoNotas,
-		{
-			pagina,
-			limite,
-			busqueda,
-			tagId,
-			carpetaId,
-			titulo,
-			creadaDesde,
-			creadaHasta,
-			editadaDesde,
-			editadaHasta,
-		}: NotaFiltros,
+		{ pagina, limite, ...filtros }: NotaFiltros,
 	): Promise<Paginacion<Nota>> {
-		const where: Prisma.NotaWhereInput = {
-			...whereAmbito(ambito),
-			deletedAt: null,
-			...(carpetaId && { carpetaId }),
-			...(titulo && { titulo: { equals: titulo, mode: "insensitive" } }),
-			createdAt: { gte: creadaDesde, lte: creadaHasta },
-			updatedAt: { gte: editadaDesde, lte: editadaHasta },
-			...(busqueda && {
-				OR: [
-					{ titulo: { contains: busqueda, mode: "insensitive" } },
-					{ contenido: { contains: busqueda, mode: "insensitive" } },
-				],
-			}),
-			...(tagId && { tags: { some: { tagId, tag: { deletedAt: null } } } }),
-		};
+		const where = whereDe(ambito, filtros);
 
 		const [registros, totalElementos] = await prisma.$transaction([
 			prisma.nota.findMany({
 				where,
 				include,
-				orderBy: [{ updatedAt: "desc" }, { id: "desc" }],
+				orderBy: orden,
 				skip: (pagina - 1) * limite,
 				take: limite,
 			}),
@@ -89,6 +99,17 @@ export class PrismaNotaRepository implements NotaRepository {
 			totalElementos,
 			totalPaginas: Math.ceil(totalElementos / limite),
 		};
+	}
+
+	buscarIndice(
+		ambito: AmbitoNotas,
+		filtros: NotaIndiceFiltros,
+	): Promise<NotaIndice[]> {
+		return prisma.nota.findMany({
+			where: whereDe(ambito, filtros),
+			select: { id: true, titulo: true, color: true, carpetaId: true },
+			orderBy: orden,
+		});
 	}
 
 	async buscarPorId(id: number): Promise<Nota | null> {

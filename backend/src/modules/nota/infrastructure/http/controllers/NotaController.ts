@@ -3,12 +3,14 @@ import type { ActualizarNotaUseCase } from "../../../application/useCases/Actual
 import type { CrearNotaUseCase } from "../../../application/useCases/CrearNotaUseCase";
 import type { EliminarNotaUseCase } from "../../../application/useCases/EliminarNotaUseCase";
 import type { ImportarNotasUseCase } from "../../../application/useCases/ImportarNotasUseCase";
+import type { ObtenerIndiceNotasUseCase } from "../../../application/useCases/ObtenerIndiceNotasUseCase";
 import type { ObtenerNotaUseCase } from "../../../application/useCases/ObtenerNotaUseCase";
 import type { ObtenerNotasUseCase } from "../../../application/useCases/ObtenerNotasUseCase";
 import {
 	actualizarNotaSchema,
 	crearNotaSchema,
 	importarNotasSchema,
+	obtenerIndiceNotasSchema,
 	obtenerNotasSchema,
 	notaIdSchema,
 } from "../schemas/notaSchemas";
@@ -23,6 +25,7 @@ export class NotaController extends BaseController {
 		private readonly useCases: {
 			crear: CrearNotaUseCase;
 			obtenerTodos: ObtenerNotasUseCase;
+			obtenerIndice: ObtenerIndiceNotasUseCase;
 			obtenerUno: ObtenerNotaUseCase;
 			actualizar: ActualizarNotaUseCase;
 			eliminar: EliminarNotaUseCase;
@@ -47,6 +50,15 @@ export class NotaController extends BaseController {
 			return this.ok(
 				c,
 				await this.useCases.obtenerTodos.ejecutar(c.get("usuario").id, dto),
+			);
+		});
+
+	obtenerIndice = (c: Context<AuthEnv>): Promise<Response> =>
+		this.executeSafely(c, async () => {
+			const dto = validate(obtenerIndiceNotasSchema, c.req.query());
+			return this.ok(
+				c,
+				await this.useCases.obtenerIndice.ejecutar(c.get("usuario").id, dto),
 			);
 		});
 
