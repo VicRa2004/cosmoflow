@@ -12,6 +12,7 @@
 		"enumMembers": "off"
 	},
 	"ignoreExportsUsedInFile": true,
+	"ignoreBinaries": ["flutter", "dart"],
 	"workspaces": {
 		".": {
 			"entry": ["scripts/*.ts"]
