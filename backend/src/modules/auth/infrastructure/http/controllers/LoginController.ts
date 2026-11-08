@@ -3,7 +3,7 @@ import { BaseController } from "@/core/shared/infrastructure/http/base.controlle
 import { LoginUseCase } from "../../../application/useCases/LoginUseCase";
 
 import { validate } from "@/core/shared/infrastructure/libs/validate";
-import { setRefreshTokenCookie } from "../refreshTokenCookie";
+import { entregarRefreshToken } from "../refreshTokenCookie";
 import { loginSchema } from "../schemas/authSchemas";
 
 export class LoginController extends BaseController {
@@ -18,8 +18,10 @@ export class LoginController extends BaseController {
 			const { refreshToken, ...session } =
 				await this.loginUseCase.ejecutar(dto);
 
-			setRefreshTokenCookie(c, refreshToken);
-			return this.ok(c, session);
+			return this.ok(c, {
+				...session,
+				...entregarRefreshToken(c, refreshToken),
+			});
 		});
 	};
 }

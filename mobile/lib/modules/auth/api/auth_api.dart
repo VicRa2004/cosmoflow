@@ -61,7 +61,7 @@ class AuthApi {
   }
 
   /// Cambia la contraseña actual (`PUT /api/auth/password`).
-  /// El backend emite un nuevo `accessToken` + cookie `refresh_token` y revoca el resto de sesiones.
+  /// El backend emite un nuevo `accessToken` + `refreshToken` (lo guarda `AuthInterceptor`) y revoca el resto de sesiones.
   Future<void> cambiarPassword({
     required String passwordActual,
     required String passwordNueva,
@@ -100,7 +100,7 @@ class AuthApi {
     }
   }
 
-  /// Restaura la sesión al abrir la app si existe un `refresh_token` guardado.
+  /// Restaura la sesión al abrir la app si existe un refresh token guardado.
   Future<bool> restaurarSesion() async {
     final restaurada = await apiClient.authInterceptor.intentarRefresh();
     if (restaurada) {

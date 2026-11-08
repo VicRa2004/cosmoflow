@@ -54,10 +54,12 @@ export async function api(
 		token?: string;
 		cookie?: string;
 		ip?: string;
+		headers?: Record<string, string>;
 	} = {},
 ): Promise<Response> {
 	const headers: Record<string, string> = {
 		"Content-Type": "application/json",
+		...init.headers,
 	};
 	if (init.token) headers.Authorization = `Bearer ${init.token}`;
 	if (init.cookie) headers.Cookie = init.cookie;

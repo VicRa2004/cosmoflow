@@ -5,8 +5,9 @@ import '../auth/usuario_sesion.dart';
 
 /// Interceptor de autenticación (Opción 1A):
 /// - Inyecta `Authorization: Bearer <accessToken>` en las peticiones.
-/// - Captura la cookie `refresh_token` de las respuestas de `/auth/*` y la guarda en `AlmacenamientoSeguro`.
-/// - Adjunta `Cookie: refresh_token=...` en `/auth/refresh` y `/auth/logout`.
+/// - Con `X-Client-Platform: mobile` el backend devuelve `refreshToken` en el cuerpo
+///   (sin cookies): se guarda en `AlmacenamientoSeguro`.
+/// - Adjunta `X-Refresh-Token` en `/auth/refresh` y `/auth/logout`.
 /// - Serializa la renovación ante `401` (una sola petición `/auth/refresh` en vuelo).
 class AuthInterceptor extends Interceptor {
   AuthInterceptor({
@@ -19,7 +20,10 @@ class AuthInterceptor extends Interceptor {
                 baseUrl: dioPrincipal.options.baseUrl,
                 connectTimeout: dioPrincipal.options.connectTimeout,
                 receiveTimeout: dioPrincipal.options.receiveTimeout,
-                headers: <String, dynamic>{'Content-Type': 'application/json'},
+                headers: <String, dynamic>{
+                  'Content-Type': 'application/json',
+                  'X-Client-Platform': 'mobile',
+                },
               ),
             );
 
@@ -29,22 +33,14 @@ class AuthInterceptor extends Interceptor {
 
   Completer<bool>? _refreshEnCurso;
 
-  static final RegExp _regexRefreshCookie =
-      RegExp(r'(?:^|;\s*)refresh_token=([^;\s]*)');
-
-  /// Extrae el valor de `refresh_token` de una lista de cabeceras `set-cookie`.
-  static String? extraerRefreshTokenDeCookies(List<String>? setCookies) {
-    if (setCookies == null || setCookies.isEmpty) return null;
-    for (final header in setCookies) {
-      final match = _regexRefreshCookie.firstMatch(header);
-      if (match != null) {
-        return match.group(1);
-      }
-    }
-    return null;
+  /// Extrae `refreshToken` del cuerpo JSON de una respuesta de `/auth/*`.
+  static String? extraerRefreshToken(Object? data) {
+    if (data is! Map) return null;
+    final token = data['refreshToken'];
+    return token is String && token.isNotEmpty ? token : null;
   }
 
-  bool _esRutaConCookieRefresh(String path) {
+  bool _esRutaConRefreshToken(String path) {
     return path.endsWith('/auth/refresh') || path.endsWith('/auth/logout');
   }
 
@@ -65,10 +61,10 @@ class AuthInterceptor extends Interceptor {
       options.headers['Authorization'] = 'Bearer $accessToken';
     }
 
-    if (_esRutaConCookieRefresh(options.path)) {
+    if (_esRutaConRefreshToken(options.path)) {
       final refreshToken = await sesionStore.almacenamiento.leerRefreshToken();
       if (refreshToken != null && refreshToken.isNotEmpty) {
-        options.headers['Cookie'] = 'refresh_token=$refreshToken';
+        options.headers['X-Refresh-Token'] = refreshToken;
       }
     }
 
@@ -80,7 +76,7 @@ class AuthInterceptor extends Interceptor {
     Response<dynamic> response,
     ResponseInterceptorHandler handler,
   ) async {
-    await _sincronizarCookieRefresh(response.headers);
+    await _guardarRefreshToken(response.data);
     handler.next(response);
   }
 
@@ -119,15 +115,10 @@ class AuthInterceptor extends Interceptor {
     }
   }
 
-  Future<void> _sincronizarCookieRefresh(Headers headers) async {
-    final setCookies = headers['set-cookie'];
-    final tokenExtraido = extraerRefreshTokenDeCookies(setCookies);
-    if (tokenExtraido == null) return;
-
-    if (tokenExtraido.isEmpty) {
-      await sesionStore.almacenamiento.eliminarRefreshToken();
-    } else {
-      await sesionStore.almacenamiento.guardarRefreshToken(tokenExtraido);
+  Future<void> _guardarRefreshToken(Object? data) async {
+    final token = extraerRefreshToken(data);
+    if (token != null) {
+      await sesionStore.almacenamiento.guardarRefreshToken(token);
     }
   }
 
@@ -152,7 +143,7 @@ class AuthInterceptor extends Interceptor {
     }
   }
 
-  /// Llama a `POST /auth/refresh` enviando la cookie guardada y actualiza `SesionStore`.
+  /// Llama a `POST /auth/refresh` con el refresh token guardado y actualiza `SesionStore`.
   Future<bool> intentarRefresh() async {
     final refreshToken = await sesionStore.almacenamiento.leerRefreshToken();
     if (refreshToken == null || refreshToken.isEmpty) {
@@ -164,12 +155,12 @@ class AuthInterceptor extends Interceptor {
         '/auth/refresh',
         options: Options(
           headers: <String, dynamic>{
-            'Cookie': 'refresh_token=$refreshToken',
+            'X-Refresh-Token': refreshToken,
           },
         ),
       );
 
-      await _sincronizarCookieRefresh(response.headers);
+      await _guardarRefreshToken(response.data);
       final data = response.data;
       if (data == null) return false;
 

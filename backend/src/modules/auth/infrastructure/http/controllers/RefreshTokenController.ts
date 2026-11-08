@@ -3,10 +3,7 @@ import { BaseController } from "@/core/shared/infrastructure/http/base.controlle
 import { RefreshTokenUseCase } from "../../../application/useCases/RefreshTokenUseCase";
 
 import { validate } from "@/core/shared/infrastructure/libs/validate";
-import {
-	getRefreshTokenCookie,
-	setRefreshTokenCookie,
-} from "../refreshTokenCookie";
+import { leerRefreshToken, entregarRefreshToken } from "../refreshTokenCookie";
 import { refreshTokenSchema } from "../schemas/authSchemas";
 
 export class RefreshTokenController extends BaseController {
@@ -17,13 +14,15 @@ export class RefreshTokenController extends BaseController {
 	ejecutar = async (c: Context): Promise<Response> => {
 		return this.executeSafely(c, async () => {
 			const dto = validate(refreshTokenSchema, {
-				refreshToken: getRefreshTokenCookie(c),
+				refreshToken: leerRefreshToken(c),
 			});
 			const { refreshToken, ...session } =
 				await this.refreshTokenUseCase.ejecutar(dto.refreshToken);
 
-			setRefreshTokenCookie(c, refreshToken);
-			return this.ok(c, session);
+			return this.ok(c, {
+				...session,
+				...entregarRefreshToken(c, refreshToken),
+			});
 		});
 	};
 }

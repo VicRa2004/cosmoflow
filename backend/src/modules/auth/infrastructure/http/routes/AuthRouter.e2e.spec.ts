@@ -45,6 +45,58 @@ describe("Auth (e2e)", () => {
 		expect((await refresh(cookieNueva)).status).toBe(401);
 	});
 
+	it("móvil: el refresh token viaja en cuerpo y cabecera, nunca en cookie", async () => {
+		const movil = { "X-Client-Platform": "mobile" };
+		const login = await api("/api/auth/login", {
+			method: "POST",
+			body: { email: "ana@e2e.dev", password: PASSWORD },
+			headers: movil,
+		});
+		expect(login.status).toBe(200);
+		expect(login.headers.getSetCookie()).toEqual([]);
+		const { refreshToken } = await login.json();
+		expect(refreshToken).toBeString();
+
+		const rotado = await api("/api/auth/refresh", {
+			method: "POST",
+			headers: { ...movil, "X-Refresh-Token": refreshToken },
+		});
+		expect(rotado.status).toBe(200);
+		const nuevo = (await rotado.json()).refreshToken;
+		expect(nuevo).toBeString();
+		expect(nuevo).not.toBe(refreshToken);
+
+		const logout = await api("/api/auth/logout", {
+			method: "POST",
+			headers: { ...movil, "X-Refresh-Token": nuevo },
+		});
+		expect(logout.status).toBe(200);
+		expect(
+			(
+				await api("/api/auth/refresh", {
+					method: "POST",
+					headers: { ...movil, "X-Refresh-Token": nuevo },
+				})
+			).status,
+		).toBe(401);
+	});
+
+	it("navegador con cookie: la cabecera móvil no expone el token en el cuerpo", async () => {
+		const login = await api("/api/auth/login", {
+			method: "POST",
+			body: { email: "ana@e2e.dev", password: PASSWORD },
+		});
+		const rotado = await api("/api/auth/refresh", {
+			method: "POST",
+			cookie: refreshCookie(login),
+			headers: { "X-Client-Platform": "mobile" },
+		});
+
+		expect(rotado.status).toBe(200);
+		expect((await rotado.json()).refreshToken).toBeUndefined();
+		expect(refreshCookie(rotado)).toStartWith("refresh_token=");
+	});
+
 	it("vuelta de Google sin la cookie de state → login con error", async () => {
 		const res = await api("/api/auth/google/callback?code=x&state=y");
 

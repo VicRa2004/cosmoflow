@@ -19,6 +19,8 @@ class ApiClient {
                 headers: <String, dynamic>{
                   'Content-Type': 'application/json',
                   'Accept': 'application/json',
+                  // El backend devuelve el refresh token en el cuerpo, no en cookie.
+                  'X-Client-Platform': 'mobile',
                 },
               ),
             ) {

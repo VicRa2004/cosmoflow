@@ -3,7 +3,7 @@ import { BaseController } from "@/core/shared/infrastructure/http/base.controlle
 import { RegistroUseCase } from "../../../application/useCases/RegistroUseCase";
 
 import { validate } from "@/core/shared/infrastructure/libs/validate";
-import { setRefreshTokenCookie } from "../refreshTokenCookie";
+import { entregarRefreshToken } from "../refreshTokenCookie";
 import { registroSchema } from "../schemas/authSchemas";
 
 export class RegistroController extends BaseController {
@@ -18,8 +18,10 @@ export class RegistroController extends BaseController {
 			const { refreshToken, ...session } =
 				await this.registroUseCase.ejecutar(dto);
 
-			setRefreshTokenCookie(c, refreshToken);
-			return this.created(c, session);
+			return this.created(c, {
+				...session,
+				...entregarRefreshToken(c, refreshToken),
+			});
 		});
 	};
 }

@@ -471,7 +471,7 @@ export interface paths {
         put?: never;
         /**
          * Iniciar sesión
-         * @description Devuelve el access token y fija el refresh token en la cookie httpOnly `refresh_token`.
+         * @description Devuelve el access token y fija el refresh token en la cookie httpOnly `refresh_token` (con `X-Client-Platform: mobile`, lo devuelve en el cuerpo).
          */
         post: {
             parameters: {
@@ -613,7 +613,7 @@ export interface paths {
         put?: never;
         /**
          * Renovar tokens usando un refresh token válido
-         * @description Lee el refresh token de la cookie httpOnly `refresh_token`, lo revoca y emite un nuevo access token junto con una cookie nueva (Refresh Token Rotation).
+         * @description Lee el refresh token de la cookie httpOnly `refresh_token` (o de la cabecera `X-Refresh-Token` en móvil), lo revoca y emite un nuevo access token junto con uno nuevo (Refresh Token Rotation): en cookie o, con `X-Client-Platform: mobile`, en el cuerpo.
          */
         post: {
             parameters: {
@@ -633,7 +633,7 @@ export interface paths {
                         "application/json": components["schemas"]["AuthResponse"];
                     };
                 };
-                /** @description Cookie `refresh_token` ausente */
+                /** @description Cookie `refresh_token` o cabecera `X-Refresh-Token` ausente */
                 400: {
                     headers: {
                         [name: string]: unknown;
@@ -670,7 +670,7 @@ export interface paths {
         put?: never;
         /**
          * Cerrar sesión (revocar refresh token)
-         * @description Revoca el refresh token de la cookie httpOnly `refresh_token` y la borra. El access token seguirá siendo válido hasta que expire (máx 15 min).
+         * @description Revoca el refresh token de la cookie httpOnly `refresh_token` (o de la cabecera `X-Refresh-Token`) y la borra. El access token seguirá siendo válido hasta que expire (máx 15 min).
          */
         post: {
             parameters: {
@@ -1002,6 +1002,8 @@ export interface paths {
                         "application/json": {
                             /** @example eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9... */
                             accessToken: string;
+                            /** @description Sólo con `X-Client-Platform: mobile` (y sin cookie): el refresh token, que la app reenvía en `X-Refresh-Token`. */
+                            refreshToken?: string;
                         };
                     };
                 };
@@ -7289,6 +7291,8 @@ export interface components {
             /** @example eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9... */
             accessToken: string;
             usuario: components["schemas"]["UsuarioDto"];
+            /** @description Sólo con `X-Client-Platform: mobile` (y sin cookie): el refresh token, que la app reenvía en `X-Refresh-Token`. */
+            refreshToken?: string;
         };
         TokenPersonalCreado: components["schemas"]["TokenPersonalDto"] & {
             /** @description Solo se devuelve aquí */

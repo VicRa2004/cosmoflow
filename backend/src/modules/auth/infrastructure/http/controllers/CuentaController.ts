@@ -10,7 +10,7 @@ import type { VerificarEmailUseCase } from "../../../application/useCases/Verifi
 import type { AuthEnv } from "../middlewares/authMiddleware";
 import {
 	clearRefreshTokenCookie,
-	setRefreshTokenCookie,
+	entregarRefreshToken,
 } from "../refreshTokenCookie";
 import {
 	cambiarPasswordSchema,
@@ -73,8 +73,10 @@ export class CuentaController extends BaseController {
 			const { refreshToken, accessToken } =
 				await this.useCases.cambiarPassword.ejecutar(c.get("usuario").id, dto);
 
-			setRefreshTokenCookie(c, refreshToken);
-			return this.ok(c, { accessToken });
+			return this.ok(c, {
+				accessToken,
+				...entregarRefreshToken(c, refreshToken),
+			});
 		});
 
 	cerrarSesiones = (c: Context<AuthEnv>): Promise<Response> =>

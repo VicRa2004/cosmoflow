@@ -14,13 +14,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
-  test('AuthInterceptor extrae el refresh_token del header Set-Cookie', () {
-    const headers = <String>[
-      'refresh_token=token_secreto_123; Path=/api/auth; HttpOnly; SameSite=Strict',
-    ];
+  test('AuthInterceptor extrae el refreshToken del cuerpo de la respuesta', () {
+    final conToken = <String, dynamic>{'accessToken': 'jwt', 'refreshToken': 'rt'};
+    final sinToken = <String, dynamic>{'accessToken': 'jwt'};
 
-    final extraido = AuthInterceptor.extraerRefreshTokenDeCookies(headers);
-    expect(extraido, equals('token_secreto_123'));
+    expect(AuthInterceptor.extraerRefreshToken(conToken), equals('rt'));
+    expect(AuthInterceptor.extraerRefreshToken(sinToken), isNull);
+    expect(AuthInterceptor.extraerRefreshToken('texto'), isNull);
   });
 
   test('Modelos TareaDto, NotaDto y TagDto parsean respuestas del backend', () {

@@ -51,15 +51,23 @@ const accessTokenSchema = z
 	.string()
 	.openapi({ example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." });
 
+// Web: viaja en la cookie httpOnly y no aparece aquí.
+const refreshTokenMovilSchema = z.string().optional().openapi({
+	description:
+		"Sólo con `X-Client-Platform: mobile` (y sin cookie): el refresh token, que la app reenvía en `X-Refresh-Token`.",
+});
+
 export const authResponseSchema = z
 	.object({
 		accessToken: accessTokenSchema,
 		usuario: usuarioDtoSchema,
+		refreshToken: refreshTokenMovilSchema,
 	})
 	.openapi("AuthResponse");
 
 export const refreshResponseSchema = z.object({
 	accessToken: accessTokenSchema,
+	refreshToken: refreshTokenMovilSchema,
 });
 
 export const mensajeResponseSchema = z.object({

@@ -71,7 +71,7 @@ export class AuthRouter {
 			security,
 			summary: "Iniciar sesión",
 			description:
-				"Devuelve el access token y fija el refresh token en la cookie httpOnly `refresh_token`.",
+				"Devuelve el access token y fija el refresh token en la cookie httpOnly `refresh_token` (con `X-Client-Platform: mobile`, lo devuelve en el cuerpo).",
 			request: {
 				body: {
 					required: true,
@@ -124,13 +124,15 @@ export class AuthRouter {
 			security,
 			summary: "Renovar tokens usando un refresh token válido",
 			description:
-				"Lee el refresh token de la cookie httpOnly `refresh_token`, lo revoca y emite un nuevo access token junto con una cookie nueva (Refresh Token Rotation).",
+				"Lee el refresh token de la cookie httpOnly `refresh_token` (o de la cabecera `X-Refresh-Token` en móvil), lo revoca y emite un nuevo access token junto con uno nuevo (Refresh Token Rotation): en cookie o, con `X-Client-Platform: mobile`, en el cuerpo.",
 			responses: {
 				200: jsonResponse(
 					authResponseSchema,
 					"Tokens renovados (cookie `refresh_token` renovada)",
 				),
-				400: errorResponse("Cookie `refresh_token` ausente"),
+				400: errorResponse(
+					"Cookie `refresh_token` o cabecera `X-Refresh-Token` ausente",
+				),
 				401: errorResponse("Refresh token inválido o expirado"),
 			},
 		});
@@ -143,7 +145,7 @@ export class AuthRouter {
 			security,
 			summary: "Cerrar sesión (revocar refresh token)",
 			description:
-				"Revoca el refresh token de la cookie httpOnly `refresh_token` y la borra. El access token seguirá siendo válido hasta que expire (máx 15 min).",
+				"Revoca el refresh token de la cookie httpOnly `refresh_token` (o de la cabecera `X-Refresh-Token`) y la borra. El access token seguirá siendo válido hasta que expire (máx 15 min).",
 			responses: {
 				200: jsonResponse(
 					mensajeResponseSchema,
