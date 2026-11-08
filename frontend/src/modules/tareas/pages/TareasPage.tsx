@@ -49,7 +49,7 @@ export function TareasPage({
 	const enContexto = organizacionId !== undefined;
 	const [pagina, setPagina] = useState(1);
 	const [busqueda, setBusqueda] = useState("");
-	const [estado, setEstado] = useState<EstadoTarea | "">("");
+	const [estado, setEstado] = useState<EstadoTarea | "">("pendiente");
 	const [tagId, setTagId] = useState("");
 	const { tags: tagsDisponibles } = useTagsDisponibles(
 		enContexto ? organizacionId : undefined,
@@ -94,6 +94,15 @@ export function TareasPage({
 					)
 				}
 			>
+				<MenuNuevo
+					soloTareas
+					contexto={
+						enContexto ? { organizacionId, equipoId, proyectoId } : undefined
+					}
+				/>
+			</EncabezadoPagina>
+
+			<div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
 				<div className="w-full sm:w-56">
 					<SelectorContextoTareas
 						valor={contexto}
@@ -153,13 +162,7 @@ export function TareasPage({
 					/>
 					<Search className="pointer-events-none absolute top-2.5 left-3 h-4 w-4 text-tinta-tenue" />
 				</div>
-				<MenuNuevo
-					soloTareas
-					contexto={
-						enContexto ? { organizacionId, equipoId, proyectoId } : undefined
-					}
-				/>
-			</EncabezadoPagina>
+			</div>
 
 			<TareasTable
 				pagina={data}
