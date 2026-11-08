@@ -20,7 +20,7 @@ export class CrearNotaUseCase {
 			? await this.proyectos.exigir(usuarioId, proyectoId)
 			: null;
 		const nota = Nota.crear(usuarioId, campos, proyecto);
-		await this.proyectos.validarTags(nota);
+		await this.proyectos.validarReferencias(nota);
 		return NotaMapper.toDto(await this.notaRepository.crear(nota));
 	}
 }

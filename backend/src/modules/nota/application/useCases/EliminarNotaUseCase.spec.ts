@@ -24,7 +24,7 @@ describe("EliminarNotaUseCase", () => {
 			Nota.reconstituir(
 				3,
 				7,
-				{ titulo: "x", contenido: "", tagIds: [] },
+				{ titulo: "x", contenido: "", tagIds: [], carpetaId: null },
 				new Date(),
 			),
 		);

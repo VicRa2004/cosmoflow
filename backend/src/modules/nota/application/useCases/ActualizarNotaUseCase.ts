@@ -18,7 +18,7 @@ export class ActualizarNotaUseCase {
 	): Promise<NotaDto> {
 		const nota = await this.proyectos.buscarVisible(usuarioId, id);
 		nota.actualizar(dto);
-		await this.proyectos.validarTags(nota);
+		await this.proyectos.validarReferencias(nota);
 		return NotaMapper.toDto(await this.notaRepository.actualizar(nota));
 	}
 }

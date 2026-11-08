@@ -1,6 +1,6 @@
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
-import { ContenidoMarkdown } from "./ContenidoMarkdown";
+import { ContenidoMarkdown, convertirWikilinks } from "./ContenidoMarkdown";
 
 const html = (markdown: string) =>
 	renderToStaticMarkup(<ContenidoMarkdown>{markdown}</ContenidoMarkdown>);
@@ -44,6 +44,16 @@ describe("ContenidoMarkdown", () => {
 	it("abre los enlaces externos en otra pestaña sin opener", () => {
 		expect(html("[web](https://ejemplo.com)")).toContain(
 			'target="_blank" rel="noopener noreferrer"',
+		);
+	});
+
+	it("convierte los wikilinks de Obsidian, pero no los embebidos", () => {
+		expect(
+			convertirWikilinks(
+				"[[Plan (Q1)]] y [[Plan#Fase 2|el plan]] ![[foto.png]]",
+			),
+		).toBe(
+			"[Plan (Q1)](wikilink:Plan%20%28Q1%29) y [el plan](wikilink:Plan) ![[foto.png]]",
 		);
 	});
 });

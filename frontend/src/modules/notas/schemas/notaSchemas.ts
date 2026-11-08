@@ -3,13 +3,19 @@ import type { NotaDto } from "../api/notasApi";
 
 const idSearch = z.coerce.number().int().positive().optional().catch(undefined);
 
-/** `?organizacionId=&proyectoId=`: notas de ese proyecto (lista y alta). */
+/** `?organizacionId=&proyectoId=`: notas de ese proyecto (lista y alta); `carpetaId`, la carpeta abierta. */
 export const contextoNotaSearch = z.object({
 	organizacionId: idSearch,
 	proyectoId: idSearch,
+	carpetaId: idSearch,
 });
 
 export type ContextoNotaSearch = z.infer<typeof contextoNotaSearch>;
+
+/** `/notas/enlace?titulo=`: destino de un `[[wikilink]]`. */
+export const enlaceNotaSearch = contextoNotaSearch.extend({
+	titulo: z.string().catch(""),
+});
 
 /** Valida lo que se escribe en el formulario y lo convierte al cuerpo de la API. */
 export const notaFormSchema = z.object({
@@ -19,6 +25,8 @@ export const notaFormSchema = z.object({
 	// "" = sin color: se envía `null` para quitarlo.
 	color: z.string().transform((v) => v || null),
 	tagIds: z.array(z.number()),
+	// "" = en la raíz.
+	carpetaId: z.string().transform((v) => (v ? Number(v) : null)),
 });
 
 export type NotaFormValues = z.input<typeof notaFormSchema>;
@@ -28,6 +36,7 @@ export const notaFormVacio: NotaFormValues = {
 	contenido: "",
 	color: "",
 	tagIds: [],
+	carpetaId: "",
 };
 
 export const notaAFormValues = (dto: NotaDto): NotaFormValues => ({
@@ -35,4 +44,5 @@ export const notaAFormValues = (dto: NotaDto): NotaFormValues => ({
 	contenido: dto.contenido,
 	color: dto.color ?? "",
 	tagIds: dto.tagIds,
+	carpetaId: dto.carpetaId ? String(dto.carpetaId) : "",
 });

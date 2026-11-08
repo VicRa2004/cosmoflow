@@ -3,6 +3,7 @@ export interface CamposNotaDto {
 	contenido?: string;
 	color?: string | null;
 	tagIds?: number[];
+	carpetaId?: number | null;
 }
 
 /** Sin `proyectoId`, personal. */

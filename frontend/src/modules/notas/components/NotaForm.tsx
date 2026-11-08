@@ -6,6 +6,8 @@ import { SelectorTags } from "@/modules/tags/components/SelectorTags";
 import { useAppForm } from "@/core/components/form/useAppForm";
 import { useAtajoGuardar } from "@/core/components/form/useAtajoGuardar";
 import type { NotaDto } from "../api/notasApi";
+import { useCarpetasQuery } from "../hooks/useCarpetas";
+import { ordenEnArbol } from "../utils/arbolCarpetas";
 import {
 	useActualizarNotaMutation,
 	useCrearNotaMutation,
@@ -39,9 +41,12 @@ export function NotaForm({
 		(inicial ? inicial.proyectoId : contexto?.proyectoId) ?? null;
 	const organizacionId =
 		(inicial ? inicial.organizacionId : contexto?.organizacionId) ?? null;
+	const { data: carpetas = [] } = useCarpetasQuery(proyectoId ?? undefined);
 
 	const form = useAppForm({
-		defaultValues: inicial ? notaAFormValues(inicial) : notaFormVacio,
+		defaultValues: inicial
+			? notaAFormValues(inicial)
+			: { ...notaFormVacio, carpetaId: String(contexto?.carpetaId ?? "") },
 		validators: { onSubmit: notaFormSchema },
 		// `quedarse`: Ctrl+S al editar guarda sin salir; el botón sí sale.
 		onSubmitMeta: { quedarse: false },
@@ -84,6 +89,21 @@ export function NotaForm({
 				<form.AppField name="color">
 					{(campo) => <campo.CampoColorAcento />}
 				</form.AppField>
+				{carpetas.length > 0 && (
+					<form.AppField name="carpetaId">
+						{(campo) => (
+							<campo.CampoSelect label="Carpeta" className="sm:w-72">
+								<option value="">Sin carpeta</option>
+								{ordenEnArbol(carpetas).map(({ carpeta, nivel }) => (
+									<option key={carpeta.id} value={carpeta.id}>
+										{"\u00a0\u00a0".repeat(nivel)}
+										{carpeta.icono ?? "📁"} {carpeta.nombre}
+									</option>
+								))}
+							</campo.CampoSelect>
+						)}
+					</form.AppField>
+				)}
 				<form.AppField name="tagIds">
 					{(campo) => (
 						<SelectorTags

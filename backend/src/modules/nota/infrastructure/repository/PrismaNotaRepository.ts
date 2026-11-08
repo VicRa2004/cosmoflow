@@ -15,6 +15,12 @@ const include = {
 
 type PrismaNotaRecord = Prisma.NotaGetPayload<{ include: typeof include }>;
 
+// Las personales son las suyas sin proyecto.
+const whereAmbito = (ambito: AmbitoNotas) =>
+	"usuarioId" in ambito
+		? { usuarioId: ambito.usuarioId, proyectoId: null }
+		: ambito;
+
 export class PrismaNotaRepository implements NotaRepository {
 	private toDomain(raw: PrismaNotaRecord): Nota {
 		return Nota.reconstituir(
@@ -25,24 +31,38 @@ export class PrismaNotaRepository implements NotaRepository {
 				contenido: raw.contenido,
 				color: raw.color,
 				tagIds: raw.tags.map((t) => t.tagId),
+				carpetaId: raw.carpetaId,
 			},
 			raw.updatedAt,
 			raw.organizacionId && raw.proyectoId
 				? { organizacionId: raw.organizacionId, proyectoId: raw.proyectoId }
 				: null,
+			raw.createdAt,
 		);
 	}
 
 	async buscar(
 		ambito: AmbitoNotas,
-		{ pagina, limite, busqueda, tagId }: NotaFiltros,
+		{
+			pagina,
+			limite,
+			busqueda,
+			tagId,
+			carpetaId,
+			titulo,
+			creadaDesde,
+			creadaHasta,
+			editadaDesde,
+			editadaHasta,
+		}: NotaFiltros,
 	): Promise<Paginacion<Nota>> {
 		const where: Prisma.NotaWhereInput = {
-			// Las personales son las suyas sin proyecto.
-			...("usuarioId" in ambito
-				? { usuarioId: ambito.usuarioId, proyectoId: null }
-				: ambito),
+			...whereAmbito(ambito),
 			deletedAt: null,
+			...(carpetaId && { carpetaId }),
+			...(titulo && { titulo: { equals: titulo, mode: "insensitive" } }),
+			createdAt: { gte: creadaDesde, lte: creadaHasta },
+			updatedAt: { gte: editadaDesde, lte: editadaHasta },
 			...(busqueda && {
 				OR: [
 					{ titulo: { contains: busqueda, mode: "insensitive" } },
@@ -91,8 +111,16 @@ export class PrismaNotaRepository implements NotaRepository {
 		return propios === unicos.length;
 	}
 
+	async esCarpetaDe(ambito: AmbitoNotas, carpetaId: number): Promise<boolean> {
+		const carpeta = await prisma.carpetaNota.findFirst({
+			where: { id: carpetaId, ...whereAmbito(ambito), deletedAt: null },
+			select: { id: true },
+		});
+		return carpeta !== null;
+	}
+
 	async crear(data: Nota): Promise<Nota> {
-		const { titulo, contenido, color, tagIds } = data.getDatos();
+		const { titulo, contenido, color, tagIds, carpetaId } = data.getDatos();
 		const registro = await prisma.nota.create({
 			data: {
 				usuarioId: data.getUsuarioId(),
@@ -100,6 +128,7 @@ export class PrismaNotaRepository implements NotaRepository {
 				titulo,
 				contenido,
 				color,
+				carpetaId,
 				tags: { create: tagIds.map((tagId) => ({ tagId })) },
 			},
 			include,
@@ -108,13 +137,14 @@ export class PrismaNotaRepository implements NotaRepository {
 	}
 
 	async actualizar(data: Nota): Promise<Nota> {
-		const { titulo, contenido, color, tagIds } = data.getDatos();
+		const { titulo, contenido, color, tagIds, carpetaId } = data.getDatos();
 		const registro = await prisma.nota.update({
 			where: { id: data.getId() },
 			data: {
 				titulo,
 				contenido,
 				color,
+				carpetaId,
 				tags: { deleteMany: {}, create: tagIds.map((tagId) => ({ tagId })) },
 			},
 			include,
@@ -134,7 +164,11 @@ export class PrismaNotaRepository implements NotaRepository {
 			prisma.notaTag.deleteMany({ where: { nota: { proyectoId } } }),
 			prisma.nota.updateMany({
 				where: { proyectoId },
-				data: { organizacionId: null, proyectoId: null },
+				data: { organizacionId: null, proyectoId: null, carpetaId: null },
+			}),
+			prisma.carpetaNota.updateMany({
+				where: { proyectoId, deletedAt: null },
+				data: { deletedAt: new Date() },
 			}),
 		]);
 	}

@@ -70,7 +70,7 @@ frontend/src/
 │   │   └── pages/                  # RolesPage.tsx
 │   │
 │   ├── adjuntos/                   # Imágenes y markdown: EditorMarkdown (WYSIWYG tipo Notion con Milkdown Crepe: menú «/», subir y pegar imágenes), ContenidoMarkdown y PaginaLectura (lectura de tareas y notas)
-│   ├── notas/                      # Notas personales: búsqueda en título y contenido, filtro por tag; lectura (NotaLecturaPage), alta y edición a página completa (NotaEditorPage)
+│   ├── notas/                      # Notas personales y de proyecto: árbol de carpetas (PanelCarpetas, icono emoji y color), búsqueda, filtros por tag y fechas; importar de Obsidian y descargar .md/.zip (utils/); wikilinks `[[…]]` → /notas/enlace (WikilinkPage); lectura (NotaLecturaPage), alta y edición (NotaEditorPage)
 │   ├── tareas/                     # Tareas (selector: personales, asignadas a mí, organización, equipo o proyecto) y PendientesPage (portada); lectura (TareaLecturaPage), alta y edición a página completa (TareaEditorPage)
 │   ├── conexiones/                 # Conector MCP: pasos para conectar Claude en el perfil (ConectarClaudeCard) y pantalla de permiso OAuth (AutorizarConexionPage)
 │   ├── configuracion/              # /configuracion: preferencias de interfaz guardadas en la cuenta (Query; `aplicarPreferencias` las pone como `data-*` en <html> y guarda copia local para pintar sin parpadeo)

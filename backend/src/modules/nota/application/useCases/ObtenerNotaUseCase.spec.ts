@@ -6,7 +6,7 @@ import { ObtenerNotaUseCase } from "./ObtenerNotaUseCase";
 
 const DUENO = 7;
 const OTRO = 8;
-const datos = { titulo: "Ejemplo", contenido: "", tagIds: [] };
+const datos = { titulo: "Ejemplo", contenido: "", tagIds: [], carpetaId: null };
 
 const preparar = (nota: Nota | null, esMiembro = false) =>
 	new ObtenerNotaUseCase(

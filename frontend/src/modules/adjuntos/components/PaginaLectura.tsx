@@ -1,7 +1,7 @@
 import { ArrowLeft } from "lucide-react";
 import type { ReactNode } from "react";
 import { Button } from "@/core/components/ui/Button";
-import { ContenidoMarkdown } from "./ContenidoMarkdown";
+import { type AmbitoWikilinks, ContenidoMarkdown } from "./ContenidoMarkdown";
 
 interface PaginaLecturaProps {
 	onVolver: () => void;
@@ -11,6 +11,8 @@ interface PaginaLecturaProps {
 	/** Propiedades bajo el título (estado, vencimiento, tags…). */
 	detalles?: ReactNode;
 	contenido: string;
+	/** Dónde resolver los `[[wikilinks]]`; sin él, en las notas personales. */
+	ambito?: AmbitoWikilinks;
 }
 
 /** Lectura de una tarea o nota a página completa: el markdown renderizado y sus acciones. */
@@ -20,6 +22,7 @@ export function PaginaLectura({
 	titulo,
 	detalles,
 	contenido,
+	ambito,
 }: PaginaLecturaProps) {
 	return (
 		<article className="mx-auto max-w-3xl space-y-6">
@@ -38,7 +41,7 @@ export function PaginaLectura({
 			{detalles}
 			<div className="border-t border-borde pt-6">
 				{contenido.trim() ? (
-					<ContenidoMarkdown>{contenido}</ContenidoMarkdown>
+					<ContenidoMarkdown ambito={ambito}>{contenido}</ContenidoMarkdown>
 				) : (
 					<p className="text-sm text-tinta-tenue">Sin contenido.</p>
 				)}

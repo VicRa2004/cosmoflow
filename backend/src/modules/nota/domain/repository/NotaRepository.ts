@@ -7,6 +7,14 @@ export interface NotaFiltros {
 	/** Texto en el título o el contenido, sin distinguir mayúsculas. */
 	busqueda?: string;
 	tagId?: number;
+	/** Solo las que están directamente en esa carpeta. */
+	carpetaId?: number;
+	/** Título exacto, sin distinguir mayúsculas (resuelve los wikilinks). */
+	titulo?: string;
+	creadaDesde?: Date;
+	creadaHasta?: Date;
+	editadaDesde?: Date;
+	editadaHasta?: Date;
 }
 
 /** Las personales de un usuario o las de un proyecto. */
@@ -28,10 +36,12 @@ export interface NotaRepository {
 		dueno: { usuarioId: number } | { organizacionId: number },
 		tagIds: number[],
 	) => Promise<boolean>;
+	/** `true` si es una carpeta viva de ese ámbito. */
+	esCarpetaDe: (ambito: AmbitoNotas, carpetaId: number) => Promise<boolean>;
 	crear: (data: Nota) => Promise<Nota>;
 	actualizar: (data: Nota) => Promise<Nota>;
 	/** Borrado lógico (`deletedAt`). */
 	eliminar: (id: number) => Promise<void>;
-	/** Al eliminar el proyecto, sus notas pasan a quien las creó, sin los tags de la organización. */
+	/** Al eliminar el proyecto, sus notas pasan a quien las creó, sin los tags de la organización ni carpeta. */
 	hacerPersonales: (proyectoId: number) => Promise<void>;
 }

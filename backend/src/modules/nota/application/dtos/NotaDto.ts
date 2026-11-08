@@ -7,4 +7,6 @@ export interface NotaDto extends DatosNota {
 	proyectoId: number | null;
 	/** ISO 8601 de la última edición. */
 	updatedAt: string;
+	/** ISO 8601 de su creación. */
+	createdAt: string;
 }

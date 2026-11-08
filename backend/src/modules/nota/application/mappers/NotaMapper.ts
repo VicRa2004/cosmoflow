@@ -10,6 +10,7 @@ export const NotaMapper = {
 			organizacionId: proyecto?.organizacionId ?? null,
 			proyectoId: proyecto?.proyectoId ?? null,
 			updatedAt: nota.getUpdatedAt()?.toISOString() ?? "",
+			createdAt: nota.getCreatedAt()?.toISOString() ?? "",
 		};
 	},
 };

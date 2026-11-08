@@ -3542,6 +3542,12 @@ export interface paths {
                     limite?: string;
                     busqueda?: string;
                     tagId?: string;
+                    carpetaId?: string;
+                    titulo?: string;
+                    creadaDesde?: string;
+                    creadaHasta?: string;
+                    editadaDesde?: string;
+                    editadaHasta?: string;
                     proyectoId?: string;
                 };
                 header?: never;
@@ -3622,6 +3628,7 @@ export interface paths {
                         /** @example #f59e0b */
                         color?: string | null;
                         tagIds?: number[];
+                        carpetaId?: number | null;
                         proyectoId?: number;
                     };
                 };
@@ -3636,7 +3643,97 @@ export interface paths {
                         "application/json": components["schemas"]["NotaDto"];
                     };
                 };
-                /** @description Validación fallida o tags ajenos */
+                /** @description Validación fallida, tags ajenos o carpeta inválida */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description No autenticado */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Permiso denegado (requiere notas:crear) */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Proyecto no encontrado */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/notas/importar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Importar notas de Obsidian con su árbol de carpetas (hasta 200 por petición) */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        proyectoId?: number;
+                        carpetaId?: number;
+                        notas: {
+                            /**
+                             * @example [
+                             *       "Viajes",
+                             *       "Europa"
+                             *     ]
+                             */
+                            carpeta: string[];
+                            titulo: string;
+                            contenido: string;
+                        }[];
+                    };
+                };
+            };
+            responses: {
+                /** @description Notas importadas */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ResultadoImportacionDto"];
+                    };
+                };
+                /** @description Validación fallida o carpeta inexistente */
                 400: {
                     headers: {
                         [name: string]: unknown;
@@ -3755,6 +3852,7 @@ export interface paths {
                         /** @example #f59e0b */
                         color?: string | null;
                         tagIds?: number[];
+                        carpetaId?: number | null;
                     };
                 };
             };
@@ -3768,7 +3866,7 @@ export interface paths {
                         "application/json": components["schemas"]["NotaDto"];
                     };
                 };
-                /** @description Validación fallida o tags ajenos */
+                /** @description Validación fallida, tags ajenos o carpeta inválida */
                 400: {
                     headers: {
                         [name: string]: unknown;
@@ -3845,6 +3943,271 @@ export interface paths {
                     };
                 };
                 /** @description Nota no encontrada */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/carpetas": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Listar todas las carpetas personales, o las de un proyecto */
+        get: {
+            parameters: {
+                query?: {
+                    proyectoId?: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Carpetas por nombre */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["CarpetaDto"][];
+                    };
+                };
+                /** @description No autenticado */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Permiso denegado (requiere notas:leer) */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Proyecto no encontrado */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        /** Crear carpeta personal o de un proyecto */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        nombre: string;
+                        /** @example 📁 */
+                        icono?: string | null;
+                        /** @example #f59e0b */
+                        color?: string | null;
+                        padreId?: number | null;
+                        proyectoId?: number;
+                    };
+                };
+            };
+            responses: {
+                /** @description Carpeta creada */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["CarpetaDto"];
+                    };
+                };
+                /** @description Validación fallida o carpeta padre inválida */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description No autenticado */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Permiso denegado (requiere notas:crear) */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Proyecto no encontrado */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/carpetas/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Renombrar, personalizar o mover una carpeta */
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        nombre?: string;
+                        /** @example 📁 */
+                        icono?: string | null;
+                        /** @example #f59e0b */
+                        color?: string | null;
+                        padreId?: number | null;
+                    };
+                };
+            };
+            responses: {
+                /** @description Carpeta actualizada */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["CarpetaDto"];
+                    };
+                };
+                /** @description Validación fallida o movimiento inválido */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description No autenticado */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Permiso denegado (requiere notas:actualizar) */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Carpeta no encontrada */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        /** Eliminar carpeta (su contenido sube a la carpeta padre) */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Carpeta eliminada */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description No autenticado */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Permiso denegado (requiere notas:eliminar) */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Carpeta no encontrada */
                 404: {
                     headers: {
                         [name: string]: unknown;
@@ -7448,11 +7811,36 @@ export interface components {
             tagIds: number[];
             organizacionId: number | null;
             proyectoId: number | null;
+            carpetaId: number | null;
             /**
              * Format: date-time
              * @example 2026-10-28T10:00:00Z
              */
             updatedAt: string;
+            /**
+             * Format: date-time
+             * @example 2026-10-27T10:00:00Z
+             */
+            createdAt: string;
+        };
+        ResultadoImportacionDto: {
+            /** @example 12 */
+            notas: number;
+            /** @example 3 */
+            carpetas: number;
+        };
+        CarpetaDto: {
+            /** @example 1 */
+            id: number;
+            /** @example Viajes */
+            nombre: string;
+            /** @example ✈️ */
+            icono: string | null;
+            /** @example #f59e0b */
+            color: string | null;
+            padreId: number | null;
+            organizacionId: number | null;
+            proyectoId: number | null;
         };
         AdjuntoDto: {
             /** @example 12 */
@@ -7645,6 +8033,8 @@ export type TagDto = components['schemas']['TagDto'];
 export type TareaDto = components['schemas']['TareaDto'];
 export type EstadisticasTareasDto = components['schemas']['EstadisticasTareasDto'];
 export type NotaDto = components['schemas']['NotaDto'];
+export type ResultadoImportacionDto = components['schemas']['ResultadoImportacionDto'];
+export type CarpetaDto = components['schemas']['CarpetaDto'];
 export type AdjuntoDto = components['schemas']['AdjuntoDto'];
 export type OrganizacionDto = components['schemas']['OrganizacionDto'];
 export type MiembroDto = components['schemas']['MiembroDto'];

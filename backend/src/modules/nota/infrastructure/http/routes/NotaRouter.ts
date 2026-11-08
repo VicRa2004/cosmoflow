@@ -10,10 +10,12 @@ import { NotaController } from "../controllers/NotaController";
 import {
 	actualizarNotaSchema,
 	crearNotaSchema,
+	importarNotasSchema,
 	obtenerNotasSchema,
 	notaDtoSchema,
 	notaIdSchema,
 	notaPaginaSchema,
+	resultadoImportacionSchema,
 } from "../schemas/notaSchemas";
 
 const tags = ["Notas"];
@@ -45,12 +47,40 @@ export class NotaRouter {
 			},
 			responses: {
 				201: jsonResponse(notaDtoSchema, "Nota creada"),
-				400: errorResponse("Validación fallida o tags ajenos"),
+				400: errorResponse(
+					"Validación fallida, tags ajenos o carpeta inválida",
+				),
 				404: errorResponse("Proyecto no encontrado"),
 				...protectedErrorResponses(`${recurso}:crear`),
 			},
 		});
 		this.router.post("/", guard.handle(recurso, "crear"), controller.crear);
+
+		docs.registerPath({
+			method: "post",
+			path: "/importar",
+			tags,
+			security,
+			summary:
+				"Importar notas de Obsidian con su árbol de carpetas (hasta 200 por petición)",
+			request: {
+				body: {
+					required: true,
+					content: { "application/json": { schema: importarNotasSchema } },
+				},
+			},
+			responses: {
+				201: jsonResponse(resultadoImportacionSchema, "Notas importadas"),
+				400: errorResponse("Validación fallida o carpeta inexistente"),
+				404: errorResponse("Proyecto no encontrado"),
+				...protectedErrorResponses(`${recurso}:crear`),
+			},
+		});
+		this.router.post(
+			"/importar",
+			guard.handle(recurso, "crear"),
+			controller.importar,
+		);
 
 		docs.registerPath({
 			method: "get",
@@ -106,7 +136,9 @@ export class NotaRouter {
 			},
 			responses: {
 				200: jsonResponse(notaDtoSchema, "Nota actualizada"),
-				400: errorResponse("Validación fallida o tags ajenos"),
+				400: errorResponse(
+					"Validación fallida, tags ajenos o carpeta inválida",
+				),
 				...protectedErrorResponses(`${recurso}:actualizar`),
 				404: errorResponse("Nota no encontrada"),
 			},

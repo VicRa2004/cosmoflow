@@ -11,7 +11,7 @@ describe("ObtenerNotasUseCase", () => {
 					Nota.reconstituir(
 						1,
 						7,
-						{ titulo: "Ejemplo", contenido: "", tagIds: [] },
+						{ titulo: "Ejemplo", contenido: "", tagIds: [], carpetaId: null },
 						new Date(),
 					),
 				],

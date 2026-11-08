@@ -27,6 +27,7 @@ import { Route as AuthenticatedUsuariosRouteImport } from './routes/_authenticat
 import { Route as LoginGoogleRouteImport } from './routes/login_.google'
 import { Route as AuthenticatedNotasIndexRouteImport } from './routes/_authenticated/notas/index'
 import { Route as AuthenticatedNotasIdRouteImport } from './routes/_authenticated/notas/$id'
+import { Route as AuthenticatedNotasEnlaceRouteImport } from './routes/_authenticated/notas/enlace'
 import { Route as AuthenticatedNotasNuevaRouteImport } from './routes/_authenticated/notas/nueva'
 import { Route as AuthenticatedOrganizacionesIndexRouteImport } from './routes/_authenticated/organizaciones/index'
 import { Route as AuthenticatedOrganizacionesIdRouteImport } from './routes/_authenticated/organizaciones/$id'
@@ -141,6 +142,12 @@ const AuthenticatedNotasIdRoute = AuthenticatedNotasIdRouteImport.update({
   path: '/notas/$id',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedNotasEnlaceRoute =
+  AuthenticatedNotasEnlaceRouteImport.update({
+    id: '/notas/enlace',
+    path: '/notas/enlace',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const AuthenticatedNotasNuevaRoute = AuthenticatedNotasNuevaRouteImport.update({
   id: '/notas/nueva',
   path: '/notas/nueva',
@@ -289,6 +296,7 @@ export interface FileRoutesByFullPath {
   '/usuarios': typeof AuthenticatedUsuariosRoute
   '/login/google': typeof LoginGoogleRoute
   '/notas/$id': typeof AuthenticatedNotasIdRoute
+  '/notas/enlace': typeof AuthenticatedNotasEnlaceRoute
   '/notas/nueva': typeof AuthenticatedNotasNuevaRoute
   '/organizaciones/$id': typeof AuthenticatedOrganizacionesIdRouteWithChildren
   '/perfil/conexiones': typeof AuthenticatedPerfilConexionesRoute
@@ -329,6 +337,7 @@ export interface FileRoutesByTo {
   '/usuarios': typeof AuthenticatedUsuariosRoute
   '/login/google': typeof LoginGoogleRoute
   '/notas/$id': typeof AuthenticatedNotasIdRoute
+  '/notas/enlace': typeof AuthenticatedNotasEnlaceRoute
   '/notas/nueva': typeof AuthenticatedNotasNuevaRoute
   '/perfil/conexiones': typeof AuthenticatedPerfilConexionesRoute
   '/perfil/general': typeof AuthenticatedPerfilGeneralRoute
@@ -371,6 +380,7 @@ export interface FileRoutesById {
   '/_authenticated/usuarios': typeof AuthenticatedUsuariosRoute
   '/login_/google': typeof LoginGoogleRoute
   '/_authenticated/notas/$id': typeof AuthenticatedNotasIdRoute
+  '/_authenticated/notas/enlace': typeof AuthenticatedNotasEnlaceRoute
   '/_authenticated/notas/nueva': typeof AuthenticatedNotasNuevaRoute
   '/_authenticated/organizaciones/$id': typeof AuthenticatedOrganizacionesIdRouteWithChildren
   '/_authenticated/perfil/conexiones': typeof AuthenticatedPerfilConexionesRoute
@@ -414,6 +424,7 @@ export interface FileRouteTypes {
     | '/usuarios'
     | '/login/google'
     | '/notas/$id'
+    | '/notas/enlace'
     | '/notas/nueva'
     | '/organizaciones/$id'
     | '/perfil/conexiones'
@@ -454,6 +465,7 @@ export interface FileRouteTypes {
     | '/usuarios'
     | '/login/google'
     | '/notas/$id'
+    | '/notas/enlace'
     | '/notas/nueva'
     | '/perfil/conexiones'
     | '/perfil/general'
@@ -495,6 +507,7 @@ export interface FileRouteTypes {
     | '/_authenticated/usuarios'
     | '/login_/google'
     | '/_authenticated/notas/$id'
+    | '/_authenticated/notas/enlace'
     | '/_authenticated/notas/nueva'
     | '/_authenticated/organizaciones/$id'
     | '/_authenticated/perfil/conexiones'
@@ -657,6 +670,13 @@ declare module '@tanstack/react-router' {
       path: '/notas/$id'
       fullPath: '/notas/$id'
       preLoaderRoute: typeof AuthenticatedNotasIdRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/notas/enlace': {
+      id: '/_authenticated/notas/enlace'
+      path: '/notas/enlace'
+      fullPath: '/notas/enlace'
+      preLoaderRoute: typeof AuthenticatedNotasEnlaceRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/notas/nueva': {
@@ -885,6 +905,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedTagsRoute: typeof AuthenticatedTagsRoute
   AuthenticatedUsuariosRoute: typeof AuthenticatedUsuariosRoute
   AuthenticatedNotasIdRoute: typeof AuthenticatedNotasIdRoute
+  AuthenticatedNotasEnlaceRoute: typeof AuthenticatedNotasEnlaceRoute
   AuthenticatedNotasNuevaRoute: typeof AuthenticatedNotasNuevaRoute
   AuthenticatedOrganizacionesIdRoute: typeof AuthenticatedOrganizacionesIdRouteWithChildren
   AuthenticatedTareasIdRoute: typeof AuthenticatedTareasIdRoute
@@ -906,6 +927,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedTagsRoute: AuthenticatedTagsRoute,
   AuthenticatedUsuariosRoute: AuthenticatedUsuariosRoute,
   AuthenticatedNotasIdRoute: AuthenticatedNotasIdRoute,
+  AuthenticatedNotasEnlaceRoute: AuthenticatedNotasEnlaceRoute,
   AuthenticatedNotasNuevaRoute: AuthenticatedNotasNuevaRoute,
   AuthenticatedOrganizacionesIdRoute:
     AuthenticatedOrganizacionesIdRouteWithChildren,

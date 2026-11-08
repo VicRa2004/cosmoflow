@@ -1,5 +1,5 @@
 import { useCanGoBack, useNavigate, useRouter } from "@tanstack/react-router";
-import { Pencil, Trash2 } from "lucide-react";
+import { Download, Pencil, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { usePermisos } from "@/core/auth/usePermisos";
 import { Button } from "@/core/components/ui/Button";
@@ -9,6 +9,7 @@ import { PaginaLectura } from "@/modules/adjuntos/components/PaginaLectura";
 import { TagsBadges } from "@/modules/tags/components/TagsBadges";
 import { useEliminarNotaMutation } from "../hooks/useNotasMutation";
 import { useNotaQuery } from "../hooks/useNotasQuery";
+import { descargarNotaMd } from "../utils/exportar";
 
 /** Lectura de una nota: tags, contenido y las acciones que permita el usuario. */
 export function NotaLecturaPage({ id }: { id: number }) {
@@ -37,6 +38,14 @@ export function NotaLecturaPage({ id }: { id: number }) {
 				onVolver={volver}
 				titulo={nota.titulo}
 				contenido={nota.contenido}
+				ambito={
+					nota.organizacionId && nota.proyectoId
+						? {
+								organizacionId: nota.organizacionId,
+								proyectoId: nota.proyectoId,
+							}
+						: undefined
+				}
 				detalles={
 					nota.tagIds.length > 0 && (
 						<TagsBadges
@@ -47,6 +56,14 @@ export function NotaLecturaPage({ id }: { id: number }) {
 				}
 				acciones={
 					<>
+						<Button
+							variant="ghost"
+							size="sm"
+							onClick={() => descargarNotaMd(nota)}
+						>
+							<Download className="h-4 w-4" />
+							.md
+						</Button>
 						{puede("notas:eliminar") && (
 							<Button
 								variant="dangerGhost"

@@ -42,6 +42,7 @@ model Usuario {
   tags                     Tag[]
   tareas                   Tarea[]
   notas                    Nota[]
+  carpetasNota             CarpetaNota[]
   adjuntos                 Adjunto[]
   organizaciones           MiembroOrganizacion[]
   preferenciasNotificacion PreferenciaNotificacion[]
@@ -388,15 +389,51 @@ model Nota {
   /// Nota de proyecto (RN-33): la ven sus miembros. Sin él, personal (RN-50).
   organizacionId Int? @map("not_fkorganizacion")
   proyectoId     Int? @map("not_fkproyecto")
+  /// Carpeta del mismo ámbito (personal o del proyecto); sin ella, en la raíz
+  carpetaId      Int? @map("not_fkcarpeta")
 
   /// Quien la creó; en las personales, su dueño
-  usuario  Usuario   @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
-  proyecto Proyecto? @relation(fields: [organizacionId, proyectoId], references: [organizacionId, id], onDelete: Cascade)
+  usuario  Usuario      @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  proyecto Proyecto?    @relation(fields: [organizacionId, proyectoId], references: [organizacionId, id], onDelete: Cascade)
+  carpeta  CarpetaNota? @relation(fields: [carpetaId], references: [id], onDelete: SetNull)
   tags     NotaTag[]
 
   @@index([usuarioId, updatedAt])
   @@index([proyectoId, updatedAt])
+  @@index([carpetaId])
   @@map("nota")
+}
+
+/// Carpeta para ordenar notas, anidable. Mismo ámbito que sus notas: personal
+/// (solo su dueño) o de un proyecto (sus miembros, RN-33).
+model CarpetaNota {
+  id        Int       @id @default(autoincrement()) @map("car_id")
+  usuarioId Int       @map("car_fkusuario")
+  nombre    String    @map("car_nombre") @db.VarChar(120)
+  /// Emoji opcional
+  icono     String?   @map("car_icono") @db.VarChar(16)
+  /// Color de acento opcional (#rrggbb)
+  color     String?   @map("car_color") @db.VarChar(7)
+  /// Sin padre, en la raíz
+  padreId   Int?      @map("car_fkpadre")
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @default(now()) @updatedAt @map("updated_at")
+  /// Borrado lógico (RN-91)
+  deletedAt DateTime? @map("deleted_at")
+
+  organizacionId Int? @map("car_fkorganizacion")
+  proyectoId     Int? @map("car_fkproyecto")
+
+  /// Quien la creó; en las personales, su dueño
+  usuario  Usuario       @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  proyecto Proyecto?     @relation(fields: [organizacionId, proyectoId], references: [organizacionId, id], onDelete: Cascade)
+  padre    CarpetaNota?  @relation("CarpetaHijas", fields: [padreId], references: [id], onDelete: SetNull)
+  hijas    CarpetaNota[] @relation("CarpetaHijas")
+  notas    Nota[]
+
+  @@index([usuarioId])
+  @@index([proyectoId])
+  @@map("carpeta_nota")
 }
 
 model NotaTag {
@@ -634,6 +671,7 @@ model Proyecto {
   integrantes  IntegranteProyecto[]
   tareas       Tarea[]
   notas        Nota[]
+  carpetasNota CarpetaNota[]
   adjuntos     Adjunto[]
 
   /// Destino de las FK compuestas de `ProyectoEquipo` e `IntegranteProyecto`
