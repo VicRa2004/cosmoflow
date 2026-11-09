@@ -57,6 +57,16 @@ export interface TareaRepository {
 		usuarioId: number,
 		paginacion: { pagina: number; limite: number },
 	) => Promise<Paginacion<Tarea>>;
+	/**
+	 * Todo lo que el usuario ve (personales, de sus organizaciones, equipos y
+	 * proyectos, y las asignadas) cuyo día —vencimiento o, sin él, inicio— cae
+	 * entre `desde` y `hasta` (AAAA-MM-DD, incluidos).
+	 */
+	buscarCalendario: (
+		usuarioId: number,
+		desde: string,
+		hasta: string,
+	) => Promise<Tarea[]>;
 	contar: (
 		ambito: { organizacionId: number } | GrupoTareas,
 	) => Promise<EstadisticasTareas>;

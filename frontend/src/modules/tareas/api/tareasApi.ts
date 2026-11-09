@@ -61,6 +61,14 @@ export const tareasApi = {
 		return response.data;
 	},
 
+	/** Todo lo que el usuario ve con fecha entre `desde` y `hasta` (AAAA-MM-DD). */
+	async calendario(desde: string, hasta: string): Promise<TareaDto[]> {
+		const response = await apiClient.get<TareaDto[]>("/tareas/calendario", {
+			params: { desde, hasta },
+		});
+		return response.data;
+	},
+
 	async estadisticas(destino: DestinoTarea): Promise<EstadisticasTareasDto> {
 		const response = await apiClient.get<EstadisticasTareasDto>(
 			"/tareas/estadisticas",

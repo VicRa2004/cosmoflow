@@ -1,6 +1,7 @@
 import type { LinkProps } from "@tanstack/react-router";
 import { cn } from "@/core/utils/cn";
 import {
+	CalendarDays,
 	CircleDot,
 	ListTodo,
 	type LucideIcon,
@@ -40,6 +41,12 @@ export const NAVEGACION: GrupoNavegacion[] = [
 				to: "/tareas",
 				etiqueta: "Tareas",
 				icono: ListTodo,
+				permiso: "tareas:leer",
+			},
+			{
+				to: "/calendario",
+				etiqueta: "Calendario",
+				icono: CalendarDays,
 				permiso: "tareas:leer",
 			},
 			{

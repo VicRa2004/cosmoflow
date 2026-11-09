@@ -6,9 +6,11 @@ import type { ObtenerTareaUseCase } from "../../../application/useCases/ObtenerT
 import type { ObtenerPendientesUseCase } from "../../../application/useCases/ObtenerPendientesUseCase";
 import type { ObtenerTareasUseCase } from "../../../application/useCases/ObtenerTareasUseCase";
 import type { ObtenerEstadisticasTareasUseCase } from "../../../application/useCases/ObtenerEstadisticasTareasUseCase";
+import type { ObtenerCalendarioUseCase } from "../../../application/useCases/ObtenerCalendarioUseCase";
 import type { MoverTareaUseCase } from "../../../application/useCases/MoverTareaUseCase";
 import {
 	actualizarTareaSchema,
+	calendarioTareasSchema,
 	crearTareaSchema,
 	estadisticasTareasSchema,
 	moverTareaSchema,
@@ -28,6 +30,7 @@ export class TareaController extends BaseController {
 			crear: CrearTareaUseCase;
 			obtenerTodos: ObtenerTareasUseCase;
 			obtenerPendientes: ObtenerPendientesUseCase;
+			calendario: ObtenerCalendarioUseCase;
 			obtenerUno: ObtenerTareaUseCase;
 			actualizar: ActualizarTareaUseCase;
 			eliminar: EliminarTareaUseCase;
@@ -64,6 +67,19 @@ export class TareaController extends BaseController {
 				await this.useCases.obtenerPendientes.ejecutar(
 					c.get("usuario").id,
 					dto,
+				),
+			);
+		});
+
+	calendario = (c: Context<AuthEnv>): Promise<Response> =>
+		this.executeSafely(c, async () => {
+			const { desde, hasta } = validate(calendarioTareasSchema, c.req.query());
+			return this.ok(
+				c,
+				await this.useCases.calendario.ejecutar(
+					c.get("usuario").id,
+					desde,
+					hasta,
 				),
 			);
 		});

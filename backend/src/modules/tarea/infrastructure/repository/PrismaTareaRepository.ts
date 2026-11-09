@@ -124,6 +124,55 @@ export class PrismaTareaRepository implements TareaRepository {
 		);
 	}
 
+	async buscarCalendario(
+		usuarioId: number,
+		desde: string,
+		hasta: string,
+	): Promise<Tarea[]> {
+		const rango = { gte: new Date(desde), lte: new Date(hasta) };
+		const esMiembro = { some: { usuarioId } };
+		const registros = await prisma.tarea.findMany({
+			where: {
+				deletedAt: null,
+				AND: [
+					{
+						OR: [
+							{ fechaVencimiento: rango },
+							{ fechaVencimiento: null, fechaInicio: rango },
+						],
+					},
+					// Misma visibilidad que `ContextosTarea`, en una sola consulta.
+					{
+						OR: [
+							{ usuarioId, organizacionId: null },
+							{ responsables: esMiembro },
+							{
+								equipoId: null,
+								proyectoId: null,
+								organizacion: { deletedAt: null, miembros: esMiembro },
+							},
+							{ equipo: { deletedAt: null, miembros: esMiembro } },
+							{
+								proyecto: {
+									deletedAt: null,
+									OR: [
+										{ integrantes: esMiembro },
+										{ equipos: { some: { equipo: { miembros: esMiembro } } } },
+									],
+								},
+							},
+						],
+					},
+				],
+			},
+			include,
+			orderBy: ORDEN_POR_VENCIMIENTO,
+			// shortcut: tope de 500 tareas por rango, paginar si un mes llega a tener más
+			take: 500,
+		});
+		return registros.map((registro) => this.toDomain(registro));
+	}
+
 	private async paginar(
 		where: Prisma.TareaWhereInput,
 		orderBy: Prisma.TareaOrderByWithRelationInput[],

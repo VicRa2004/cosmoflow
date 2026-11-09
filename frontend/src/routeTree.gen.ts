@@ -17,6 +17,7 @@ import { Route as RegistroRouteImport } from './routes/registro'
 import { Route as RestablecerPasswordRouteImport } from './routes/restablecer-password'
 import { Route as VerificarEmailRouteImport } from './routes/verificar-email'
 import { Route as AuthenticatedAutorizarConexionRouteImport } from './routes/_authenticated/autorizar-conexion'
+import { Route as AuthenticatedCalendarioRouteImport } from './routes/_authenticated/calendario'
 import { Route as AuthenticatedConfiguracionRouteImport } from './routes/_authenticated/configuracion'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedInvitacionRouteImport } from './routes/_authenticated/invitacion'
@@ -91,6 +92,11 @@ const AuthenticatedAutorizarConexionRoute =
     path: '/autorizar-conexion',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
+const AuthenticatedCalendarioRoute = AuthenticatedCalendarioRouteImport.update({
+  id: '/calendario',
+  path: '/calendario',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
 const AuthenticatedConfiguracionRoute =
   AuthenticatedConfiguracionRouteImport.update({
     id: '/configuracion',
@@ -287,6 +293,7 @@ export interface FileRoutesByFullPath {
   '/verificar-email': typeof VerificarEmailRoute
   '/notas': typeof AuthenticatedNotasRouteRouteWithChildren
   '/autorizar-conexion': typeof AuthenticatedAutorizarConexionRoute
+  '/calendario': typeof AuthenticatedCalendarioRoute
   '/configuracion': typeof AuthenticatedConfiguracionRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/invitacion': typeof AuthenticatedInvitacionRoute
@@ -328,6 +335,7 @@ export interface FileRoutesByTo {
   '/restablecer-password': typeof RestablecerPasswordRoute
   '/verificar-email': typeof VerificarEmailRoute
   '/autorizar-conexion': typeof AuthenticatedAutorizarConexionRoute
+  '/calendario': typeof AuthenticatedCalendarioRoute
   '/configuracion': typeof AuthenticatedConfiguracionRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/invitacion': typeof AuthenticatedInvitacionRoute
@@ -370,6 +378,7 @@ export interface FileRoutesById {
   '/verificar-email': typeof VerificarEmailRoute
   '/_authenticated/notas': typeof AuthenticatedNotasRouteRouteWithChildren
   '/_authenticated/autorizar-conexion': typeof AuthenticatedAutorizarConexionRoute
+  '/_authenticated/calendario': typeof AuthenticatedCalendarioRoute
   '/_authenticated/configuracion': typeof AuthenticatedConfiguracionRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/invitacion': typeof AuthenticatedInvitacionRoute
@@ -414,6 +423,7 @@ export interface FileRouteTypes {
     | '/verificar-email'
     | '/notas'
     | '/autorizar-conexion'
+    | '/calendario'
     | '/configuracion'
     | '/dashboard'
     | '/invitacion'
@@ -455,6 +465,7 @@ export interface FileRouteTypes {
     | '/restablecer-password'
     | '/verificar-email'
     | '/autorizar-conexion'
+    | '/calendario'
     | '/configuracion'
     | '/dashboard'
     | '/invitacion'
@@ -496,6 +507,7 @@ export interface FileRouteTypes {
     | '/verificar-email'
     | '/_authenticated/notas'
     | '/_authenticated/autorizar-conexion'
+    | '/_authenticated/calendario'
     | '/_authenticated/configuracion'
     | '/_authenticated/dashboard'
     | '/_authenticated/invitacion'
@@ -597,6 +609,13 @@ declare module '@tanstack/react-router' {
       path: '/autorizar-conexion'
       fullPath: '/autorizar-conexion'
       preLoaderRoute: typeof AuthenticatedAutorizarConexionRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/calendario': {
+      id: '/_authenticated/calendario'
+      path: '/calendario'
+      fullPath: '/calendario'
+      preLoaderRoute: typeof AuthenticatedCalendarioRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/configuracion': {
@@ -915,6 +934,7 @@ const AuthenticatedOrganizacionesIdRouteWithChildren =
 interface AuthenticatedRouteChildren {
   AuthenticatedNotasRouteRoute: typeof AuthenticatedNotasRouteRouteWithChildren
   AuthenticatedAutorizarConexionRoute: typeof AuthenticatedAutorizarConexionRoute
+  AuthenticatedCalendarioRoute: typeof AuthenticatedCalendarioRoute
   AuthenticatedConfiguracionRoute: typeof AuthenticatedConfiguracionRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedInvitacionRoute: typeof AuthenticatedInvitacionRoute
@@ -933,6 +953,7 @@ interface AuthenticatedRouteChildren {
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedNotasRouteRoute: AuthenticatedNotasRouteRouteWithChildren,
   AuthenticatedAutorizarConexionRoute: AuthenticatedAutorizarConexionRoute,
+  AuthenticatedCalendarioRoute: AuthenticatedCalendarioRoute,
   AuthenticatedConfiguracionRoute: AuthenticatedConfiguracionRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedInvitacionRoute: AuthenticatedInvitacionRoute,

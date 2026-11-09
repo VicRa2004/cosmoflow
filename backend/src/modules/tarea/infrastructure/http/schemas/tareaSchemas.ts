@@ -101,6 +101,19 @@ export const obtenerTareasSchema = paginacionSchema
 		},
 	);
 
+const diaObligatorio = z.iso.date("Fecha inválida (formato AAAA-MM-DD)");
+
+/** Rango del calendario, ambos días incluidos. */
+export const calendarioTareasSchema = z
+	.object({
+		desde: diaObligatorio.openapi({ example: "2026-11-01" }),
+		hasta: diaObligatorio.openapi({ example: "2026-11-30" }),
+	})
+	.refine((v) => v.desde <= v.hasta, {
+		message: "`hasta` debe ser igual o posterior a `desde`",
+		path: ["hasta"],
+	});
+
 /** Una organización (sin equipo ni proyecto), un equipo o un proyecto. */
 export const estadisticasTareasSchema = z
 	.object({

@@ -1,4 +1,4 @@
-import { OpenAPIHono } from "@hono/zod-openapi";
+import { OpenAPIHono, z } from "@hono/zod-openapi";
 import {
 	errorResponse,
 	jsonResponse,
@@ -10,6 +10,7 @@ import type { PermisoGuard } from "@/core/shared/infrastructure/http/permisoGuar
 import { TareaController } from "../controllers/TareaController";
 import {
 	actualizarTareaSchema,
+	calendarioTareasSchema,
 	crearTareaSchema,
 	estadisticasTareasDtoSchema,
 	estadisticasTareasSchema,
@@ -109,6 +110,27 @@ export class TareaRouter {
 			"/pendientes",
 			guard.handle(recurso, "leer"),
 			controller.obtenerPendientes,
+		);
+
+		docs.registerPath({
+			method: "get",
+			path: "/calendario",
+			tags,
+			security,
+			summary: "Tareas con fecha en un rango (calendario)",
+			description:
+				"Personales, asignadas y de las organizaciones, equipos y proyectos del usuario. Cada tarea cuenta en su vencimiento o, sin él, en su inicio. Máximo 500.",
+			request: { query: calendarioTareasSchema },
+			responses: {
+				200: jsonResponse(z.array(tareaDtoSchema), "Tareas del rango"),
+				400: errorResponse("Parámetros inválidos"),
+				...protectedErrorResponses(`${recurso}:leer`),
+			},
+		});
+		this.router.get(
+			"/calendario",
+			guard.handle(recurso, "leer"),
+			controller.calendario,
 		);
 
 		docs.registerPath({

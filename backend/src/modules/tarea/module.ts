@@ -11,6 +11,7 @@ import { MoverTareaUseCase } from "./application/useCases/MoverTareaUseCase";
 import { ActualizarTareaUseCase } from "./application/useCases/ActualizarTareaUseCase";
 import { CrearTareaUseCase } from "./application/useCases/CrearTareaUseCase";
 import { EliminarTareaUseCase } from "./application/useCases/EliminarTareaUseCase";
+import { ObtenerCalendarioUseCase } from "./application/useCases/ObtenerCalendarioUseCase";
 import { ObtenerEstadisticasTareasUseCase } from "./application/useCases/ObtenerEstadisticasTareasUseCase";
 import { ObtenerTareaUseCase } from "./application/useCases/ObtenerTareaUseCase";
 import { ObtenerPendientesUseCase } from "./application/useCases/ObtenerPendientesUseCase";
@@ -37,6 +38,7 @@ export const tareaModule: AppModule = {
 				crear: new CrearTareaUseCase(repo, contextos, eventBus, uow),
 				obtenerTodos: new ObtenerTareasUseCase(repo, contextos),
 				obtenerPendientes: new ObtenerPendientesUseCase(repo),
+				calendario: new ObtenerCalendarioUseCase(repo),
 				obtenerUno: new ObtenerTareaUseCase(repo, contextos),
 				actualizar: new ActualizarTareaUseCase(repo, contextos, eventBus, uow),
 				eliminar: new EliminarTareaUseCase(repo, contextos),

@@ -1,7 +1,8 @@
 import { useNavigate } from "@tanstack/react-router";
-import { Search } from "lucide-react";
+import { Columns3, List, Search } from "lucide-react";
 import { useState } from "react";
 import { EncabezadoPagina } from "@/core/components/ui/EncabezadoPagina";
+import { Button } from "@/core/components/ui/Button";
 import { ConfirmDialog } from "@/core/components/ui/ConfirmDialog";
 import { Input } from "@/core/components/ui/Input";
 import { Select } from "@/core/components/ui/Select";
@@ -9,6 +10,7 @@ import { destinoDe, type EstadoTarea, type TareaDto } from "../api/tareasApi";
 import { AsignarTareaDialog } from "../components/AsignarTareaDialog";
 import { MenuNuevo } from "../components/MenuNuevo";
 import { SelectorContextoTareas } from "../components/SelectorContextoTareas";
+import { TableroTareas } from "../components/TableroTareas";
 import { TareasTable } from "../components/TareasTable";
 import { useEliminarTareaMutation } from "../hooks/useTareasMutation";
 import { useTagsDisponibles } from "@/modules/tags/hooks/useTagsDisponibles";
@@ -45,7 +47,8 @@ export function TareasPage({
 }: {
 	contexto?: ListaTareasSearch;
 }) {
-	const { organizacionId, equipoId, proyectoId, asignadas } = contexto;
+	const { organizacionId, equipoId, proyectoId, asignadas, vista } = contexto;
+	const enTablero = vista === "tablero";
 	const enContexto = organizacionId !== undefined;
 	const [pagina, setPagina] = useState(1);
 	const [busqueda, setBusqueda] = useState("");
@@ -66,16 +69,17 @@ export function TareasPage({
 		navigate({ to: "/tareas/$id/editar", params: { id: String(tarea.id) } });
 	const [eliminando, setEliminando] = useState<TareaDto | null>(null);
 	const eliminar = useEliminarTareaMutation();
-	const { data, isLoading, error } = useTareasQuery({
-		pagina,
-		limite: 10,
+	const filtros = {
 		busqueda: busqueda.trim() || undefined,
-		estado: estado || undefined,
 		tagId: tagId ? Number(tagId) : undefined,
 		...(asignadas
 			? { asignadas }
 			: enContexto && destinoDe({ organizacionId, equipoId, proyectoId })),
-	});
+	};
+	const { data, isLoading, error } = useTareasQuery(
+		{ ...filtros, pagina, limite: 10, estado: estado || undefined },
+		!enTablero,
+	);
 
 	return (
 		<div className="space-y-6">
@@ -94,6 +98,23 @@ export function TareasPage({
 					)
 				}
 			>
+				<Button
+					variant="outline"
+					aria-pressed={enTablero}
+					onClick={() =>
+						navigate({
+							to: "/tareas",
+							search: { ...contexto, vista: enTablero ? undefined : "tablero" },
+						})
+					}
+				>
+					{enTablero ? (
+						<List className="mr-2 h-4 w-4" />
+					) : (
+						<Columns3 className="mr-2 h-4 w-4" />
+					)}
+					{enTablero ? "Lista" : "Tablero"}
+				</Button>
 				<MenuNuevo
 					soloTareas
 					contexto={
@@ -109,11 +130,11 @@ export function TareasPage({
 						onChange={(search) => {
 							setPagina(1);
 							setTagId("");
-							navigate({ to: "/tareas", search });
+							navigate({ to: "/tareas", search: { ...search, vista } });
 						}}
 					/>
 				</div>
-				<div className="w-full sm:w-44">
+				<div className={enTablero ? "hidden" : "w-full sm:w-44"}>
 					<Select
 						aria-label="Filtrar por estado"
 						value={estado}
@@ -164,17 +185,21 @@ export function TareasPage({
 				</div>
 			</div>
 
-			<TareasTable
-				pagina={data}
-				isLoading={isLoading}
-				error={error}
-				onCambioPagina={setPagina}
-				onAbrir={abrir}
-				onEditar={editar}
-				onEliminar={setEliminando}
-				onAsignar={enContexto || asignadas ? setAsignando : undefined}
-				mostrarDonde={asignadas}
-			/>
+			{enTablero ? (
+				<TableroTareas filtros={filtros} />
+			) : (
+				<TareasTable
+					pagina={data}
+					isLoading={isLoading}
+					error={error}
+					onCambioPagina={setPagina}
+					onAbrir={abrir}
+					onEditar={editar}
+					onEliminar={setEliminando}
+					onAsignar={enContexto || asignadas ? setAsignando : undefined}
+					mostrarDonde={asignadas}
+				/>
+			)}
 
 			{asignando && (
 				<AsignarTareaDialog

@@ -255,6 +255,60 @@ describe("Tareas de equipo y proyecto (e2e)", () => {
 		).toBe(404);
 	});
 
+	it("el calendario junta personales y compartidas visibles, por vencimiento o inicio", async () => {
+		const crear = (token: string, body: Record<string, unknown>) =>
+			post("/api/tareas", token, body);
+		await crear(t.ana, {
+			titulo: "Cal personal",
+			fechaVencimiento: "2031-03-10",
+		});
+		await crear(t.beto, {
+			titulo: "Cal de beto",
+			fechaVencimiento: "2031-03-11",
+		});
+		await crear(t.beto, {
+			titulo: "Cal equipo",
+			equipoId: equipo,
+			fechaVencimiento: "2031-03-15",
+		});
+		await crear(t.caro, {
+			titulo: "Cal proyecto",
+			proyectoId: proyecto,
+			fechaInicio: "2031-03-20",
+			fechaVencimiento: null,
+		});
+		await crear(t.caro, {
+			titulo: "Cal organización",
+			organizacionId: acme,
+			fechaVencimiento: "2031-03-25",
+		});
+		await crear(t.ana, { titulo: "Cal fuera", fechaVencimiento: "2031-04-01" });
+
+		const calendario = async (token: string) =>
+			(
+				(await (
+					await api(
+						"/api/tareas/calendario?desde=2031-03-01&hasta=2031-03-31",
+						{
+							token,
+						},
+					)
+				).json()) as { titulo: string }[]
+			).map((tarea) => tarea.titulo);
+
+		expect(await calendario(t.ana)).toEqual([
+			"Cal personal",
+			"Cal equipo",
+			"Cal organización",
+			"Cal proyecto",
+		]);
+		expect(await calendario(t.zoe)).toEqual([]);
+		expect(
+			(await api("/api/tareas/calendario?desde=2031-03-01", { token: t.ana }))
+				.status,
+		).toBe(400);
+	});
+
 	it("salir de la organización lo quita como responsable (decisión 20)", async () => {
 		expect(
 			(

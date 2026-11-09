@@ -3169,6 +3169,75 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/tareas/calendario": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Tareas con fecha en un rango (calendario)
+         * @description Personales, asignadas y de las organizaciones, equipos y proyectos del usuario. Cada tarea cuenta en su vencimiento o, sin él, en su inicio. Máximo 500.
+         */
+        get: {
+            parameters: {
+                query: {
+                    desde: string;
+                    hasta: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Tareas del rango */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["TareaDto"][];
+                    };
+                };
+                /** @description Parámetros inválidos */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description No autenticado */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Permiso denegado (requiere tareas:leer) */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/tareas/estadisticas": {
         parameters: {
             query?: never;

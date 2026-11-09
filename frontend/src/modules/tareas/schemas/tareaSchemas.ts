@@ -41,6 +41,8 @@ export type ContextoTareaSearch = z.infer<typeof contextoTareaSearch>;
 /** Lista de `/tareas`: un contexto, o `?asignadas=true` (en las que se es responsable). */
 export const listaTareasSearch = contextoTareaSearch.extend({
 	asignadas: z.literal(true).optional().catch(undefined),
+	/** Kanban por estado en lugar de la tabla. */
+	vista: z.literal("tablero").optional().catch(undefined),
 });
 
 export type ListaTareasSearch = z.infer<typeof listaTareasSearch>;

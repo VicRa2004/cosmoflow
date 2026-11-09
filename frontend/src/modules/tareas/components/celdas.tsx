@@ -6,6 +6,7 @@ import { useNombresContexto } from "@/modules/organizaciones/hooks/useNombresCon
 import type { EstadoTarea, PrioridadTarea, TareaDto } from "../api/tareasApi";
 import { useDestinosTareas } from "../hooks/useDestinosTareas";
 import { ETIQUETAS_ESTADO, ETIQUETAS_PRIORIDAD } from "../schemas/tareaSchemas";
+import { diaLocal } from "../utils/calendario";
 
 const VARIANTE_ESTADO: Record<EstadoTarea, BadgeProps["variant"]> = {
 	pendiente: "default",
@@ -38,9 +39,6 @@ export const PrioridadBadge = ({
 type TareaCompartida = TareaDto & { organizacionId: number };
 export const esCompartida = (tarea: TareaDto): tarea is TareaCompartida =>
 	tarea.organizacionId !== null;
-
-/** AAAA-MM-DD en hora local. */
-const diaLocal = (fecha: Date) => fecha.toLocaleDateString("sv-SE");
 
 /** "2026-11-15" → "15 nov 2026" (sin pasar por la zona horaria). */
 export const formatearDia = (dia: string) =>
