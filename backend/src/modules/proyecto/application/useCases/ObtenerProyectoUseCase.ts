@@ -15,8 +15,12 @@ export class ObtenerProyectoUseCase {
 		id: number,
 	): Promise<ProyectoDto> {
 		await this.acceso.exigir(usuarioId, organizacionId);
-		return ProyectoMapper.toDto(
-			await buscarProyecto(this.proyectoRepository, organizacionId, id),
+		const proyecto = await buscarProyecto(
+			this.proyectoRepository,
+			organizacionId,
+			id,
 		);
+		const progreso = await this.proyectoRepository.progreso([id]);
+		return ProyectoMapper.toDto(proyecto, progreso.get(id));
 	}
 }

@@ -13,6 +13,10 @@ const nombre = z
 	.max(100, "Máximo 100 caracteres");
 const descripcion = z.string().trim().max(500, "Máximo 500 caracteres");
 const estado = z.enum(ESTADOS_PROYECTO).openapi("EstadoProyecto");
+const dia = z.iso
+	.date("Fecha inválida (formato AAAA-MM-DD)")
+	.nullable()
+	.openapi({ example: "2026-11-15" });
 const ids = z.array(z.number().int().positive()).max(500);
 
 export const organizacionIdParamSchema = z.object({ organizacionId: idParam });
@@ -25,6 +29,8 @@ export const crearProyectoSchema = z.object({
 	descripcion: descripcion.optional().default(""),
 	estado: estado.optional().default("activo"),
 	color: colorAcentoSchema.optional().default(null),
+	fechaInicio: dia.optional().default(null),
+	fechaFin: dia.optional().default(null),
 	// RN-31 («al menos un equipo o una persona») la comprueba `Proyecto`.
 	equipoIds: ids.optional().default([]),
 	integranteIds: ids.optional().default([]),
@@ -35,6 +41,8 @@ export const actualizarProyectoSchema = z.object({
 	descripcion: descripcion.optional(),
 	estado: estado.optional(),
 	color: colorAcentoSchema.optional(),
+	fechaInicio: dia.optional(),
+	fechaFin: dia.optional(),
 	equipoIds: ids.optional(),
 	integranteIds: ids.optional(),
 });
@@ -50,6 +58,14 @@ export const proyectoDtoSchema = z
 		descripcion: z.string().openapi({ example: "" }),
 		estado,
 		color: colorAcentoSchema,
+		fechaInicio: dia,
+		fechaFin: dia,
+		progreso: z
+			.object({
+				tareas: z.number().int().openapi({ example: 8 }),
+				completadas: z.number().int().openapi({ example: 3 }),
+			})
+			.openapi({ description: "Tareas del proyecto, sin las canceladas" }),
 		equipoIds: z.array(z.number().int()),
 		integranteIds: z.array(z.number().int()),
 	})

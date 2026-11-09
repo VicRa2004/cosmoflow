@@ -12,6 +12,7 @@ const preparar = (permisos: PermisoOrganizacion[] = []) => {
 		nombre: "Plataforma",
 		descripcion: "",
 		color: "#6366f1",
+		avatar: null,
 		liderId: LIDER,
 		miembros: [
 			{ usuarioId: LIDER, puedeCrearTareas: false },

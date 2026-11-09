@@ -594,6 +594,8 @@ model Equipo {
   descripcion    String    @default("") @map("eq_descripcion") @db.VarChar(500)
   /// Hex `#rrggbb` (RN-25)
   color          String    @map("eq_color") @db.VarChar(7)
+  /// Clave de la foto en el almacenamiento de archivos
+  avatar         String?   @map("eq_avatar") @db.VarChar(255)
   createdAt      DateTime  @default(now()) @map("created_at")
   updatedAt      DateTime? @updatedAt @map("updated_at")
   /// Borrado lógico (RN-91)
@@ -661,6 +663,8 @@ model Proyecto {
   estado         EstadoProyecto @default(activo) @map("pry_estado")
   /// Color de acento opcional (#rrggbb) para destacarlo
   color          String?        @map("pry_color") @db.VarChar(7)
+  fechaInicio    DateTime?      @map("pry_fecha_inicio") @db.Date
+  fechaFin       DateTime?      @map("pry_fecha_fin") @db.Date
   createdAt      DateTime       @default(now()) @map("created_at")
   updatedAt      DateTime?      @updatedAt @map("updated_at")
   /// Borrado lógico (RN-91)

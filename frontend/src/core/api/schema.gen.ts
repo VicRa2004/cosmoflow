@@ -6584,6 +6584,197 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/organizaciones/{organizacionId}/equipos/{id}/avatar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Foto del equipo (cualquier miembro de la organización) */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    organizacionId: string;
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Imagen PNG, JPEG o WebP */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "image/*": string;
+                    };
+                };
+                /** @description No autenticado */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Permiso denegado (requiere organizaciones:leer) */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Equipo o foto no encontrados */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        /** Subir la foto (multipart, campo «archivo», máx. 2 MB; equipos:editar) */
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    organizacionId: string;
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "multipart/form-data": {
+                        /** Format: binary */
+                        archivo: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Equipo con la foto nueva */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["EquipoDto"];
+                    };
+                };
+                /** @description Archivo ausente o no es PNG, JPEG ni WebP */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description No autenticado */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Sin el permiso equipos:editar */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Organización o equipo no encontrado */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description El archivo supera los 2 MB */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        /** Quitar la foto (equipos:editar) */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    organizacionId: string;
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Equipo sin foto */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["EquipoDto"];
+                    };
+                };
+                /** @description No autenticado */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Sin el permiso equipos:editar */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Organización o equipo no encontrado */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/organizaciones/{organizacionId}/proyectos": {
         parameters: {
             query?: never;
@@ -6666,6 +6857,18 @@ export interface paths {
                          * @example #f59e0b
                          */
                         color?: string | null;
+                        /**
+                         * Format: date
+                         * @default null
+                         * @example 2026-11-15
+                         */
+                        fechaInicio?: string | null;
+                        /**
+                         * Format: date
+                         * @default null
+                         * @example 2026-11-15
+                         */
+                        fechaFin?: string | null;
                         /** @default [] */
                         equipoIds?: number[];
                         /** @default [] */
@@ -6804,6 +7007,16 @@ export interface paths {
                         estado?: components["schemas"]["EstadoProyecto"];
                         /** @example #f59e0b */
                         color?: string | null;
+                        /**
+                         * Format: date
+                         * @example 2026-11-15
+                         */
+                        fechaInicio?: string | null;
+                        /**
+                         * Format: date
+                         * @example 2026-11-15
+                         */
+                        fechaFin?: string | null;
                         equipoIds?: number[];
                         integranteIds?: number[];
                     };
@@ -8031,6 +8244,8 @@ export interface components {
             descripcion: string;
             /** @example #6366f1 */
             color: string;
+            /** @example /api/organizaciones/1/equipos/1/avatar?v=equipos%2F1-abc.png */
+            avatarUrl: string | null;
             /** @example 3 */
             liderId: number | null;
             miembros: {
@@ -8049,6 +8264,23 @@ export interface components {
             estado: components["schemas"]["EstadoProyecto"];
             /** @example #f59e0b */
             color: string | null;
+            /**
+             * Format: date
+             * @example 2026-11-15
+             */
+            fechaInicio: string | null;
+            /**
+             * Format: date
+             * @example 2026-11-15
+             */
+            fechaFin: string | null;
+            /** @description Tareas del proyecto, sin las canceladas */
+            progreso: {
+                /** @example 8 */
+                tareas: number;
+                /** @example 3 */
+                completadas: number;
+            };
             equipoIds: number[];
             integranteIds: number[];
         };

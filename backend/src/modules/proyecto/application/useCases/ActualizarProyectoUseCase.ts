@@ -41,6 +41,7 @@ export class ActualizarProyectoUseCase {
 			);
 			return guardado;
 		});
-		return ProyectoMapper.toDto(actualizado);
+		const progreso = await this.proyectoRepository.progreso([id]);
+		return ProyectoMapper.toDto(actualizado, progreso.get(id));
 	}
 }

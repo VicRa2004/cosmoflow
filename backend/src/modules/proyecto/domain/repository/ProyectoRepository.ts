@@ -1,5 +1,11 @@
 import type { EstadoProyecto, Proyecto } from "../Proyecto";
 
+/** Tareas vivas del proyecto, sin contar las canceladas. */
+export interface ProgresoProyecto {
+	tareas: number;
+	completadas: number;
+}
+
 export interface ProyectoRepository {
 	buscar(
 		organizacionId: number,
@@ -10,6 +16,8 @@ export interface ProyectoRepository {
 	buscarSoloPorId(id: number): Promise<Proyecto | null>;
 	/** Miembros de sus equipos más los integrantes sueltos, sin repetir. */
 	miembrosDe(proyecto: Proyecto): Promise<number[]>;
+	/** Por id de proyecto; los que no tienen tareas no aparecen. */
+	progreso(proyectoIds: number[]): Promise<Map<number, ProgresoProyecto>>;
 	crear(proyecto: Proyecto): Promise<Proyecto>;
 	actualizar(proyecto: Proyecto): Promise<Proyecto>;
 	eliminar(organizacionId: number, id: number): Promise<void>;

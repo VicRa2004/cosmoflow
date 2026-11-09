@@ -74,6 +74,16 @@ export function ProyectoForm({
 						</campo.CampoSelect>
 					)}
 				</form.AppField>
+				<div className="grid gap-4 sm:grid-cols-2">
+					<form.AppField name="fechaInicio">
+						{(campo) => (
+							<campo.CampoTexto label="Inicio (opcional)" type="date" />
+						)}
+					</form.AppField>
+					<form.AppField name="fechaFin">
+						{(campo) => <campo.CampoTexto label="Fin (opcional)" type="date" />}
+					</form.AppField>
+				</div>
 				<form.AppField name="color">
 					{(campo) => <campo.CampoColorAcento />}
 				</form.AppField>

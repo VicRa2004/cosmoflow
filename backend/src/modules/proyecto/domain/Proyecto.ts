@@ -11,6 +11,9 @@ interface DatosProyecto {
 	estado: EstadoProyecto;
 	/** Color de acento (#rrggbb) o `null`. */
 	color: string | null;
+	/** Días ISO (`AAAA-MM-DD`) o `null`. */
+	fechaInicio: string | null;
+	fechaFin: string | null;
 	equipoIds: number[];
 	/** Integrantes sueltos, además de los equipos (RN-32). */
 	integranteIds: number[];
@@ -65,6 +68,14 @@ export class Proyecto extends Entity {
 		return this.datos.color;
 	}
 
+	getFechaInicio() {
+		return this.datos.fechaInicio;
+	}
+
+	getFechaFin() {
+		return this.datos.fechaFin;
+	}
+
 	getEquipoIds(): readonly number[] {
 		return this.datos.equipoIds;
 	}
@@ -83,12 +94,24 @@ export class Proyecto extends Entity {
 				"Un proyecto necesita al menos un integrante: un equipo o una persona",
 			);
 		}
+		// `null` quita el color o la fecha; `undefined` los deja.
+		const o = <T>(nuevo: T | undefined, actual: T) =>
+			nuevo === undefined ? actual : nuevo;
+		const fechaInicio = o(cambios.fechaInicio, this.datos.fechaInicio);
+		const fechaFin = o(cambios.fechaFin, this.datos.fechaFin);
+		// Las fechas ISO de día se comparan bien como texto.
+		if (fechaInicio && fechaFin && fechaInicio > fechaFin) {
+			throw new ProyectoInvalidoError(
+				"La fecha de inicio no puede ser posterior a la de fin",
+			);
+		}
 		this.datos = {
 			nombre: cambios.nombre ?? this.datos.nombre,
 			descripcion: cambios.descripcion ?? this.datos.descripcion,
 			estado: cambios.estado ?? this.datos.estado,
-			// `null` quita el color; `undefined` lo deja.
-			color: cambios.color === undefined ? this.datos.color : cambios.color,
+			color: o(cambios.color, this.datos.color),
+			fechaInicio,
+			fechaFin,
 			equipoIds,
 			integranteIds,
 		};

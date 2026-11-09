@@ -52,6 +52,9 @@ export const equipoDtoSchema = z
 		nombre: z.string().openapi({ example: "Plataforma" }),
 		descripcion: z.string().openapi({ example: "" }),
 		color: z.string().openapi({ example: "#6366f1" }),
+		avatarUrl: z.string().nullable().openapi({
+			example: "/api/organizaciones/1/equipos/1/avatar?v=equipos%2F1-abc.png",
+		}),
 		liderId: z.number().int().nullable().openapi({ example: 3 }),
 		miembros: z.array(
 			z.object({

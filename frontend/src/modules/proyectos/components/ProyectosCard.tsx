@@ -22,6 +22,7 @@ import { puedeEn } from "@/modules/organizaciones/utils/permisos";
 import type { EstadoProyecto, ProyectoDto } from "../api/proyectosApi";
 import { useGestionProyectos, useProyectosQuery } from "../hooks/useProyectos";
 import { ETIQUETA_ESTADO } from "../schemas/proyectoSchemas";
+import { ProgresoProyecto } from "./ProgresoProyecto";
 import { ProyectoForm } from "./ProyectoForm";
 
 const VARIANTE_ESTADO: Record<EstadoProyecto, BadgeProps["variant"]> = {
@@ -120,6 +121,7 @@ export function ProyectosCard({
 												: []),
 										].join(" · ")}
 									</p>
+									<ProgresoProyecto proyecto={proyecto} />
 								</div>
 								<div className="ml-auto flex shrink-0 items-center gap-1">
 									<Button

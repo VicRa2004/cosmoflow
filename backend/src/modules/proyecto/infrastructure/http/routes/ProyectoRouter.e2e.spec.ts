@@ -114,6 +114,55 @@ describe("Proyectos (e2e)", () => {
 		expect(terminados).toEqual([]);
 	});
 
+	it("guarda fechas y da el progreso de sus tareas, sin las canceladas", async () => {
+		const ruta = org(acme, "/proyectos");
+		expect(
+			(
+				await post(ruta, t.ana, {
+					nombre: "X",
+					integranteIds: [id.ana],
+					fechaInicio: "2026-12-01",
+					fechaFin: "2026-11-01",
+				})
+			).status,
+		).toBe(400);
+		const proyecto = await (
+			await post(ruta, t.ana, {
+				nombre: "Con fechas",
+				integranteIds: [id.ana],
+				fechaInicio: "2026-11-01",
+				fechaFin: "2026-12-01",
+			})
+		).json();
+		expect(proyecto).toMatchObject({
+			fechaInicio: "2026-11-01",
+			fechaFin: "2026-12-01",
+			progreso: { tareas: 0, completadas: 0 },
+		});
+		for (const estado of ["pendiente", "completada", "cancelada"]) {
+			const tarea = await post("/api/tareas", t.ana, {
+				titulo: estado,
+				estado,
+				proyectoId: proyecto.id,
+			});
+			expect(tarea.status).toBe(201);
+		}
+		const url = org(acme, `/proyectos/${proyecto.id}`);
+		const editado = await (
+			await api(url, { method: "PUT", token: t.ana, body: { fechaFin: null } })
+		).json();
+		expect(editado).toMatchObject({
+			fechaInicio: "2026-11-01",
+			fechaFin: null,
+			progreso: { tareas: 2, completadas: 1 },
+		});
+		const lista = await (await api(ruta, { token: t.ana })).json();
+		expect(
+			lista.find((p: { id: number }) => p.id === proyecto.id).progreso,
+		).toEqual({ tareas: 2, completadas: 1 });
+		await api(url, { method: "DELETE", token: t.ana });
+	});
+
 	it("un proyecto puede tener solo integrantes sueltos, sin equipo (RN-31)", async () => {
 		const crear = await post(org(acme, "/proyectos"), t.ana, {
 			nombre: "Solo personas",

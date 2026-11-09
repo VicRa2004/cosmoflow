@@ -7,6 +7,9 @@ export const ETIQUETA_ESTADO: Record<EstadoProyecto, string> = {
 	terminado: "Terminado",
 };
 
+/** `<input type="date">` da "" o `AAAA-MM-DD`; "" vacía la fecha. */
+const dia = z.string().transform((v) => v || null);
+
 /** Valida el formulario y lo convierte al cuerpo de la API (RN-31, 32). */
 export const proyectoFormSchema = z
 	.object({
@@ -19,8 +22,14 @@ export const proyectoFormSchema = z
 		estado: z.enum(["activo", "en_pausa", "terminado"]),
 		// "" = sin color: se envía `null` para quitarlo.
 		color: z.string().transform((v) => v || null),
+		fechaInicio: dia,
+		fechaFin: dia,
 		equipoIds: z.array(z.number()),
 		integranteIds: z.array(z.number()),
+	})
+	.refine((d) => !d.fechaInicio || !d.fechaFin || d.fechaInicio <= d.fechaFin, {
+		message: "Debe ser igual o posterior al inicio",
+		path: ["fechaFin"],
 	})
 	.refine((d) => d.equipoIds.length + d.integranteIds.length > 0, {
 		message: "Elige al menos un equipo o una persona",
@@ -36,6 +45,8 @@ export const proyectoAFormValues = (
 	descripcion: proyecto?.descripcion ?? "",
 	estado: proyecto?.estado ?? "activo",
 	color: proyecto?.color ?? "",
+	fechaInicio: proyecto?.fechaInicio ?? "",
+	fechaFin: proyecto?.fechaFin ?? "",
 	equipoIds: proyecto?.equipoIds ?? [],
 	integranteIds: proyecto?.integranteIds ?? [],
 });

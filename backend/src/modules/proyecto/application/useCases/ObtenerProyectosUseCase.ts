@@ -20,6 +20,6 @@ export class ObtenerProyectosUseCase {
 			organizacionId,
 			filtro,
 		);
-		return proyectos.map(ProyectoMapper.toDto);
+		return ProyectoMapper.conProgreso(this.proyectoRepository, proyectos);
 	}
 }

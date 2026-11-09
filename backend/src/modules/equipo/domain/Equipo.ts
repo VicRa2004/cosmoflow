@@ -13,6 +13,8 @@ interface DatosEquipo {
 	descripcion: string;
 	/** Hex `#rrggbb` (RN-25). */
 	color: string;
+	/** Clave de la foto en el almacenamiento, o `null` (iniciales sobre el color). */
+	avatar: string | null;
 	liderId: number | null;
 	miembros: MiembroDeEquipo[];
 	tagIds: number[];
@@ -51,6 +53,7 @@ export class Equipo extends Entity {
 			nombre: datos.nombre,
 			descripcion: datos.descripcion,
 			color: datos.color,
+			avatar: null,
 			liderId: datos.liderId,
 			miembros: [],
 			tagIds: [],
@@ -81,6 +84,10 @@ export class Equipo extends Entity {
 
 	getColor() {
 		return this.datos.color;
+	}
+
+	getAvatar() {
+		return this.datos.avatar;
 	}
 
 	getLiderId() {
@@ -119,6 +126,7 @@ export class Equipo extends Entity {
 			nombre: cambios.nombre ?? this.datos.nombre,
 			descripcion: cambios.descripcion ?? this.datos.descripcion,
 			color: cambios.color ?? this.datos.color,
+			avatar: this.datos.avatar,
 			liderId,
 			miembros,
 			tagIds:
@@ -126,6 +134,10 @@ export class Equipo extends Entity {
 					? this.datos.tagIds
 					: [...new Set(cambios.tagIds)],
 		};
+	}
+
+	public cambiarAvatar(clave: string | null): void {
+		this.datos.avatar = clave;
 	}
 
 	/** El líder elige quién crea y asigna tareas además de él (RN-22). */

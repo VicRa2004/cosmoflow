@@ -99,9 +99,7 @@ export function EquiposCard({
 									}}
 									className="flex items-center gap-3 py-2.5 text-sm hover:bg-elevada/50"
 								>
-									<AvatarOrganizacion
-										organizacion={{ ...equipo, avatarUrl: null }}
-									/>
+									<AvatarOrganizacion organizacion={equipo} />
 									<div className="min-w-0 flex-1">
 										<p className="truncate font-medium text-tinta">
 											{equipo.nombre}

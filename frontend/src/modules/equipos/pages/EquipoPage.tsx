@@ -19,13 +19,18 @@ import { EmptyState } from "@/core/components/ui/EmptyState";
 import { Spinner } from "@/core/components/ui/Spinner";
 import type { OrganizacionDto } from "@/modules/organizaciones/api/organizacionesApi";
 import { AvatarOrganizacion } from "@/modules/organizaciones/components/AvatarOrganizacion";
+import { AvatarOrganizacionControles } from "@/modules/organizaciones/components/AvatarOrganizacionControles";
 import { useMiembrosQuery } from "@/modules/organizaciones/hooks/useMiembros";
 import { puedeEn } from "@/modules/organizaciones/utils/permisos";
 import { useTagsQuery } from "@/modules/tags/hooks/useTagsQuery";
 import { EstadisticasTareas } from "@/modules/tareas/components/EstadisticasTareas";
 import { DelegadosForm } from "../components/DelegadosForm";
 import { EquipoForm } from "../components/EquipoForm";
-import { useEquiposQuery, useGestionEquipos } from "../hooks/useEquipos";
+import {
+	useAvatarEquipoMutation,
+	useEquiposQuery,
+	useGestionEquipos,
+} from "../hooks/useEquipos";
 
 /** Un equipo: sus miembros y sus acciones (RN-20 a 26). */
 export function EquipoPage({
@@ -46,6 +51,7 @@ export function EquipoPage({
 		organizacionId,
 	);
 	const { eliminar } = useGestionEquipos(organizacionId);
+	const avatar = useAvatarEquipoMutation(organizacionId, equipoId);
 	const [dialogo, setDialogo] = useState<
 		"editar" | "delegados" | "eliminar" | null
 	>(null);
@@ -91,10 +97,7 @@ export function EquipoPage({
 			{volver}
 
 			<header className="flex flex-wrap items-center gap-x-4 gap-y-3">
-				<AvatarOrganizacion
-					organizacion={{ ...equipo, avatarUrl: null }}
-					className="size-10 text-sm"
-				/>
+				<AvatarOrganizacion organizacion={equipo} className="size-10 text-sm" />
 				<div className="min-w-0 flex-1 basis-48">
 					<h2 className="truncate text-lg font-semibold text-tinta">
 						{equipo.nombre}
@@ -199,6 +202,9 @@ export function EquipoPage({
 				onCerrar={cerrar}
 				titulo="Editar equipo"
 			>
+				<div className="mb-6">
+					<AvatarOrganizacionControles organizacion={equipo} avatar={avatar} />
+				</div>
 				<EquipoForm
 					key={equipo.id}
 					organizacionId={organizacionId}

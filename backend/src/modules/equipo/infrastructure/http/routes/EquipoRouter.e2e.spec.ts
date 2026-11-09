@@ -2,7 +2,10 @@ import { beforeAll, describe, expect, it, spyOn } from "bun:test";
 import type { Correo } from "@/core/shared/domain/Mailer";
 import { container } from "@/core/shared/infrastructure/di/container";
 import { TOKENS } from "@/core/shared/infrastructure/di/tokens";
+import { app } from "@/core/shared/infrastructure/http/server";
 import { api, crearUsuario, login, vaciarUsuarios } from "@/test/e2e";
+
+const PNG = new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0]);
 
 const correos: Correo[] = [];
 spyOn(container.get(TOKENS.Mailer), "enviar").mockImplementation(
@@ -224,5 +227,61 @@ describe("Equipos (e2e)", () => {
 		expect(
 			(await api(equipos(acme), { token: t.ana })).json(),
 		).resolves.toEqual([]);
+	});
+
+	it("foto: la sube quien tiene equipos:editar y la ven solo los miembros", async () => {
+		const equipo = await (
+			await api(equipos(acme), {
+				method: "POST",
+				token: t.ana,
+				body: {
+					nombre: "Foto",
+					color: "#6366f1",
+					miembroIds: [id.ana, id.beto],
+				},
+			})
+		).json();
+		expect(equipo.avatarUrl).toBeNull();
+		const ruta = equipos(acme, `/${equipo.id}/avatar`);
+		const subir = (token: string, datos: Uint8Array) => {
+			const form = new FormData();
+			form.append("archivo", new File([datos], "a.png"));
+			return app.request(ruta, {
+				method: "PUT",
+				headers: { Authorization: `Bearer ${token}` },
+				body: form,
+			});
+		};
+
+		expect((await subir(t.beto, PNG)).status).toBe(403);
+		expect(
+			(await subir(t.ana, new TextEncoder().encode("<script>"))).status,
+		).toBe(400);
+		const subida = await subir(t.ana, PNG);
+		expect(subida.status).toBe(200);
+		const { avatarUrl, miembros } = await subida.json();
+		expect(avatarUrl).toStartWith(`${ruta}?v=`);
+		expect(miembros).toHaveLength(2);
+
+		const imagen = await api(avatarUrl, { token: t.beto });
+		expect(imagen.headers.get("Content-Type")).toBe("image/png");
+		expect(new Uint8Array(await imagen.arrayBuffer())).toEqual(PNG);
+		expect((await api(avatarUrl, { token: t.zoe })).status).toBe(404);
+
+		// Editar los datos no pierde la foto.
+		const editado = await api(equipos(acme, `/${equipo.id}`), {
+			method: "PUT",
+			token: t.ana,
+			body: { nombre: "Con foto" },
+		});
+		expect((await editado.json()).avatarUrl).toBe(avatarUrl);
+
+		const quitado = await api(ruta, { method: "DELETE", token: t.ana });
+		expect((await quitado.json()).avatarUrl).toBeNull();
+		expect((await api(ruta, { token: t.ana })).status).toBe(404);
+		await api(equipos(acme, `/${equipo.id}`), {
+			method: "DELETE",
+			token: t.ana,
+		});
 	});
 });

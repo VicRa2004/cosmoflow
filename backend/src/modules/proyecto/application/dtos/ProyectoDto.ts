@@ -1,4 +1,5 @@
 import type { CambiosProyecto, EstadoProyecto } from "../../domain/Proyecto";
+import type { ProgresoProyecto } from "../../domain/repository/ProyectoRepository";
 
 export interface ProyectoDto {
 	id: number;
@@ -6,6 +7,9 @@ export interface ProyectoDto {
 	descripcion: string;
 	estado: EstadoProyecto;
 	color: string | null;
+	fechaInicio: string | null;
+	fechaFin: string | null;
+	progreso: ProgresoProyecto;
 	equipoIds: number[];
 	integranteIds: number[];
 }

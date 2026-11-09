@@ -7,6 +7,8 @@ const datos = {
 	descripcion: "",
 	estado: "activo" as const,
 	color: null,
+	fechaInicio: null,
+	fechaFin: null,
 	equipoIds: [1],
 	integranteIds: [],
 };
@@ -18,6 +20,20 @@ describe("Proyecto", () => {
 		expect(proyecto.getColor()).toBe("#f59e0b");
 		proyecto.actualizar({ color: null });
 		expect(proyecto.getColor()).toBeNull();
+	});
+
+	it("la fecha de inicio no puede ser posterior a la de fin", () => {
+		const proyecto = Proyecto.crear(10, {
+			...datos,
+			fechaInicio: "2026-11-01",
+			fechaFin: "2026-11-30",
+		});
+		expect(() => proyecto.actualizar({ fechaFin: "2026-10-31" })).toThrow(
+			ProyectoInvalidoError,
+		);
+		proyecto.actualizar({ fechaInicio: null, fechaFin: "2026-10-31" });
+		expect(proyecto.getFechaInicio()).toBeNull();
+		expect(proyecto.getFechaFin()).toBe("2026-10-31");
 	});
 
 	it("no se crea sin equipos ni integrantes (RN-31)", () => {

@@ -4,6 +4,9 @@ import { AUTH_TOKENS } from "@/modules/auth";
 import { ORGANIZACION_TOKENS } from "@/modules/organizacion";
 import { TareasEquipoService } from "./application/services/TareasEquipoService";
 import { SalidaMiembroEquipos } from "./application/services/SalidaMiembroEquipos";
+import { CambiarAvatarEquipoUseCase } from "./application/useCases/CambiarAvatarEquipoUseCase";
+import { ObtenerAvatarEquipoUseCase } from "./application/useCases/ObtenerAvatarEquipoUseCase";
+import { AvatarEquipoController } from "./infrastructure/http/controllers/AvatarEquipoController";
 import { ActualizarEquipoUseCase } from "./application/useCases/ActualizarEquipoUseCase";
 import { CambiarDelegadosUseCase } from "./application/useCases/CambiarDelegadosUseCase";
 import { CrearEquipoUseCase } from "./application/useCases/CrearEquipoUseCase";
@@ -35,6 +38,7 @@ export const equipoModule: AppModule = {
 		const acceso = container.get(ORGANIZACION_TOKENS.AccesoOrganizacion);
 		const eventBus = container.get(TOKENS.EventBus);
 		const uow = container.get(TOKENS.UnitOfWork);
+		const almacenamiento = container.get(TOKENS.Almacenamiento);
 		app.route(
 			"/api/organizaciones/:organizacionId/equipos",
 			new EquipoRouter(
@@ -53,6 +57,10 @@ export const equipoModule: AppModule = {
 						eventBus,
 						uow,
 					),
+				}),
+				new AvatarEquipoController({
+					cambiar: new CambiarAvatarEquipoUseCase(repo, acceso, almacenamiento),
+					obtener: new ObtenerAvatarEquipoUseCase(repo, acceso, almacenamiento),
 				}),
 			).router,
 		);

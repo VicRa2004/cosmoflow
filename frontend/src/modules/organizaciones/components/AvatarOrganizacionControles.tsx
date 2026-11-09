@@ -2,16 +2,17 @@ import { Camera, Trash2 } from "lucide-react";
 import { useRef } from "react";
 import { Button } from "@/core/components/ui/Button";
 import type { OrganizacionDto } from "../api/organizacionesApi";
-import { useAvatarOrganizacionMutation } from "../hooks/useOrganizacionesMutation";
 import { AvatarOrganizacion } from "./AvatarOrganizacion";
 
-/** Avatar grande con subir/quitar. Solo lo ve el administrador. */
+/** Avatar grande con subir/quitar, de la organización o de un equipo. Solo para quien puede editar. */
 export function AvatarOrganizacionControles({
 	organizacion,
+	avatar,
 }: {
-	organizacion: OrganizacionDto;
+	organizacion: Pick<OrganizacionDto, "nombre" | "color" | "avatarUrl">;
+	/** Sube con un archivo y quita con `null`. */
+	avatar: { mutate: (archivo: File | null) => void; isPending: boolean };
 }) {
-	const avatar = useAvatarOrganizacionMutation(organizacion.id);
 	const inputArchivo = useRef<HTMLInputElement>(null);
 
 	return (

@@ -1,6 +1,13 @@
 import { prisma } from "@/core/config/prisma";
 import { type EstadoProyecto, Proyecto } from "../../domain/Proyecto";
-import type { ProyectoRepository } from "../../domain/repository/ProyectoRepository";
+import type {
+	ProgresoProyecto,
+	ProyectoRepository,
+} from "../../domain/repository/ProyectoRepository";
+
+/** `@db.Date` llega como medianoche UTC: el día ISO es su parte de fecha. */
+const aDia = (fecha: Date | null) => fecha?.toISOString().slice(0, 10) ?? null;
+const aFecha = (dia: string | null) => (dia ? new Date(dia) : null);
 
 // Un equipo borrado deja de contar sin tocar `proyecto_equipo`.
 const include = {
@@ -18,6 +25,8 @@ interface PrismaProyectoRecord {
 	descripcion: string;
 	estado: EstadoProyecto;
 	color: string | null;
+	fechaInicio: Date | null;
+	fechaFin: Date | null;
 	equipos: { equipoId: number }[];
 	integrantes: { usuarioId: number }[];
 }
@@ -29,6 +38,8 @@ export class PrismaProyectoRepository implements ProyectoRepository {
 			descripcion: raw.descripcion,
 			estado: raw.estado,
 			color: raw.color,
+			fechaInicio: aDia(raw.fechaInicio),
+			fechaFin: aDia(raw.fechaFin),
 			equipoIds: raw.equipos.map((e) => e.equipoId),
 			integranteIds: raw.integrantes.map((i) => i.usuarioId),
 		});
@@ -40,6 +51,8 @@ export class PrismaProyectoRepository implements ProyectoRepository {
 			descripcion: proyecto.getDescripcion(),
 			estado: proyecto.getEstado(),
 			color: proyecto.getColor(),
+			fechaInicio: aFecha(proyecto.getFechaInicio()),
+			fechaFin: aFecha(proyecto.getFechaFin()),
 			equipos: {
 				createMany: {
 					data: proyecto.getEquipoIds().map((equipoId) => ({ equipoId })),
@@ -93,6 +106,27 @@ export class PrismaProyectoRepository implements ProyectoRepository {
 				...proyecto.getIntegranteIds(),
 			]),
 		];
+	}
+
+	async progreso(proyectoIds: number[]) {
+		const grupos = await prisma.tarea.groupBy({
+			by: ["proyectoId", "estado"],
+			where: {
+				proyectoId: { in: proyectoIds },
+				deletedAt: null,
+				estado: { not: "cancelada" },
+			},
+			_count: true,
+		});
+		const progreso = new Map<number, ProgresoProyecto>();
+		for (const { proyectoId, estado, _count } of grupos) {
+			if (proyectoId === null) continue;
+			const p = progreso.get(proyectoId) ?? { tareas: 0, completadas: 0 };
+			p.tareas += _count;
+			if (estado === "completada") p.completadas += _count;
+			progreso.set(proyectoId, p);
+		}
+		return progreso;
 	}
 
 	async crear(proyecto: Proyecto): Promise<Proyecto> {

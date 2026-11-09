@@ -15,7 +15,10 @@ import type { OrganizacionDto } from "../api/organizacionesApi";
 import { AvatarOrganizacionControles } from "../components/AvatarOrganizacionControles";
 import { OrganizacionForm } from "../components/OrganizacionForm";
 import { SinAccesoSeccion } from "../components/SinAccesoSeccion";
-import { useEliminarOrganizacionMutation } from "../hooks/useOrganizacionesMutation";
+import {
+	useAvatarOrganizacionMutation,
+	useEliminarOrganizacionMutation,
+} from "../hooks/useOrganizacionesMutation";
 import { puedeEn } from "../utils/permisos";
 
 /** Personalización y notificaciones (`organizacion:editar`); eliminarla, solo el administrador. */
@@ -26,6 +29,7 @@ export function AjustesOrganizacionPage({
 }) {
 	const navigate = useNavigate();
 	const eliminar = useEliminarOrganizacionMutation();
+	const avatar = useAvatarOrganizacionMutation(organizacion.id);
 	const [confirmando, setConfirmando] = useState(false);
 	const puedeEditar = puedeEn(organizacion, "organizacion:editar");
 
@@ -43,7 +47,10 @@ export function AjustesOrganizacionPage({
 							</CardDescription>
 						</CardHeader>
 						<CardContent className="space-y-6">
-							<AvatarOrganizacionControles organizacion={organizacion} />
+							<AvatarOrganizacionControles
+								organizacion={organizacion}
+								avatar={avatar}
+							/>
 							<OrganizacionForm
 								key={organizacion.id}
 								inicial={organizacion}

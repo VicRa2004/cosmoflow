@@ -54,6 +54,29 @@ export const equiposApi = {
 		return response.data;
 	},
 
+	async subirAvatar(
+		organizacionId: number,
+		id: number,
+		archivo: File,
+	): Promise<EquipoDto> {
+		const datos = new FormData();
+		datos.append("archivo", archivo);
+		// Sin esta cabecera axios convertiría el FormData al JSON por defecto del cliente.
+		const response = await apiClient.put<EquipoDto>(
+			`${base(organizacionId)}/${id}/avatar`,
+			datos,
+			{ headers: { "Content-Type": "multipart/form-data" } },
+		);
+		return response.data;
+	},
+
+	async eliminarAvatar(organizacionId: number, id: number): Promise<EquipoDto> {
+		const response = await apiClient.delete<EquipoDto>(
+			`${base(organizacionId)}/${id}/avatar`,
+		);
+		return response.data;
+	},
+
 	async eliminar(organizacionId: number, id: number): Promise<void> {
 		await apiClient.delete(`${base(organizacionId)}/${id}`);
 	},

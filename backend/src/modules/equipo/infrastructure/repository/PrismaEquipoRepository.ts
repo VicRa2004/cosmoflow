@@ -14,6 +14,7 @@ interface PrismaEquipoRecord {
 	nombre: string;
 	descripcion: string;
 	color: string;
+	avatar: string | null;
 	miembros: {
 		usuarioId: number;
 		isLider: boolean;
@@ -28,6 +29,7 @@ export class PrismaEquipoRepository implements EquipoRepository {
 			nombre: raw.nombre,
 			descripcion: raw.descripcion,
 			color: raw.color,
+			avatar: raw.avatar,
 			liderId: raw.miembros.find((m) => m.isLider)?.usuarioId ?? null,
 			miembros: raw.miembros.map(({ usuarioId, puedeCrearTareas }) => ({
 				usuarioId,
@@ -109,6 +111,7 @@ export class PrismaEquipoRepository implements EquipoRepository {
 					nombre: equipo.getNombre(),
 					descripcion: equipo.getDescripcion(),
 					color: equipo.getColor(),
+					avatar: equipo.getAvatar(),
 					...this.relaciones(equipo),
 				},
 				include,

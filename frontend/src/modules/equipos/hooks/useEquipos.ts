@@ -55,3 +55,17 @@ export function useGestionEquipos(organizacionId: number) {
 		}),
 	};
 }
+
+/** Sube (con archivo) o quita (con `null`) la foto del equipo. */
+export function useAvatarEquipoMutation(organizacionId: number, id: number) {
+	const queryClient = useQueryClient();
+	return useMutation({
+		mutationFn: (archivo: File | null) =>
+			archivo
+				? equiposApi.subirAvatar(organizacionId, id, archivo)
+				: equiposApi.eliminarAvatar(organizacionId, id),
+		onSuccess: () =>
+			queryClient.invalidateQueries({ queryKey: equiposKey(organizacionId) }),
+		onError,
+	});
+}

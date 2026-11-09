@@ -5,6 +5,7 @@ export interface EquipoDto {
 	nombre: string;
 	descripcion: string;
 	color: string;
+	avatarUrl: string | null;
 	liderId: number | null;
 	miembros: { usuarioId: number; puedeCrearTareas: boolean }[];
 	tagIds: number[];

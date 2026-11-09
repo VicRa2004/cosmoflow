@@ -1,4 +1,5 @@
 import { OpenAPIHono, z } from "@hono/zod-openapi";
+import { bodyLimit } from "hono/body-limit";
 import {
 	errorResponse,
 	jsonResponse,
@@ -6,6 +7,8 @@ import {
 } from "@/core/shared/infrastructure/http/openapi";
 import type { PermisoGuard } from "@/core/shared/infrastructure/http/permisoGuard";
 import type { AuthMiddleware } from "@/modules/auth";
+import { AVATAR_EQUIPO_MAX_BYTES } from "../../../application/useCases/CambiarAvatarEquipoUseCase";
+import type { AvatarEquipoController } from "../controllers/AvatarEquipoController";
 import type { EquipoController } from "../controllers/EquipoController";
 import {
 	actualizarEquipoSchema,
@@ -38,6 +41,7 @@ export class EquipoRouter {
 		authMiddleware: AuthMiddleware,
 		guard: PermisoGuard,
 		controller: EquipoController,
+		avatar: AvatarEquipoController,
 	) {
 		const docs = this.router.openAPIRegistry;
 		const leer = guard.handle(recurso, "leer");
@@ -143,5 +147,77 @@ export class EquipoRouter {
 			},
 		});
 		this.router.delete("/:id", actualizar, controller.eliminar);
+
+		docs.registerPath({
+			method: "get",
+			path: "/{id}/avatar",
+			tags,
+			security,
+			summary: "Foto del equipo (cualquier miembro de la organización)",
+			request: { params: equipoParamsSchema },
+			responses: {
+				200: {
+					description: "Imagen PNG, JPEG o WebP",
+					content: {
+						"image/*": { schema: z.string().openapi({ format: "binary" }) },
+					},
+				},
+				...protectedErrorResponses(`${recurso}:leer`),
+				404: errorResponse("Equipo o foto no encontrados"),
+			},
+		});
+		this.router.get("/:id/avatar", leer, avatar.obtener);
+
+		docs.registerPath({
+			method: "put",
+			path: "/{id}/avatar",
+			tags,
+			security,
+			summary:
+				"Subir la foto (multipart, campo «archivo», máx. 2 MB; equipos:editar)",
+			request: {
+				params: equipoParamsSchema,
+				body: {
+					required: true,
+					content: {
+						"multipart/form-data": {
+							schema: z.object({
+								archivo: z.string().openapi({ format: "binary" }),
+							}),
+						},
+					},
+				},
+			},
+			responses: {
+				200: jsonResponse(equipoDtoSchema, "Equipo con la foto nueva"),
+				400: errorResponse("Archivo ausente o no es PNG, JPEG ni WebP"),
+				...escribir("equipos:editar"),
+				413: errorResponse("El archivo supera los 2 MB"),
+			},
+		});
+		this.router.put(
+			"/:id/avatar",
+			actualizar,
+			// Margen para las cabeceras del multipart; el tamaño exacto lo valida el caso de uso.
+			bodyLimit({
+				maxSize: AVATAR_EQUIPO_MAX_BYTES + 64 * 1024,
+				onError: (c) => c.json({ error: "El archivo supera los 2 MB" }, 413),
+			}),
+			avatar.subir,
+		);
+
+		docs.registerPath({
+			method: "delete",
+			path: "/{id}/avatar",
+			tags,
+			security,
+			summary: "Quitar la foto (equipos:editar)",
+			request: { params: equipoParamsSchema },
+			responses: {
+				200: jsonResponse(equipoDtoSchema, "Equipo sin foto"),
+				...escribir("equipos:editar"),
+			},
+		});
+		this.router.delete("/:id/avatar", actualizar, avatar.eliminar);
 	}
 }
