@@ -5,6 +5,7 @@ import {
 	protectedErrorResponses,
 } from "@/core/shared/infrastructure/http/openapi";
 import type { AuthMiddleware } from "@/modules/auth";
+import { idempotencia } from "@/core/shared/infrastructure/http/idempotencia";
 import type { PermisoGuard } from "@/core/shared/infrastructure/http/permisoGuard";
 import { NotaController } from "../controllers/NotaController";
 import {
@@ -56,7 +57,13 @@ export class NotaRouter {
 				...protectedErrorResponses(`${recurso}:crear`),
 			},
 		});
-		this.router.post("/", guard.handle(recurso, "crear"), controller.crear);
+		this.router.post(
+			"/",
+			guard.handle(recurso, "crear"),
+			// La app móvil reintenta las altas hechas sin conexión.
+			idempotencia,
+			controller.crear,
+		);
 
 		docs.registerPath({
 			method: "post",

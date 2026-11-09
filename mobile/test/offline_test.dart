@@ -17,6 +17,7 @@ class _AdaptadorFalso implements HttpClientAdapter {
   _AdaptadorFalso(this.responder);
   ResponseBody? Function(RequestOptions) responder;
   final List<String> peticiones = <String>[];
+  final List<Object> claves = <Object>[];
 
   @override
   Future<ResponseBody> fetch(
@@ -25,6 +26,8 @@ class _AdaptadorFalso implements HttpClientAdapter {
     Future<void>? cancelFuture,
   ) async {
     peticiones.add('${options.method} ${options.path}');
+    final clave = options.headers['Idempotency-Key'];
+    if (clave != null) claves.add(clave);
     final respuesta = responder(options);
     if (respuesta == null) throw const SocketExceptionFalsa();
     return respuesta;
@@ -100,6 +103,10 @@ void main() {
       expect(await recargada.sincronizar(), 1);
       expect(recargada.pendientes(1, '/notas'), isEmpty);
       expect(red.peticiones.where((p) => p == 'POST /notas'), hasLength(4));
+      // El reintento lleva la misma Idempotency-Key que el primer envío.
+      expect(red.claves.sublist(2), red.claves.sublist(0, 2));
+      expect(red.claves, hasLength(4));
+      expect(red.claves.toSet(), hasLength(2));
     },
   );
 

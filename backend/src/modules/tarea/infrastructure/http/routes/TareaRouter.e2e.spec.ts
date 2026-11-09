@@ -41,6 +41,34 @@ describe("Tareas personales (e2e)", () => {
 		});
 	});
 
+	it("con Idempotency-Key el reintento no duplica la tarea", async () => {
+		const crear = (clave: string, titulo: string, token = ana) =>
+			api("/api/tareas", {
+				method: "POST",
+				token,
+				body: { titulo },
+				headers: { "Idempotency-Key": clave },
+			});
+		const cuantas = () =>
+			prisma.tarea.count({ where: { titulo: { startsWith: "Sin red" } } });
+
+		const primera = await crear("clave-1", "Sin red");
+		const repetida = await crear("clave-1", "Sin red");
+		expect(primera.status).toBe(201);
+		expect(repetida.status).toBe(201);
+		expect((await repetida.json()).id).toBe((await primera.json()).id);
+		expect(await cuantas()).toBe(1);
+
+		// La clave es por usuario, y un rechazo no la gasta.
+		expect((await crear("clave-1", "Sin red de beto", beto)).status).toBe(201);
+		expect((await crear("clave-2", "")).status).toBe(400);
+		expect((await crear("clave-2", "Sin red 2")).status).toBe(201);
+		expect(await cuantas()).toBe(3);
+		await prisma.tarea.deleteMany({
+			where: { titulo: { startsWith: "Sin red" } },
+		});
+	});
+
 	it("rechaza tags de otro usuario y fechas incoherentes (400)", async () => {
 		const ajeno = await post(ana, "/api/tareas", {
 			titulo: "x",

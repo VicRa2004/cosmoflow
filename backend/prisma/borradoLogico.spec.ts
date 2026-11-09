@@ -38,6 +38,7 @@ const EXENTOS: Record<string, string> = {
 	// Catálogo global de la plantilla; los roles por organización (RolOrganizacion) sí lo llevan.
 	Rol: "catálogo global de la plantilla",
 	Permiso: "catálogo global de la plantilla",
+	ClaveIdempotencia: "técnica: respuestas guardadas una semana que se purgan",
 };
 
 const schema = await Bun.file(`${import.meta.dir}/schema.prisma`).text();

@@ -72,3 +72,4 @@ mobile/lib/
 - Crear notas y tareas sin red: `NotasApi`/`TareasApi.crear` usan `ColaSinConexion.crearOEncolar`, que devuelve `null` si la guardó en la cola (la página avisa con `avisarSiEncolada` y muestra `avisoPendientes`).
 - Si al abrir la app el refresh no llega al servidor (`intentarRefresh` devuelve `null`), `restaurarSesion` entra en **sesión sin conexión** con el último usuario guardado (`SesionStore.sinConexion`, sin token). Un refresh rechazado (401) no entra.
 - `main.dart` sincroniza al restaurar la sesión, al volver a primer plano y cada 30 s, de una en una (dos refresh en paralelo revocarían la sesión). Solo se crean offline; editar, borrar y leer necesitan red.
+- Cada alta lleva una `Idempotency-Key` propia desde el primer envío y la repite en los reintentos: si el servidor guardó pero la respuesta se perdió, el backend devuelve la misma respuesta y no duplica.

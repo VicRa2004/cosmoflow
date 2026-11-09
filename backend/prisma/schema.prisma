@@ -49,8 +49,26 @@ model Usuario {
   preferenciaInterfaz      PreferenciaInterfaz?
   vinculoTelegram          VinculoTelegram?
   mencionesTarea           TareaMencion[]
+  clavesIdempotencia       ClaveIdempotencia[]
 
   @@map("usuario")
+}
+
+/// Respuesta guardada de un alta enviada con `Idempotency-Key`: el reintento la
+/// recibe sin repetir el alta (middleware `idempotencia`).
+model ClaveIdempotencia {
+  usuarioId Int      @map("cid_fkusuario")
+  clave     String   @map("cid_clave") @db.VarChar(100)
+  /// `null` mientras la petición original sigue en curso
+  status    Int?     @map("cid_status")
+  respuesta Json?    @map("cid_respuesta")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  usuario Usuario @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+
+  @@id([usuarioId, clave])
+  @@index([createdAt])
+  @@map("clave_idempotencia")
 }
 
 model Rol {

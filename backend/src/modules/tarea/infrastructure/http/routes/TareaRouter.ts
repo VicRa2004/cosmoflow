@@ -5,6 +5,7 @@ import {
 	protectedErrorResponses,
 } from "@/core/shared/infrastructure/http/openapi";
 import type { AuthMiddleware } from "@/modules/auth";
+import { idempotencia } from "@/core/shared/infrastructure/http/idempotencia";
 import type { PermisoGuard } from "@/core/shared/infrastructure/http/permisoGuard";
 import { TareaController } from "../controllers/TareaController";
 import {
@@ -59,7 +60,13 @@ export class TareaRouter {
 				404: errorResponse("Equipo o proyecto no encontrado"),
 			},
 		});
-		this.router.post("/", guard.handle(recurso, "crear"), controller.crear);
+		this.router.post(
+			"/",
+			guard.handle(recurso, "crear"),
+			// La app móvil reintenta las altas hechas sin conexión.
+			idempotencia,
+			controller.crear,
+		);
 
 		docs.registerPath({
 			method: "get",
