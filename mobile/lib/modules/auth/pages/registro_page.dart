@@ -1,8 +1,11 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+
 import '../../../core/theme/colores_noche_indigo.dart';
 import '../api/auth_api.dart';
+import '../widgets/boton_google.dart';
+import '../widgets/google_oauth_sheet.dart';
 
 /// Pantalla de registro de usuario (`/registro`) con estética «Noche índigo».
 class RegistroPage extends StatefulWidget {
@@ -21,7 +24,10 @@ class _RegistroPageState extends State<RegistroPage> {
   final TextEditingController _passwordController = TextEditingController();
 
   bool _isCargando = false;
+  bool _isCargandoGoogle = false;
   String? _mensajeError;
+
+  bool get _ocupado => _isCargando || _isCargandoGoogle;
 
   @override
   void dispose() {
@@ -29,6 +35,37 @@ class _RegistroPageState extends State<RegistroPage> {
     _emailController.dispose();
     _passwordController.dispose();
     super.dispose();
+  }
+
+  Future<void> _continuarConGoogle() async {
+    setState(() {
+      _isCargandoGoogle = true;
+      _mensajeError = null;
+    });
+
+    try {
+      await autenticarConGoogleModal(context: context, authApi: widget.authApi);
+    } on OAuthGoogleException catch (e) {
+      if (mounted) {
+        setState(() => _mensajeError = e.mensaje);
+      }
+    } on DioException {
+      if (mounted) {
+        setState(() {
+          _mensajeError = 'No se pudo continuar con Google. Inténtalo de nuevo o regístrate con tu email.';
+        });
+      }
+    } catch (_) {
+      if (mounted) {
+        setState(() {
+          _mensajeError = 'Ocurrió un error al conectar con Google.';
+        });
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isCargandoGoogle = false);
+      }
+    }
   }
 
   Future<void> _enviarFormulario() async {
@@ -48,8 +85,9 @@ class _RegistroPageState extends State<RegistroPage> {
       );
     } on DioException catch (e) {
       final data = e.response?.data;
-      final mensajeServidor =
-          data is Map<String, dynamic> ? data['mensaje'] as String? : null;
+      final mensajeServidor = data is Map<String, dynamic>
+          ? data['mensaje'] as String?
+          : null;
       if (mounted) {
         setState(() {
           _mensajeError =
@@ -146,6 +184,11 @@ class _RegistroPageState extends State<RegistroPage> {
                       ),
                       const SizedBox(height: 16),
                     ],
+                    BotonGoogle(
+                      onPressed: _ocupado ? null : _continuarConGoogle,
+                      isCargando: _isCargandoGoogle,
+                    ),
+                    const SeparadorO(),
                     Text('Nombre', style: textTheme.labelMedium),
                     const SizedBox(height: 6),
                     TextFormField(
@@ -201,7 +244,7 @@ class _RegistroPageState extends State<RegistroPage> {
                     ),
                     const SizedBox(height: 24),
                     FilledButton(
-                      onPressed: _isCargando ? null : _enviarFormulario,
+                      onPressed: _ocupado ? null : _enviarFormulario,
                       child: _isCargando
                           ? const SizedBox(
                               width: 16,
@@ -219,10 +262,7 @@ class _RegistroPageState extends State<RegistroPage> {
                       crossAxisAlignment: WrapCrossAlignment.center,
                       spacing: 4,
                       children: <Widget>[
-                        Text(
-                          '¿Ya tienes cuenta?',
-                          style: textTheme.bodySmall,
-                        ),
+                        Text('¿Ya tienes cuenta?', style: textTheme.bodySmall),
                         TextButton(
                           onPressed: () => context.go('/login'),
                           child: const Text('Iniciar sesión'),

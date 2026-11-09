@@ -1,8 +1,11 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+
 import '../../../core/theme/colores_noche_indigo.dart';
 import '../api/auth_api.dart';
+import '../widgets/boton_google.dart';
+import '../widgets/google_oauth_sheet.dart';
 
 /// Pantalla de inicio de sesión con estética «Noche índigo».
 class LoginPage extends StatefulWidget {
@@ -20,13 +23,47 @@ class _LoginPageState extends State<LoginPage> {
   final TextEditingController _passwordController = TextEditingController();
 
   bool _isCargando = false;
+  bool _isCargandoGoogle = false;
   String? _mensajeError;
+
+  bool get _ocupado => _isCargando || _isCargandoGoogle;
 
   @override
   void dispose() {
     _emailController.dispose();
     _passwordController.dispose();
     super.dispose();
+  }
+
+  Future<void> _continuarConGoogle() async {
+    setState(() {
+      _isCargandoGoogle = true;
+      _mensajeError = null;
+    });
+
+    try {
+      await autenticarConGoogleModal(context: context, authApi: widget.authApi);
+    } on OAuthGoogleException catch (e) {
+      if (mounted) {
+        setState(() => _mensajeError = e.mensaje);
+      }
+    } on DioException {
+      if (mounted) {
+        setState(() {
+          _mensajeError = 'No se pudo iniciar sesión con Google. Inténtalo de nuevo o usa tu email y contraseña.';
+        });
+      }
+    } catch (_) {
+      if (mounted) {
+        setState(() {
+          _mensajeError = 'Ocurrió un error al conectar con Google.';
+        });
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isCargandoGoogle = false);
+      }
+    }
   }
 
   Future<void> _enviarFormulario() async {
@@ -45,12 +82,14 @@ class _LoginPageState extends State<LoginPage> {
       );
     } on DioException catch (e) {
       final data = e.response?.data;
-      final mensajeServidor =
-          data is Map<String, dynamic> ? data['mensaje'] as String? : null;
+      final mensajeServidor = data is Map<String, dynamic>
+          ? data['mensaje'] as String?
+          : null;
       if (mounted) {
         setState(() {
           _mensajeError =
-              mensajeServidor ?? 'No se pudo iniciar sesión. Verifica tus datos.';
+              mensajeServidor ??
+              'No se pudo iniciar sesión. Verifica tus datos.';
         });
       }
     } catch (_) {
@@ -143,6 +182,11 @@ class _LoginPageState extends State<LoginPage> {
                       ),
                       const SizedBox(height: 16),
                     ],
+                    BotonGoogle(
+                      onPressed: _ocupado ? null : _continuarConGoogle,
+                      isCargando: _isCargandoGoogle,
+                    ),
+                    const SeparadorO(),
                     Text('Email', style: textTheme.labelMedium),
                     const SizedBox(height: 6),
                     TextFormField(
@@ -188,9 +232,7 @@ class _LoginPageState extends State<LoginPage> {
                       obscureText: true,
                       textInputAction: TextInputAction.done,
                       onFieldSubmitted: (_) => _enviarFormulario(),
-                      decoration: const InputDecoration(
-                        hintText: '••••••••',
-                      ),
+                      decoration: const InputDecoration(hintText: '••••••••'),
                       validator: (valor) {
                         if (valor == null || valor.isEmpty) {
                           return 'Ingresa tu contraseña';
@@ -200,7 +242,7 @@ class _LoginPageState extends State<LoginPage> {
                     ),
                     const SizedBox(height: 24),
                     FilledButton(
-                      onPressed: _isCargando ? null : _enviarFormulario,
+                      onPressed: _ocupado ? null : _enviarFormulario,
                       child: _isCargando
                           ? const SizedBox(
                               width: 16,
@@ -218,10 +260,7 @@ class _LoginPageState extends State<LoginPage> {
                       crossAxisAlignment: WrapCrossAlignment.center,
                       spacing: 4,
                       children: <Widget>[
-                        Text(
-                          '¿No tienes cuenta?',
-                          style: textTheme.bodySmall,
-                        ),
+                        Text('¿No tienes cuenta?', style: textTheme.bodySmall),
                         TextButton(
                           onPressed: () => context.go('/registro'),
                           child: const Text('Crear cuenta'),

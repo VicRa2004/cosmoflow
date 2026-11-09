@@ -1,5 +1,7 @@
 import 'dart:async';
+
 import 'package:dio/dio.dart';
+
 import '../auth/sesion_store.dart';
 import '../auth/usuario_sesion.dart';
 
@@ -41,6 +43,19 @@ class AuthInterceptor extends Interceptor {
     return token is String && token.isNotEmpty ? token : null;
   }
 
+  /// Extrae el valor de una cookie por su [nombre] desde cabeceras `set-cookie` (ej. flujo OAuth Google).
+  static String? extraerValorCookie(List<String>? setCookies, String nombre) {
+    if (setCookies == null || setCookies.isEmpty) return null;
+    final regex = RegExp('(?:^|;\\s*)${RegExp.escape(nombre)}=([^;\\s]*)');
+    for (final header in setCookies) {
+      final match = regex.firstMatch(header);
+      if (match != null) {
+        return match.group(1);
+      }
+    }
+    return null;
+  }
+
   bool _esRutaConRefreshToken(String path) {
     return path.endsWith('/auth/refresh') || path.endsWith('/auth/logout');
   }
@@ -48,6 +63,7 @@ class AuthInterceptor extends Interceptor {
   bool _esRutaDeAuthSinRetry(String path) {
     return path.contains('/auth/login') ||
         path.contains('/auth/registro') ||
+        path.contains('/auth/google') ||
         path.contains('/auth/refresh') ||
         path.contains('/auth/logout');
   }

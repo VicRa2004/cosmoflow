@@ -6,6 +6,7 @@ import 'package:cosmoflow_mobile/core/auth/usuario_sesion.dart';
 import 'package:cosmoflow_mobile/core/theme/tema_app.dart';
 import 'package:cosmoflow_mobile/main.dart';
 import 'package:cosmoflow_mobile/modules/auth/api/auth_api.dart';
+import 'package:cosmoflow_mobile/modules/auth/widgets/google_oauth_sheet.dart';
 import 'package:cosmoflow_mobile/modules/notas/models/nota_model.dart';
 import 'package:cosmoflow_mobile/modules/tags/models/tag_model.dart';
 import 'package:cosmoflow_mobile/modules/tareas/models/tarea_model.dart';
@@ -15,12 +16,39 @@ import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   test('AuthInterceptor extrae el refreshToken del cuerpo de la respuesta', () {
-    final conToken = <String, dynamic>{'accessToken': 'jwt', 'refreshToken': 'rt'};
+    final conToken = <String, dynamic>{
+      'accessToken': 'jwt',
+      'refreshToken': 'rt',
+    };
     final sinToken = <String, dynamic>{'accessToken': 'jwt'};
 
     expect(AuthInterceptor.extraerRefreshToken(conToken), equals('rt'));
     expect(AuthInterceptor.extraerRefreshToken(sinToken), isNull);
     expect(AuthInterceptor.extraerRefreshToken('texto'), isNull);
+  });
+
+  test('AuthInterceptor y ResultadoCallbackGoogle extraen cookies y callbacks OAuth', () {
+    const headers = <String>[
+      'google_oauth=estado123.verifier456; Path=/api/auth/google; HttpOnly; SameSite=Lax',
+    ];
+    expect(
+      AuthInterceptor.extraerValorCookie(headers, 'google_oauth'),
+      equals('estado123.verifier456'),
+    );
+
+    final exito = ResultadoCallbackGoogle.intentarExtraer(
+      'https://cosmoflow.saasil.mx/api/auth/google/callback?code=4/0AeanS&state=abc123',
+    );
+    expect(exito, isNotNull);
+    expect(exito!.esValido, isTrue);
+    expect(exito.code, equals('4/0AeanS'));
+    expect(exito.state, equals('abc123'));
+
+    final fallo = ResultadoCallbackGoogle.intentarExtraer(
+      'https://cosmoflow.saasil.mx/login?error=google',
+    );
+    expect(fallo, isNotNull);
+    expect(fallo!.esValido, isFalse);
   });
 
   test('Modelos TareaDto, NotaDto y TagDto parsean respuestas del backend', () {
@@ -107,6 +135,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('Iniciar sesión'), findsOneWidget);
+      expect(find.text('Continuar con Google'), findsOneWidget);
 
       sesionStore.establecerSesion(
         accessToken: 'jwt-test',
