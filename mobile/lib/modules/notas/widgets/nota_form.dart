@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../core/theme/colores_noche_indigo.dart';
+import '../../../core/widgets/editor_markdown.dart';
 import '../../tags/models/tag_model.dart';
 import '../models/carpeta_model.dart';
 import '../models/nota_model.dart';
@@ -98,18 +99,13 @@ class NotaFormState extends State<NotaForm> {
                 ? 'El título es obligatorio'
                 : null,
           ),
-          const SizedBox(height: 16),
-          TextFormField(
+          const SizedBox(height: 24),
+          Text('Contenido', style: seccion),
+          const SizedBox(height: 8),
+          EditorMarkdown(
             controller: _contenido,
-            minLines: 10,
-            maxLines: null,
-            keyboardType: TextInputType.multiline,
-            textCapitalization: TextCapitalization.sentences,
-            decoration: const InputDecoration(
-              labelText: 'Contenido',
-              hintText: 'Escribe tus apuntes (admite Markdown)',
-              alignLabelWithHint: true,
-            ),
+            hint: 'Toca para escribir tus apuntes (admite Markdown)',
+            onCambio: widget.onCambio,
           ),
           if (widget.carpetas.isNotEmpty) ...<Widget>[
             const SizedBox(height: 16),

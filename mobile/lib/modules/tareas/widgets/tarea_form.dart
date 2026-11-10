@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../core/theme/colores_noche_indigo.dart';
 import '../../../core/widgets/campo_fecha.dart';
+import '../../../core/widgets/editor_markdown.dart';
 import '../models/tarea_model.dart';
 
 /// Valores del formulario de tarea (crear o editar).
@@ -113,18 +114,13 @@ class TareaFormState extends State<TareaForm> {
                 ? 'El título es obligatorio'
                 : null,
           ),
-          const SizedBox(height: 16),
-          TextFormField(
+          const SizedBox(height: 24),
+          Text('Descripción', style: seccion),
+          const SizedBox(height: 8),
+          EditorMarkdown(
             controller: _contenido,
-            minLines: 4,
-            maxLines: 12,
-            keyboardType: TextInputType.multiline,
-            textCapitalization: TextCapitalization.sentences,
-            decoration: const InputDecoration(
-              labelText: 'Descripción',
-              hintText: 'Detalles, pasos… (admite Markdown)',
-              alignLabelWithHint: true,
-            ),
+            hint: 'Toca para añadir detalles, pasos… (admite Markdown)',
+            onCambio: widget.onCambio,
           ),
           const SizedBox(height: 24),
           Text('Prioridad', style: seccion),

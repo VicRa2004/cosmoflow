@@ -6,9 +6,16 @@ import '../theme/colores_noche_indigo.dart';
 /// Contenido Markdown de tareas y notas con la tipografía del tema.
 /// Los enlaces http(s) y mailto se abren fuera de la app.
 class ContenidoMarkdown extends StatelessWidget {
-  const ContenidoMarkdown({super.key, required this.texto});
+  const ContenidoMarkdown({
+    super.key,
+    required this.texto,
+    this.selectable = true,
+  });
 
   final String texto;
+
+  /// `false` en el editor: la selección de texto se tragaría el toque para editar.
+  final bool selectable;
 
   @override
   Widget build(BuildContext context) {
@@ -41,7 +48,7 @@ class ContenidoMarkdown extends StatelessWidget {
     );
     return MarkdownBody(
       data: texto,
-      selectable: true,
+      selectable: selectable,
       styleSheet: hoja,
       onTapLink: (_, href, _) => abrirEnlace(context, href),
     );
