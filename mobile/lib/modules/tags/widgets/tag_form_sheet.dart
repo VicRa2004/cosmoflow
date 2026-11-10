@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../../../core/theme/colores_noche_indigo.dart';
 import '../models/tag_model.dart';
 
 /// Valores devueltos por el formulario de crear o editar tag.
@@ -18,17 +17,17 @@ const List<String> _coloresPreset = <String>[
   '#0284C7',
 ];
 
-/// Diálogo modal para crear o editar un tag personal.
-class TagFormDialog extends StatefulWidget {
-  const TagFormDialog({super.key, this.tagInicial});
+/// Bottom sheet (2 campos) para crear o editar un tag personal.
+class TagFormSheet extends StatefulWidget {
+  const TagFormSheet({super.key, this.tagInicial});
 
   final TagDto? tagInicial;
 
   @override
-  State<TagFormDialog> createState() => _TagFormDialogState();
+  State<TagFormSheet> createState() => _TagFormSheetState();
 }
 
-class _TagFormDialogState extends State<TagFormDialog> {
+class _TagFormSheetState extends State<TagFormSheet> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   late final TextEditingController _nombreController;
   String? _colorSeleccionado;
@@ -36,8 +35,9 @@ class _TagFormDialogState extends State<TagFormDialog> {
   @override
   void initState() {
     super.initState();
-    _nombreController =
-        TextEditingController(text: widget.tagInicial?.nombre ?? '');
+    _nombreController = TextEditingController(
+      text: widget.tagInicial?.nombre ?? '',
+    );
     _colorSeleccionado = widget.tagInicial?.color;
   }
 
@@ -66,98 +66,73 @@ class _TagFormDialogState extends State<TagFormDialog> {
 
   @override
   Widget build(BuildContext context) {
-    final colores = context.colores;
     final textTheme = Theme.of(context).textTheme;
     final esEdicion = widget.tagInicial != null;
 
-    return Dialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 380),
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
+    return Padding(
+      padding: EdgeInsets.fromLTRB(
+        16,
+        0,
+        16,
+        16 + MediaQuery.viewInsetsOf(context).bottom,
+      ),
+      child: Form(
+        key: _formKey,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: <Widget>[
+            Text(
+              esEdicion ? 'Editar tag' : 'Nuevo tag',
+              style: textTheme.titleMedium,
+            ),
+            const SizedBox(height: 16),
+            TextFormField(
+              controller: _nombreController,
+              autofocus: !esEdicion,
+              textCapitalization: TextCapitalization.sentences,
+              textInputAction: TextInputAction.done,
+              onFieldSubmitted: (_) => _guardar(),
+              decoration: const InputDecoration(
+                labelText: 'Nombre',
+                hintText: 'Ej. Urgente, Backend, Diseño',
+              ),
+              validator: (valor) {
+                final texto = valor?.trim() ?? '';
+                if (texto.isEmpty) return 'El nombre es obligatorio';
+                if (texto.length > 64) return 'Máximo 64 caracteres';
+                return null;
+              },
+            ),
+            const SizedBox(height: 16),
+            Text('Color', style: textTheme.labelLarge),
+            const SizedBox(height: 4),
+            Wrap(
+              crossAxisAlignment: WrapCrossAlignment.center,
               children: <Widget>[
-                Text(
-                  esEdicion ? 'Editar tag' : 'Nuevo tag',
-                  style: textTheme.titleMedium,
+                ChoiceChip(
+                  label: const Text('Sin color'),
+                  selected:
+                      _colorSeleccionado == null || _colorSeleccionado!.isEmpty,
+                  onSelected: (_) => setState(() => _colorSeleccionado = null),
                 ),
-                const SizedBox(height: 16),
-                Text('Nombre', style: textTheme.labelMedium),
-                const SizedBox(height: 6),
-                TextFormField(
-                  controller: _nombreController,
-                  decoration: const InputDecoration(
-                    hintText: 'Ej. Urgente, Backend, Diseño',
+                for (final hex in _coloresPreset)
+                  IconButton(
+                    tooltip: hex,
+                    onPressed: () => setState(() => _colorSeleccionado = hex),
+                    icon: Icon(
+                      _colorSeleccionado == hex
+                          ? Icons.check_circle_rounded
+                          : Icons.circle,
+                      color: _hexAColor(hex),
+                      size: 32,
+                    ),
                   ),
-                  validator: (valor) {
-                    final texto = valor?.trim() ?? '';
-                    if (texto.isEmpty) return 'El nombre es obligatorio';
-                    if (texto.length > 64) return 'Máximo 64 caracteres';
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 16),
-                Text('Color opcional', style: textTheme.labelMedium),
-                const SizedBox(height: 8),
-                Wrap(
-                  spacing: 10,
-                  runSpacing: 8,
-                  crossAxisAlignment: WrapCrossAlignment.center,
-                  children: <Widget>[
-                    ChoiceChip(
-                      label: const Text('Sin color'),
-                      selected:
-                          _colorSeleccionado == null ||
-                          _colorSeleccionado!.isEmpty,
-                      onSelected: (_) {
-                        setState(() => _colorSeleccionado = null);
-                      },
-                    ),
-                    for (final hex in _coloresPreset)
-                      GestureDetector(
-                        onTap: () {
-                          setState(() => _colorSeleccionado = hex);
-                        },
-                        child: Container(
-                          width: 28,
-                          height: 28,
-                          decoration: BoxDecoration(
-                            color: _hexAColor(hex),
-                            shape: BoxShape.circle,
-                            border: Border.all(
-                              color: _colorSeleccionado == hex
-                                  ? colores.tinta
-                                  : Colors.transparent,
-                              width: 2,
-                            ),
-                          ),
-                        ),
-                      ),
-                  ],
-                ),
-                const SizedBox(height: 24),
-                Wrap(
-                  alignment: WrapAlignment.end,
-                  spacing: 8,
-                  children: <Widget>[
-                    OutlinedButton(
-                      onPressed: () => Navigator.of(context).pop(),
-                      child: const Text('Cancelar'),
-                    ),
-                    FilledButton(
-                      onPressed: _guardar,
-                      child: const Text('Guardar'),
-                    ),
-                  ],
-                ),
               ],
             ),
-          ),
+            const SizedBox(height: 16),
+            FilledButton(onPressed: _guardar, child: const Text('Guardar')),
+          ],
         ),
       ),
     );

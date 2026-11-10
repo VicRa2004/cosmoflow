@@ -3,7 +3,10 @@ import '../../../core/auth/sesion_store.dart';
 import '../../../core/theme/colores_noche_indigo.dart';
 import '../api/tags_api.dart';
 import '../models/tag_model.dart';
-import '../widgets/tag_form_dialog.dart';
+import '../../../core/widgets/avisos.dart';
+import '../../../core/widgets/confirmar.dart';
+import '../../../core/widgets/estados.dart';
+import '../widgets/tag_form_sheet.dart';
 
 /// Vista `/tags` para buscar, crear, editar y eliminar etiquetas personales.
 class TagsPage extends StatefulWidget {
@@ -81,198 +84,113 @@ class _TagsPageState extends State<TagsPage> {
     }
   }
 
-  Future<void> _crearTag() async {
-    final valores = await showDialog<TagFormValores>(
-      context: context,
-      builder: (_) => const TagFormDialog(),
-    );
-    if (valores == null) return;
+  Future<TagFormValores?> _abrirForm([TagDto? tag]) =>
+      showModalBottomSheet<TagFormValores>(
+        context: context,
+        isScrollControlled: true,
+        useSafeArea: true,
+        builder: (_) => TagFormSheet(tagInicial: tag),
+      );
 
-    await widget.tagsApi.crear(nombre: valores.nombre, color: valores.color);
-    await _cargarTags();
+  Future<void> _guardar(Future<void> Function() accion) async {
+    if (await ejecutarConAviso(
+      context,
+      accion,
+      error: 'No se pudo guardar el tag.',
+    )) {
+      await _cargarTags();
+    }
+  }
+
+  Future<void> _crearTag() async {
+    final v = await _abrirForm();
+    if (v == null || !mounted) return;
+    await _guardar(
+      () => widget.tagsApi.crear(nombre: v.nombre, color: v.color),
+    );
   }
 
   Future<void> _editarTag(TagDto tag) async {
-    final valores = await showDialog<TagFormValores>(
-      context: context,
-      builder: (_) => TagFormDialog(tagInicial: tag),
+    final v = await _abrirForm(tag);
+    if (v == null || !mounted) return;
+    await _guardar(
+      () => widget.tagsApi.actualizar(tag.id, nombre: v.nombre, color: v.color),
     );
-    if (valores == null) return;
-
-    await widget.tagsApi.actualizar(
-      tag.id,
-      nombre: valores.nombre,
-      color: valores.color,
-    );
-    await _cargarTags();
   }
 
   Future<void> _eliminarTag(TagDto tag) async {
-    await widget.tagsApi.eliminar(tag.id);
-    await _cargarTags();
+    final ok = await confirmar(
+      context,
+      titulo: '¿Eliminar tag?',
+      mensaje: '«${tag.nombre}» se quitará de todas sus tareas y notas.',
+      accion: 'Eliminar',
+    );
+    if (!ok || !mounted) return;
+    await _guardar(() => widget.tagsApi.eliminar(tag.id));
   }
 
   @override
   Widget build(BuildContext context) {
     final colores = context.colores;
-    final textTheme = Theme.of(context).textTheme;
-    final puedeCrear = widget.sesionStore.puede('tags:crear');
     final puedeActualizar = widget.sesionStore.puede('tags:actualizar');
     final puedeEliminar = widget.sesionStore.puede('tags:eliminar');
 
-    return RefreshIndicator(
-      onRefresh: _cargarTags,
-      child: ListView(
-        padding: const EdgeInsets.all(24),
-        children: <Widget>[
-          Wrap(
-            alignment: WrapAlignment.spaceBetween,
-            crossAxisAlignment: WrapCrossAlignment.center,
-            spacing: 12,
-            runSpacing: 12,
-            children: <Widget>[
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: <Widget>[
-                  Text('Tags', style: textTheme.headlineSmall),
-                  const SizedBox(height: 4),
-                  Text(
-                    'Etiquetas personales para clasificar tareas y notas.',
-                    style: textTheme.bodyMedium?.copyWith(
-                      color: colores.tintaTenue,
-                    ),
-                  ),
-                ],
-              ),
-              if (puedeCrear)
-                FilledButton.icon(
-                  onPressed: _crearTag,
-                  icon: const Icon(Icons.add_rounded, size: 18),
-                  label: const Text('Nuevo tag'),
-                ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          TextField(
-            controller: _busquedaController,
-            textInputAction: TextInputAction.search,
-            onSubmitted: (_) => _cargarTags(),
-            decoration: InputDecoration(
-              hintText: 'Filtrar por nombre...',
-              prefixIcon: Icon(
-                Icons.search_rounded,
-                size: 18,
-                color: colores.tintaTenue,
+    return Scaffold(
+      appBar: AppBar(title: const Text('Tags')),
+      floatingActionButton: widget.sesionStore.puede('tags:crear')
+          ? FloatingActionButton(
+              tooltip: 'Nuevo tag',
+              onPressed: _crearTag,
+              child: const Icon(Icons.add_rounded),
+            )
+          : null,
+      body: RefreshIndicator(
+        onRefresh: _cargarTags,
+        child: ListView(
+          padding: const EdgeInsets.only(bottom: 96),
+          children: <Widget>[
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
+              child: SearchBar(
+                controller: _busquedaController,
+                hintText: 'Filtrar por nombre',
+                leading: const Icon(Icons.search_rounded),
+                elevation: const WidgetStatePropertyAll<double>(0),
+                textInputAction: TextInputAction.search,
+                onSubmitted: (_) => _cargarTags(),
               ),
             ),
-          ),
-          const SizedBox(height: 20),
-          if (_isCargando)
-            const Padding(
-              padding: EdgeInsets.symmetric(vertical: 40),
-              child: Center(child: CircularProgressIndicator()),
-            )
-          else if (_mensajeError != null)
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(20),
-                child: Column(
-                  children: <Widget>[
-                    Text(
-                      _mensajeError!,
-                      style: textTheme.bodyMedium?.copyWith(
-                        color: colores.rosePeligro,
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    OutlinedButton(
-                      onPressed: _cargarTags,
-                      child: const Text('Reintentar'),
-                    ),
-                  ],
-                ),
-              ),
-            )
-          else if (_tags.isEmpty)
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(24),
-                child: Column(
-                  children: <Widget>[
-                    Icon(
-                      Icons.sell_outlined,
-                      size: 32,
-                      color: colores.tintaTenue,
-                    ),
-                    const SizedBox(height: 12),
-                    Text('Sin etiquetas', style: textTheme.titleMedium),
-                    const SizedBox(height: 4),
-                    Text(
-                      'Crea etiquetas personales para organizar tus tareas y notas.',
-                      textAlign: TextAlign.center,
-                      style: textTheme.bodyMedium?.copyWith(
-                        color: colores.tintaTenue,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            )
-          else
-            for (final tag in _tags) ...<Widget>[
-              Card(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 12,
+            if (_isCargando)
+              const EstadoCargando()
+            else if (_mensajeError != null)
+              EstadoError(mensaje: _mensajeError!, onReintentar: _cargarTags)
+            else if (_tags.isEmpty)
+              const EstadoVacio(
+                icono: Icons.sell_outlined,
+                titulo: 'Sin etiquetas',
+                mensaje: 'Crea etiquetas para organizar tus tareas y notas.',
+              )
+            else
+              for (final tag in _tags) ...<Widget>[
+                ListTile(
+                  onTap: puedeActualizar ? () => _editarTag(tag) : null,
+                  leading: Icon(
+                    Icons.sell_rounded,
+                    color: _parsearColorHex(tag.color) ?? colores.tintaTenue,
                   ),
-                  child: Row(
-                    children: <Widget>[
-                      Container(
-                        width: 10,
-                        height: 10,
-                        decoration: BoxDecoration(
-                          color: _parsearColorHex(tag.color) ??
-                              colores.tintaTenue,
-                          shape: BoxShape.circle,
-                        ),
-                      ),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: Text(
-                          tag.nombre,
-                          style: textTheme.bodyMedium?.copyWith(
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      ),
-                      if (puedeActualizar)
-                        IconButton(
-                          tooltip: 'Editar tag',
-                          onPressed: () => _editarTag(tag),
-                          icon: Icon(
-                            Icons.edit_outlined,
-                            size: 18,
-                            color: colores.tintaSuave,
-                          ),
-                        ),
-                      if (puedeEliminar)
-                        IconButton(
+                  title: Text(tag.nombre),
+                  trailing: puedeEliminar
+                      ? IconButton(
                           tooltip: 'Eliminar tag',
                           onPressed: () => _eliminarTag(tag),
-                          icon: Icon(
-                            Icons.delete_outline_rounded,
-                            size: 18,
-                            color: colores.rosePeligro,
-                          ),
-                        ),
-                    ],
-                  ),
+                          icon: const Icon(Icons.delete_outline_rounded),
+                        )
+                      : null,
                 ),
-              ),
-              const SizedBox(height: 8),
-            ],
-        ],
+                const Divider(indent: 56),
+              ],
+          ],
+        ),
       ),
     );
   }

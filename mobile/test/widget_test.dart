@@ -10,7 +10,7 @@ import 'package:cosmoflow_mobile/modules/auth/widgets/google_oauth_sheet.dart';
 import 'package:cosmoflow_mobile/modules/notas/models/nota_model.dart';
 import 'package:cosmoflow_mobile/modules/tags/models/tag_model.dart';
 import 'package:cosmoflow_mobile/modules/tareas/models/tarea_model.dart';
-import 'package:cosmoflow_mobile/modules/tareas/widgets/tarea_card.dart';
+import 'package:cosmoflow_mobile/modules/tareas/widgets/tarea_fila.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -27,29 +27,32 @@ void main() {
     expect(AuthInterceptor.extraerRefreshToken('texto'), isNull);
   });
 
-  test('AuthInterceptor y ResultadoCallbackGoogle extraen cookies y callbacks OAuth', () {
-    const headers = <String>[
-      'google_oauth=estado123.verifier456; Path=/api/auth/google; HttpOnly; SameSite=Lax',
-    ];
-    expect(
-      AuthInterceptor.extraerValorCookie(headers, 'google_oauth'),
-      equals('estado123.verifier456'),
-    );
+  test(
+    'AuthInterceptor y ResultadoCallbackGoogle extraen cookies y callbacks OAuth',
+    () {
+      const headers = <String>[
+        'google_oauth=estado123.verifier456; Path=/api/auth/google; HttpOnly; SameSite=Lax',
+      ];
+      expect(
+        AuthInterceptor.extraerValorCookie(headers, 'google_oauth'),
+        equals('estado123.verifier456'),
+      );
 
-    final exito = ResultadoCallbackGoogle.intentarExtraer(
-      'https://cosmoflow.saasil.mx/api/auth/google/callback?code=4/0AeanS&state=abc123',
-    );
-    expect(exito, isNotNull);
-    expect(exito!.esValido, isTrue);
-    expect(exito.code, equals('4/0AeanS'));
-    expect(exito.state, equals('abc123'));
+      final exito = ResultadoCallbackGoogle.intentarExtraer(
+        'https://cosmoflow.saasil.mx/api/auth/google/callback?code=4/0AeanS&state=abc123',
+      );
+      expect(exito, isNotNull);
+      expect(exito!.esValido, isTrue);
+      expect(exito.code, equals('4/0AeanS'));
+      expect(exito.state, equals('abc123'));
 
-    final fallo = ResultadoCallbackGoogle.intentarExtraer(
-      'https://cosmoflow.saasil.mx/login?error=google',
-    );
-    expect(fallo, isNotNull);
-    expect(fallo!.esValido, isFalse);
-  });
+      final fallo = ResultadoCallbackGoogle.intentarExtraer(
+        'https://cosmoflow.saasil.mx/login?error=google',
+      );
+      expect(fallo, isNotNull);
+      expect(fallo!.esValido, isFalse);
+    },
+  );
 
   test('Modelos TareaDto, NotaDto y TagDto parsean respuestas del backend', () {
     final tarea = TareaDto.fromJson(<String, dynamic>{
@@ -86,39 +89,38 @@ void main() {
     expect(tag.nombre, equals('Mobile'));
   });
 
-  testWidgets(
-    'TareaCard muestra botón Completar en tarea abierta y Reabrir en completada',
-    (WidgetTester tester) async {
-      var alternado = false;
-      const tareaAbierta = TareaDto(
-        id: 1,
-        titulo: 'Revisar PR',
-        contenido: '',
-        estado: EstadoTarea.pendiente,
-        prioridad: PrioridadTarea.media,
-      );
+  testWidgets('TareaFila marca la tarea como completada desde la casilla', (
+    WidgetTester tester,
+  ) async {
+    var alternado = false;
+    const tareaAbierta = TareaDto(
+      id: 1,
+      titulo: 'Revisar PR',
+      contenido: '',
+      estado: EstadoTarea.pendiente,
+      prioridad: PrioridadTarea.media,
+    );
 
-      await tester.pumpWidget(
-        MaterialApp(
-          theme: TemaApp.claro,
-          home: Scaffold(
-            body: TareaCard(
-              tarea: tareaAbierta,
-              onTap: () {},
-              onAlternarCompletada: () => alternado = true,
-            ),
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: TemaApp.claro,
+        home: Scaffold(
+          body: TareaFila(
+            tarea: tareaAbierta,
+            onTap: () {},
+            onAlternarCompletada: () => alternado = true,
           ),
         ),
-      );
+      ),
+    );
 
-      expect(find.text('Completar'), findsOneWidget);
-      await tester.tap(find.text('Completar'));
-      expect(alternado, isTrue);
-    },
-  );
+    expect(find.bySemanticsLabel('Completar'), findsOneWidget);
+    await tester.tap(find.byType(Checkbox));
+    expect(alternado, isTrue);
+  });
 
   testWidgets(
-    'Navega por todas las secciones del MainShell (Pendientes, Tareas, Notas, Tags, Perfil)',
+    'Navega por todas las secciones del MainShell (Pendientes, Notas, Perfil y Tags desde Perfil)',
     (WidgetTester tester) async {
       final almacenamiento = MemoriaAlmacenamientoSeguro();
       final sesionStore = SesionStore(almacenamientoSeguro: almacenamiento);
@@ -155,14 +157,16 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.text('Sin notas'), findsOneWidget);
 
-      await tester.tap(find.text('Tags'));
-      await tester.pumpAndSettle();
-      expect(find.text('Sin etiquetas'), findsOneWidget);
-
       await tester.tap(find.text('Perfil'));
       await tester.pumpAndSettle();
       expect(find.text('Email verificado'), findsOneWidget);
       expect(find.text('Seguridad de la cuenta'), findsOneWidget);
+
+      await tester.tap(find.text('Tags'));
+      await tester.pumpAndSettle();
+      expect(find.text('Sin etiquetas'), findsOneWidget);
+      await tester.pageBack();
+      await tester.pumpAndSettle();
 
       await tester.tap(find.text('Oscuro'));
       await tester.pumpAndSettle();

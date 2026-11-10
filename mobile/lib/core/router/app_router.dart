@@ -5,11 +5,14 @@ import '../../modules/auth/pages/recuperar_password_page.dart';
 import '../../modules/auth/pages/registro_page.dart';
 import '../../modules/dashboard/pages/dashboard_page.dart';
 import '../../modules/notas/api/notas_api.dart';
+import '../../modules/notas/pages/nota_editor_page.dart';
 import '../../modules/notas/pages/notas_page.dart';
 import '../../modules/perfil/pages/perfil_page.dart';
 import '../../modules/tags/api/tags_api.dart';
 import '../../modules/tags/pages/tags_page.dart';
 import '../../modules/tareas/api/tareas_api.dart';
+import '../../modules/tareas/models/tarea_model.dart';
+import '../../modules/tareas/pages/tarea_editor_page.dart';
 import '../../modules/tareas/pages/tareas_page.dart';
 import '../auth/sesion_store.dart';
 import '../layout/main_shell.dart';
@@ -58,11 +61,46 @@ GoRouter crearAppRouter({
         path: '/recuperar-password',
         builder: (context, state) => RecuperarPasswordPage(authApi: authApi),
       ),
+      // Fuera del shell: pantallas completas apiladas sobre la pestaña (con «atrás»).
+      // shortcut: los editores reciben la entidad por `extra`; sin él (deep link) editar
+      // abriría un alta vacía. Cargarla por `:id` si algún día hay enlaces profundos.
+      GoRoute(
+        path: '/tags',
+        builder: (context, state) => TagsPage(
+          sesionStore: sesionStore,
+          tagsApi: tagsApi,
+          cargarAlIniciar: cargarDatosIniciales,
+        ),
+      ),
+      GoRoute(
+        path: '/tareas/nueva',
+        builder: (context, state) => TareaEditorPage(tareasApi: tareasApi),
+      ),
+      GoRoute(
+        path: '/tareas/:id/editar',
+        builder: (context, state) => TareaEditorPage(
+          tareasApi: tareasApi,
+          tarea: state.extra as TareaDto?,
+        ),
+      ),
+      GoRoute(
+        path: '/notas/nueva',
+        builder: (context, state) => NotaEditorPage(
+          notasApi: notasApi,
+          args: state.extra as NotaEditorArgs? ?? const NotaEditorArgs(),
+        ),
+      ),
+      GoRoute(
+        path: '/notas/:id/editar',
+        builder: (context, state) => NotaEditorPage(
+          notasApi: notasApi,
+          args: state.extra as NotaEditorArgs? ?? const NotaEditorArgs(),
+        ),
+      ),
       ShellRoute(
         builder: (context, state, child) => MainShell(
           ubicacionActual: state.matchedLocation,
           sesionStore: sesionStore,
-          authApi: authApi,
           child: child,
         ),
         routes: <RouteBase>[
@@ -92,19 +130,9 @@ GoRouter crearAppRouter({
             ),
           ),
           GoRoute(
-            path: '/tags',
-            builder: (context, state) => TagsPage(
-              sesionStore: sesionStore,
-              tagsApi: tagsApi,
-              cargarAlIniciar: cargarDatosIniciales,
-            ),
-          ),
-          GoRoute(
             path: '/perfil',
-            builder: (context, state) => PerfilPage(
-              sesionStore: sesionStore,
-              authApi: authApi,
-            ),
+            builder: (context, state) =>
+                PerfilPage(sesionStore: sesionStore, authApi: authApi),
           ),
         ],
       ),

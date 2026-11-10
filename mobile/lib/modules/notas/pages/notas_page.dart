@@ -1,19 +1,21 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import '../../../core/auth/sesion_store.dart';
 import '../../../core/offline/aviso_pendientes.dart';
-import '../../../core/theme/colores_noche_indigo.dart';
+import '../../../core/widgets/avisos.dart';
+import '../../../core/widgets/confirmar.dart';
+import '../../../core/widgets/estados.dart';
 import '../../tags/api/tags_api.dart';
 import '../../tags/models/tag_model.dart';
 import '../api/notas_api.dart';
 import '../models/carpeta_model.dart';
 import '../models/nota_model.dart';
-import '../widgets/nota_card.dart';
-import '../widgets/notas_vacias.dart';
 import '../widgets/nota_detalle_sheet.dart';
-import '../widgets/nota_form_dialog.dart';
+import '../widgets/nota_fila.dart';
 import '../widgets/selector_carpeta.dart';
+import 'nota_editor_page.dart';
 
-/// Vista `/notas` con buscador, filtro por tag, lectura y edición.
+/// Vista `/notas` con buscador, filtro por carpeta y tag, lectura y edición.
 class NotasPage extends StatefulWidget {
   const NotasPage({
     super.key,
@@ -33,12 +35,11 @@ class NotasPage extends StatefulWidget {
 }
 
 class _NotasPageState extends State<NotasPage> {
-  final TextEditingController _busquedaController = TextEditingController();
-
+  final _busqueda = TextEditingController();
   List<NotaDto> _notas = const <NotaDto>[];
-  List<TagDto> _tagsDisponibles = const <TagDto>[];
-  int? _tagIdSeleccionado;
+  List<TagDto> _tags = const <TagDto>[];
   List<CarpetaDto> _carpetas = const <CarpetaDto>[];
+  int? _tagId;
   int? _carpetaId;
   bool _isCargando = false;
   String? _mensajeError;
@@ -46,263 +47,201 @@ class _NotasPageState extends State<NotasPage> {
   @override
   void initState() {
     super.initState();
-    if (widget.cargarAlIniciar) {
-      _cargarDatos();
-    }
+    if (widget.cargarAlIniciar) _cargar();
   }
 
   @override
   void dispose() {
-    _busquedaController.dispose();
+    _busqueda.dispose();
     super.dispose();
   }
 
-  Future<void> _cargarDatos() async {
+  Future<void> _cargar() async {
     setState(() {
       _isCargando = true;
       _mensajeError = null;
     });
-
     try {
-      final futuros = await Future.wait<dynamic>(<Future<dynamic>>[
+      final r = await Future.wait<dynamic>(<Future<dynamic>>[
         widget.notasApi.obtenerTodos(
-          busqueda: _busquedaController.text,
-          tagId: _tagIdSeleccionado,
+          busqueda: _busqueda.text,
+          tagId: _tagId,
           carpetaId: _carpetaId,
         ),
         widget.tagsApi.obtenerTodos(),
         widget.notasApi.obtenerCarpetas(),
       ]);
-
-      final paginaNotas = futuros[0] as PaginaNotas;
-      final paginaTags = futuros[1] as PaginaTags;
-
       if (mounted) {
         setState(() {
-          _notas = paginaNotas.datos;
-          _tagsDisponibles = paginaTags.datos;
-          _carpetas = futuros[2] as List<CarpetaDto>;
+          _notas = (r[0] as PaginaNotas).datos;
+          _tags = (r[1] as PaginaTags).datos;
+          _carpetas = r[2] as List<CarpetaDto>;
         });
       }
     } catch (_) {
       if (mounted) {
-        setState(() {
-          _mensajeError = 'No se pudieron cargar las notas.';
-        });
+        setState(() => _mensajeError = 'No se pudieron cargar las notas.');
       }
     } finally {
-      if (mounted) {
-        setState(() {
-          _isCargando = false;
-        });
-      }
+      if (mounted) setState(() => _isCargando = false);
     }
   }
 
-  Future<void> _crearNota() async {
-    final valores = await showDialog<NotaFormValores>(
-      context: context,
-      builder: (_) => NotaFormDialog(
-        tagsDisponibles: _tagsDisponibles,
+  Future<void> _abrirEditor(String ruta, {NotaDto? nota}) async {
+    final guardada = await context.push<bool>(
+      ruta,
+      extra: NotaEditorArgs(
+        nota: nota,
+        tags: _tags,
         carpetas: _carpetas,
         carpetaInicial: _carpetaId,
       ),
     );
-    if (valores == null) return;
+    if (guardada ?? false) await _cargar();
+  }
 
-    final creada = await widget.notasApi.crear(
-      titulo: valores.titulo,
-      contenido: valores.contenido,
-      tagIds: valores.tagIds,
-      carpetaId: valores.carpetaId,
+  Future<void> _eliminar(NotaDto nota) async {
+    final ok = await confirmar(
+      context,
+      titulo: '¿Eliminar nota?',
+      mensaje: '«${nota.titulo}» se eliminará definitivamente.',
+      accion: 'Eliminar',
     );
-    if (mounted) avisarSiEncolada(context, creada);
-    await _cargarDatos();
+    if (!ok || !mounted) return;
+    final hecho = await ejecutarConAviso(
+      context,
+      () => widget.notasApi.eliminar(nota.id),
+      error: 'No se pudo eliminar la nota.',
+      exito: 'Nota eliminada.',
+    );
+    if (hecho) await _cargar();
   }
 
   Future<void> _abrirDetalle(NotaDto nota) async {
-    final colores = context.colores;
-    await showModalBottomSheet<void>(
+    final accion = await showModalBottomSheet<String>(
       context: context,
-      backgroundColor: colores.superficie,
       isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(8)),
-      ),
-      builder: (sheetContext) => NotaDetalleSheet(
+      useSafeArea: true,
+      builder: (ctx) => NotaDetalleSheet(
         nota: nota,
-        tagsDisponibles: _tagsDisponibles,
+        tagsDisponibles: _tags,
         puedeActualizar: widget.sesionStore.puede('notas:actualizar'),
         puedeEliminar: widget.sesionStore.puede('notas:eliminar'),
-        onEditar: () async {
-          Navigator.of(sheetContext).pop();
-          final valores = await showDialog<NotaFormValores>(
-            context: context,
-            builder: (_) => NotaFormDialog(
-              notaInicial: nota,
-              tagsDisponibles: _tagsDisponibles,
-              carpetas: _carpetas,
+        onEditar: () => Navigator.of(ctx).pop('editar'),
+        onEliminar: () => Navigator.of(ctx).pop('eliminar'),
+      ),
+    );
+    if (!mounted) return;
+    switch (accion) {
+      case 'editar':
+        await _abrirEditor('/notas/${nota.id}/editar', nota: nota);
+      case 'eliminar':
+        await _eliminar(nota);
+    }
+  }
+
+  Widget _filtroTags() {
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Row(
+        spacing: 8,
+        children: <Widget>[
+          ChoiceChip(
+            label: const Text('Todos'),
+            selected: _tagId == null,
+            onSelected: (_) {
+              setState(() => _tagId = null);
+              _cargar();
+            },
+          ),
+          for (final tag in _tags)
+            ChoiceChip(
+              label: Text(tag.nombre),
+              selected: _tagId == tag.id,
+              onSelected: (sel) {
+                setState(() => _tagId = sel ? tag.id : null);
+                _cargar();
+              },
             ),
-          );
-          if (valores == null) return;
-          await widget.notasApi.actualizar(
-            nota.id,
-            titulo: valores.titulo,
-            contenido: valores.contenido,
-            color: nota.color,
-            tagIds: valores.tagIds,
-            carpetaId: valores.carpetaId,
-          );
-          await _cargarDatos();
-        },
-        onEliminar: () async {
-          Navigator.of(sheetContext).pop();
-          await widget.notasApi.eliminar(nota.id);
-          await _cargarDatos();
-        },
+        ],
       ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    final colores = context.colores;
-    final textTheme = Theme.of(context).textTheme;
-    final puedeCrear = widget.sesionStore.puede('notas:crear');
-
-    return RefreshIndicator(
-      onRefresh: _cargarDatos,
-      child: ListView(
-        padding: const EdgeInsets.all(24),
-        children: <Widget>[
-          Wrap(
-            alignment: WrapAlignment.spaceBetween,
-            crossAxisAlignment: WrapCrossAlignment.center,
-            spacing: 12,
-            runSpacing: 12,
-            children: <Widget>[
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: <Widget>[
-                  Text('Notas', style: textTheme.headlineSmall),
-                  const SizedBox(height: 4),
-                  Text(
-                    'Tus apuntes y documentos en Markdown.',
-                    style: textTheme.bodyMedium?.copyWith(
-                      color: colores.tintaTenue,
-                    ),
-                  ),
-                ],
-              ),
-              if (puedeCrear)
-                FilledButton.icon(
-                  onPressed: _crearNota,
-                  icon: const Icon(Icons.add_rounded, size: 18),
-                  label: const Text('Nueva nota'),
-                ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          TextField(
-            controller: _busquedaController,
-            textInputAction: TextInputAction.search,
-            onSubmitted: (_) => _cargarDatos(),
-            decoration: InputDecoration(
-              hintText: 'Buscar en título o contenido...',
-              prefixIcon: Icon(
-                Icons.search_rounded,
-                size: 18,
-                color: colores.tintaTenue,
+    return Scaffold(
+      appBar: AppBar(title: const Text('Notas')),
+      floatingActionButton: widget.sesionStore.puede('notas:crear')
+          ? FloatingActionButton(
+              tooltip: 'Nueva nota',
+              onPressed: () => _abrirEditor('/notas/nueva'),
+              child: const Icon(Icons.add_rounded),
+            )
+          : null,
+      body: RefreshIndicator(
+        onRefresh: _cargar,
+        child: ListView(
+          padding: const EdgeInsets.only(bottom: 96),
+          children: <Widget>[
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 4, 16, 12),
+              child: SearchBar(
+                controller: _busqueda,
+                hintText: 'Buscar en notas',
+                leading: const Icon(Icons.search_rounded),
+                elevation: const WidgetStatePropertyAll<double>(0),
+                textInputAction: TextInputAction.search,
+                onSubmitted: (_) => _cargar(),
               ),
             ),
-          ),
-          if (_carpetas.isNotEmpty) ...<Widget>[
-            const SizedBox(height: 12),
-            SelectorCarpeta(
-              carpetas: _carpetas,
-              valor: _carpetaId,
-              textoNinguna: 'Todas las carpetas',
-              onChanged: (id) {
-                setState(() => _carpetaId = id);
-                _cargarDatos();
-              },
-            ),
-          ],
-          if (_tagsDisponibles.isNotEmpty) ...<Widget>[
-            const SizedBox(height: 12),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: <Widget>[
-                ChoiceChip(
-                  label: const Text('Todos'),
-                  selected: _tagIdSeleccionado == null,
-                  onSelected: (_) {
-                    setState(() => _tagIdSeleccionado = null);
-                    _cargarDatos();
+            if (_carpetas.isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+                child: SelectorCarpeta(
+                  carpetas: _carpetas,
+                  valor: _carpetaId,
+                  textoNinguna: 'Todas las carpetas',
+                  onChanged: (id) {
+                    setState(() => _carpetaId = id);
+                    _cargar();
                   },
                 ),
-                for (final tag in _tagsDisponibles)
-                  ChoiceChip(
-                    label: Text(tag.nombre),
-                    selected: _tagIdSeleccionado == tag.id,
-                    onSelected: (seleccionado) {
-                      setState(() {
-                        _tagIdSeleccionado = seleccionado ? tag.id : null;
-                      });
-                      _cargarDatos();
-                    },
-                  ),
-              ],
+              ),
+            if (_tags.isNotEmpty) _filtroTags(),
+            const SizedBox(height: 8),
+            avisoPendientes(
+              cola: widget.notasApi.cola,
+              usuarioId: widget.sesionStore.usuario?.id,
+              ruta: '/notas',
+              onSincronizado: _cargar,
             ),
-          ],
-          const SizedBox(height: 20),
-          avisoPendientes(
-            cola: widget.notasApi.cola,
-            usuarioId: widget.sesionStore.usuario?.id,
-            ruta: '/notas',
-            onSincronizado: _cargarDatos,
-          ),
-          if (_isCargando)
-            const Padding(
-              padding: EdgeInsets.symmetric(vertical: 40),
-              child: Center(child: CircularProgressIndicator()),
-            )
-          else if (_mensajeError != null)
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(20),
-                child: Column(
-                  children: <Widget>[
-                    Text(
-                      _mensajeError!,
-                      style: textTheme.bodyMedium?.copyWith(
-                        color: colores.rosePeligro,
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    OutlinedButton(
-                      onPressed: _cargarDatos,
-                      child: const Text('Reintentar'),
-                    ),
-                  ],
+            if (_isCargando)
+              const EstadoCargando()
+            else if (_mensajeError != null)
+              EstadoError(mensaje: _mensajeError!, onReintentar: _cargar)
+            else if (_notas.isEmpty)
+              const EstadoVacio(
+                icono: Icons.sticky_note_2_outlined,
+                titulo: 'Sin notas',
+                mensaje: 'Crea una nota para guardar apuntes e ideas.',
+              )
+            else
+              for (final nota in _notas) ...<Widget>[
+                NotaFila(
+                  nota: nota,
+                  carpeta: _carpetaId == null
+                      ? _carpetas
+                            .where((c) => c.id == nota.carpetaId)
+                            .firstOrNull
+                      : null,
+                  onTap: () => _abrirDetalle(nota),
                 ),
-              ),
-            )
-          else if (_notas.isEmpty)
-            const NotasVacias()
-          else
-            for (final nota in _notas) ...<Widget>[
-              NotaCard(
-                nota: nota,
-                carpeta: _carpetaId == null
-                    ? _carpetas.where((c) => c.id == nota.carpetaId).firstOrNull
-                    : null,
-                onTap: () => _abrirDetalle(nota),
-              ),
-              const SizedBox(height: 10),
-            ],
-        ],
+                const Divider(indent: 56),
+              ],
+          ],
+        ),
       ),
     );
   }

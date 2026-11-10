@@ -1,24 +1,24 @@
 import 'package:flutter/material.dart';
 import 'colores_noche_indigo.dart';
 
-/// Construcción de `ThemeData` claro y oscuro siguiendo `frontend/DESIGN.md`:
-/// - Radios: `6px` en controles, `8px` en tarjetas.
+/// `ThemeData` claro y oscuro: identidad de `frontend/DESIGN.md` con medidas móviles
+/// (skill `disenar-pantallas-mobile`): radios 8/12, controles de 48 dp, cuerpo de 16.
 /// - Profundidad por filetes de `1px`, sin sombras en tarjetas (`elevation: 0`).
 class TemaApp {
   TemaApp._();
 
-  static const double radioControl = 6.0;
-  static const double radioTarjeta = 8.0;
+  static const double radioControl = 8.0;
+  static const double radioTarjeta = 12.0;
 
   static ThemeData get claro => _construirTema(
-        brightness: Brightness.light,
-        paleta: ColoresNocheIndigo.claro,
-      );
+    brightness: Brightness.light,
+    paleta: ColoresNocheIndigo.claro,
+  );
 
   static ThemeData get oscuro => _construirTema(
-        brightness: Brightness.dark,
-        paleta: ColoresNocheIndigo.oscuro,
-      );
+    brightness: Brightness.dark,
+    paleta: ColoresNocheIndigo.oscuro,
+  );
 
   static ThemeData _construirTema({
     required Brightness brightness,
@@ -54,12 +54,44 @@ class TemaApp {
         elevation: 0,
         scrolledUnderElevation: 0,
         centerTitle: false,
-        shape: Border(bottom: BorderSide(color: paleta.borde, width: 1)),
         titleTextStyle: TextStyle(
           color: paleta.tinta,
-          fontSize: 16,
+          fontSize: 20,
           fontWeight: FontWeight.w600,
         ),
+      ),
+      floatingActionButtonTheme: FloatingActionButtonThemeData(
+        backgroundColor: paleta.indigoMarca,
+        foregroundColor: Colors.white,
+        elevation: 2,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      ),
+      bottomSheetTheme: BottomSheetThemeData(
+        backgroundColor: paleta.superficie,
+        showDragHandle: true,
+        dragHandleColor: paleta.bordeFuerte,
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+        ),
+      ),
+      dialogTheme: DialogThemeData(
+        backgroundColor: paleta.superficie,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(radioTarjeta * 2),
+        ),
+      ),
+      snackBarTheme: const SnackBarThemeData(
+        behavior: SnackBarBehavior.floating,
+      ),
+      dividerTheme: DividerThemeData(
+        color: paleta.borde,
+        thickness: 1,
+        space: 1,
+      ),
+      listTileTheme: ListTileThemeData(
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16),
+        iconColor: paleta.tintaSuave,
+        minVerticalPadding: 12,
       ),
       cardTheme: CardThemeData(
         color: paleta.superficie,
@@ -73,10 +105,9 @@ class TemaApp {
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: paleta.superficie,
-        isDense: true,
         contentPadding: const EdgeInsets.symmetric(
           horizontal: 12,
-          vertical: 10,
+          vertical: 14,
         ),
         hintStyle: TextStyle(color: paleta.tintaTenue, fontSize: 14),
         labelStyle: TextStyle(
@@ -99,12 +130,9 @@ class TemaApp {
         style: FilledButton.styleFrom(
           backgroundColor: paleta.indigoMarca,
           foregroundColor: Colors.white,
-          minimumSize: const Size(0, 36),
-          padding: const EdgeInsets.symmetric(horizontal: 14),
-          textStyle: const TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w500,
-          ),
+          minimumSize: const Size(64, 48),
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          textStyle: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(radioControl),
           ),
@@ -114,13 +142,10 @@ class TemaApp {
         style: OutlinedButton.styleFrom(
           backgroundColor: paleta.superficie,
           foregroundColor: paleta.tinta,
-          minimumSize: const Size(0, 36),
-          padding: const EdgeInsets.symmetric(horizontal: 14),
+          minimumSize: const Size(64, 48),
+          padding: const EdgeInsets.symmetric(horizontal: 20),
           side: BorderSide(color: paleta.borde, width: 1),
-          textStyle: const TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w500,
-          ),
+          textStyle: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(radioControl),
           ),
@@ -137,6 +162,12 @@ class TemaApp {
           color: paleta.tinta,
           fontSize: 16,
           fontWeight: FontWeight.w600,
+          height: 1.5,
+        ),
+        bodyLarge: TextStyle(
+          color: paleta.tinta,
+          fontSize: 16,
+          fontWeight: FontWeight.w400,
           height: 1.5,
         ),
         bodyMedium: TextStyle(

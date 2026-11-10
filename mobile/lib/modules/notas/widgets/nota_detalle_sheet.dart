@@ -32,7 +32,7 @@ class NotaDetalleSheet extends StatelessWidget {
 
     return SafeArea(
       child: Padding(
-        padding: const EdgeInsets.all(24),
+        padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -55,14 +55,7 @@ class NotaDetalleSheet extends StatelessWidget {
                         borderRadius: BorderRadius.circular(6),
                         border: Border.all(color: colores.borde, width: 1),
                       ),
-                      child: Text(
-                        tag.nombre,
-                        style: TextStyle(
-                          color: colores.tintaSuave,
-                          fontSize: 12,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
+                      child: Text(tag.nombre, style: textTheme.labelMedium),
                     ),
                 ],
               ),
@@ -98,7 +91,6 @@ class NotaDetalleSheet extends StatelessWidget {
                     onPressed: onEliminar,
                     icon: Icon(
                       Icons.delete_outline_rounded,
-                      size: 16,
                       color: colores.rosePeligro,
                     ),
                     label: Text(
@@ -109,9 +101,9 @@ class NotaDetalleSheet extends StatelessWidget {
                 else
                   const SizedBox.shrink(),
                 if (puedeActualizar && onEditar != null)
-                  OutlinedButton.icon(
+                  FilledButton.icon(
                     onPressed: onEditar,
-                    icon: const Icon(Icons.edit_outlined, size: 16),
+                    icon: const Icon(Icons.edit_outlined),
                     label: const Text('Editar'),
                   ),
               ],

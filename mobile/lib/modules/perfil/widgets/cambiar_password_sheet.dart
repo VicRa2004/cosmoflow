@@ -4,16 +4,16 @@ import '../../../core/theme/colores_noche_indigo.dart';
 import '../../auth/api/auth_api.dart';
 
 /// Diálogo modal para cambiar la contraseña de la cuenta (`PUT /api/auth/password`).
-class CambiarPasswordDialog extends StatefulWidget {
-  const CambiarPasswordDialog({super.key, required this.authApi});
+class CambiarPasswordSheet extends StatefulWidget {
+  const CambiarPasswordSheet({super.key, required this.authApi});
 
   final AuthApi authApi;
 
   @override
-  State<CambiarPasswordDialog> createState() => _CambiarPasswordDialogState();
+  State<CambiarPasswordSheet> createState() => _CambiarPasswordSheetState();
 }
 
-class _CambiarPasswordDialogState extends State<CambiarPasswordDialog> {
+class _CambiarPasswordSheetState extends State<CambiarPasswordSheet> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   final TextEditingController _actualController = TextEditingController();
   final TextEditingController _nuevaController = TextEditingController();
@@ -47,8 +47,9 @@ class _CambiarPasswordDialogState extends State<CambiarPasswordDialog> {
       }
     } on DioException catch (e) {
       final data = e.response?.data;
-      final mensajeServidor =
-          data is Map<String, dynamic> ? data['mensaje'] as String? : null;
+      final mensajeServidor = data is Map<String, dynamic>
+          ? data['mensaje'] as String?
+          : null;
       if (mounted) {
         setState(() {
           _mensajeError =
@@ -75,104 +76,70 @@ class _CambiarPasswordDialogState extends State<CambiarPasswordDialog> {
     final colores = context.colores;
     final textTheme = Theme.of(context).textTheme;
 
-    return Dialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 400),
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: <Widget>[
-                Text('Cambiar contraseña', style: textTheme.titleMedium),
-                const SizedBox(height: 4),
-                Text(
-                  'Se cerrarán tus demás sesiones activas.',
-                  style: textTheme.bodySmall,
-                ),
-                const SizedBox(height: 16),
-                if (_mensajeError != null) ...<Widget>[
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 10,
-                    ),
-                    decoration: BoxDecoration(
-                      color: colores.rosePeligro.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(6),
-                      border: Border.all(
-                        color: colores.rosePeligro.withValues(alpha: 0.4),
-                      ),
-                    ),
-                    child: Text(
-                      _mensajeError!,
-                      style: textTheme.bodySmall?.copyWith(
-                        color: colores.rosePeligro,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                ],
-                Text('Contraseña actual', style: textTheme.labelMedium),
-                const SizedBox(height: 6),
-                TextFormField(
-                  controller: _actualController,
-                  obscureText: true,
-                  decoration: const InputDecoration(hintText: '••••••••'),
-                  validator: (valor) {
-                    if (valor == null || valor.isEmpty) {
-                      return 'Ingresa tu contraseña actual';
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 12),
-                Text('Nueva contraseña', style: textTheme.labelMedium),
-                const SizedBox(height: 6),
-                TextFormField(
-                  controller: _nuevaController,
-                  obscureText: true,
-                  decoration: const InputDecoration(
-                    hintText: 'Mínimo 8 caracteres',
-                  ),
-                  validator: (valor) {
-                    if (valor == null || valor.length < 8) {
-                      return 'Mínimo 8 caracteres';
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 20),
-                Wrap(
-                  alignment: WrapAlignment.end,
-                  spacing: 8,
-                  children: <Widget>[
-                    OutlinedButton(
-                      onPressed:
-                          _isCargando ? null : () => Navigator.of(context).pop(),
-                      child: const Text('Cancelar'),
-                    ),
-                    FilledButton(
-                      onPressed: _isCargando ? null : _guardar,
-                      child: _isCargando
-                          ? const SizedBox(
-                              width: 16,
-                              height: 16,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                color: Colors.white,
-                              ),
-                            )
-                          : const Text('Guardar'),
-                    ),
-                  ],
-                ),
-              ],
+    return Padding(
+      padding: EdgeInsets.fromLTRB(
+        16,
+        0,
+        16,
+        16 + MediaQuery.viewInsetsOf(context).bottom,
+      ),
+      child: Form(
+        key: _formKey,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: <Widget>[
+            Text('Cambiar contraseña', style: textTheme.titleMedium),
+            const SizedBox(height: 4),
+            Text(
+              'Se cerrarán tus demás sesiones activas.',
+              style: textTheme.bodySmall,
             ),
-          ),
+            const SizedBox(height: 16),
+            if (_mensajeError != null) ...<Widget>[
+              Text(
+                _mensajeError!,
+                style: textTheme.bodyMedium?.copyWith(
+                  color: colores.rosePeligro,
+                ),
+              ),
+              const SizedBox(height: 12),
+            ],
+            TextFormField(
+              controller: _actualController,
+              obscureText: true,
+              autofocus: true,
+              textInputAction: TextInputAction.next,
+              decoration: const InputDecoration(labelText: 'Contraseña actual'),
+              validator: (valor) => (valor == null || valor.isEmpty)
+                  ? 'Ingresa tu contraseña actual'
+                  : null,
+            ),
+            const SizedBox(height: 16),
+            TextFormField(
+              controller: _nuevaController,
+              obscureText: true,
+              textInputAction: TextInputAction.done,
+              onFieldSubmitted: (_) => _isCargando ? null : _guardar(),
+              decoration: const InputDecoration(
+                labelText: 'Nueva contraseña',
+                helperText: 'Mínimo 8 caracteres',
+              ),
+              validator: (valor) => (valor == null || valor.length < 8)
+                  ? 'Mínimo 8 caracteres'
+                  : null,
+            ),
+            const SizedBox(height: 24),
+            FilledButton(
+              onPressed: _isCargando ? null : _guardar,
+              child: _isCargando
+                  ? const SizedBox.square(
+                      dimension: 20,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Text('Guardar'),
+            ),
+          ],
         ),
       ),
     );

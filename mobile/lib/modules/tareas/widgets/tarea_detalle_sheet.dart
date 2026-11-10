@@ -28,7 +28,7 @@ class TareaDetalleSheet extends StatelessWidget {
 
     return SafeArea(
       child: Padding(
-        padding: const EdgeInsets.all(24),
+        padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -39,10 +39,7 @@ class TareaDetalleSheet extends StatelessWidget {
               spacing: 24,
               runSpacing: 12,
               children: <Widget>[
-                _MetaItem(
-                  etiqueta: 'Estado',
-                  valor: tarea.estado.etiqueta,
-                ),
+                _MetaItem(etiqueta: 'Estado', valor: tarea.estado.etiqueta),
                 _MetaItem(
                   etiqueta: 'Prioridad',
                   valor: tarea.prioridad.etiqueta,
@@ -88,7 +85,6 @@ class TareaDetalleSheet extends StatelessWidget {
                     onPressed: onEliminar,
                     icon: Icon(
                       Icons.delete_outline_rounded,
-                      size: 16,
                       color: colores.rosePeligro,
                     ),
                     label: Text(
@@ -99,9 +95,9 @@ class TareaDetalleSheet extends StatelessWidget {
                 else
                   const SizedBox.shrink(),
                 if (puedeActualizar && onEditar != null)
-                  OutlinedButton.icon(
+                  FilledButton.icon(
                     onPressed: onEditar,
-                    icon: const Icon(Icons.edit_outlined, size: 16),
+                    icon: const Icon(Icons.edit_outlined),
                     label: const Text('Editar'),
                   ),
               ],

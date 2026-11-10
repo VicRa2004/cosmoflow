@@ -3,9 +3,9 @@ import '../../../core/theme/colores_noche_indigo.dart';
 import '../models/carpeta_model.dart';
 import '../models/nota_model.dart';
 
-/// Tarjeta de la lista: título, carpeta (si se ven todas) y extracto.
-class NotaCard extends StatelessWidget {
-  const NotaCard({
+/// Fila de lista: título, carpeta (si se ven todas) y extracto de una línea.
+class NotaFila extends StatelessWidget {
+  const NotaFila({
     super.key,
     required this.nota,
     required this.onTap,
@@ -19,47 +19,25 @@ class NotaCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colores = context.colores;
-    final textTheme = Theme.of(context).textTheme;
-    final carpeta = this.carpeta;
-    return Card(
-      child: InkWell(
-        borderRadius: BorderRadius.circular(8),
-        onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: <Widget>[
-              Text(
-                nota.titulo,
-                style: textTheme.bodyMedium?.copyWith(
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-              if (carpeta != null) ...<Widget>[
-                const SizedBox(height: 4),
-                Text(
-                  carpeta.nombre,
-                  style: textTheme.bodySmall?.copyWith(
-                    color: colores.tintaSuave,
-                  ),
-                ),
-              ],
-              if (nota.contenido.trim().isNotEmpty) ...<Widget>[
-                const SizedBox(height: 6),
-                Text(
-                  nota.contenido.trim(),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: textTheme.bodySmall?.copyWith(
-                    color: colores.tintaTenue,
-                  ),
-                ),
-              ],
-            ],
-          ),
-        ),
-      ),
+    final extracto = nota.contenido.trim().replaceAll(RegExp(r'\s+'), ' ');
+    final meta = <String>[
+      if (carpeta != null) carpeta!.nombre,
+      if (extracto.isNotEmpty) extracto,
+    ].join(' · ');
+    return ListTile(
+      onTap: onTap,
+      leading: Icon(Icons.sticky_note_2_outlined, color: colores.tintaTenue),
+      title: Text(nota.titulo, maxLines: 1, overflow: TextOverflow.ellipsis),
+      subtitle: meta.isEmpty
+          ? null
+          : Text(
+              meta,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: Theme.of(
+                context,
+              ).textTheme.bodySmall?.copyWith(color: colores.tintaTenue),
+            ),
     );
   }
 }

@@ -7,6 +7,7 @@ class ItemNavegacion {
     required this.ruta,
     required this.etiqueta,
     required this.icono,
+    this.iconoActivo,
     this.permiso,
     this.soloAdmin = false,
     this.enBarraInferior = false,
@@ -15,16 +16,14 @@ class ItemNavegacion {
   final String ruta;
   final String etiqueta;
   final IconData icono;
+  final IconData? iconoActivo;
   final String? permiso;
   final bool soloAdmin;
   final bool enBarraInferior;
 }
 
 class GrupoNavegacion {
-  const GrupoNavegacion({
-    required this.titulo,
-    required this.items,
-  });
+  const GrupoNavegacion({required this.titulo, required this.items});
 
   final String titulo;
   final List<ItemNavegacion> items;
@@ -37,14 +36,16 @@ const List<GrupoNavegacion> gruposNavegacion = <GrupoNavegacion>[
       ItemNavegacion(
         ruta: '/dashboard',
         etiqueta: 'Pendientes',
-        icono: Icons.radio_button_checked_outlined,
+        icono: Icons.inbox_outlined,
+        iconoActivo: Icons.inbox_rounded,
         permiso: 'tareas:leer',
         enBarraInferior: true,
       ),
       ItemNavegacion(
         ruta: '/tareas',
         etiqueta: 'Tareas',
-        icono: Icons.checklist_rounded,
+        icono: Icons.task_alt_outlined,
+        iconoActivo: Icons.task_alt_rounded,
         permiso: 'tareas:leer',
         enBarraInferior: true,
       ),
@@ -52,6 +53,7 @@ const List<GrupoNavegacion> gruposNavegacion = <GrupoNavegacion>[
         ruta: '/notas',
         etiqueta: 'Notas',
         icono: Icons.sticky_note_2_outlined,
+        iconoActivo: Icons.sticky_note_2_rounded,
         permiso: 'notas:leer',
         enBarraInferior: true,
       ),
@@ -60,12 +62,13 @@ const List<GrupoNavegacion> gruposNavegacion = <GrupoNavegacion>[
         etiqueta: 'Tags',
         icono: Icons.sell_outlined,
         permiso: 'tags:leer',
-        enBarraInferior: true,
+        // Secundaria: se llega desde Perfil (máx. 4 destinos en la barra).
       ),
       ItemNavegacion(
         ruta: '/perfil',
         etiqueta: 'Perfil',
         icono: Icons.person_outline_rounded,
+        iconoActivo: Icons.person_rounded,
         enBarraInferior: true,
       ),
     ],
@@ -77,8 +80,10 @@ List<ItemNavegacion> obtenerItemsVisibles(
   List<ItemNavegacion> items,
   SesionStore sesionStore,
 ) {
-  return items.where((item) {
-    if (item.soloAdmin && !sesionStore.esAdmin) return false;
-    return sesionStore.puede(item.permiso);
-  }).toList(growable: false);
+  return items
+      .where((item) {
+        if (item.soloAdmin && !sesionStore.esAdmin) return false;
+        return sesionStore.puede(item.permiso);
+      })
+      .toList(growable: false);
 }
