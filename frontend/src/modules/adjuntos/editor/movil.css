@@ -1,0 +1,44 @@
+/* Editor de la app (`movil.ts`): los colores llegan del tema de Flutter. */
+html,
+body {
+	margin: 0;
+	background: var(--fondo);
+	color: var(--tinta);
+	font-family: system-ui, sans-serif;
+	-webkit-tap-highlight-color: transparent;
+}
+.milkdown {
+	--crepe-color-background: var(--fondo);
+	--crepe-color-on-background: var(--tinta);
+	--crepe-color-surface: var(--superficie);
+	--crepe-color-surface-low: var(--elevada);
+	--crepe-color-on-surface: var(--tinta);
+	--crepe-color-on-surface-variant: var(--tinta-tenue);
+	--crepe-color-outline: var(--borde-fuerte);
+	--crepe-color-primary: var(--indigo);
+	--crepe-color-secondary: var(--elevada);
+	--crepe-color-on-secondary: var(--tinta);
+	--crepe-color-inverse: var(--tinta);
+	--crepe-color-on-inverse: var(--fondo);
+	--crepe-color-inline-code: var(--tinta);
+	--crepe-color-error: var(--peligro);
+	--crepe-color-hover: var(--elevada);
+	--crepe-color-selected: var(--borde);
+	--crepe-color-inline-area: var(--elevada);
+	--crepe-base-font-size: 16px;
+	--crepe-font-title: system-ui, sans-serif;
+	--crepe-font-default: system-ui, sans-serif;
+	--crepe-font-code: ui-monospace, monospace;
+	caret-color: var(--indigo);
+}
+/* Hueco izquierdo para el asa de bloque y abajo para que quepan los menús. */
+.milkdown .ProseMirror {
+	padding: 4px 0 96px 40px;
+}
+.milkdown a[data-mencion] {
+	border-radius: 4px;
+	padding: 0 4px;
+	background: var(--elevada);
+	color: var(--indigo);
+	text-decoration: none;
+}

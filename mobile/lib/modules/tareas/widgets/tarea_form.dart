@@ -119,7 +119,7 @@ class TareaFormState extends State<TareaForm> {
           const SizedBox(height: 8),
           EditorMarkdown(
             controller: _contenido,
-            hint: 'Toca para añadir detalles, pasos… (admite Markdown)',
+            hint: 'Detalles, pasos… o pulsa «/» para insertar un bloque',
             onCambio: widget.onCambio,
           ),
           const SizedBox(height: 24),

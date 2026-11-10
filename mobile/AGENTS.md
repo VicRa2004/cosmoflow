@@ -36,7 +36,7 @@ mobile/lib/
 │   ├── offline/                    # ColaSinConexion (altas de notas y tareas sin red, en SharedPreferences) y AvisoPendientes
 │   ├── router/                     # Configuración de GoRouter y guardián de rutas autenticadas
 │   ├── theme/                      # Sistema de diseño «Noche índigo» (ThemeData claro/oscuro, tokens de color y tipografía)
-│   └── widgets/                    # EstadoCargando/Error/Vacio, confirmar(), ejecutarConAviso(), PaginaEditor, CampoFecha
+│   └── widgets/                    # EstadoCargando/Error/Vacio, confirmar(), ejecutarConAviso(), PaginaEditor, CampoFecha, EditorMarkdown (Crepe de la web en WebView: `assets/editor/`, se regenera con `pnpm build:editor-movil` desde la raíz)
 │
 ├── modules/                        # Lógica de dominio modular (en español)
 │   ├── auth/                       # Login, Registro, Recuperar contraseña

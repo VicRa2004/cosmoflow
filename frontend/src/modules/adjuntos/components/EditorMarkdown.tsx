@@ -5,6 +5,11 @@ import { useFieldContext } from "@/core/components/form/contextos";
 import { cn } from "@/core/utils/cn";
 import { type AmbitoAdjunto, adjuntosApi } from "../api/adjuntosApi";
 import {
+	etiquetasBloques,
+	etiquetasToolbar,
+	PLACEHOLDER_EDITOR,
+} from "../editor/configCrepe";
+import {
 	CONSULTA_MENCION,
 	enlacesPegables,
 	filtrarMencionables,
@@ -84,8 +89,10 @@ export function EditorMarkdown({
 			features: { [Crepe.Feature.Latex]: false },
 			featureConfigs: {
 				[Crepe.Feature.Placeholder]: {
-					text: placeholder ?? "Escribe o pulsa «/» para insertar un bloque…",
+					text: placeholder ?? PLACEHOLDER_EDITOR,
 				},
+				[Crepe.Feature.BlockEdit]: etiquetasBloques,
+				[Crepe.Feature.Toolbar]: etiquetasToolbar,
 				[Crepe.Feature.ImageBlock]: {
 					onUpload: async (archivo) => (await subirRef.current(archivo)).url,
 					// shortcut: el blob URL no se libera hasta recargar; basta para una sesión de edición.
@@ -98,39 +105,6 @@ export function EditorMarkdown({
 					blockCaptionPlaceholderText: "Pie de imagen",
 					blockUploadPlaceholderText: "o pega un enlace",
 					inlineUploadPlaceholderText: "o pega un enlace",
-				},
-				[Crepe.Feature.BlockEdit]: {
-					textGroup: {
-						label: "Texto",
-						text: { label: "Texto" },
-						h1: { label: "Título 1" },
-						h2: { label: "Título 2" },
-						h3: { label: "Título 3" },
-						h4: { label: "Título 4" },
-						h5: { label: "Título 5" },
-						h6: { label: "Título 6" },
-						quote: { label: "Cita" },
-						divider: { label: "Separador" },
-					},
-					listGroup: {
-						label: "Listas",
-						bulletList: { label: "Lista" },
-						orderedList: { label: "Lista numerada" },
-						taskList: { label: "Lista de tareas" },
-					},
-					advancedGroup: {
-						label: "Avanzado",
-						image: { label: "Imagen" },
-						codeBlock: { label: "Código" },
-						table: { label: "Tabla" },
-					},
-				},
-				[Crepe.Feature.Toolbar]: {
-					boldLabel: "Negrita",
-					italicLabel: "Cursiva",
-					strikethroughLabel: "Tachado",
-					codeLabel: "Código",
-					linkLabel: "Enlace",
 				},
 			},
 		});

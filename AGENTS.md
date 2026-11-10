@@ -38,6 +38,7 @@ pnpm dev                # corre frontend y backend concurrentemente en paralelo
 pnpm dev:backend        # corre el backend con Bun (se reinicia al guardar; `--watch`, no `--hot`: el WASM de Prisma se corrompe al recargar en caliente)
 pnpm dev:frontend       # corre el frontend con Vite (puerto 5173)
 pnpm build:frontend     # compila el frontend para producción
+pnpm build:editor-movil # empaqueta el editor Crepe para el WebView de mobile (mobile/assets/editor/); commitear el resultado
 pnpm test:backend       # tests del backend con Bun
 pnpm test:frontend      # tests del frontend con Vitest
 pnpm test:e2e           # e2e del backend contra Postgres real (DATABASE_URL_TEST, se resetea)

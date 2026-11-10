@@ -28,7 +28,11 @@
 			"ignoreDependencies": ["@prisma/client", "@swc/core"]
 		},
 		"frontend": {
-			"entry": ["src/routes/**/!(*.test|*.spec).{ts,tsx}"],
+			"entry": [
+				"src/routes/**/!(*.test|*.spec).{ts,tsx}",
+				"src/modules/adjuntos/editor/movil.ts",
+				"vite.editor-movil.config.ts"
+			],
 			"project": ["src/**/*.{ts,tsx}"],
 			"ignoreDependencies": ["tailwindcss"]
 		}

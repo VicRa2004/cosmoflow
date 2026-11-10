@@ -1,12 +1,15 @@
+import 'dart:convert';
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
+import 'package:webview_flutter/webview_flutter.dart';
 import '../theme/colores_noche_indigo.dart';
-import 'contenido_markdown.dart';
 
-/// Editor por bloques al estilo Notion: cada párrafo se ve renderizado y,
-/// al tocarlo, se edita su Markdown en el sitio. [controller] guarda el texto completo.
+/// Editor WYSIWYG de notas y tareas: el mismo Milkdown Crepe de la web
+/// (`assets/editor/`, generado con `pnpm build:editor-movil`) en un WebView.
+/// Crece con el contenido; [controller] recibe el Markdown en cada cambio.
 ///
-/// shortcut: el cursor va al final del bloque tocado, no donde se tocó; sin
-/// barra de formato ni comandos «/». Ampliar si se echa en falta.
+/// shortcut: sin imágenes, menciones ni menú de `[[` (necesitan la API desde el
+/// WebView); los `[[wikilinks]]` escritos se conservan.
 class EditorMarkdown extends StatefulWidget {
   const EditorMarkdown({
     super.key,
@@ -19,142 +22,112 @@ class EditorMarkdown extends StatefulWidget {
   final String hint;
   final VoidCallback? onCambio;
 
-  /// Separa en bloques por líneas en blanco, sin partir bloques de código ```.
-  static List<String> dividirBloques(String texto) {
-    final bloques = <String>[];
-    final actual = <String>[];
-    var enCodigo = false;
-    void cerrar() {
-      if (actual.isNotEmpty) bloques.add(actual.join('\n'));
-      actual.clear();
-    }
-
-    for (final linea in texto.split('\n')) {
-      if (linea.trimLeft().startsWith('```')) enCodigo = !enCodigo;
-      if (!enCodigo && linea.trim().isEmpty) {
-        cerrar();
-      } else {
-        actual.add(linea);
-      }
-    }
-    cerrar();
-    return bloques;
-  }
-
   @override
   State<EditorMarkdown> createState() => _EditorMarkdownState();
 }
 
 class _EditorMarkdownState extends State<EditorMarkdown> {
-  late List<String> _bloques;
-  int? _editando;
-  TextEditingController? _edicion;
-  FocusNode? _foco;
+  late final WebViewController _web;
+  double _altura = 160;
+
+  /// Borde inferior del cursor dentro del editor, o `null` si no tiene el foco.
+  double? _cursor;
+  double _teclado = 0;
 
   @override
   void initState() {
     super.initState();
-    _bloques = EditorMarkdown.dividirBloques(widget.controller.text);
+    _web = WebViewController()
+      ..setJavaScriptMode(JavaScriptMode.unrestricted)
+      ..addJavaScriptChannel('Cosmoflow', onMessageReceived: _recibir)
+      ..setNavigationDelegate(
+        NavigationDelegate(
+          onPageFinished: (_) => _iniciar(),
+          // Solo la página local del editor: un enlace no debe abrirse dentro.
+          onNavigationRequest: (peticion) => peticion.url.startsWith('file:')
+              ? NavigationDecision.navigate
+              : NavigationDecision.prevent,
+        ),
+      )
+      ..loadFlutterAsset('assets/editor/index.html');
   }
 
   @override
-  void dispose() {
-    _edicion?.dispose();
-    _foco?.dispose();
-    super.dispose();
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _web.setBackgroundColor(context.colores.fondo);
   }
 
-  void _editar(int i) {
-    final anteriorEdicion = _edicion;
-    final anteriorFoco = _foco;
-    final foco = FocusNode();
-    // Si el foco se va a otro sitio (título, Guardar…), vuelve a la vista previa.
-    foco.addListener(() {
-      if (!foco.hasFocus && _foco == foco) _terminar();
+  static String _hex(Color c) =>
+      '#${(c.toARGB32() & 0xFFFFFF).toRadixString(16).padLeft(6, '0')}';
+
+  void _iniciar() {
+    if (!mounted) return;
+    final c = context.colores;
+    final opciones = jsonEncode(<String, Object>{
+      'markdown': widget.controller.text,
+      'placeholder': widget.hint,
+      'colores': <String, String>{
+        '--fondo': _hex(c.fondo),
+        '--superficie': _hex(c.superficie),
+        '--elevada': _hex(c.elevada),
+        '--borde': _hex(c.borde),
+        '--borde-fuerte': _hex(c.bordeFuerte),
+        '--tinta': _hex(c.tinta),
+        '--tinta-tenue': _hex(c.tintaTenue),
+        '--indigo': _hex(c.indigoMarca),
+        '--peligro': _hex(c.rosePeligro),
+      },
     });
-    setState(() {
-      _editando = i;
-      _edicion = TextEditingController(text: _bloques[i]);
-      _foco = foco;
-    });
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      anteriorEdicion?.dispose();
-      anteriorFoco?.dispose();
-    });
+    _web.runJavaScript('window.iniciarEditor($opciones)');
   }
 
-  void _anadir() {
-    setState(() => _bloques.add(''));
-    _editar(_bloques.length - 1);
+  void _recibir(JavaScriptMessage mensaje) {
+    if (!mounted) return;
+    final datos = jsonDecode(mensaje.message) as Map<String, dynamic>;
+    if (datos['markdown'] case final String markdown) {
+      widget.controller.text = markdown;
+      widget.onCambio?.call();
+    }
+    if (datos['altura'] case final num altura) {
+      setState(() => _altura = math.max(altura.toDouble(), 160));
+    }
+    if (datos.containsKey('cursor')) {
+      _cursor = (datos['cursor'] as num?)?.toDouble();
+      _mostrarCursor();
+    }
   }
 
-  void _terminar() {
-    setState(() {
-      _editando = null;
-      _bloques = EditorMarkdown.dividirBloques(_bloques.join('\n\n'));
-    });
-  }
-
-  void _escribir(String texto) {
-    _bloques[_editando!] = texto;
-    widget.controller.text = _bloques
-        .where((b) => b.trim().isNotEmpty)
-        .join('\n\n');
-    widget.onCambio?.call();
+  /// El WebView no se desplaza (crece con el contenido): mueve la lista para
+  /// que el cursor quede por encima del teclado.
+  void _mostrarCursor() {
+    final cursor = _cursor;
+    final caja = context.findRenderObject() as RenderBox?;
+    final posicion = Scrollable.maybeOf(context)?.position;
+    if (cursor == null || caja == null || posicion == null) return;
+    final media = MediaQuery.of(context);
+    final limite = media.size.height - media.viewInsets.bottom - 24;
+    final exceso = caja.localToGlobal(Offset(0, cursor)).dy - limite;
+    if (exceso > 0) {
+      posicion.jumpTo(
+        math.min(posicion.pixels + exceso, posicion.maxScrollExtent),
+      );
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    final colores = context.colores;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: <Widget>[
-        for (var i = 0; i < _bloques.length; i++)
-          if (i == _editando)
-            TextField(
-              controller: _edicion,
-              focusNode: _foco,
-              autofocus: true,
-              maxLines: null,
-              keyboardType: TextInputType.multiline,
-              textCapitalization: TextCapitalization.sentences,
-              style: Theme.of(context).textTheme.bodyLarge,
-              decoration: InputDecoration(
-                isDense: true,
-                filled: true,
-                fillColor: colores.elevada,
-                border: InputBorder.none,
-                enabledBorder: InputBorder.none,
-                focusedBorder: InputBorder.none,
-                contentPadding: const EdgeInsets.all(8),
-              ),
-              onChanged: _escribir,
-            )
-          else
-            InkWell(
-              onTap: () => _editar(i),
-              borderRadius: BorderRadius.circular(8),
-              child: Padding(
-                padding: const EdgeInsets.all(8),
-                child: ContenidoMarkdown(texto: _bloques[i], selectable: false),
-              ),
-            ),
-        InkWell(
-          onTap: _anadir,
-          borderRadius: BorderRadius.circular(8),
-          child: Container(
-            constraints: const BoxConstraints(minHeight: 48),
-            alignment: Alignment.centerLeft,
-            padding: const EdgeInsets.symmetric(horizontal: 8),
-            child: Text(
-              _bloques.isEmpty ? widget.hint : 'Toca para seguir escribiendo',
-              style: Theme.of(
-                context,
-              ).textTheme.bodyLarge?.copyWith(color: colores.tintaTenue),
-            ),
-          ),
-        ),
-      ],
+    // Al abrirse el teclado no hay mensaje del editor: se recoloca aquí.
+    final teclado = MediaQuery.viewInsetsOf(context).bottom;
+    if (teclado != _teclado) {
+      _teclado = teclado;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _mostrarCursor();
+      });
+    }
+    return SizedBox(
+      height: _altura,
+      child: WebViewWidget(controller: _web),
     );
   }
 }

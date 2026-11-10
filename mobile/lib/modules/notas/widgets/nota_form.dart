@@ -104,7 +104,7 @@ class NotaFormState extends State<NotaForm> {
           const SizedBox(height: 8),
           EditorMarkdown(
             controller: _contenido,
-            hint: 'Toca para escribir tus apuntes (admite Markdown)',
+            hint: 'Escribe tus apuntes o pulsa «/» para insertar un bloque…',
             onCambio: widget.onCambio,
           ),
           if (widget.carpetas.isNotEmpty) ...<Widget>[
