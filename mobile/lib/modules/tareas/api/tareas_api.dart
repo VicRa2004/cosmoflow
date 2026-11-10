@@ -85,6 +85,14 @@ class TareasApi {
     return respuesta == null ? null : TareaDto.fromJson(respuesta);
   }
 
+  /// Una tarea por id (`GET /api/tareas/{id}`).
+  Future<TareaDto> obtenerUno(int id) async {
+    final response = await apiClient.dio.get<Map<String, dynamic>>(
+      '/tareas/$id',
+    );
+    return TareaDto.fromJson(response.data!);
+  }
+
   /// Actualiza campos de una tarea existente (`PUT /api/tareas/{id}`).
   Future<TareaDto> actualizar(int id, Map<String, dynamic> datos) async {
     final response = await apiClient.dio.put<Map<String, dynamic>>(

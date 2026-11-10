@@ -6,7 +6,6 @@ import '../../core/widgets/avisos.dart';
 import '../../core/widgets/confirmar.dart';
 import 'api/tareas_api.dart';
 import 'models/tarea_model.dart';
-import 'widgets/tarea_detalle_sheet.dart';
 
 /// Acciones de tarea compartidas por Pendientes y Tareas.
 /// Todas devuelven `true` si algo cambió y la lista debe recargarse.
@@ -48,25 +47,9 @@ class AccionesTarea {
     );
   }
 
-  /// Vista previa en bottom sheet con Editar / Eliminar.
+  /// Abre `/tareas/:id`. Devuelve `true` siempre: dentro pudo editarse o eliminarse.
   Future<bool> abrirDetalle(BuildContext context, TareaDto tarea) async {
-    final accion = await showModalBottomSheet<String>(
-      context: context,
-      isScrollControlled: true,
-      useSafeArea: true,
-      builder: (ctx) => TareaDetalleSheet(
-        tarea: tarea,
-        puedeActualizar: sesionStore.puede('tareas:actualizar'),
-        puedeEliminar: sesionStore.puede('tareas:eliminar'),
-        onEditar: () => Navigator.of(ctx).pop('editar'),
-        onEliminar: () => Navigator.of(ctx).pop('eliminar'),
-      ),
-    );
-    if (!context.mounted) return false;
-    return switch (accion) {
-      'editar' => editar(context, tarea),
-      'eliminar' => eliminar(context, tarea),
-      _ => Future<bool>.value(false),
-    };
+    await context.push<void>('/tareas/${tarea.id}', extra: tarea);
+    return true;
   }
 }

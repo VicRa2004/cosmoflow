@@ -13,6 +13,8 @@ import '../../modules/tags/api/tags_api.dart';
 import '../../modules/tags/pages/tags_page.dart';
 import '../../modules/tareas/api/tareas_api.dart';
 import '../../modules/tareas/models/tarea_model.dart';
+import '../../modules/tareas/acciones_tarea.dart';
+import '../../modules/tareas/pages/tarea_detalle_page.dart';
 import '../../modules/tareas/pages/tarea_editor_page.dart';
 import '../../modules/tareas/pages/tareas_page.dart';
 import '../auth/sesion_store.dart';
@@ -76,6 +78,17 @@ GoRouter crearAppRouter({
       GoRoute(
         path: '/tareas/nueva',
         builder: (context, state) => TareaEditorPage(tareasApi: tareasApi),
+      ),
+      GoRoute(
+        path: '/tareas/:id',
+        builder: (context, state) => TareaDetallePage(
+          id: int.parse(state.pathParameters['id']!),
+          tarea: state.extra as TareaDto?,
+          acciones: AccionesTarea(
+            sesionStore: sesionStore,
+            tareasApi: tareasApi,
+          ),
+        ),
       ),
       GoRoute(
         path: '/tareas/:id/editar',

@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/auth/sesion_store.dart';
-import '../../../core/theme/colores_noche_indigo.dart';
 import '../../../core/widgets/avisos.dart';
 import '../../../core/widgets/confirmar.dart';
+import '../../../core/widgets/contenido_markdown.dart';
 import '../../../core/widgets/estados.dart';
 import '../api/notas_api.dart';
 import '../models/nota_model.dart';
@@ -111,7 +111,6 @@ class _NotaDetallePageState extends State<NotaDetallePage> {
   }
 
   Widget _contenido(NotaDto nota) {
-    final colores = context.colores;
     final textTheme = Theme.of(context).textTheme;
     final carpeta = widget.args.carpetas
         .where((c) => c.id == nota.carpetaId)
@@ -119,7 +118,6 @@ class _NotaDetallePageState extends State<NotaDetallePage> {
     final tags = widget.args.tags
         .where((t) => nota.tagIds.contains(t.id))
         .toList(growable: false);
-    final vacia = nota.contenido.trim().isEmpty;
 
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 48),
@@ -143,12 +141,7 @@ class _NotaDetallePageState extends State<NotaDetallePage> {
         const SizedBox(height: 16),
         const Divider(),
         const SizedBox(height: 16),
-        SelectableText(
-          vacia ? 'Sin contenido.' : nota.contenido,
-          style: textTheme.bodyLarge?.copyWith(
-            color: vacia ? colores.tintaTenue : colores.tinta,
-          ),
-        ),
+        ContenidoMarkdown(texto: nota.contenido),
       ],
     );
   }
