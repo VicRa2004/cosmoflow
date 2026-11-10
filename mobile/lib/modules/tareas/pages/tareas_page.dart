@@ -1,3 +1,4 @@
+import 'package:go_router/go_router.dart';
 import 'package:flutter/material.dart';
 import '../../../core/auth/sesion_store.dart';
 import '../../../core/offline/aviso_pendientes.dart';
@@ -106,7 +107,16 @@ class _TareasPageState extends State<TareasPage> {
   Widget build(BuildContext context) {
     final puedeActualizar = widget.sesionStore.puede('tareas:actualizar');
     return Scaffold(
-      appBar: AppBar(title: const Text('Tareas')),
+      appBar: AppBar(
+        title: const Text('Tareas'),
+        actions: <Widget>[
+          IconButton(
+            tooltip: 'Calendario',
+            icon: const Icon(Icons.calendar_month_outlined),
+            onPressed: () => context.push('/calendario'),
+          ),
+        ],
+      ),
       floatingActionButton: widget.sesionStore.puede('tareas:crear')
           ? FloatingActionButton(
               tooltip: 'Nueva tarea',

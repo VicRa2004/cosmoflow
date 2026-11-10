@@ -13,10 +13,7 @@ class TagsApi {
     int limite = 50,
     String? nombre,
   }) async {
-    final query = <String, dynamic>{
-      'pagina': pagina,
-      'limite': limite,
-    };
+    final query = <String, dynamic>{'pagina': pagina, 'limite': limite};
     if (nombre != null && nombre.trim().isNotEmpty) {
       query['nombre'] = nombre.trim();
     }
@@ -29,10 +26,7 @@ class TagsApi {
   }
 
   /// Crea una nueva etiqueta (`POST /api/tags`).
-  Future<TagDto> crear({
-    required String nombre,
-    String? color,
-  }) async {
+  Future<TagDto> crear({required String nombre, String? color}) async {
     final response = await apiClient.dio.post<Map<String, dynamic>>(
       '/tags',
       data: <String, dynamic>{

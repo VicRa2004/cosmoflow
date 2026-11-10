@@ -8,7 +8,9 @@ void main() {
     ('Cancelar', false),
     ('Eliminar', true),
   ]) {
-    testWidgets('confirmar devuelve $esperado al pulsar $boton', (tester) async {
+    testWidgets('confirmar devuelve $esperado al pulsar $boton', (
+      tester,
+    ) async {
       bool? resultado;
       await tester.pumpWidget(
         MaterialApp(

@@ -1,10 +1,6 @@
 /// DTO de Tag (`TagDto` en `schema.gen.ts`).
 class TagDto {
-  const TagDto({
-    required this.id,
-    required this.nombre,
-    this.color,
-  });
+  const TagDto({required this.id, required this.nombre, this.color});
 
   final int id;
   final String nombre;
@@ -37,9 +33,9 @@ class PaginaTags {
     final datosRaw = json['datos'];
     final lista = datosRaw is List
         ? datosRaw
-            .whereType<Map<String, dynamic>>()
-            .map(TagDto.fromJson)
-            .toList(growable: false)
+              .whereType<Map<String, dynamic>>()
+              .map(TagDto.fromJson)
+              .toList(growable: false)
         : const <TagDto>[];
 
     return PaginaTags(

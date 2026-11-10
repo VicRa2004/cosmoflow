@@ -14,6 +14,7 @@ import '../../modules/tags/pages/tags_page.dart';
 import '../../modules/tareas/api/tareas_api.dart';
 import '../../modules/tareas/models/tarea_model.dart';
 import '../../modules/tareas/acciones_tarea.dart';
+import '../../modules/tareas/pages/calendario_page.dart';
 import '../../modules/tareas/pages/tarea_detalle_page.dart';
 import '../../modules/tareas/pages/tarea_editor_page.dart';
 import '../../modules/tareas/pages/tareas_page.dart';
@@ -73,6 +74,16 @@ GoRouter crearAppRouter({
           sesionStore: sesionStore,
           tagsApi: tagsApi,
           cargarAlIniciar: cargarDatosIniciales,
+        ),
+      ),
+      GoRoute(
+        path: '/calendario',
+        builder: (context, state) => CalendarioPage(
+          acciones: AccionesTarea(
+            sesionStore: sesionStore,
+            tareasApi: tareasApi,
+          ),
+          tareasApi: tareasApi,
         ),
       ),
       GoRoute(

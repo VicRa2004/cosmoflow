@@ -33,11 +33,11 @@ class UsuarioSesion {
   }
 
   Map<String, dynamic> toJson() => <String, dynamic>{
-        'id': id,
-        'nombre': nombre,
-        'email': email,
-        'emailVerificado': emailVerificado,
-        'avatarUrl': avatarUrl,
-        'roles': roles,
-      };
+    'id': id,
+    'nombre': nombre,
+    'email': email,
+    'emailVerificado': emailVerificado,
+    'avatarUrl': avatarUrl,
+    'roles': roles,
+  };
 }

@@ -116,9 +116,9 @@ class PaginaTareas {
     final datosRaw = json['datos'];
     final lista = datosRaw is List
         ? datosRaw
-            .whereType<Map<String, dynamic>>()
-            .map(TareaDto.fromJson)
-            .toList(growable: false)
+              .whereType<Map<String, dynamic>>()
+              .map(TareaDto.fromJson)
+              .toList(growable: false)
         : const <TareaDto>[];
 
     return PaginaTareas(

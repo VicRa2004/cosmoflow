@@ -141,8 +141,11 @@ class ColoresNocheIndigo extends ThemeExtension<ColoresNocheIndigo> {
     if (other is! ColoresNocheIndigo) return this;
     return ColoresNocheIndigo(
       indigoMarca: Color.lerp(indigoMarca, other.indigoMarca, t)!,
-      indigoMarcaHover:
-          Color.lerp(indigoMarcaHover, other.indigoMarcaHover, t)!,
+      indigoMarcaHover: Color.lerp(
+        indigoMarcaHover,
+        other.indigoMarcaHover,
+        t,
+      )!,
       indigoFoco: Color.lerp(indigoFoco, other.indigoFoco, t)!,
       rosePeligro: Color.lerp(rosePeligro, other.rosePeligro, t)!,
       fondo: Color.lerp(fondo, other.fondo, t)!,

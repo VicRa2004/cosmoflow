@@ -85,6 +85,18 @@ class TareasApi {
     return respuesta == null ? null : TareaDto.fromJson(respuesta);
   }
 
+  /// Tareas con vencimiento (o inicio) entre dos días AAAA-MM-DD (`GET /api/tareas/calendario`).
+  Future<List<TareaDto>> calendario(String desde, String hasta) async {
+    final response = await apiClient.dio.get<List<dynamic>>(
+      '/tareas/calendario',
+      queryParameters: <String, dynamic>{'desde': desde, 'hasta': hasta},
+    );
+    return (response.data ?? const <dynamic>[])
+        .whereType<Map<String, dynamic>>()
+        .map(TareaDto.fromJson)
+        .toList(growable: false);
+  }
+
   /// Una tarea por id (`GET /api/tareas/{id}`).
   Future<TareaDto> obtenerUno(int id) async {
     final response = await apiClient.dio.get<Map<String, dynamic>>(

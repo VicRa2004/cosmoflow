@@ -10,20 +10,21 @@ class ApiClient {
     String? baseUrl,
     Dio? dio,
     Dio? dioRefresh,
-  }) : dio = dio ??
-            Dio(
-              BaseOptions(
-                baseUrl: baseUrl ?? Entorno.apiBaseUrl,
-                connectTimeout: const Duration(seconds: 15),
-                receiveTimeout: const Duration(seconds: 15),
-                headers: <String, dynamic>{
-                  'Content-Type': 'application/json',
-                  'Accept': 'application/json',
-                  // El backend devuelve el refresh token en el cuerpo, no en cookie.
-                  'X-Client-Platform': 'mobile',
-                },
-              ),
-            ) {
+  }) : dio =
+           dio ??
+           Dio(
+             BaseOptions(
+               baseUrl: baseUrl ?? Entorno.apiBaseUrl,
+               connectTimeout: const Duration(seconds: 15),
+               receiveTimeout: const Duration(seconds: 15),
+               headers: <String, dynamic>{
+                 'Content-Type': 'application/json',
+                 'Accept': 'application/json',
+                 // El backend devuelve el refresh token en el cuerpo, no en cookie.
+                 'X-Client-Platform': 'mobile',
+               },
+             ),
+           ) {
     authInterceptor = AuthInterceptor(
       sesionStore: sesionStore,
       dioPrincipal: this.dio,
