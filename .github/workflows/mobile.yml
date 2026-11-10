@@ -39,7 +39,16 @@ jobs:
       - run: flutter pub get
       - run: dart analyze
       - run: flutter test
-      # shortcut: firmado con la clave debug de Flutter; vale para instalar y probar, no para Play Store.
+      # Misma clave en cada build para que el APK nuevo se instale encima del anterior.
+      - name: Clave de firma
+        env:
+          KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+        run: |
+          [ -n "$KEYSTORE_BASE64" ] || { echo "Falta el secret ANDROID_KEYSTORE_BASE64"; exit 1; }
+          echo "$KEYSTORE_BASE64" | base64 -d > android/app/release.jks
+          printf 'storeFile=release.jks\nstorePassword=%s\nkeyAlias=cosmoflow\nkeyPassword=%s\n' \
+            "$KEYSTORE_PASSWORD" "$KEYSTORE_PASSWORD" > android/key.properties
       - name: Compilar APK
         run: |
           flutter build apk --release \
