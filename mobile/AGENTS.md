@@ -36,7 +36,7 @@ mobile/lib/
 │   ├── offline/                    # ColaSinConexion (altas de notas y tareas sin red, en SharedPreferences) y AvisoPendientes
 │   ├── router/                     # Configuración de GoRouter y guardián de rutas autenticadas
 │   ├── theme/                      # Sistema de diseño «Noche índigo» (ThemeData claro/oscuro, tokens de color y tipografía)
-│   └── widgets/                    # Primitivas reutilizables (botones, inputs, tarjetas, badges, diálogos)
+│   └── widgets/                    # EstadoCargando/Error/Vacio, confirmar(), ejecutarConAviso(), PaginaEditor, CampoFecha
 │
 ├── modules/                        # Lógica de dominio modular (en español)
 │   ├── auth/                       # Login, Registro, Recuperar contraseña
@@ -61,15 +61,27 @@ mobile/lib/
 - Seguir la regla de idioma del monorepo (`../AGENTS.md`): **español** para dominio y negocio (`Usuario`, `Tarea`, `Nota`, `obtenerTodos`, `crear`), **inglés** para sufijos técnicos y términos estándar (`Repository`, `Controller`, `State`, `Widget`, `email`, `password`, `token`).
 - Mantener los archivos por debajo de **250-300 líneas**, extrayendo widgets de presentación y repositorios/servicios de datos.
 
-### 3. Sistema de Diseño «Noche índigo»
-- Seguir las reglas visuales definidas en `../frontend/DESIGN.md`:
-  - **Un solo acento:** Índigo (`#4F46E5` / tono 277) reservado para acción primaria, foco, selección e indicador activo.
-  - **Superficies y bordes:** Separación mediante bordes finos de `1px` (`BorderSide(width: 1)`) en lugar de sombras de elevación (`elevation: 0` en tarjetas; sombra únicamente en diálogos y menús flotantes).
-  - **Radios:** `6px` para controles (botones, inputs, badges) y `8px` para tarjetas y diálogos.
-  - **Temas:** Soporte completo para tema claro, oscuro y sistema usando tokens semánticos (`fondo`, `superficie`, `elevada`, `borde`, `tinta`, `tintaSuave`, `tintaTenue`).
+### 3. Diseño: identidad web, ergonomía nativa
+- **Identidad** de `../frontend/DESIGN.md` («Noche índigo»): un solo acento índigo (acción primaria, foco, selección), bordes de 1px en lugar de sombras, tokens `context.colores` (nunca hex ni `Colors.*` en widgets), claro/oscuro/sistema.
+- **Ergonomía** de app nativa, no de escritorio: márgenes 16 dp, áreas táctiles ≥ 48 dp, un solo título por pantalla (en la `AppBar`), acción primaria en FAB, listas como filas, 3–4 destinos en la `NavigationBar`, cada acción en un solo sitio. Detalle completo en la skill **`disenar-pantallas-mobile`**.
 
-### 4. Sin conexión (básico)
+### 4. Formularios y modales
+- **Pantalla completa con ruta propia** para crear/editar entidades o cualquier campo multilínea (`/<recurso>/nueva`, `/<recurso>/:id/editar`).
+- **Diálogo** solo para confirmaciones; **bottom sheet** para acciones rápidas de 1–2 campos.
+- El form va en `widgets/<entidad>_form.dart`, separado de la página; si pasa de ~200 líneas se divide por secciones. Toda eliminación pide confirmación.
+- Detalle completo en la skill **`disenar-formularios-mobile`**.
+
+### 5. Sin conexión (básico)
 - Crear notas y tareas sin red: `NotasApi`/`TareasApi.crear` usan `ColaSinConexion.crearOEncolar`, que devuelve `null` si la guardó en la cola (la página avisa con `avisarSiEncolada` y muestra `avisoPendientes`).
 - Si al abrir la app el refresh no llega al servidor (`intentarRefresh` devuelve `null`), `restaurarSesion` entra en **sesión sin conexión** con el último usuario guardado (`SesionStore.sinConexion`, sin token). Un refresh rechazado (401) no entra.
 - `main.dart` sincroniza al restaurar la sesión, al volver a primer plano y cada 30 s, de una en una (dos refresh en paralelo revocarían la sesión). Solo se crean offline; editar, borrar y leer necesitan red.
 - Cada alta lleva una `Idempotency-Key` propia desde el primer envío y la repite en los reintentos: si el servidor guardó pero la respuesta se perdió, el backend devuelve la misma respuesta y no duplica.
+
+## Skills
+
+En `mobile/.agents/skills/` (enlazadas en `.claude/skills/` con `link-skills` desde la raíz). Propias del proyecto, obligatorias al tocar UI:
+
+- `disenar-pantallas-mobile` — anatomía de pantalla, navegación, listas, estados, medidas.
+- `disenar-formularios-mobile` — página vs. bottom sheet vs. diálogo, estructura del form.
+
+Las demás (`flutter-*`, `dart-*`) son genéricas de `flutter/agent-plugins` y otros; ver `skills-lock.json`.
