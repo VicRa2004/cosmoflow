@@ -38,6 +38,7 @@ export function CalendarioPage() {
 	} = useCalendarioQuery(dias[0], dias[dias.length - 1]);
 	const porDia = new Map<string, TareaDto[]>();
 	for (const tarea of data) {
+		if (tarea.estado === "completada" || tarea.estado === "cancelada") continue;
 		const dia = diaDe(tarea);
 		if (dia) porDia.set(dia, [...(porDia.get(dia) ?? []), tarea]);
 	}
@@ -133,13 +134,7 @@ export function CalendarioPage() {
 											title={tarea.titulo}
 											className={cn(
 												"flex items-center gap-1 rounded bg-elevada px-1.5 py-0.5 text-xs text-tinta hover:bg-borde",
-												(tarea.estado === "completada" ||
-													tarea.estado === "cancelada") &&
-													"text-tinta-tenue line-through",
-												tarea.estado !== "completada" &&
-													tarea.estado !== "cancelada" &&
-													dia < hoy &&
-													"text-rose-400",
+												dia < hoy && "text-rose-400",
 											)}
 										>
 											<PuntoColor color={tarea.color} className="h-2 w-2" />
