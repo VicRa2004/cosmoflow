@@ -20,6 +20,7 @@ const include = {
 	tags: { where: { tag: { deletedAt: null } }, select: { tagId: true } },
 	responsables: { select: { usuarioId: true }, orderBy: { usuarioId: "asc" } },
 	menciones: { select: { usuarioId: true } },
+	dependeDe: { select: { estado: true, deletedAt: true } },
 } satisfies Prisma.TareaInclude;
 
 type PrismaTareaRecord = Prisma.TareaGetPayload<{ include: typeof include }>;
@@ -62,6 +63,7 @@ export class PrismaTareaRepository implements TareaRepository {
 				fechaVencimiento: aDia(raw.fechaVencimiento),
 				color: raw.color,
 				tagIds: raw.tags.map((t) => t.tagId),
+				dependeDeId: raw.dependeDeId,
 			},
 			{
 				organizacionId: raw.organizacionId,
@@ -70,6 +72,10 @@ export class PrismaTareaRepository implements TareaRepository {
 			},
 			raw.responsables.map((r) => r.usuarioId),
 			raw.menciones.map((m) => m.usuarioId),
+			// Una principal borrada ya no bloquea.
+			!!raw.dependeDe &&
+				!raw.dependeDe.deletedAt &&
+				raw.dependeDe.estado !== "completada",
 		);
 	}
 
@@ -82,6 +88,7 @@ export class PrismaTareaRepository implements TareaRepository {
 			fechaInicio: aFecha(datos.fechaInicio),
 			fechaVencimiento: aFecha(datos.fechaVencimiento),
 			color: datos.color,
+			dependeDeId: datos.dependeDeId,
 		};
 	}
 

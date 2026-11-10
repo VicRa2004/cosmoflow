@@ -29,6 +29,7 @@ export class ActualizarTareaUseCase {
 			usuarioId,
 			id,
 		);
+		const antes = tarea.getDatos();
 		const { responsableIds, ...campos } = dto;
 		if (responsableIds !== undefined) {
 			if (contexto && !contexto.puedeCrear) throw new SinPermisoTareasError();
@@ -36,7 +37,7 @@ export class ActualizarTareaUseCase {
 		}
 		tarea.actualizar(campos);
 		tarea.mencionar(contexto?.miembroIds ?? []);
-		await validarTarea(this.tareaRepository, tarea, contexto);
+		await validarTarea(this.tareaRepository, tarea, contexto, antes);
 		const actualizada = await this.uow.ejecutar(async () => {
 			const actualizada = await this.tareaRepository.actualizar(tarea);
 			await this.eventBus.publishAll(tarea.pullDomainEvents());

@@ -9,6 +9,7 @@ export interface CamposTareaDto {
 	fechaVencimiento?: string | null;
 	color?: string | null;
 	tagIds?: number[];
+	dependeDeId?: number | null;
 	/** Solo en las compartidas (RN-44). */
 	responsableIds?: number[];
 }

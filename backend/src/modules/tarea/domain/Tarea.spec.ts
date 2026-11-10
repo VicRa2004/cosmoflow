@@ -13,6 +13,7 @@ describe("Tarea", () => {
 			fechaVencimiento: null,
 			color: null,
 			tagIds: [],
+			dependeDeId: null,
 		});
 	});
 

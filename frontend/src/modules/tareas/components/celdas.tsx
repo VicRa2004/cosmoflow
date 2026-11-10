@@ -1,4 +1,4 @@
-import { UserPlus } from "lucide-react";
+import { Lock, UserPlus } from "lucide-react";
 import { Badge, type BadgeProps } from "@/core/components/ui/Badge";
 import { Button } from "@/core/components/ui/Button";
 import { useMiembrosQuery } from "@/modules/organizaciones/hooks/useMiembros";
@@ -125,3 +125,14 @@ export function AccionAsignar({
 		</Button>
 	);
 }
+
+/** Candado si depende de una tarea aún sin completar. */
+export const BloqueadaIcono = ({ tarea }: { tarea: TareaDto }) =>
+	tarea.bloqueada && (
+		<Lock
+			className="h-3.5 w-3.5 shrink-0 text-amber-400"
+			aria-label="Bloqueada: depende de una tarea sin completar"
+		>
+			<title>Bloqueada: depende de una tarea sin completar</title>
+		</Lock>
+	);

@@ -8,6 +8,7 @@ export const TareaMapper = {
 			...tarea.getDatos(),
 			...tarea.getUbicacion(),
 			responsableIds: [...tarea.getResponsableIds()],
+			bloqueada: tarea.isBloqueada(),
 		};
 	},
 };

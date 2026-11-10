@@ -3032,6 +3032,7 @@ export interface paths {
                         color?: string | null;
                         tagIds?: number[];
                         responsableIds?: number[];
+                        dependeDeId?: number | null;
                         organizacionId?: number;
                         equipoId?: number;
                         proyectoId?: number;
@@ -3407,6 +3408,7 @@ export interface paths {
                         color?: string | null;
                         tagIds?: number[];
                         responsableIds?: number[];
+                        dependeDeId?: number | null;
                     };
                 };
             };
@@ -8126,6 +8128,8 @@ export interface components {
             equipoId: number | null;
             proyectoId: number | null;
             responsableIds: number[];
+            dependeDeId: number | null;
+            bloqueada: boolean;
         };
         EstadisticasTareasDto: {
             /** @example 3 */

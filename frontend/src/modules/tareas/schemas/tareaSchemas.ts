@@ -63,6 +63,8 @@ export const tareaFormSchema = z
 		color: z.string().transform((v) => v || null),
 		tagIds: z.array(z.number()),
 		responsableIds: z.array(z.number()),
+		// "" = no depende de ninguna: `null` la quita.
+		dependeDeId: z.string().transform((v) => (v ? Number(v) : null)),
 	})
 	.refine(
 		(t) =>
@@ -95,6 +97,7 @@ export const tareaFormVacio = (): TareaFormValues => ({
 	color: "",
 	tagIds: [],
 	responsableIds: [],
+	dependeDeId: "",
 });
 
 export const tareaAFormValues = (dto: TareaDto): TareaFormValues => ({
@@ -107,4 +110,5 @@ export const tareaAFormValues = (dto: TareaDto): TareaFormValues => ({
 	color: dto.color ?? "",
 	tagIds: dto.tagIds,
 	responsableIds: dto.responsableIds,
+	dependeDeId: dto.dependeDeId ? String(dto.dependeDeId) : "",
 });

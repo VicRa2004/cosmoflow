@@ -6,6 +6,7 @@ import { useAppForm } from "@/core/components/form/useAppForm";
 import { useAtajoGuardar } from "@/core/components/form/useAtajoGuardar";
 import { destinoDe, type TareaDto } from "../api/tareasApi";
 import { CampoResponsables } from "./CampoResponsables";
+import { useTareasQuery } from "../hooks/useTareasQuery";
 import { EditorTarea } from "./EditorTarea";
 import { MoverTareaDialog } from "./MoverTareaDialog";
 import {
@@ -52,6 +53,12 @@ export function TareaForm({
 		organizacionId !== null
 			? destinoDe({ organizacionId, equipoId, proyectoId })
 			: undefined;
+
+	// Candidatas a principal: las del mismo sitio (las personales sin destino).
+	const { data: delSitio } = useTareasQuery({ ...destino, limite: 100 });
+	const principales = (delSitio?.datos ?? []).filter(
+		(t) => t.id !== inicial?.id,
+	);
 
 	const form = useAppForm({
 		defaultValues: inicial ? tareaAFormValues(inicial) : tareaFormVacio(),
@@ -148,6 +155,18 @@ export function TareaForm({
 						{(campo) => <campo.CampoTexto label="Vencimiento" type="date" />}
 					</form.AppField>
 				</div>
+				<form.AppField name="dependeDeId">
+					{(campo) => (
+						<campo.CampoSelect label="Depende de">
+							<option value="">Ninguna</option>
+							{principales.map((t) => (
+								<option key={t.id} value={t.id}>
+									{t.titulo}
+								</option>
+							))}
+						</campo.CampoSelect>
+					)}
+				</form.AppField>
 				<form.AppField name="color">
 					{(campo) => <campo.CampoColorAcento />}
 				</form.AppField>

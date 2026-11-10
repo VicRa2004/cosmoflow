@@ -9,7 +9,11 @@ import { PaginaLectura } from "@/modules/adjuntos/components/PaginaLectura";
 import { useMiembrosQuery } from "@/modules/organizaciones/hooks/useMiembros";
 import { TagsBadges } from "@/modules/tags/components/TagsBadges";
 import type { TareaDto } from "../api/tareasApi";
-import { formatearDia, VencimientoTarea } from "../components/celdas";
+import {
+	BloqueadaIcono,
+	formatearDia,
+	VencimientoTarea,
+} from "../components/celdas";
 import { MoverTareaDialog } from "../components/MoverTareaDialog";
 import { useEliminarTareaMutation } from "../hooks/useTareasMutation";
 import { useTareaQuery } from "../hooks/useTareasQuery";
@@ -33,7 +37,10 @@ function Detalles({ tarea }: { tarea: TareaDto }) {
 	return (
 		<dl className="grid grid-cols-[auto_1fr] gap-x-6 gap-y-2 text-sm">
 			<dt className="text-tinta-tenue">Estado</dt>
-			<dd>{ETIQUETAS_ESTADO[tarea.estado]}</dd>
+			<dd className="flex items-center gap-2">
+				{ETIQUETAS_ESTADO[tarea.estado]}
+				<BloqueadaIcono tarea={tarea} />
+			</dd>
 			<dt className="text-tinta-tenue">Prioridad</dt>
 			<dd>{ETIQUETAS_PRIORIDAD[tarea.prioridad]}</dd>
 			{tarea.fechaInicio && (

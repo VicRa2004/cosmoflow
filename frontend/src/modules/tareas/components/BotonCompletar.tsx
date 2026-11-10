@@ -17,6 +17,13 @@ export function BotonCompletar({ tarea }: { tarea: TareaDto }) {
 			variant="outline"
 			size="sm"
 			isLoading={actualizar.isPending}
+			// Hasta completar la tarea de la que depende (el backend también lo exige).
+			disabled={tarea.bloqueada && !completada}
+			title={
+				tarea.bloqueada && !completada
+					? "Depende de una tarea sin completar"
+					: undefined
+			}
 			aria-label={`${completada ? "Reabrir" : "Completar"} «${tarea.titulo}»`}
 			onClick={() =>
 				actualizar.mutate({

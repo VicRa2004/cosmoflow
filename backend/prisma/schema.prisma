@@ -319,6 +319,8 @@ model Tarea {
   fechaVencimiento DateTime?      @map("tar_fecha_vencimiento") @db.Date
   /// Color de acento opcional (#rrggbb) para destacarla
   color            String?        @map("tar_color") @db.VarChar(7)
+  /// Tarea principal: esta no se empieza ni se completa hasta que aquella esté completada
+  dependeDeId      Int?           @map("tar_fkdepende_de")
   createdAt        DateTime       @default(now()) @map("created_at")
   updatedAt        DateTime?      @updatedAt @map("updated_at")
   /// Borrado lógico (RN-91)
@@ -338,6 +340,8 @@ model Tarea {
   tags         TareaTag[]
   responsables TareaResponsable[]
   menciones    TareaMencion[]
+  dependeDe    Tarea?             @relation("DependenciaTarea", fields: [dependeDeId], references: [id], onDelete: SetNull)
+  dependientes Tarea[]            @relation("DependenciaTarea")
 
   /// Destino de la FK compuesta de `TareaResponsable`
   @@unique([organizacionId, id])

@@ -13,7 +13,7 @@ import {
 import { useActualizarTareaMutation } from "../hooks/useTareasMutation";
 import { useTareasQuery } from "../hooks/useTareasQuery";
 import { ETIQUETAS_ESTADO } from "../schemas/tareaSchemas";
-import { PrioridadBadge, VencimientoTarea } from "./celdas";
+import { BloqueadaIcono, PrioridadBadge, VencimientoTarea } from "./celdas";
 
 const ESTADOS = Object.keys(ETIQUETAS_ESTADO) as EstadoTarea[];
 // shortcut: el tablero carga las 200 primeras tareas, paginar por columna si un contexto pasa de ahí
@@ -110,6 +110,7 @@ export function TableroTareas({
 									>
 										<PuntoColor color={tarea.color} />
 										<span className="min-w-0 break-words">{tarea.titulo}</span>
+										<BloqueadaIcono tarea={tarea} />
 									</Link>
 									<div className="flex flex-wrap items-center gap-2 text-xs">
 										<PrioridadBadge prioridad={tarea.prioridad} />

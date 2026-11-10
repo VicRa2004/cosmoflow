@@ -29,6 +29,8 @@ export interface DatosTarea {
 	color: string | null;
 	/** Personal: tags del dueño; compartida: de la organización (RN-60). */
 	tagIds: number[];
+	/** Tarea principal (mismo sitio): hasta completarla, esta no empieza ni se completa. */
+	dependeDeId: number | null;
 }
 
 /** Organización (sin equipo ni proyecto), equipo o proyecto de una tarea compartida. */
@@ -66,6 +68,8 @@ export class Tarea extends Entity {
 	private ubicacion: UbicacionTarea;
 	private responsableIds: number[];
 	private mencionIds: number[];
+	/** Su principal sigue sin completar (dato de lectura). */
+	private readonly bloqueada: boolean;
 
 	private constructor(
 		id: EntityId,
@@ -74,8 +78,10 @@ export class Tarea extends Entity {
 		ubicacion: UbicacionTarea,
 		responsableIds: number[],
 		mencionIds: number[],
+		bloqueada = false,
 	) {
 		super(id);
+		this.bloqueada = bloqueada;
 		this.usuarioId = usuarioId;
 		this.datos = Tarea.validar(datos);
 		this.ubicacion = ubicacion;
@@ -112,6 +118,7 @@ export class Tarea extends Entity {
 			fechaVencimiento: null,
 			color: null,
 			tagIds: [],
+			dependeDeId: null,
 			...sinIndefinidos(datos),
 			titulo: datos.titulo,
 		};
@@ -135,6 +142,7 @@ export class Tarea extends Entity {
 		ubicacion: UbicacionTarea = PERSONAL,
 		responsableIds: number[] = [],
 		mencionIds: number[] = [],
+		bloqueada = false,
 	): Tarea {
 		return new Tarea(
 			new EntityId(id),
@@ -143,7 +151,23 @@ export class Tarea extends Entity {
 			ubicacion,
 			responsableIds,
 			mencionIds,
+			bloqueada,
 		);
+	}
+
+	isBloqueada(): boolean {
+		return this.bloqueada;
+	}
+
+	/** Solo puede depender de otra del mismo sitio (y, si es personal, del mismo dueño). */
+	mismoSitioQue(otra: Tarea): boolean {
+		const a = this.ubicacion;
+		const b = otra.ubicacion;
+		return a.organizacionId === null
+			? b.organizacionId === null && this.usuarioId === otra.usuarioId
+			: a.organizacionId === b.organizacionId &&
+					a.equipoId === b.equipoId &&
+					a.proyectoId === b.proyectoId;
 	}
 
 	/** Quien la creó; en las personales, su dueño. */
@@ -193,7 +217,8 @@ export class Tarea extends Entity {
 			throw new TareaInvalidaError("Una tarea compartida no se puede mover");
 		}
 		this.ubicacion = Tarea.ubicar(destino);
-		this.datos = { ...this.datos, tagIds: [] };
+		// Sus tags y su dependencia eran del sitio anterior.
+		this.datos = { ...this.datos, tagIds: [], dependeDeId: null };
 	}
 
 	/** RN-44: varios responsables; las personales no tienen. */

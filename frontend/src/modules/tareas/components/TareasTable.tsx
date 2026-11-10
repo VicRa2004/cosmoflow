@@ -18,6 +18,7 @@ import {
 	PrioridadBadge,
 	ResponsablesTarea,
 	VencimientoTarea,
+	BloqueadaIcono,
 } from "./celdas";
 import { BotonCompletar } from "./BotonCompletar";
 
@@ -58,6 +59,7 @@ export function TareasTable({
 				>
 					<PuntoColor color={fila.color} />
 					{fila.titulo}
+					<BloqueadaIcono tarea={fila} />
 				</button>
 			),
 		},

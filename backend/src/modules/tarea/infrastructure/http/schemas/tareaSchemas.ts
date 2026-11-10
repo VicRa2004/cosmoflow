@@ -22,6 +22,8 @@ const campos = {
 	tagIds: z.array(z.number().int().positive()).max(50).optional(),
 	/** Solo en las compartidas (RN-44). */
 	responsableIds: z.array(z.number().int().positive()).max(50).optional(),
+	/** Tarea principal del mismo sitio; `null` quita la dependencia. */
+	dependeDeId: z.number().int().positive().nullable().optional(),
 };
 
 const id = z.number().int().positive();
@@ -144,6 +146,8 @@ export const tareaDtoSchema = z
 		equipoId: z.number().int().nullable(),
 		proyectoId: z.number().int().nullable(),
 		responsableIds: z.array(z.number().int()),
+		dependeDeId: z.number().int().nullable(),
+		bloqueada: z.boolean(),
 	})
 	.openapi("TareaDto");
 
