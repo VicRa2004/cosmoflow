@@ -1,9 +1,8 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 
-import '../../../core/theme/colores_noche_indigo.dart';
 import '../api/auth_api.dart';
+import '../widgets/auth_layout.dart';
 import '../widgets/boton_google.dart';
 import '../widgets/google_oauth_sheet.dart';
 
@@ -52,7 +51,8 @@ class _RegistroPageState extends State<RegistroPage> {
     } on DioException {
       if (mounted) {
         setState(() {
-          _mensajeError = 'No se pudo continuar con Google. Inténtalo de nuevo o regístrate con tu email.';
+          _mensajeError =
+              'No se pudo continuar con Google. Inténtalo de nuevo o regístrate con tu email.';
         });
       }
     } catch (_) {
@@ -111,171 +111,55 @@ class _RegistroPageState extends State<RegistroPage> {
 
   @override
   Widget build(BuildContext context) {
-    final colores = context.colores;
-    final textTheme = Theme.of(context).textTheme;
-
-    return Scaffold(
-      body: SafeArea(
-        child: Center(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(24),
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 384),
-              child: Form(
-                key: _formKey,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: <Widget>[
-                    Row(
-                      children: <Widget>[
-                        Container(
-                          width: 36,
-                          height: 36,
-                          decoration: BoxDecoration(
-                            color: colores.indigoMarca,
-                            borderRadius: BorderRadius.circular(6),
-                          ),
-                          alignment: Alignment.center,
-                          child: const Text(
-                            'C',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 18,
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 10),
-                        Text('Cosmoflow', style: textTheme.titleMedium),
-                      ],
-                    ),
-                    const SizedBox(height: 24),
-                    Text(
-                      'Crear cuenta',
-                      style: textTheme.headlineSmall?.copyWith(fontSize: 24),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      'Completa tus datos para comenzar a organizar tu trabajo.',
-                      style: textTheme.bodyMedium?.copyWith(
-                        color: colores.tintaTenue,
-                      ),
-                    ),
-                    const SizedBox(height: 24),
-                    if (_mensajeError != null) ...<Widget>[
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 10,
-                        ),
-                        decoration: BoxDecoration(
-                          color: colores.rosePeligro.withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(6),
-                          border: Border.all(
-                            color: colores.rosePeligro.withValues(alpha: 0.4),
-                          ),
-                        ),
-                        child: Text(
-                          _mensajeError!,
-                          style: textTheme.bodySmall?.copyWith(
-                            color: colores.rosePeligro,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                    ],
-                    BotonGoogle(
-                      onPressed: _ocupado ? null : _continuarConGoogle,
-                      isCargando: _isCargandoGoogle,
-                    ),
-                    const SeparadorO(),
-                    Text('Nombre', style: textTheme.labelMedium),
-                    const SizedBox(height: 6),
-                    TextFormField(
-                      controller: _nombreController,
-                      textInputAction: TextInputAction.next,
-                      decoration: const InputDecoration(
-                        hintText: 'Tu nombre completo',
-                      ),
-                      validator: (valor) {
-                        if (valor == null || valor.trim().length < 2) {
-                          return 'Ingresa tu nombre (mínimo 2 caracteres)';
-                        }
-                        return null;
-                      },
-                    ),
-                    const SizedBox(height: 16),
-                    Text('Email', style: textTheme.labelMedium),
-                    const SizedBox(height: 6),
-                    TextFormField(
-                      controller: _emailController,
-                      keyboardType: TextInputType.emailAddress,
-                      textInputAction: TextInputAction.next,
-                      decoration: const InputDecoration(
-                        hintText: 'nombre@empresa.com',
-                      ),
-                      validator: (valor) {
-                        if (valor == null || valor.trim().isEmpty) {
-                          return 'Ingresa tu email';
-                        }
-                        if (!valor.contains('@')) {
-                          return 'Ingresa un email válido';
-                        }
-                        return null;
-                      },
-                    ),
-                    const SizedBox(height: 16),
-                    Text('Contraseña', style: textTheme.labelMedium),
-                    const SizedBox(height: 6),
-                    TextFormField(
-                      controller: _passwordController,
-                      obscureText: true,
-                      textInputAction: TextInputAction.done,
-                      onFieldSubmitted: (_) => _enviarFormulario(),
-                      decoration: const InputDecoration(
-                        hintText: 'Mínimo 8 caracteres',
-                      ),
-                      validator: (valor) {
-                        if (valor == null || valor.length < 8) {
-                          return 'La contraseña debe tener al menos 8 caracteres';
-                        }
-                        return null;
-                      },
-                    ),
-                    const SizedBox(height: 24),
-                    FilledButton(
-                      onPressed: _ocupado ? null : _enviarFormulario,
-                      child: _isCargando
-                          ? const SizedBox(
-                              width: 16,
-                              height: 16,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                color: Colors.white,
-                              ),
-                            )
-                          : const Text('Crear cuenta'),
-                    ),
-                    const SizedBox(height: 16),
-                    Wrap(
-                      alignment: WrapAlignment.center,
-                      crossAxisAlignment: WrapCrossAlignment.center,
-                      spacing: 4,
-                      children: <Widget>[
-                        Text('¿Ya tienes cuenta?', style: textTheme.bodySmall),
-                        TextButton(
-                          onPressed: () => context.go('/login'),
-                          child: const Text('Iniciar sesión'),
-                        ),
-                      ],
-                    ),
-                  ],
+    return AuthLayout(
+      formKey: _formKey,
+      titulo: 'Crear cuenta',
+      subtitulo: 'Empieza a organizar tus tareas y notas.',
+      mensajeError: _mensajeError,
+      children: <Widget>[
+        BotonGoogle(
+          onPressed: _ocupado ? null : _continuarConGoogle,
+          isCargando: _isCargandoGoogle,
+        ),
+        const SeparadorO(),
+        AutofillGroup(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: <Widget>[
+              TextFormField(
+                controller: _nombreController,
+                textCapitalization: TextCapitalization.words,
+                textInputAction: TextInputAction.next,
+                autofillHints: const <String>[AutofillHints.name],
+                decoration: const InputDecoration(
+                  labelText: 'Nombre',
+                  prefixIcon: Icon(Icons.person_outline_rounded),
                 ),
+                validator: (v) => (v == null || v.trim().length < 2)
+                    ? 'Ingresa tu nombre (mínimo 2 caracteres)'
+                    : null,
               ),
-            ),
+              const SizedBox(height: 16),
+              CampoEmail(controller: _emailController),
+              const SizedBox(height: 16),
+              CampoPassword(
+                controller: _passwordController,
+                nueva: true,
+                onSubmitted: (_) => _enviarFormulario(),
+                validator: (v) => (v == null || v.length < 8)
+                    ? 'La contraseña debe tener al menos 8 caracteres'
+                    : null,
+              ),
+            ],
           ),
         ),
-      ),
+        const SizedBox(height: 24),
+        BotonEnviar(
+          texto: 'Crear cuenta',
+          cargando: _isCargando,
+          onPressed: _ocupado ? null : _enviarFormulario,
+        ),
+      ],
     );
   }
 }

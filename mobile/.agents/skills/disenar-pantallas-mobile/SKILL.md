@@ -22,7 +22,8 @@ El shell (`MainShell`) solo pone la `NavigationBar`. Cada página construye su p
 
 - `NavigationBar` con **3–4 destinos** máximo, los de uso diario (Pendientes, Tareas, Notas, Perfil). Lo secundario (Tags, ajustes) se llega desde Perfil o desde el propio flujo (p. ej. «Gestionar tags» al elegir tags).
 - Sin acciones globales en la AppBar (tema, cerrar sesión): viven **solo** en Perfil. Una acción, un sitio.
-- Detalle de una entidad → **pantalla con ruta** (`/tareas/:id`), no bottom sheet, si tiene contenido largo o acciones de edición. El bottom sheet de detalle solo para vistas previas cortas.
+- Detalle de una entidad → **pantalla con ruta** (`/tareas/:id`), no bottom sheet, si tiene contenido largo o acciones de edición. El bottom sheet de detalle solo para vistas previas cortas. Ejemplo: `NotaDetallePage` (pinta con la entidad recibida y la refresca por id).
+- Pantallas de auth: `AuthLayout` + `CampoEmail`/`CampoPassword`/`BotonEnviar` (`modules/auth/widgets/auth_layout.dart`); registro y recuperar se abren con `push` (tienen «atrás»).
 - `context.push` para detalle/editor (hay atrás), `context.go` solo entre pestañas.
 
 ## 4. Acción primaria = FAB

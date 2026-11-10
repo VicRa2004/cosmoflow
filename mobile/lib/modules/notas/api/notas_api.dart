@@ -94,6 +94,14 @@ class NotasApi {
     return NotaDto.fromJson(response.data!);
   }
 
+  /// Una nota por id (`GET /api/notas/{id}`).
+  Future<NotaDto> obtenerUno(int id) async {
+    final response = await apiClient.dio.get<Map<String, dynamic>>(
+      '/notas/$id',
+    );
+    return NotaDto.fromJson(response.data!);
+  }
+
   /// Elimina una nota (`DELETE /api/notas/{id}`).
   Future<void> eliminar(int id) async {
     await apiClient.dio.delete<void>('/notas/$id');

@@ -5,6 +5,7 @@ import '../../modules/auth/pages/recuperar_password_page.dart';
 import '../../modules/auth/pages/registro_page.dart';
 import '../../modules/dashboard/pages/dashboard_page.dart';
 import '../../modules/notas/api/notas_api.dart';
+import '../../modules/notas/pages/nota_detalle_page.dart';
 import '../../modules/notas/pages/nota_editor_page.dart';
 import '../../modules/notas/pages/notas_page.dart';
 import '../../modules/perfil/pages/perfil_page.dart';
@@ -86,6 +87,15 @@ GoRouter crearAppRouter({
       GoRoute(
         path: '/notas/nueva',
         builder: (context, state) => NotaEditorPage(
+          notasApi: notasApi,
+          args: state.extra as NotaEditorArgs? ?? const NotaEditorArgs(),
+        ),
+      ),
+      GoRoute(
+        path: '/notas/:id',
+        builder: (context, state) => NotaDetallePage(
+          id: int.parse(state.pathParameters['id']!),
+          sesionStore: sesionStore,
           notasApi: notasApi,
           args: state.extra as NotaEditorArgs? ?? const NotaEditorArgs(),
         ),

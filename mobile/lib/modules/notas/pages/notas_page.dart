@@ -2,15 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/auth/sesion_store.dart';
 import '../../../core/offline/aviso_pendientes.dart';
-import '../../../core/widgets/avisos.dart';
-import '../../../core/widgets/confirmar.dart';
 import '../../../core/widgets/estados.dart';
 import '../../tags/api/tags_api.dart';
 import '../../tags/models/tag_model.dart';
 import '../api/notas_api.dart';
 import '../models/carpeta_model.dart';
 import '../models/nota_model.dart';
-import '../widgets/nota_detalle_sheet.dart';
 import '../widgets/nota_fila.dart';
 import '../widgets/selector_carpeta.dart';
 import 'nota_editor_page.dart';
@@ -87,11 +84,10 @@ class _NotasPageState extends State<NotasPage> {
     }
   }
 
-  Future<void> _abrirEditor(String ruta, {NotaDto? nota}) async {
+  Future<void> _abrirEditor(String ruta) async {
     final guardada = await context.push<bool>(
       ruta,
       extra: NotaEditorArgs(
-        nota: nota,
         tags: _tags,
         carpetas: _carpetas,
         carpetaInicial: _carpetaId,
@@ -100,44 +96,13 @@ class _NotasPageState extends State<NotasPage> {
     if (guardada ?? false) await _cargar();
   }
 
-  Future<void> _eliminar(NotaDto nota) async {
-    final ok = await confirmar(
-      context,
-      titulo: '¿Eliminar nota?',
-      mensaje: '«${nota.titulo}» se eliminará definitivamente.',
-      accion: 'Eliminar',
-    );
-    if (!ok || !mounted) return;
-    final hecho = await ejecutarConAviso(
-      context,
-      () => widget.notasApi.eliminar(nota.id),
-      error: 'No se pudo eliminar la nota.',
-      exito: 'Nota eliminada.',
-    );
-    if (hecho) await _cargar();
-  }
-
   Future<void> _abrirDetalle(NotaDto nota) async {
-    final accion = await showModalBottomSheet<String>(
-      context: context,
-      isScrollControlled: true,
-      useSafeArea: true,
-      builder: (ctx) => NotaDetalleSheet(
-        nota: nota,
-        tagsDisponibles: _tags,
-        puedeActualizar: widget.sesionStore.puede('notas:actualizar'),
-        puedeEliminar: widget.sesionStore.puede('notas:eliminar'),
-        onEditar: () => Navigator.of(ctx).pop('editar'),
-        onEliminar: () => Navigator.of(ctx).pop('eliminar'),
-      ),
+    await context.push<void>(
+      '/notas/${nota.id}',
+      extra: NotaEditorArgs(nota: nota, tags: _tags, carpetas: _carpetas),
     );
-    if (!mounted) return;
-    switch (accion) {
-      case 'editar':
-        await _abrirEditor('/notas/${nota.id}/editar', nota: nota);
-      case 'eliminar':
-        await _eliminar(nota);
-    }
+    // Pudo editarse o eliminarse dentro.
+    if (mounted) await _cargar();
   }
 
   Widget _filtroTags() {

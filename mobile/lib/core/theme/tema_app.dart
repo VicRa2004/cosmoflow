@@ -152,6 +152,13 @@ class TemaApp {
         ),
       ),
       textTheme: TextTheme(
+        headlineMedium: TextStyle(
+          color: paleta.tinta,
+          fontSize: 26,
+          fontWeight: FontWeight.w600,
+          height: 1.3,
+          letterSpacing: -0.4,
+        ),
         headlineSmall: TextStyle(
           color: paleta.tinta,
           fontSize: 20,
