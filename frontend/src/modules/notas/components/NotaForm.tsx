@@ -176,7 +176,7 @@ export function NotaForm({
 										{ordenEnArbol(carpetas).map(({ carpeta, nivel }) => (
 											<option key={carpeta.id} value={carpeta.id}>
 												{"  ".repeat(nivel)}
-												{carpeta.icono ?? "📁"} {carpeta.nombre}
+												{carpeta.nombre}
 											</option>
 										))}
 									</campo.CampoSelect>

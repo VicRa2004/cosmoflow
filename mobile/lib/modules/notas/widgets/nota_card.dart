@@ -39,7 +39,7 @@ class NotaCard extends StatelessWidget {
               if (carpeta != null) ...<Widget>[
                 const SizedBox(height: 4),
                 Text(
-                  '${carpeta.icono ?? '📁'} ${carpeta.nombre}',
+                  carpeta.nombre,
                   style: textTheme.bodySmall?.copyWith(
                     color: colores.tintaSuave,
                   ),

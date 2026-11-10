@@ -37,6 +37,8 @@ export function NotaEditorPage({
 	if (id === undefined) {
 		return (
 			<NotaForm
+				// Ya en /notas/nueva, crear en otra carpeta debe reiniciar el formulario.
+				key={`nueva-${contexto?.carpetaId ?? ""}`}
 				contexto={contexto}
 				onVolver={volver}
 				onCreada={(nota) =>

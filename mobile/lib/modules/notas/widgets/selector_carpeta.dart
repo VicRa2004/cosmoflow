@@ -32,7 +32,7 @@ class SelectorCarpeta extends StatelessWidget {
           DropdownMenuItem<int?>(
             value: carpeta.id,
             child: Text(
-              '${'   ' * nivel}${carpeta.icono ?? '📁'} ${carpeta.nombre}',
+              '${'   ' * nivel}${carpeta.nombre}',
               overflow: TextOverflow.ellipsis,
             ),
           ),

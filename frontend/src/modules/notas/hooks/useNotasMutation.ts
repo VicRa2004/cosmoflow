@@ -63,3 +63,14 @@ export function useEliminarNotaMutation() {
 		onError,
 	});
 }
+
+/** Arrastrar una nota a otra carpeta (`null`: la raíz). */
+export function useMoverNotaMutation() {
+	const invalidar = useInvalidar();
+	return useMutation({
+		mutationFn: ({ id, carpetaId }: { id: number; carpetaId: number | null }) =>
+			notasApi.actualizar(id, { carpetaId }),
+		onSuccess: invalidar,
+		onError,
+	});
+}

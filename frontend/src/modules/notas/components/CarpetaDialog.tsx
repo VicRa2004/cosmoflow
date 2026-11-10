@@ -9,8 +9,8 @@ import {
 import {
 	carpetaAFormValues,
 	carpetaFormSchema,
-	ICONOS_CARPETA,
 } from "../schemas/carpetaSchemas";
+import { ICONOS_CARPETA } from "./IconoCarpeta";
 import { ordenEnArbol, subarbol } from "../utils/arbolCarpetas";
 
 interface CarpetaDialogProps {
@@ -93,28 +93,24 @@ function FormCarpeta({
 								Icono
 							</legend>
 							<div className="flex flex-wrap gap-1">
-								{ICONOS_CARPETA.map((icono) => (
+								{Object.entries(ICONOS_CARPETA).map(([icono, Icono]) => (
 									<button
 										key={icono}
 										type="button"
 										aria-label={`Icono ${icono}`}
+										title={icono}
 										aria-pressed={campo.state.value === icono}
 										onClick={() => campo.handleChange(icono)}
 										className={cn(
-											"flex h-8 w-8 items-center justify-center rounded-md text-lg hover:bg-elevada",
+											"flex h-8 w-8 items-center justify-center rounded-md text-tinta-suave hover:bg-elevada",
 											campo.state.value === icono &&
 												"bg-elevada ring-2 ring-indigo-500",
 										)}
 									>
-										{icono}
+										<Icono className="h-4 w-4" />
 									</button>
 								))}
 							</div>
-							<campo.CampoTexto
-								aria-label="Otro emoji"
-								placeholder="Otro emoji (vacío = 📁)"
-								className="w-48"
-							/>
 						</fieldset>
 					)}
 				</form.AppField>
@@ -130,7 +126,7 @@ function FormCarpeta({
 								.map(({ carpeta: c, nivel }) => (
 									<option key={c.id} value={c.id}>
 										{"  ".repeat(nivel)}
-										{c.icono ?? "📁"} {c.nombre}
+										{c.nombre}
 									</option>
 								))}
 						</campo.CampoSelect>
