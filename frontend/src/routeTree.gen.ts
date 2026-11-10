@@ -41,6 +41,7 @@ import { Route as AuthenticatedPerfilSeguridadRouteImport } from './routes/_auth
 import { Route as AuthenticatedTareasIndexRouteImport } from './routes/_authenticated/tareas/index'
 import { Route as AuthenticatedTareasIdRouteImport } from './routes/_authenticated/tareas/$id'
 import { Route as AuthenticatedTareasNuevaRouteImport } from './routes/_authenticated/tareas/nueva'
+import { Route as AuthenticatedNotasIdEditarRouteImport } from './routes/_authenticated/notas/$id_.editar'
 import { Route as AuthenticatedOrganizacionesIdIndexRouteImport } from './routes/_authenticated/organizaciones/$id/index'
 import { Route as AuthenticatedOrganizacionesIdAjustesRouteImport } from './routes/_authenticated/organizaciones/$id/ajustes'
 import { Route as AuthenticatedOrganizacionesIdEstadisticasRouteImport } from './routes/_authenticated/organizaciones/$id/estadisticas'
@@ -223,6 +224,12 @@ const AuthenticatedTareasNuevaRoute =
     path: '/tareas/nueva',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
+const AuthenticatedNotasIdEditarRoute =
+  AuthenticatedNotasIdEditarRouteImport.update({
+    id: '/$id_/editar',
+    path: '/$id/editar',
+    getParentRoute: () => AuthenticatedNotasRouteRoute,
+  } as any)
 const AuthenticatedOrganizacionesIdIndexRoute =
   AuthenticatedOrganizacionesIdIndexRouteImport.update({
     id: '/',
@@ -316,6 +323,7 @@ export interface FileRoutesByFullPath {
   '/organizaciones/': typeof AuthenticatedOrganizacionesIndexRoute
   '/perfil/': typeof AuthenticatedPerfilIndexRoute
   '/tareas/': typeof AuthenticatedTareasIndexRoute
+  '/notas/$id/editar': typeof AuthenticatedNotasIdEditarRoute
   '/organizaciones/$id/ajustes': typeof AuthenticatedOrganizacionesIdAjustesRoute
   '/organizaciones/$id/estadisticas': typeof AuthenticatedOrganizacionesIdEstadisticasRoute
   '/organizaciones/$id/miembros': typeof AuthenticatedOrganizacionesIdMiembrosRoute
@@ -356,6 +364,7 @@ export interface FileRoutesByTo {
   '/organizaciones': typeof AuthenticatedOrganizacionesIndexRoute
   '/perfil': typeof AuthenticatedPerfilIndexRoute
   '/tareas': typeof AuthenticatedTareasIndexRoute
+  '/notas/$id/editar': typeof AuthenticatedNotasIdEditarRoute
   '/organizaciones/$id/ajustes': typeof AuthenticatedOrganizacionesIdAjustesRoute
   '/organizaciones/$id/estadisticas': typeof AuthenticatedOrganizacionesIdEstadisticasRoute
   '/organizaciones/$id/miembros': typeof AuthenticatedOrganizacionesIdMiembrosRoute
@@ -401,6 +410,7 @@ export interface FileRoutesById {
   '/_authenticated/organizaciones/': typeof AuthenticatedOrganizacionesIndexRoute
   '/_authenticated/perfil/': typeof AuthenticatedPerfilIndexRoute
   '/_authenticated/tareas/': typeof AuthenticatedTareasIndexRoute
+  '/_authenticated/notas/$id_/editar': typeof AuthenticatedNotasIdEditarRoute
   '/_authenticated/organizaciones/$id/ajustes': typeof AuthenticatedOrganizacionesIdAjustesRoute
   '/_authenticated/organizaciones/$id/estadisticas': typeof AuthenticatedOrganizacionesIdEstadisticasRoute
   '/_authenticated/organizaciones/$id/miembros': typeof AuthenticatedOrganizacionesIdMiembrosRoute
@@ -446,6 +456,7 @@ export interface FileRouteTypes {
     | '/organizaciones/'
     | '/perfil/'
     | '/tareas/'
+    | '/notas/$id/editar'
     | '/organizaciones/$id/ajustes'
     | '/organizaciones/$id/estadisticas'
     | '/organizaciones/$id/miembros'
@@ -486,6 +497,7 @@ export interface FileRouteTypes {
     | '/organizaciones'
     | '/perfil'
     | '/tareas'
+    | '/notas/$id/editar'
     | '/organizaciones/$id/ajustes'
     | '/organizaciones/$id/estadisticas'
     | '/organizaciones/$id/miembros'
@@ -530,6 +542,7 @@ export interface FileRouteTypes {
     | '/_authenticated/organizaciones/'
     | '/_authenticated/perfil/'
     | '/_authenticated/tareas/'
+    | '/_authenticated/notas/$id_/editar'
     | '/_authenticated/organizaciones/$id/ajustes'
     | '/_authenticated/organizaciones/$id/estadisticas'
     | '/_authenticated/organizaciones/$id/miembros'
@@ -779,6 +792,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedTareasNuevaRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/notas/$id_/editar': {
+      id: '/_authenticated/notas/$id_/editar'
+      path: '/$id/editar'
+      fullPath: '/notas/$id/editar'
+      preLoaderRoute: typeof AuthenticatedNotasIdEditarRouteImport
+      parentRoute: typeof AuthenticatedNotasRouteRoute
+    }
     '/_authenticated/organizaciones/$id/': {
       id: '/_authenticated/organizaciones/$id/'
       path: '/'
@@ -857,6 +877,7 @@ interface AuthenticatedNotasRouteRouteChildren {
   AuthenticatedNotasEnlaceRoute: typeof AuthenticatedNotasEnlaceRoute
   AuthenticatedNotasNuevaRoute: typeof AuthenticatedNotasNuevaRoute
   AuthenticatedNotasIndexRoute: typeof AuthenticatedNotasIndexRoute
+  AuthenticatedNotasIdEditarRoute: typeof AuthenticatedNotasIdEditarRoute
 }
 
 const AuthenticatedNotasRouteRouteChildren: AuthenticatedNotasRouteRouteChildren =
@@ -865,6 +886,7 @@ const AuthenticatedNotasRouteRouteChildren: AuthenticatedNotasRouteRouteChildren
     AuthenticatedNotasEnlaceRoute: AuthenticatedNotasEnlaceRoute,
     AuthenticatedNotasNuevaRoute: AuthenticatedNotasNuevaRoute,
     AuthenticatedNotasIndexRoute: AuthenticatedNotasIndexRoute,
+    AuthenticatedNotasIdEditarRoute: AuthenticatedNotasIdEditarRoute,
   }
 
 const AuthenticatedNotasRouteRouteWithChildren =

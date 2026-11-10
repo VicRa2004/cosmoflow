@@ -1,12 +1,7 @@
 import { strFromU8 } from "fflate";
 import { describe, expect, it } from "vitest";
 import type { CarpetaDto, NotaDto } from "../api/notasApi";
-import {
-	filasExplorador,
-	ordenEnArbol,
-	rutaDe,
-	subarbol,
-} from "./arbolCarpetas";
+import { contenidoDe, ordenEnArbol, rutaDe, subarbol } from "./arbolCarpetas";
 import { archivosZip } from "./exportar";
 import { enLotes, leerArchivosObsidian } from "./obsidian";
 
@@ -36,7 +31,6 @@ describe("árbol de carpetas", () => {
 			["Europa", 1],
 			["Trabajo", 0],
 		]);
-		expect(ordenEnArbol(carpetas, new Set([1]))).toHaveLength(2);
 	});
 });
 
@@ -91,7 +85,7 @@ describe("leerArchivosObsidian", () => {
 	});
 });
 
-describe("filasExplorador", () => {
+describe("contenidoDe", () => {
 	const carpetas = [
 		{ id: 1, nombre: "A", padreId: null },
 		{ id: 2, nombre: "B", padreId: 1 },
@@ -107,31 +101,17 @@ describe("filasExplorador", () => {
 		nota("en B", 2),
 		nota("huérfana", 99),
 	];
-	const nombres = (plegadas?: Set<number>) =>
-		filasExplorador(carpetas, notas, plegadas).map((f) =>
-			f.tipo === "carpeta"
-				? `${f.nivel}:${f.carpeta.nombre}/`
-				: `${f.nivel}:${f.nota.titulo}`,
-		);
+	const nombres = (carpetaId: number | null) => {
+		const c = contenidoDe(carpetaId, carpetas, notas);
+		return [
+			...c.carpetas.map((x) => `${x.nombre}/`),
+			...c.notas.map((x) => x.titulo),
+		];
+	};
 
-	it("pone las subcarpetas antes que las notas de cada nivel", () => {
-		expect(nombres()).toEqual([
-			"0:A/",
-			"1:B/",
-			"2:en B",
-			"1:en A",
-			"0:C/",
-			"0:huérfana",
-			"0:zeta",
-		]);
-	});
-
-	it("oculta el contenido de las plegadas", () => {
-		expect(nombres(new Set([1]))).toEqual([
-			"0:A/",
-			"0:C/",
-			"0:huérfana",
-			"0:zeta",
-		]);
+	it("solo lo que cuelga directamente de la carpeta, por nombre", () => {
+		expect(nombres(null)).toEqual(["A/", "C/", "huérfana", "zeta"]);
+		expect(nombres(1)).toEqual(["B/", "en A"]);
+		expect(nombres(2)).toEqual(["en B"]);
 	});
 });

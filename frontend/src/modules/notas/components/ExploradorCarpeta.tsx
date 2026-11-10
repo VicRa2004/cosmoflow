@@ -8,12 +8,18 @@ import {
 	Pencil,
 	Trash2,
 } from "lucide-react";
-import { type DragEvent, type MouseEvent, useCallback, useState } from "react";
+import {
+	type DragEvent,
+	Fragment,
+	type MouseEvent,
+	useCallback,
+	useState,
+} from "react";
 import { PuntoColor } from "@/core/components/ui/PuntoColor";
 import { cn } from "@/core/utils/cn";
 import type { CarpetaDto, NotaIndiceDto } from "../api/notasApi";
 import type { ContextoNotaSearch } from "../schemas/notaSchemas";
-import { filasExplorador, subarbol } from "../utils/arbolCarpetas";
+import { cadenaDe, contenidoDe, subarbol } from "../utils/arbolCarpetas";
 import { IconoCarpeta } from "./IconoCarpeta";
 import {
 	type MenuAbierto,
@@ -27,12 +33,11 @@ export interface Arrastrado {
 	id: number;
 }
 
-interface ArbolCarpetasProps {
+interface ExploradorCarpetaProps {
 	carpetas: CarpetaDto[];
 	notas: NotaIndiceDto[];
-	notaAbierta?: number;
 	searchNota: ContextoNotaSearch;
-	/** Donde se crean las notas nuevas; sin ella, en la raíz. */
+	/** Carpeta abierta; sin ella, la raíz. */
 	seleccionada?: number;
 	onSeleccionar: (carpetaId?: number) => void;
 	/** Sin menú de edición ni arrastre si no hay permiso. */
@@ -50,7 +55,10 @@ interface ArbolCarpetasProps {
 const TIPO_ARRASTRE = "application/x-cosmoflow";
 
 const fila =
-	"group flex h-8 w-full items-center gap-1 rounded-md pr-1 text-sm text-tinta-suave hover:bg-elevada";
+	"flex h-11 w-full items-center gap-3 px-4 text-left text-sm text-tinta-suave hover:bg-elevada hover:text-tinta";
+const miga =
+	"rounded-md px-1.5 py-0.5 text-tinta-tenue hover:bg-elevada hover:text-tinta aria-[current=page]:text-tinta aria-[current=page]:font-medium";
+const resaltada = "bg-indigo-950/40 ring-1 ring-indigo-500";
 
 const arrastrar = (arrastrado: Arrastrado) => (e: DragEvent) => {
 	e.dataTransfer.setData(TIPO_ARRASTRE, JSON.stringify(arrastrado));
@@ -59,15 +67,14 @@ const arrastrar = (arrastrado: Arrastrado) => (e: DragEvent) => {
 
 export function FilaNota({
 	nota,
-	abierta,
 	search,
-	nivel = 0,
+	ruta,
 	arrastrable = false,
 }: {
 	nota: NotaIndiceDto;
-	abierta: boolean;
 	search: ContextoNotaSearch;
-	nivel?: number;
+	/** Carpeta de la nota, en los resultados de búsqueda. */
+	ruta?: string;
 	arrastrable?: boolean;
 }) {
 	return (
@@ -75,32 +82,35 @@ export function FilaNota({
 			to="/notas/$id"
 			params={{ id: String(nota.id) }}
 			search={search}
-			aria-current={abierta ? "page" : undefined}
 			draggable={arrastrable}
 			onDragStart={
 				arrastrable ? arrastrar({ tipo: "nota", id: nota.id }) : undefined
 			}
-			className={cn(fila, "gap-1.5", abierta && "bg-elevada text-tinta")}
-			style={{ paddingLeft: `${nivel * 0.875 + 0.375}rem` }}
+			className={fila}
 		>
 			{nota.color ? (
 				<PuntoColor color={nota.color} />
 			) : (
-				<FileText className="h-3.5 w-3.5 shrink-0 text-tinta-tenue" />
+				<FileText className="h-4 w-4 shrink-0 text-tinta-tenue" />
 			)}
 			<span className="truncate">{nota.titulo}</span>
+			{ruta && (
+				<span className="ml-auto shrink-0 truncate text-xs text-tinta-tenue">
+					{ruta}
+				</span>
+			)}
 		</Link>
 	);
 }
 
 /**
- * Explorador tipo Obsidian: carpetas anidadas y plegables, con sus notas dentro.
- * Clic derecho (o tecla de menú) abre las acciones; notas y carpetas se arrastran.
+ * Explorador de archivos: migas de la carpeta abierta y su contenido (subcarpetas y
+ * notas). Clic en una carpeta entra en ella; clic derecho (o tecla de menú) abre sus
+ * acciones; notas y carpetas se arrastran a una carpeta o a una miga.
  */
-export function ArbolCarpetas({
+export function ExploradorCarpeta({
 	carpetas,
 	notas,
-	notaAbierta,
 	searchNota,
 	seleccionada,
 	onSeleccionar,
@@ -111,25 +121,18 @@ export function ArbolCarpetas({
 	onEliminar,
 	onDescargar,
 	onMover,
-}: ArbolCarpetasProps) {
-	const [plegadas, setPlegadas] = useState<Set<number>>(new Set());
+}: ExploradorCarpetaProps) {
 	const [menu, setMenu] = useState<MenuAbierto>();
 	const cerrarMenu = useCallback(() => setMenu(undefined), []);
 	// "raiz" o el id de la carpeta sobre la que se arrastra.
 	const [destino, setDestino] = useState<number | "raiz">();
-	const conHijas = new Set<number | null>([
-		...carpetas.map((c) => c.padreId),
-		...notas.map((n) => n.carpetaId),
-	]);
-	const plegar = (id: number) =>
-		setPlegadas((p) => {
-			const nuevas = new Set(p);
-			if (!nuevas.delete(id)) nuevas.add(id);
-			return nuevas;
-		});
+	const migas = cadenaDe(seleccionada ?? null, carpetas);
+	const actual = migas.at(-1) ?? null;
+	const contenido = contenidoDe(actual?.id ?? null, carpetas, notas);
 
 	const abrirMenu = (carpeta: CarpetaDto | null) => (e: MouseEvent) => {
 		e.preventDefault();
+		e.stopPropagation();
 		const id = carpeta?.id ?? null;
 		const opciones: OpcionMenu[] = editable
 			? [
@@ -197,89 +200,77 @@ export function ArbolCarpetas({
 				}
 			: {};
 
-	const resaltada = "bg-indigo-950/40 ring-1 ring-indigo-500";
-
 	return (
-		<nav aria-label="Carpetas" className="space-y-0.5">
-			<button
-				type="button"
-				onClick={() => onSeleccionar(undefined)}
-				onContextMenu={abrirMenu(null)}
-				{...soltable(null)}
-				className={cn(
-					fila,
-					"pl-2 text-left font-medium",
-					seleccionada === undefined && "bg-elevada text-tinta",
-					destino === "raiz" && resaltada,
-				)}
+		<div className="space-y-3">
+			<nav
+				aria-label="Ruta de la carpeta"
+				className="flex flex-wrap items-center gap-0.5 text-sm"
 			>
-				Raíz
-			</button>
-			{filasExplorador(carpetas, notas, plegadas).map((elemento) => {
-				if (elemento.tipo === "nota")
-					return (
-						<FilaNota
-							key={`n${elemento.nota.id}`}
-							nota={elemento.nota}
-							nivel={elemento.nivel}
-							abierta={elemento.nota.id === notaAbierta}
-							search={searchNota}
-							arrastrable={editable}
-						/>
-					);
-				const { carpeta, nivel } = elemento;
-				return (
-					// biome-ignore lint/a11y/noStaticElementInteractions: arrastrar y el menú son atajos; con teclado, el menú sale de sus botones (Shift+F10) y mover está en «Editar»
-					<div
+				<button
+					type="button"
+					onClick={() => onSeleccionar(undefined)}
+					onContextMenu={abrirMenu(null)}
+					aria-current={actual ? undefined : "page"}
+					{...soltable(null)}
+					className={cn(miga, destino === "raiz" && resaltada)}
+				>
+					Raíz
+				</button>
+				{migas.map((carpeta) => (
+					<Fragment key={carpeta.id}>
+						<ChevronRight className="h-3.5 w-3.5 text-tinta-tenue" />
+						<button
+							type="button"
+							onClick={() => onSeleccionar(carpeta.id)}
+							onContextMenu={abrirMenu(carpeta)}
+							aria-current={carpeta === actual ? "page" : undefined}
+							{...soltable(carpeta.id)}
+							className={cn(miga, destino === carpeta.id && resaltada)}
+						>
+							{carpeta.nombre}
+						</button>
+					</Fragment>
+				))}
+			</nav>
+			{/* biome-ignore lint/a11y/noStaticElementInteractions: clic derecho en el hueco = menú de la carpeta abierta; con teclado está en su miga */}
+			<div
+				onContextMenu={abrirMenu(actual)}
+				className="min-h-48 divide-y divide-borde overflow-hidden rounded-lg border border-borde bg-superficie"
+			>
+				{contenido.carpetas.map((carpeta) => (
+					<button
 						key={carpeta.id}
+						type="button"
 						draggable={editable}
 						onDragStart={arrastrar({ tipo: "carpeta", id: carpeta.id })}
+						onClick={() => onSeleccionar(carpeta.id)}
 						onContextMenu={abrirMenu(carpeta)}
 						{...soltable(carpeta.id)}
-						className={cn(
-							fila,
-							seleccionada === carpeta.id && "bg-elevada text-tinta",
-							destino === carpeta.id && resaltada,
-						)}
-						style={{ paddingLeft: `${nivel * 0.875}rem` }}
+						className={cn(fila, destino === carpeta.id && resaltada)}
+						style={carpeta.color ? { color: carpeta.color } : undefined}
 					>
-						<button
-							type="button"
-							aria-label={plegadas.has(carpeta.id) ? "Desplegar" : "Plegar"}
-							aria-expanded={!plegadas.has(carpeta.id)}
-							onClick={() => plegar(carpeta.id)}
-							className={cn(
-								"flex h-6 w-5 shrink-0 items-center justify-center text-tinta-tenue",
-								!conHijas.has(carpeta.id) && "invisible",
-							)}
-						>
-							<ChevronRight
-								className={cn(
-									"h-3.5 w-3.5 transition-transform",
-									!plegadas.has(carpeta.id) && "rotate-90",
-								)}
-							/>
-						</button>
-						<button
-							type="button"
-							onClick={() => {
-								onSeleccionar(carpeta.id);
-								plegar(carpeta.id);
-							}}
-							aria-current={seleccionada === carpeta.id ? "page" : undefined}
-							className="flex min-w-0 flex-1 items-center gap-1.5 text-left"
-							style={carpeta.color ? { color: carpeta.color } : undefined}
-						>
-							<IconoCarpeta
-								icono={carpeta.icono}
-								className={carpeta.color ? "text-current" : undefined}
-							/>
-							<span className="truncate">{carpeta.nombre}</span>
-						</button>
-					</div>
-				);
-			})}
+						<IconoCarpeta
+							icono={carpeta.icono}
+							className={carpeta.color ? "text-current" : undefined}
+						/>
+						<span className="truncate">{carpeta.nombre}</span>
+					</button>
+				))}
+				{contenido.notas.map((nota) => (
+					<FilaNota
+						key={nota.id}
+						nota={nota}
+						search={searchNota}
+						arrastrable={editable}
+					/>
+				))}
+				{contenido.carpetas.length + contenido.notas.length === 0 && (
+					<p className="p-4 text-sm text-tinta-tenue">
+						Carpeta vacía.{editable && " Clic derecho para crear."}
+					</p>
+				)}
+			</div>
 			<MenuContextual menu={menu} onCerrar={cerrarMenu} />
-		</nav>
+		</div>
 	);
 }

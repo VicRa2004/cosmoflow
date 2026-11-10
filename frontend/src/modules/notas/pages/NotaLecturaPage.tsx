@@ -1,19 +1,32 @@
 import { useCanGoBack, useNavigate, useRouter } from "@tanstack/react-router";
+import { Pencil } from "lucide-react";
+import { usePermisos } from "@/core/auth/usePermisos";
+import { Button } from "@/core/components/ui/Button";
 import { Spinner } from "@/core/components/ui/Spinner";
 import { PaginaLectura } from "@/modules/adjuntos/components/PaginaLectura";
 import { TagsBadges } from "@/modules/tags/components/TagsBadges";
 import { AccionesNota } from "../components/AccionesNota";
 import { useNotaQuery } from "../hooks/useNotasQuery";
 
-/** Lectura de una nota, para quien no tiene permiso de editarla. */
+/** Lectura de una nota a página completa; «Editar» lleva al editor. */
 export function NotaLecturaPage({ id }: { id: number }) {
 	const router = useRouter();
 	const navigate = useNavigate();
 	const puedeVolver = useCanGoBack();
+	const { puede } = usePermisos();
 	const { data: nota, error } = useNotaQuery(id);
-	// Vuelve a donde se abrió; si se entró por URL, a la lista.
+	// Vuelve a donde se abrió; si se entró por URL, a la carpeta de la nota.
 	const volver = () =>
-		puedeVolver ? router.history.back() : navigate({ to: "/notas" });
+		puedeVolver
+			? router.history.back()
+			: navigate({
+					to: "/notas",
+					search: {
+						organizacionId: nota?.organizacionId ?? undefined,
+						proyectoId: nota?.proyectoId ?? undefined,
+						carpetaId: nota?.carpetaId ?? undefined,
+					},
+				});
 
 	if (error) throw error;
 	if (!nota) {
@@ -44,7 +57,25 @@ export function NotaLecturaPage({ id }: { id: number }) {
 					/>
 				)
 			}
-			acciones={<AccionesNota nota={nota} onEliminada={volver} />}
+			acciones={
+				<>
+					<AccionesNota nota={nota} onEliminada={volver} />
+					{puede("notas:actualizar") && (
+						<Button
+							size="sm"
+							onClick={() =>
+								navigate({
+									to: "/notas/$id/editar",
+									params: { id: String(id) },
+								})
+							}
+						>
+							<Pencil className="h-4 w-4" />
+							Editar
+						</Button>
+					)}
+				</>
+			}
 		/>
 	);
 }

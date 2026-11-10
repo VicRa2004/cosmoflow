@@ -2,17 +2,24 @@ import type { CarpetaDto } from "../api/notasApi";
 
 type Carpetas = Pick<CarpetaDto, "id" | "nombre" | "padreId">[];
 
-/** Nombres desde la raíz hasta la carpeta (incluida); `[]` en la raíz. */
-export function rutaDe(carpetaId: number | null, carpetas: Carpetas): string[] {
+/** Carpetas desde la raíz hasta la carpeta (incluida); `[]` en la raíz. */
+export function cadenaDe<C extends Carpetas[number]>(
+	carpetaId: number | null,
+	carpetas: C[],
+): C[] {
 	const porId = new Map(carpetas.map((c) => [c.id, c]));
-	const ruta: string[] = [];
+	const cadena: C[] = [];
 	// El límite corta un ciclo imposible en datos sanos sin colgar la pestaña.
-	for (let c = porId.get(carpetaId ?? -1); c && ruta.length < 100; ) {
-		ruta.unshift(c.nombre);
+	for (let c = porId.get(carpetaId ?? -1); c && cadena.length < 100; ) {
+		cadena.unshift(c);
 		c = c.padreId === null ? undefined : porId.get(c.padreId);
 	}
-	return ruta;
+	return cadena;
 }
+
+/** Nombres desde la raíz hasta la carpeta (incluida); `[]` en la raíz. */
+export const rutaDe = (carpetaId: number | null, carpetas: Carpetas) =>
+	cadenaDe(carpetaId, carpetas).map((c) => c.nombre);
 
 /** La carpeta y todas las que cuelgan de ella. */
 export function subarbol(carpetaId: number, carpetas: Carpetas): Set<number> {
@@ -30,65 +37,33 @@ export function subarbol(carpetaId: number, carpetas: Carpetas): Set<number> {
 	return ids;
 }
 
-type FilaExplorador<C, N> =
-	| { tipo: "carpeta"; carpeta: C; nivel: number }
-	| { tipo: "nota"; nota: N; nivel: number };
-
 /**
- * Filas del explorador, como en Obsidian: en cada nivel, primero las subcarpetas y
- * luego las notas por título. Una nota de una carpeta desconocida va a la raíz.
+ * Lo que se ve al abrir una carpeta (`null`: la raíz): sus subcarpetas y sus notas,
+ * por nombre. Una nota de una carpeta desconocida va a la raíz.
  */
-export function filasExplorador<
+export function contenidoDe<
 	C extends Carpetas[number],
 	N extends { titulo: string; carpetaId: number | null },
->(
-	carpetas: C[],
-	notas: N[],
-	plegadas: ReadonlySet<number> = new Set(),
-): FilaExplorador<C, N>[] {
+>(carpetaId: number | null, carpetas: C[], notas: N[]) {
 	const conocidas = new Set(carpetas.map((c) => c.id));
-	const porCarpeta = new Map<number | null, N[]>();
-	for (const nota of [...notas].sort((a, b) =>
-		a.titulo.localeCompare(b.titulo, "es"),
-	)) {
-		const clave =
-			nota.carpetaId !== null && conocidas.has(nota.carpetaId)
-				? nota.carpetaId
-				: null;
-		porCarpeta.set(clave, [...(porCarpeta.get(clave) ?? []), nota]);
-	}
-
-	const salida: FilaExplorador<C, N>[] = [];
-	const pendientes: { nivel: number; notas: N[] }[] = [];
-	// Las notas de una carpeta salen cuando se acaban sus subcarpetas.
-	const volcar = (desdeNivel: number) => {
-		while ((pendientes.at(-1)?.nivel ?? -1) >= desdeNivel) {
-			const { nivel, notas: grupo } =
-				pendientes.pop() as (typeof pendientes)[0];
-			for (const nota of grupo) salida.push({ tipo: "nota", nota, nivel });
-		}
+	return {
+		carpetas: carpetas
+			.filter((c) => c.padreId === carpetaId)
+			.sort((a, b) => a.nombre.localeCompare(b.nombre, "es")),
+		notas: notas
+			.filter(
+				(n) =>
+					(n.carpetaId !== null && conocidas.has(n.carpetaId)
+						? n.carpetaId
+						: null) === carpetaId,
+			)
+			.sort((a, b) => a.titulo.localeCompare(b.titulo, "es")),
 	};
-	for (const { carpeta, nivel } of ordenEnArbol(carpetas, plegadas)) {
-		volcar(nivel + 1);
-		salida.push({ tipo: "carpeta", carpeta, nivel });
-		if (!plegadas.has(carpeta.id))
-			pendientes.push({
-				nivel: nivel + 1,
-				notas: porCarpeta.get(carpeta.id) ?? [],
-			});
-	}
-	pendientes.unshift({ nivel: 0, notas: porCarpeta.get(null) ?? [] });
-	volcar(0);
-	return salida;
 }
 
-/**
- * Recorrido en profundidad con su nivel, para pintar el árbol o un `<select>`
- * con sangría. No baja por las `plegadas`.
- */
+/** Recorrido en profundidad con su nivel, para un `<select>` con sangría. */
 export function ordenEnArbol<T extends Carpetas[number]>(
 	carpetas: T[],
-	plegadas: ReadonlySet<number> = new Set(),
 ): { carpeta: T; nivel: number }[] {
 	const hijas = new Map<number | null, T[]>();
 	for (const c of carpetas)
@@ -97,8 +72,7 @@ export function ordenEnArbol<T extends Carpetas[number]>(
 	const visitar = (padreId: number | null, nivel: number) => {
 		for (const carpeta of hijas.get(padreId) ?? []) {
 			salida.push({ carpeta, nivel });
-			if (!plegadas.has(carpeta.id) && nivel < 50)
-				visitar(carpeta.id, nivel + 1);
+			if (nivel < 50) visitar(carpeta.id, nivel + 1);
 		}
 	};
 	visitar(null, 0);

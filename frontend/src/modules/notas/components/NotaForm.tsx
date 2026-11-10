@@ -1,17 +1,18 @@
 import { useStore } from "@tanstack/react-form";
+import { useBlocker } from "@tanstack/react-router";
 import { ArrowLeft, ChevronRight } from "lucide-react";
-import { type ReactNode, useEffect, useRef } from "react";
+import { useRef } from "react";
 import { useAppForm } from "@/core/components/form/useAppForm";
 import { useAtajoGuardar } from "@/core/components/form/useAtajoGuardar";
 import { Button } from "@/core/components/ui/Button";
+import { ConfirmDialog } from "@/core/components/ui/ConfirmDialog";
 import { Kbd } from "@/core/components/ui/Kbd";
-import { cn } from "@/core/utils/cn";
 import { EditorMarkdown } from "@/modules/adjuntos/components/EditorMarkdown";
 import { SelectorTags } from "@/modules/tags/components/SelectorTags";
 import type { NotaDto } from "../api/notasApi";
 import { useCarpetasQuery } from "../hooks/useCarpetas";
 import {
-	useAutoguardarNotaMutation,
+	useActualizarNotaMutation,
 	useCrearNotaMutation,
 } from "../hooks/useNotasMutation";
 import {
@@ -22,108 +23,74 @@ import {
 } from "../schemas/notaSchemas";
 import { ordenEnArbol, rutaDe } from "../utils/arbolCarpetas";
 
-const ESPERA_AUTOGUARDADO_MS = 1000;
-
 interface NotaFormProps {
-	/** Sin `inicial` crea con botón; con él, se guarda sola mientras se escribe. */
+	/** Sin `inicial` crea; con él, edita. Solo se guarda al pulsar el botón o Ctrl+S. */
 	inicial?: NotaDto;
 	/** Al crear: proyecto donde va (sin él, personal). */
 	contexto?: ContextoNotaSearch;
-	onCreada?: (nota: NotaDto) => void;
+	onGuardada: (nota: NotaDto) => void;
 	onVolver: () => void;
-	/** Botones de la cabecera (descargar, eliminar…). */
-	acciones?: ReactNode;
 }
 
 /** Documento de una nota como en Obsidian: título, propiedades plegadas y el editor. */
 export function NotaForm({
 	inicial,
 	contexto,
-	onCreada,
+	onGuardada,
 	onVolver,
-	acciones,
 }: NotaFormProps) {
 	const crear = useCrearNotaMutation();
-	const autoguardar = useAutoguardarNotaMutation();
+	const actualizar = useActualizarNotaMutation();
 	const proyectoId =
 		(inicial ? inicial.proyectoId : contexto?.proyectoId) ?? null;
 	const organizacionId =
 		(inicial ? inicial.organizacionId : contexto?.organizacionId) ?? null;
 	const { data: carpetas = [] } = useCarpetasQuery(proyectoId ?? undefined);
 
+	const iniciales = inicial
+		? notaAFormValues(inicial)
+		: { ...notaFormVacio, carpetaId: String(contexto?.carpetaId ?? "") };
+	const guardada = useRef(false);
 	const form = useAppForm({
-		defaultValues: inicial
-			? notaAFormValues(inicial)
-			: { ...notaFormVacio, carpetaId: String(contexto?.carpetaId ?? "") },
+		defaultValues: iniciales,
 		validators: { onSubmit: notaFormSchema },
 		onSubmit: async ({ value }) => {
-			if (inicial) return guardarRef.current();
 			const datos = notaFormSchema.parse(value);
-			const creada = await crear.mutateAsync(
-				proyectoId ? { ...datos, proyectoId } : datos,
-			);
-			onCreada?.(creada);
+			const nota = inicial
+				? await actualizar.mutateAsync({ id: inicial.id, datos })
+				: await crear.mutateAsync(
+						proyectoId ? { ...datos, proyectoId } : datos,
+					);
+			guardada.current = true;
+			onGuardada(nota);
 		},
 	});
 
 	const valores = useStore(form.store, (estado) => estado.values);
-	const ultimoGuardado = useRef(JSON.stringify(valores));
-	const guardar = () => {
-		if (!inicial) return;
-		const { values } = form.state;
-		const json = JSON.stringify(values);
-		const datos = notaFormSchema.safeParse(values);
-		if (json === ultimoGuardado.current || !datos.success) return;
-		ultimoGuardado.current = json;
-		autoguardar.mutate(
-			{ id: inicial.id, datos: datos.data },
-			// Vacío: el siguiente cambio (o Ctrl+S) lo reintenta.
-			{ onError: () => (ultimoGuardado.current = "") },
-		);
-	};
-	const guardarRef = useRef(guardar);
-	guardarRef.current = guardar;
-
-	// biome-ignore lint/correctness/useExhaustiveDependencies: cada cambio de `valores` reinicia la espera
-	useEffect(() => {
-		const espera = setTimeout(
-			() => guardarRef.current(),
-			ESPERA_AUTOGUARDADO_MS,
-		);
-		return () => clearTimeout(espera);
-	}, [valores]);
-	// Al cambiar de nota no se pierde lo escrito durante la espera.
-	useEffect(() => () => guardarRef.current(), []);
-
+	// Sin autoguardado: salir con cambios pide confirmación (también al cerrar la pestaña).
+	const sinGuardar = () =>
+		!guardada.current &&
+		JSON.stringify(form.state.values) !== JSON.stringify(iniciales);
+	const salida = useBlocker({
+		shouldBlockFn: sinGuardar,
+		enableBeforeUnload: sinGuardar,
+		withResolver: true,
+	});
 	useAtajoGuardar(() => {
-		if (inicial) guardar();
-		else if (!form.state.isSubmitting) form.handleSubmit().catch(() => {});
+		if (!form.state.isSubmitting) form.handleSubmit().catch(() => {});
 	});
 
 	const ruta = inicial ? rutaDe(inicial.carpetaId, carpetas) : [];
 	const palabras = valores.contenido.split(/\s+/).filter(Boolean).length;
-	const estado = !notaFormSchema.safeParse(valores).success
-		? "Falta el título"
-		: autoguardar.isError
-			? "Error al guardar"
-			: autoguardar.isPending ||
-					JSON.stringify(valores) !== ultimoGuardado.current
-				? "Guardando…"
-				: "Guardado";
 
 	return (
 		<form.AppForm>
 			<form.Formulario className="mx-auto max-w-3xl space-y-4">
 				<div className="flex min-h-9 items-center justify-between gap-2">
 					<div className="flex min-w-0 items-center gap-2">
-						<Button
-							variant="ghost"
-							size="sm"
-							onClick={onVolver}
-							className={cn(inicial && "lg:hidden")}
-						>
+						<Button variant="ghost" size="sm" onClick={onVolver}>
 							<ArrowLeft className="h-4 w-4" />
-							Volver
+							{inicial ? "Cancelar" : "Volver"}
 						</Button>
 						{ruta.length > 0 && (
 							<p className="truncate text-sm text-tinta-tenue">
@@ -131,22 +98,18 @@ export function NotaForm({
 							</p>
 						)}
 					</div>
-					{inicial ? (
-						<div className="flex shrink-0 items-center gap-1">
-							<output className="mr-2 text-xs text-tinta-tenue">
-								{estado} · {palabras} palabras
-							</output>
-							{acciones}
-						</div>
-					) : (
+					<div className="flex shrink-0 items-center gap-3">
+						<output className="hidden text-xs text-tinta-tenue sm:block">
+							{palabras} palabras
+						</output>
 						<form.BotonEnviar>
-							Crear
+							{inicial ? "Guardar" : "Crear"}
 							<Kbd
 								tecla="S"
 								className="border-white/25 bg-white/15 text-white"
 							/>
 						</form.BotonEnviar>
-					)}
+					</div>
 				</div>
 				<form.AppField name="titulo">
 					{(campo) => (
@@ -209,6 +172,15 @@ export function NotaForm({
 					)}
 				</form.AppField>
 			</form.Formulario>
+			<ConfirmDialog
+				abierto={salida.status === "blocked"}
+				titulo="¿Salir sin guardar?"
+				mensaje="Los cambios de esta nota se perderán."
+				textoConfirmar="Salir sin guardar"
+				peligroso
+				onCancelar={() => salida.reset?.()}
+				onConfirmar={() => salida.proceed?.()}
+			/>
 		</form.AppForm>
 	);
 }

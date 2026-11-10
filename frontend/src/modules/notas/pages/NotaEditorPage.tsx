@@ -1,19 +1,10 @@
 import { useCanGoBack, useNavigate, useRouter } from "@tanstack/react-router";
-import { usePermisos } from "@/core/auth/usePermisos";
 import { Spinner } from "@/core/components/ui/Spinner";
-import { AccionesNota } from "../components/AccionesNota";
 import { NotaForm } from "../components/NotaForm";
 import { useNotaQuery } from "../hooks/useNotasQuery";
 import type { ContextoNotaSearch } from "../schemas/notaSchemas";
-import { NotaLecturaPage } from "./NotaLecturaPage";
 
-const spinner = (
-	<div className="flex justify-center py-16 text-tinta-tenue">
-		<Spinner />
-	</div>
-);
-
-/** Panel derecho de la bóveda: alta (sin `id`) o la nota lista para escribir. */
+/** Alta (sin `id`, en `contexto` si viene) o edición de una nota a página completa. */
 export function NotaEditorPage({
 	id,
 	contexto,
@@ -24,42 +15,43 @@ export function NotaEditorPage({
 	const router = useRouter();
 	const navigate = useNavigate();
 	const puedeVolver = useCanGoBack();
-	const { puede, listo } = usePermisos();
 	const { data, error } = useNotaQuery(id);
-	const ambito = {
-		organizacionId: data?.organizacionId ?? contexto?.organizacionId,
-		proyectoId: data?.proyectoId ?? contexto?.proyectoId,
-	};
-	const aLaLista = () => navigate({ to: "/notas", search: ambito });
-	const volver = () => (puedeVolver ? router.history.back() : aLaLista());
+	// Vuelve a donde se abrió; si se entró por URL, a su lectura (o a la carpeta si es nueva).
+	const volver = () =>
+		puedeVolver
+			? router.history.back()
+			: id === undefined
+				? navigate({ to: "/notas", search: contexto ?? {} })
+				: navigate({ to: "/notas/$id", params: { id: String(id) } });
 
 	if (error) throw error;
-	if (id === undefined) {
+	if (id !== undefined && !data) {
 		return (
-			<NotaForm
-				// Ya en /notas/nueva, crear en otra carpeta debe reiniciar el formulario.
-				key={`nueva-${contexto?.carpetaId ?? ""}`}
-				contexto={contexto}
-				onVolver={volver}
-				onCreada={(nota) =>
-					navigate({
-						to: "/notas/$id",
-						params: { id: String(nota.id) },
-						search: ambito,
-						replace: true,
-					})
-				}
-			/>
+			<div className="flex justify-center py-16 text-tinta-tenue">
+				<Spinner />
+			</div>
 		);
 	}
-	if (!listo || !data) return spinner;
-	if (!puede("notas:actualizar")) return <NotaLecturaPage id={id} />;
 	return (
 		<NotaForm
-			key={id}
+			// Ya en /notas/nueva, crear en otra carpeta debe reiniciar el formulario.
+			key={id ?? `nueva-${contexto?.carpetaId ?? ""}`}
 			inicial={data}
-			onVolver={aLaLista}
-			acciones={<AccionesNota nota={data} onEliminada={aLaLista} />}
+			contexto={contexto}
+			onVolver={volver}
+			onGuardada={(nota) =>
+				id !== undefined
+					? volver()
+					: navigate({
+							to: "/notas/$id",
+							params: { id: String(nota.id) },
+							search: {
+								organizacionId: nota.organizacionId ?? undefined,
+								proyectoId: nota.proyectoId ?? undefined,
+							},
+							replace: true,
+						})
+			}
 		/>
 	);
 }

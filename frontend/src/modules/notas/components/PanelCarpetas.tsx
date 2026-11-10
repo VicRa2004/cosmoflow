@@ -10,13 +10,12 @@ import {
 } from "../hooks/useCarpetas";
 import { useMoverNotaMutation } from "../hooks/useNotasMutation";
 import { useDescargarCarpeta } from "../hooks/useDescargarCarpeta";
-import { ArbolCarpetas } from "./ArbolCarpetas";
+import { ExploradorCarpeta } from "./ExploradorCarpeta";
 import { CarpetaDialog } from "./CarpetaDialog";
 
 interface PanelCarpetasProps {
 	carpetas: CarpetaDto[];
 	notas: NotaIndiceDto[];
-	notaAbierta?: number;
 	/** Contexto con el que se abren las notas. */
 	searchNota: ContextoNotaSearch;
 	proyectoId?: number;
@@ -24,11 +23,10 @@ interface PanelCarpetasProps {
 	onSeleccionar: (carpetaId?: number) => void;
 }
 
-/** Árbol de carpetas y notas con crear, editar, eliminar, descargar y mover. */
+/** Explorador de carpetas y notas con crear, editar, eliminar, descargar y mover. */
 export function PanelCarpetas({
 	carpetas,
 	notas,
-	notaAbierta,
 	searchNota,
 	proyectoId,
 	seleccionada,
@@ -48,21 +46,19 @@ export function PanelCarpetas({
 
 	return (
 		<>
-			<ArbolCarpetas
+			<ExploradorCarpeta
 				carpetas={carpetas}
 				notas={notas}
-				notaAbierta={notaAbierta}
 				searchNota={searchNota}
 				seleccionada={seleccionada}
 				onSeleccionar={onSeleccionar}
 				editable={puede("notas:crear")}
-				onNuevaNota={(carpetaId) => {
-					onSeleccionar(carpetaId ?? undefined);
+				onNuevaNota={(carpetaId) =>
 					navigate({
 						to: "/notas/nueva",
 						search: { ...searchNota, carpetaId: carpetaId ?? undefined },
-					});
-				}}
+					})
+				}
 				onNueva={(padreId) => setDialogo({ padreId })}
 				onEditar={(carpeta) =>
 					setDialogo({ carpeta, padreId: carpeta.padreId })
