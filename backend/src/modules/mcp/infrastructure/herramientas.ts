@@ -13,6 +13,51 @@ const paginacion = {
 	limite: z.number().int().min(1).max(100).default(20),
 };
 
+const id = z.number().int().positive();
+const dia = z.iso
+	.date()
+	.nullable()
+	.optional()
+	.describe("AAAA-MM-DD; null la quita");
+// Copia de los de Tarea: el MCP no importa internos de otro módulo (dependency-cruiser).
+const ESTADOS = [
+	"pendiente",
+	"en_progreso",
+	"completada",
+	"cancelada",
+] as const;
+
+const destino = {
+	organizacionId: id.optional(),
+	equipoId: id.optional(),
+	proyectoId: id.optional(),
+};
+
+/** Lo que la API admite al crear y al actualizar, salvo el título. */
+const camposTarea = {
+	contenido: z.string().optional().describe("Descripción en Markdown"),
+	estado: z.enum(ESTADOS).optional(),
+	prioridad: z.enum(["baja", "media", "alta"]).optional(),
+	fechaInicio: dia,
+	fechaVencimiento: dia,
+	color: z
+		.string()
+		.regex(/^#[0-9a-fA-F]{6}$/)
+		.nullable()
+		.optional()
+		.describe("#rrggbb; null lo quita"),
+	tagIds: z.array(id).max(50).optional().describe("Reemplaza los tags"),
+	responsableIds: z
+		.array(id)
+		.max(50)
+		.optional()
+		.describe("Reemplaza los responsables; solo en tareas compartidas"),
+	dependeDeId: id
+		.nullable()
+		.optional()
+		.describe("Tarea del mismo sitio de la que depende; null la quita"),
+};
+
 /** Un fallo de la API se devuelve como resultado: así la IA lo lee y puede corregirlo. */
 async function resultado(
 	llamada: () => Promise<unknown>,
@@ -52,17 +97,133 @@ export function registrarHerramientas(servidor: McpServer, api: Api): void {
 	);
 
 	servidor.registerTool(
+		"listar_tareas",
+		{
+			description:
+				"Lista tareas. Sin destino, las personales; con organizacionId solo, las de la organización (sin equipo ni proyecto); con equipoId o proyectoId, las de ese sitio; asignadas=true, en las que el usuario es responsable.",
+			inputSchema: {
+				...destino,
+				asignadas: z.boolean().optional(),
+				busqueda: z.string().min(1).max(128).optional(),
+				estado: z.enum(ESTADOS).optional(),
+				tagId: id.optional(),
+				...paginacion,
+			},
+			annotations: { readOnlyHint: true },
+		},
+		({ asignadas, ...args }) =>
+			resultado(() =>
+				api(
+					"GET",
+					`/api/tareas?${consulta({ ...args, asignadas: asignadas ? "true" : undefined })}`,
+				),
+			),
+	);
+
+	servidor.registerTool(
+		"obtener_tarea",
+		{
+			description: "Una tarea por id, con su descripción completa.",
+			inputSchema: { id },
+			annotations: { readOnlyHint: true },
+		},
+		({ id }) => resultado(() => api("GET", `/api/tareas/${id}`)),
+	);
+
+	servidor.registerTool(
 		"crear_tarea",
 		{
-			description: "Crea una tarea personal del usuario.",
+			description:
+				"Crea una tarea. Sin destino es personal; si no, de la organización, de un equipo o de un proyecto (solo uno).",
 			inputSchema: {
 				titulo: z.string().min(1).max(255),
-				contenido: z.string().optional().describe("Markdown"),
-				prioridad: z.enum(["baja", "media", "alta"]).optional(),
-				fechaVencimiento: z.iso.date().optional().describe("AAAA-MM-DD"),
+				...camposTarea,
+				...destino,
 			},
 		},
 		(args) => resultado(() => api("POST", "/api/tareas", args)),
+	);
+
+	servidor.registerTool(
+		"actualizar_tarea",
+		{
+			description:
+				"Cambia las propiedades indicadas de una tarea; las omitidas no se tocan. Sirve para asignar responsables (ids de miembros, solo en tareas compartidas).",
+			inputSchema: {
+				id,
+				titulo: z.string().min(1).max(255).optional(),
+				...camposTarea,
+			},
+			annotations: { idempotentHint: true },
+		},
+		({ id, ...cambios }) =>
+			resultado(() => api("PUT", `/api/tareas/${id}`, cambios)),
+	);
+
+	servidor.registerTool(
+		"mover_tarea",
+		{
+			description:
+				"Mueve una tarea personal a una organización, un equipo o un proyecto (exactamente uno). No tiene vuelta atrás.",
+			inputSchema: { id, ...destino },
+		},
+		({ id, ...destinos }) =>
+			resultado(() => api("POST", `/api/tareas/${id}/mover`, destinos)),
+	);
+
+	servidor.registerTool(
+		"listar_organizaciones",
+		{
+			description: "Organizaciones de las que el usuario es miembro.",
+			inputSchema: paginacion,
+			annotations: { readOnlyHint: true },
+		},
+		(args) =>
+			resultado(() => api("GET", `/api/organizaciones?${consulta(args)}`)),
+	);
+
+	for (const [nombre, ruta, que] of [
+		["listar_equipos", "equipos", "Equipos"],
+		["listar_proyectos", "proyectos", "Proyectos"],
+		[
+			"listar_miembros",
+			"miembros",
+			"Miembros (sus ids sirven de responsables)",
+		],
+	] as const) {
+		servidor.registerTool(
+			nombre,
+			{
+				description: `${que} de una organización.`,
+				inputSchema: { organizacionId: id },
+				annotations: { readOnlyHint: true },
+			},
+			({ organizacionId }) =>
+				resultado(() =>
+					api("GET", `/api/organizaciones/${organizacionId}/${ruta}`),
+				),
+		);
+	}
+
+	servidor.registerTool(
+		"listar_tags",
+		{
+			description:
+				"Tags personales o, con organizacionId, los de la organización (para tagIds de sus tareas).",
+			inputSchema: {
+				organizacionId: id.optional(),
+				nombre: z.string().min(1).max(128).optional(),
+				...paginacion,
+			},
+			annotations: { readOnlyHint: true },
+		},
+		({ organizacionId, ...args }) =>
+			resultado(() =>
+				api(
+					"GET",
+					`${organizacionId ? `/api/organizaciones/${organizacionId}` : "/api"}/tags?${consulta(args)}`,
+				),
+			),
 	);
 
 	servidor.registerTool(

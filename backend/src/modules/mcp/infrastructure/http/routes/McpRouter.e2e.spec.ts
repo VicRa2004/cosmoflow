@@ -296,7 +296,7 @@ describe("Conector MCP (e2e)", () => {
 	});
 
 	describe("herramientas", () => {
-		it("debería inicializar y anunciar las cinco", async () => {
+		it("debería inicializar y anunciar todas", async () => {
 			const { serverInfo } = await rpc(token, "initialize", {
 				protocolVersion: "2025-06-18",
 				capabilities: {},
@@ -306,11 +306,20 @@ describe("Conector MCP (e2e)", () => {
 
 			expect(serverInfo.name).toBe("cosmoflow");
 			expect(tools.map((t) => t.name).sort()).toEqual([
+				"actualizar_tarea",
 				"buscar_notas",
 				"completar_tarea",
 				"crear_nota",
 				"crear_tarea",
+				"listar_equipos",
+				"listar_miembros",
+				"listar_organizaciones",
 				"listar_pendientes",
+				"listar_proyectos",
+				"listar_tags",
+				"listar_tareas",
+				"mover_tarea",
+				"obtener_tarea",
 			]);
 		});
 
@@ -333,6 +342,69 @@ describe("Conector MCP (e2e)", () => {
 
 			const despues = await datos(token, "listar_pendientes");
 			expect(despues.datos).toEqual([]);
+		});
+
+		it("debería editar una tarea personal, moverla a un proyecto y asignarla", async () => {
+			const org = (await (
+				await api("/api/organizaciones", {
+					method: "POST",
+					token: sesion,
+					body: { nombre: "Granja", color: "#6366f1" },
+				})
+			).json()) as { id: number };
+			const [yo] = await datos(token, "listar_miembros", {
+				organizacionId: org.id,
+			});
+			await api(`/api/organizaciones/${org.id}/proyectos`, {
+				method: "POST",
+				token: sesion,
+				body: { nombre: "Ganadero", integranteIds: [yo.usuarioId] },
+			});
+			const [proyecto] = await datos(token, "listar_proyectos", {
+				organizacionId: org.id,
+			});
+			const tarea = await datos(token, "crear_tarea", { titulo: "Vacunas" });
+
+			const editada = await datos(token, "actualizar_tarea", {
+				id: tarea.id,
+				titulo: "Vacunar terneros",
+				contenido: "- [ ] Lote 1",
+				estado: "en_progreso",
+				prioridad: "alta",
+				fechaInicio: "2030-01-01",
+				fechaVencimiento: "2030-01-10",
+				color: "#f59e0b",
+			});
+			const movida = await datos(token, "mover_tarea", {
+				id: tarea.id,
+				proyectoId: proyecto.id,
+			});
+			const asignada = await datos(token, "actualizar_tarea", {
+				id: tarea.id,
+				responsableIds: [yo.usuarioId],
+				fechaInicio: null,
+			});
+			const lista = await datos(token, "listar_tareas", {
+				proyectoId: proyecto.id,
+			});
+
+			expect(editada).toMatchObject({
+				titulo: "Vacunar terneros",
+				contenido: "- [ ] Lote 1",
+				estado: "en_progreso",
+				prioridad: "alta",
+				fechaVencimiento: "2030-01-10",
+				color: "#f59e0b",
+			});
+			expect(movida.proyectoId).toBe(proyecto.id);
+			expect(asignada).toMatchObject({
+				responsableIds: [yo.usuarioId],
+				fechaInicio: null,
+			});
+			expect(lista.datos.map((t: { id: number }) => t.id)).toEqual([tarea.id]);
+			expect(await datos(token, "obtener_tarea", { id: tarea.id })).toEqual(
+				asignada,
+			);
 		});
 
 		it("debería crear y buscar notas", async () => {
