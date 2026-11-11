@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+
 import '../auth/sesion_store.dart';
 import '../config/entorno.dart';
 import 'auth_interceptor.dart';
@@ -36,4 +37,7 @@ class ApiClient {
   final SesionStore sesionStore;
   final Dio dio;
   late final AuthInterceptor authInterceptor;
+
+  /// URL base configurada en las opciones de Dio.
+  String get baseUrl => dio.options.baseUrl;
 }

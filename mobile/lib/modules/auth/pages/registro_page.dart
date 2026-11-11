@@ -16,7 +16,8 @@ class RegistroPage extends StatefulWidget {
   State<RegistroPage> createState() => _RegistroPageState();
 }
 
-class _RegistroPageState extends State<RegistroPage> {
+class _RegistroPageState extends State<RegistroPage>
+    with WidgetsBindingObserver {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   final TextEditingController _nombreController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
@@ -29,7 +30,27 @@ class _RegistroPageState extends State<RegistroPage> {
   bool get _ocupado => _isCargando || _isCargandoGoogle;
 
   @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed && _isCargandoGoogle) {
+      Future<void>.delayed(const Duration(milliseconds: 1200), () {
+        if (mounted &&
+            _isCargandoGoogle &&
+            !widget.authApi.apiClient.sesionStore.isAutenticado) {
+          setState(() => _isCargandoGoogle = false);
+        }
+      });
+    }
+  }
+
+  @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _nombreController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
@@ -51,8 +72,7 @@ class _RegistroPageState extends State<RegistroPage> {
     } on DioException {
       if (mounted) {
         setState(() {
-          _mensajeError =
-              'No se pudo continuar con Google. Inténtalo de nuevo o regístrate con tu email.';
+          _mensajeError = 'No se pudo continuar con Google. Inténtalo de nuevo o regístrate con tu email.';
         });
       }
     } catch (_) {

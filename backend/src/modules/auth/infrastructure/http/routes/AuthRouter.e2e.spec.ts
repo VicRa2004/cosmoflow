@@ -104,6 +104,14 @@ describe("Auth (e2e)", () => {
 		expect(res.headers.get("location")).toEndWith("/login?error=google");
 	});
 
+	it("vuelta de Google con state móvil sin cookie → HTML con enlace cosmoflow://login-callback?error=google", async () => {
+		const res = await api("/api/auth/google/callback?code=x&state=y.movil");
+
+		expect(res.status).toBe(200);
+		const html = await res.text();
+		expect(html).toContain("cosmoflow://login-callback?error=google");
+	});
+
 	it("login con contraseña incorrecta → 401", async () => {
 		const res = await api("/api/auth/login", {
 			method: "POST",

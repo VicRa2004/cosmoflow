@@ -1,7 +1,10 @@
 import 'dart:convert';
 import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:webview_flutter/webview_flutter.dart';
+
 import '../theme/colores_noche_indigo.dart';
 
 /// Editor WYSIWYG de notas y tareas: el mismo Milkdown Crepe de la web
@@ -27,7 +30,7 @@ class EditorMarkdown extends StatefulWidget {
 }
 
 class _EditorMarkdownState extends State<EditorMarkdown> {
-  late final WebViewController _web;
+  WebViewController? _web;
   double _altura = 160;
 
   /// Borde inferior del cursor dentro del editor, o `null` si no tiene el foco.
@@ -37,16 +40,27 @@ class _EditorMarkdownState extends State<EditorMarkdown> {
   @override
   void initState() {
     super.initState();
+    if (WebViewPlatform.instance == null) return;
     _web = WebViewController()
       ..setJavaScriptMode(JavaScriptMode.unrestricted)
       ..addJavaScriptChannel('Cosmoflow', onMessageReceived: _recibir)
       ..setNavigationDelegate(
         NavigationDelegate(
           onPageFinished: (_) => _iniciar(),
-          // Solo la página local del editor: un enlace no debe abrirse dentro.
-          onNavigationRequest: (peticion) => peticion.url.startsWith('file:')
-              ? NavigationDecision.navigate
-              : NavigationDecision.prevent,
+          // Solo la página local del editor: los enlaces externos se abren en el navegador del dispositivo.
+          onNavigationRequest: (peticion) {
+            if (peticion.url.startsWith('file:')) {
+              return NavigationDecision.navigate;
+            }
+            final uri = Uri.tryParse(peticion.url);
+            if (uri != null &&
+                (uri.scheme == 'http' ||
+                    uri.scheme == 'https' ||
+                    uri.scheme == 'mailto')) {
+              launchUrl(uri, mode: LaunchMode.externalApplication);
+            }
+            return NavigationDecision.prevent;
+          },
         ),
       )
       ..loadFlutterAsset('assets/editor/index.html');
@@ -55,7 +69,7 @@ class _EditorMarkdownState extends State<EditorMarkdown> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    _web.setBackgroundColor(context.colores.fondo);
+    _web?.setBackgroundColor(context.colores.fondo);
   }
 
   static String _hex(Color c) =>
@@ -79,7 +93,7 @@ class _EditorMarkdownState extends State<EditorMarkdown> {
         '--peligro': _hex(c.rosePeligro),
       },
     });
-    _web.runJavaScript('window.iniciarEditor($opciones)');
+    _web?.runJavaScript('window.iniciarEditor($opciones)');
   }
 
   void _recibir(JavaScriptMessage mensaje) {
@@ -117,6 +131,15 @@ class _EditorMarkdownState extends State<EditorMarkdown> {
 
   @override
   Widget build(BuildContext context) {
+    final web = _web;
+    if (web == null) {
+      return TextFormField(
+        controller: widget.controller,
+        maxLines: 4,
+        decoration: InputDecoration(hintText: widget.hint),
+        onChanged: (_) => widget.onCambio?.call(),
+      );
+    }
     // Al abrirse el teclado no hay mensaje del editor: se recoloca aquí.
     final teclado = MediaQuery.viewInsetsOf(context).bottom;
     if (teclado != _teclado) {
@@ -127,7 +150,7 @@ class _EditorMarkdownState extends State<EditorMarkdown> {
     }
     return SizedBox(
       height: _altura,
-      child: WebViewWidget(controller: _web),
+      child: WebViewWidget(controller: web),
     );
   }
 }

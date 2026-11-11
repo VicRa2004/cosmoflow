@@ -17,7 +17,7 @@ class LoginPage extends StatefulWidget {
   State<LoginPage> createState() => _LoginPageState();
 }
 
-class _LoginPageState extends State<LoginPage> {
+class _LoginPageState extends State<LoginPage> with WidgetsBindingObserver {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
@@ -29,7 +29,27 @@ class _LoginPageState extends State<LoginPage> {
   bool get _ocupado => _isCargando || _isCargandoGoogle;
 
   @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed && _isCargandoGoogle) {
+      Future<void>.delayed(const Duration(milliseconds: 1200), () {
+        if (mounted &&
+            _isCargandoGoogle &&
+            !widget.authApi.apiClient.sesionStore.isAutenticado) {
+          setState(() => _isCargandoGoogle = false);
+        }
+      });
+    }
+  }
+
+  @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _emailController.dispose();
     _passwordController.dispose();
     super.dispose();
@@ -50,8 +70,7 @@ class _LoginPageState extends State<LoginPage> {
     } on DioException {
       if (mounted) {
         setState(() {
-          _mensajeError =
-              'No se pudo iniciar sesión con Google. Inténtalo de nuevo o usa tu email y contraseña.';
+          _mensajeError = 'No se pudo iniciar sesión con Google. Inténtalo de nuevo o usa tu email y contraseña.';
         });
       }
     } catch (_) {
