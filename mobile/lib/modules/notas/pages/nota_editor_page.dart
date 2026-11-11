@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import '../../../core/offline/aviso_pendientes.dart';
 import '../../../core/widgets/avisos.dart';
 import '../../../core/widgets/pagina_editor.dart';
@@ -15,12 +16,14 @@ class NotaEditorArgs {
     this.tags = const <TagDto>[],
     this.carpetas = const <CarpetaDto>[],
     this.carpetaInicial,
+    this.proyectoId,
   });
 
   final NotaDto? nota;
   final List<TagDto> tags;
   final List<CarpetaDto> carpetas;
   final int? carpetaInicial;
+  final int? proyectoId;
 }
 
 /// `/notas/nueva` y `/notas/:id/editar`. Devuelve `true` al guardar.
@@ -48,6 +51,7 @@ class _NotaEditorPageState extends State<NotaEditorPage> {
           contenido: v.contenido,
           tagIds: v.tagIds,
           carpetaId: v.carpetaId,
+          proyectoId: widget.args.proyectoId,
         );
         if (mounted) avisarSiEncolada(context, creada);
       } else {

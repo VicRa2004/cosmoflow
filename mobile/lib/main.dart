@@ -1,13 +1,17 @@
 import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+
 import 'core/api/api_client.dart';
 import 'core/auth/sesion_store.dart';
 import 'core/offline/cola_sin_conexion.dart';
 import 'core/router/app_router.dart';
 import 'core/theme/tema_app.dart';
 import 'modules/auth/api/auth_api.dart';
+import 'modules/auth/services/oauth_google_service.dart';
 import 'modules/notas/api/notas_api.dart';
+import 'modules/organizaciones/api/organizaciones_api.dart';
 import 'modules/tags/api/tags_api.dart';
 import 'modules/tareas/api/tareas_api.dart';
 
@@ -21,6 +25,7 @@ void main() {
   final tareasApi = TareasApi(apiClient: apiClient, cola: cola);
   final notasApi = NotasApi(apiClient: apiClient, cola: cola);
   final tagsApi = TagsApi(apiClient: apiClient);
+  final organizacionesApi = OrganizacionesApi(apiClient: apiClient);
 
   runApp(
     CosmoflowMobileApp(
@@ -29,6 +34,7 @@ void main() {
       tareasApi: tareasApi,
       notasApi: notasApi,
       tagsApi: tagsApi,
+      organizacionesApi: organizacionesApi,
       cola: cola,
     ),
   );
@@ -43,7 +49,9 @@ class CosmoflowMobileApp extends StatefulWidget {
     this.tareasApi,
     this.notasApi,
     this.tagsApi,
+    this.organizacionesApi,
     this.cola,
+    this.oauthGoogleService,
     this.restaurarAlIniciar = true,
   });
 
@@ -52,6 +60,8 @@ class CosmoflowMobileApp extends StatefulWidget {
   final TareasApi? tareasApi;
   final NotasApi? notasApi;
   final TagsApi? tagsApi;
+  final OrganizacionesApi? organizacionesApi;
+  final OAuthGoogleService? oauthGoogleService;
 
   /// Notas y tareas creadas sin conexión; sin ella no hay modo offline.
   final ColaSinConexion? cola;
@@ -64,16 +74,22 @@ class CosmoflowMobileApp extends StatefulWidget {
 class _CosmoflowMobileAppState extends State<CosmoflowMobileApp>
     with WidgetsBindingObserver {
   late final GoRouter _router;
+  late final OAuthGoogleService _oauthGoogleService;
   Timer? _reintentos;
   bool _sincronizando = false;
 
   @override
   void initState() {
     super.initState();
+    _oauthGoogleService = widget.oauthGoogleService ?? OAuthGoogleService();
+    _oauthGoogleService.iniciarListenerGlobal(authApi: widget.authApi);
+
     final apiClient = widget.authApi.apiClient;
     final tareasApi = widget.tareasApi ?? TareasApi(apiClient: apiClient);
     final notasApi = widget.notasApi ?? NotasApi(apiClient: apiClient);
     final tagsApi = widget.tagsApi ?? TagsApi(apiClient: apiClient);
+    final organizacionesApi =
+        widget.organizacionesApi ?? OrganizacionesApi(apiClient: apiClient);
 
     _router = crearAppRouter(
       sesionStore: widget.sesionStore,
@@ -81,6 +97,7 @@ class _CosmoflowMobileAppState extends State<CosmoflowMobileApp>
       tareasApi: tareasApi,
       notasApi: notasApi,
       tagsApi: tagsApi,
+      organizacionesApi: organizacionesApi,
       cargarDatosIniciales: widget.restaurarAlIniciar,
     );
     if (widget.restaurarAlIniciar) {
@@ -119,6 +136,7 @@ class _CosmoflowMobileAppState extends State<CosmoflowMobileApp>
 
   @override
   void dispose() {
+    _oauthGoogleService.dispose();
     _reintentos?.cancel();
     WidgetsBinding.instance.removeObserver(this);
     _router.dispose();

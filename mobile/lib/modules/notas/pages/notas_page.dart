@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+
 import '../../../core/auth/sesion_store.dart';
 import '../../../core/offline/aviso_pendientes.dart';
 import '../../../core/widgets/estados.dart';
@@ -12,19 +13,25 @@ import '../widgets/nota_fila.dart';
 import '../widgets/selector_carpeta.dart';
 import 'nota_editor_page.dart';
 
-/// Vista `/notas` con buscador, filtro por carpeta y tag, lectura y edición.
+/// Vista `/notas` (o pestaña de notas de un proyecto) con buscador, filtro por carpeta y tag, lectura y edición.
 class NotasPage extends StatefulWidget {
   const NotasPage({
     super.key,
     required this.sesionStore,
     required this.notasApi,
     required this.tagsApi,
+    this.proyectoId,
+    this.organizacionId,
+    this.mostrarAppBar = true,
     this.cargarAlIniciar = true,
   });
 
   final SesionStore sesionStore;
   final NotasApi notasApi;
   final TagsApi tagsApi;
+  final int? proyectoId;
+  final int? organizacionId;
+  final bool mostrarAppBar;
   final bool cargarAlIniciar;
 
   @override
@@ -64,9 +71,10 @@ class _NotasPageState extends State<NotasPage> {
           busqueda: _busqueda.text,
           tagId: _tagId,
           carpetaId: _carpetaId,
+          proyectoId: widget.proyectoId,
         ),
-        widget.tagsApi.obtenerTodos(),
-        widget.notasApi.obtenerCarpetas(),
+        widget.tagsApi.obtenerTodos(organizacionId: widget.organizacionId),
+        widget.notasApi.obtenerCarpetas(proyectoId: widget.proyectoId),
       ]);
       if (mounted) {
         setState(() {
@@ -91,6 +99,7 @@ class _NotasPageState extends State<NotasPage> {
         tags: _tags,
         carpetas: _carpetas,
         carpetaInicial: _carpetaId,
+        proyectoId: widget.proyectoId,
       ),
     );
     if (guardada ?? false) await _cargar();
@@ -99,7 +108,12 @@ class _NotasPageState extends State<NotasPage> {
   Future<void> _abrirDetalle(NotaDto nota) async {
     await context.push<void>(
       '/notas/${nota.id}',
-      extra: NotaEditorArgs(nota: nota, tags: _tags, carpetas: _carpetas),
+      extra: NotaEditorArgs(
+        nota: nota,
+        tags: _tags,
+        carpetas: _carpetas,
+        proyectoId: widget.proyectoId,
+      ),
     );
     // Pudo editarse o eliminarse dentro.
     if (mounted) await _cargar();
@@ -137,9 +151,12 @@ class _NotasPageState extends State<NotasPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Notas')),
+      appBar: widget.mostrarAppBar ? AppBar(title: const Text('Notas')) : null,
       floatingActionButton: widget.sesionStore.puede('notas:crear')
           ? FloatingActionButton(
+              heroTag: widget.proyectoId != null
+                  ? 'fab-notas-proy-${widget.proyectoId}'
+                  : 'fab-notas-personal',
               tooltip: 'Nueva nota',
               onPressed: () => _abrirEditor('/notas/nueva'),
               child: const Icon(Icons.add_rounded),

@@ -12,13 +12,14 @@ class NotasApi {
   /// Con ella, crear sin red guarda la nota para sincronizarla después.
   final ColaSinConexion? cola;
 
-  /// Obtiene las notas personales con búsqueda y filtros (`GET /api/notas`).
+  /// Obtiene las notas personales o de un proyecto con búsqueda y filtros (`GET /api/notas`).
   Future<PaginaNotas> obtenerTodos({
     int pagina = 1,
     int limite = 25,
     String? busqueda,
     int? tagId,
     int? carpetaId,
+    int? proyectoId,
   }) async {
     final query = <String, dynamic>{'pagina': pagina, 'limite': limite};
     if (busqueda != null && busqueda.trim().isNotEmpty) {
@@ -30,6 +31,9 @@ class NotasApi {
     if (carpetaId != null) {
       query['carpetaId'] = carpetaId;
     }
+    if (proyectoId != null) {
+      query['proyectoId'] = proyectoId;
+    }
 
     final response = await apiClient.dio.get<Map<String, dynamic>>(
       '/notas',
@@ -38,9 +42,14 @@ class NotasApi {
     return PaginaNotas.fromJson(response.data ?? const <String, dynamic>{});
   }
 
-  /// Carpetas personales, por nombre (`GET /api/carpetas`).
-  Future<List<CarpetaDto>> obtenerCarpetas() async {
-    final response = await apiClient.dio.get<List<dynamic>>('/carpetas');
+  /// Carpetas personales o de un proyecto, por nombre (`GET /api/carpetas`).
+  Future<List<CarpetaDto>> obtenerCarpetas({int? proyectoId}) async {
+    final response = await apiClient.dio.get<List<dynamic>>(
+      '/carpetas',
+      queryParameters: proyectoId != null
+          ? <String, dynamic>{'proyectoId': proyectoId}
+          : null,
+    );
     return (response.data ?? const <dynamic>[])
         .whereType<Map<String, dynamic>>()
         .map(CarpetaDto.fromJson)
@@ -55,6 +64,7 @@ class NotasApi {
     String? color,
     List<int> tagIds = const <int>[],
     int? carpetaId,
+    int? proyectoId,
   }) async {
     final datos = <String, dynamic>{
       'titulo': titulo.trim(),
@@ -62,6 +72,7 @@ class NotasApi {
       'color': (color != null && color.isNotEmpty) ? color : null,
       'tagIds': tagIds,
       'carpetaId': carpetaId,
+      'proyectoId': ?proyectoId,
     };
     final respuesta = cola == null
         ? (await apiClient.dio.post<Map<String, dynamic>>(

@@ -1,8 +1,13 @@
 import 'package:flutter/material.dart';
+
 import '../../../core/theme/colores_noche_indigo.dart';
 import '../../../core/widgets/campo_fecha.dart';
 import '../../../core/widgets/editor_markdown.dart';
+import '../../tags/models/tag_model.dart';
 import '../models/tarea_model.dart';
+
+/// Miembro elegible como responsable de una tarea compartida.
+typedef ResponsableCandidato = ({int id, String nombre});
 
 /// Valores del formulario de tarea (crear o editar).
 class TareaFormValores {
@@ -13,6 +18,8 @@ class TareaFormValores {
     required this.prioridad,
     this.fechaInicio,
     this.fechaVencimiento,
+    this.tagIds = const <int>[],
+    this.responsableIds = const <int>[],
   });
 
   final String titulo;
@@ -21,13 +28,23 @@ class TareaFormValores {
   final PrioridadTarea prioridad;
   final String? fechaInicio;
   final String? fechaVencimiento;
+  final List<int> tagIds;
+  final List<int> responsableIds;
 }
 
 /// Campos de la tarea. No sabe dónde vive: la página llama a [TareaFormState.validar].
 class TareaForm extends StatefulWidget {
-  const TareaForm({super.key, this.tareaInicial, this.onCambio});
+  const TareaForm({
+    super.key,
+    this.tareaInicial,
+    this.tagsDisponibles = const <TagDto>[],
+    this.responsablesDisponibles = const <ResponsableCandidato>[],
+    this.onCambio,
+  });
 
   final TareaDto? tareaInicial;
+  final List<TagDto> tagsDisponibles;
+  final List<ResponsableCandidato> responsablesDisponibles;
   final VoidCallback? onCambio;
 
   @override
@@ -42,6 +59,8 @@ class TareaFormState extends State<TareaForm> {
   late final TextEditingController _vencimiento;
   late EstadoTarea _estado;
   late PrioridadTarea _prioridad;
+  late final Set<int> _tags;
+  late final Set<int> _responsables;
 
   @override
   void initState() {
@@ -60,6 +79,8 @@ class TareaFormState extends State<TareaForm> {
     );
     _estado = t?.estado ?? EstadoTarea.pendiente;
     _prioridad = t?.prioridad ?? PrioridadTarea.media;
+    _tags = Set<int>.from(t?.tagIds ?? const <int>[]);
+    _responsables = Set<int>.from(t?.responsableIds ?? const <int>[]);
     for (final c in <TextEditingController>[_inicio, _vencimiento]) {
       c.addListener(() => widget.onCambio?.call());
     }
@@ -90,14 +111,15 @@ class TareaFormState extends State<TareaForm> {
       prioridad: _prioridad,
       fechaInicio: fecha(_inicio),
       fechaVencimiento: fecha(_vencimiento),
+      tagIds: _tags.toList(growable: false),
+      responsableIds: _responsables.toList(growable: false),
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    final seccion = Theme.of(
-      context,
-    ).textTheme.labelLarge?.copyWith(color: context.colores.tintaTenue);
+    final seccion = Theme.of(context).textTheme.labelLarge
+        ?.copyWith(color: context.colores.tintaTenue);
     return Form(
       key: _formKey,
       onChanged: widget.onCambio,
@@ -171,6 +193,53 @@ class TareaFormState extends State<TareaForm> {
                   : null;
             },
           ),
+          if (widget.responsablesDisponibles.isNotEmpty) ...<Widget>[
+            const SizedBox(height: 24),
+            Text('Responsables', style: seccion),
+            const SizedBox(height: 8),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: <Widget>[
+                for (final m in widget.responsablesDisponibles)
+                  FilterChip(
+                    avatar: const Icon(Icons.person_outline_rounded, size: 18),
+                    label: Text(m.nombre),
+                    selected: _responsables.contains(m.id),
+                    onSelected: (sel) {
+                      setState(
+                        () => sel
+                            ? _responsables.add(m.id)
+                            : _responsables.remove(m.id),
+                      );
+                      widget.onCambio?.call();
+                    },
+                  ),
+              ],
+            ),
+          ],
+          if (widget.tagsDisponibles.isNotEmpty) ...<Widget>[
+            const SizedBox(height: 24),
+            Text('Tags', style: seccion),
+            const SizedBox(height: 8),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: <Widget>[
+                for (final tag in widget.tagsDisponibles)
+                  FilterChip(
+                    label: Text(tag.nombre),
+                    selected: _tags.contains(tag.id),
+                    onSelected: (sel) {
+                      setState(
+                        () => sel ? _tags.add(tag.id) : _tags.remove(tag.id),
+                      );
+                      widget.onCambio?.call();
+                    },
+                  ),
+              ],
+            ),
+          ],
         ],
       ),
     );

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+
 import '../../../core/auth/sesion_store.dart';
 import '../../../core/theme/colores_noche_indigo.dart';
 import '../../auth/api/auth_api.dart';
@@ -32,9 +33,8 @@ class _PerfilPageState extends State<PerfilPage> {
     try {
       final mensaje = await widget.authApi.reenviarVerificacionEmail();
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(mensaje)));
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(mensaje)));
       }
     } catch (_) {
       if (mounted) {
@@ -79,9 +79,8 @@ class _PerfilPageState extends State<PerfilPage> {
     padding: const EdgeInsets.fromLTRB(16, 24, 16, 8),
     child: Text(
       titulo,
-      style: Theme.of(
-        context,
-      ).textTheme.labelLarge?.copyWith(color: context.colores.tintaTenue),
+      style: Theme.of(context).textTheme.labelLarge
+          ?.copyWith(color: context.colores.tintaTenue),
     ),
   );
 
@@ -148,15 +147,20 @@ class _PerfilPageState extends State<PerfilPage> {
               onSelectionChanged: (s) => store.cambiarModoTema(s.first),
             ),
           ),
-          if (store.puede('tags:leer')) ...<Widget>[
-            _seccion('Organización'),
+          _seccion('Organización'),
+          ListTile(
+            leading: const Icon(Icons.workspaces_outlined),
+            title: const Text('Organizaciones'),
+            trailing: const Icon(Icons.chevron_right_rounded),
+            onTap: () => context.push('/organizaciones'),
+          ),
+          if (store.puede('tags:leer'))
             ListTile(
               leading: const Icon(Icons.sell_outlined),
               title: const Text('Tags'),
               trailing: const Icon(Icons.chevron_right_rounded),
               onTap: () => context.push('/tags'),
             ),
-          ],
           _seccion('Seguridad de la cuenta'),
           ListTile(
             leading: const Icon(Icons.lock_outline_rounded),

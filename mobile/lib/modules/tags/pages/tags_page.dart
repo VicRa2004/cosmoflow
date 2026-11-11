@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import '../../../core/auth/sesion_store.dart';
 import '../../../core/theme/colores_noche_indigo.dart';
 import '../api/tags_api.dart';
@@ -8,17 +9,25 @@ import '../../../core/widgets/confirmar.dart';
 import '../../../core/widgets/estados.dart';
 import '../widgets/tag_form_sheet.dart';
 
-/// Vista `/tags` para buscar, crear, editar y eliminar etiquetas personales.
+/// Vista `/tags` (o pestaña de organización) para buscar, crear, editar y eliminar etiquetas.
 class TagsPage extends StatefulWidget {
   const TagsPage({
     super.key,
     required this.sesionStore,
     required this.tagsApi,
+    this.organizacionId,
+    this.puedeGestionar,
+    this.mostrarAppBar = true,
+    this.onTagsCambiados,
     this.cargarAlIniciar = true,
   });
 
   final SesionStore sesionStore;
   final TagsApi tagsApi;
+  final int? organizacionId;
+  final bool? puedeGestionar;
+  final bool mostrarAppBar;
+  final ValueChanged<List<TagDto>>? onTagsCambiados;
   final bool cargarAlIniciar;
 
   @override
@@ -63,11 +72,13 @@ class _TagsPageState extends State<TagsPage> {
     try {
       final pagina = await widget.tagsApi.obtenerTodos(
         nombre: _busquedaController.text,
+        organizacionId: widget.organizacionId,
       );
       if (mounted) {
         setState(() {
           _tags = pagina.datos;
         });
+        widget.onTagsCambiados?.call(pagina.datos);
       }
     } catch (_) {
       if (mounted) {
@@ -106,7 +117,11 @@ class _TagsPageState extends State<TagsPage> {
     final v = await _abrirForm();
     if (v == null || !mounted) return;
     await _guardar(
-      () => widget.tagsApi.crear(nombre: v.nombre, color: v.color),
+      () => widget.tagsApi.crear(
+        nombre: v.nombre,
+        color: v.color,
+        organizacionId: widget.organizacionId,
+      ),
     );
   }
 
@@ -114,7 +129,12 @@ class _TagsPageState extends State<TagsPage> {
     final v = await _abrirForm(tag);
     if (v == null || !mounted) return;
     await _guardar(
-      () => widget.tagsApi.actualizar(tag.id, nombre: v.nombre, color: v.color),
+      () => widget.tagsApi.actualizar(
+        tag.id,
+        nombre: v.nombre,
+        color: v.color,
+        organizacionId: widget.organizacionId,
+      ),
     );
   }
 
@@ -126,19 +146,31 @@ class _TagsPageState extends State<TagsPage> {
       accion: 'Eliminar',
     );
     if (!ok || !mounted) return;
-    await _guardar(() => widget.tagsApi.eliminar(tag.id));
+    await _guardar(
+      () => widget.tagsApi.eliminar(
+        tag.id,
+        organizacionId: widget.organizacionId,
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     final colores = context.colores;
-    final puedeActualizar = widget.sesionStore.puede('tags:actualizar');
-    final puedeEliminar = widget.sesionStore.puede('tags:eliminar');
+    final gestionOrg = widget.puedeGestionar;
+    final puedeCrear = gestionOrg ?? widget.sesionStore.puede('tags:crear');
+    final puedeActualizar =
+        gestionOrg ?? widget.sesionStore.puede('tags:actualizar');
+    final puedeEliminar =
+        gestionOrg ?? widget.sesionStore.puede('tags:eliminar');
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Tags')),
-      floatingActionButton: widget.sesionStore.puede('tags:crear')
+      appBar: widget.mostrarAppBar ? AppBar(title: const Text('Tags')) : null,
+      floatingActionButton: puedeCrear
           ? FloatingActionButton(
+              heroTag: widget.organizacionId != null
+                  ? 'fab-tags-org-${widget.organizacionId}'
+                  : 'fab-tags-personal',
               tooltip: 'Nuevo tag',
               onPressed: _crearTag,
               child: const Icon(Icons.add_rounded),
@@ -150,7 +182,7 @@ class _TagsPageState extends State<TagsPage> {
           padding: const EdgeInsets.only(bottom: 96),
           children: <Widget>[
             Padding(
-              padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
               child: SearchBar(
                 controller: _busquedaController,
                 hintText: 'Filtrar por nombre',
@@ -165,10 +197,12 @@ class _TagsPageState extends State<TagsPage> {
             else if (_mensajeError != null)
               EstadoError(mensaje: _mensajeError!, onReintentar: _cargarTags)
             else if (_tags.isEmpty)
-              const EstadoVacio(
+              EstadoVacio(
                 icono: Icons.sell_outlined,
                 titulo: 'Sin etiquetas',
-                mensaje: 'Crea etiquetas para organizar tus tareas y notas.',
+                mensaje: widget.organizacionId != null
+                    ? 'Aún no hay tags compartidos en la organización.'
+                    : 'Crea etiquetas para organizar tus tareas y notas.',
               )
             else
               for (final tag in _tags) ...<Widget>[

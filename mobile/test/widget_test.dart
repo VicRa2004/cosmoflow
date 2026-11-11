@@ -27,32 +27,29 @@ void main() {
     expect(AuthInterceptor.extraerRefreshToken('texto'), isNull);
   });
 
-  test(
-    'AuthInterceptor y ResultadoCallbackGoogle extraen cookies y callbacks OAuth',
-    () {
-      const headers = <String>[
-        'google_oauth=estado123.verifier456; Path=/api/auth/google; HttpOnly; SameSite=Lax',
-      ];
-      expect(
-        AuthInterceptor.extraerValorCookie(headers, 'google_oauth'),
-        equals('estado123.verifier456'),
-      );
+  test('AuthInterceptor y ResultadoCallbackGoogle extraen cookies y callbacks OAuth', () {
+    const headers = <String>[
+      'google_oauth=estado123.verifier456; Path=/api/auth/google; HttpOnly; SameSite=Lax',
+    ];
+    expect(
+      AuthInterceptor.extraerValorCookie(headers, 'google_oauth'),
+      equals('estado123.verifier456'),
+    );
 
-      final exito = ResultadoCallbackGoogle.intentarExtraer(
-        'https://cosmoflow.saasil.mx/api/auth/google/callback?code=4/0AeanS&state=abc123',
-      );
-      expect(exito, isNotNull);
-      expect(exito!.esValido, isTrue);
-      expect(exito.code, equals('4/0AeanS'));
-      expect(exito.state, equals('abc123'));
+    final exito = ResultadoCallbackGoogle.intentarExtraer(
+      'https://cosmoflow.saasil.mx/api/auth/google/callback?code=4/0AeanS&state=abc123',
+    );
+    expect(exito, isNotNull);
+    expect(exito!.esValido, isTrue);
+    expect(exito.code, equals('4/0AeanS'));
+    expect(exito.state, equals('abc123'));
 
-      final fallo = ResultadoCallbackGoogle.intentarExtraer(
-        'https://cosmoflow.saasil.mx/login?error=google',
-      );
-      expect(fallo, isNotNull);
-      expect(fallo!.esValido, isFalse);
-    },
-  );
+    final fallo = ResultadoCallbackGoogle.intentarExtraer(
+      'https://cosmoflow.saasil.mx/login?error=google',
+    );
+    expect(fallo, isNotNull);
+    expect(fallo!.esValido, isFalse);
+  });
 
   test('Modelos TareaDto, NotaDto y TagDto parsean respuestas del backend', () {
     final tarea = TareaDto.fromJson(<String, dynamic>{
@@ -161,6 +158,12 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.text('Email verificado'), findsOneWidget);
       expect(find.text('Seguridad de la cuenta'), findsOneWidget);
+
+      await tester.tap(find.text('Organizaciones'));
+      await tester.pumpAndSettle();
+      expect(find.text('Sin organizaciones'), findsOneWidget);
+      await tester.pageBack();
+      await tester.pumpAndSettle();
 
       await tester.tap(find.text('Tags'));
       await tester.pumpAndSettle();

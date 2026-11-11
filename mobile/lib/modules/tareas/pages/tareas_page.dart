@@ -1,24 +1,43 @@
 import 'package:go_router/go_router.dart';
 import 'package:flutter/material.dart';
+
 import '../../../core/auth/sesion_store.dart';
 import '../../../core/offline/aviso_pendientes.dart';
 import '../../../core/widgets/estados.dart';
+import '../../tags/models/tag_model.dart';
 import '../acciones_tarea.dart';
 import '../api/tareas_api.dart';
 import '../models/tarea_model.dart';
 import '../widgets/tarea_fila.dart';
+import '../widgets/tarea_form.dart';
 
-/// Vista `/tareas` con buscador y filtros por estado / asignadas.
+/// Vista `/tareas` (o lista de tareas de organización, equipo o proyecto).
 class TareasPage extends StatefulWidget {
   const TareasPage({
     super.key,
     required this.sesionStore,
     required this.tareasApi,
+    this.organizacionId,
+    this.equipoId,
+    this.proyectoId,
+    this.tags = const <TagDto>[],
+    this.responsables = const <ResponsableCandidato>[],
+    this.puedeCrear,
+    this.mostrarAppBar = true,
+    this.encabezadoExtra,
     this.cargarAlIniciar = true,
   });
 
   final SesionStore sesionStore;
   final TareasApi tareasApi;
+  final int? organizacionId;
+  final int? equipoId;
+  final int? proyectoId;
+  final List<TagDto> tags;
+  final List<ResponsableCandidato> responsables;
+  final bool? puedeCrear;
+  final bool mostrarAppBar;
+  final Widget? encabezadoExtra;
   final bool cargarAlIniciar;
 
   @override
@@ -26,16 +45,22 @@ class TareasPage extends StatefulWidget {
 }
 
 class _TareasPageState extends State<TareasPage> {
-  late final _acciones = AccionesTarea(
-    sesionStore: widget.sesionStore,
-    tareasApi: widget.tareasApi,
-  );
   final _busqueda = TextEditingController();
   List<TareaDto> _tareas = const <TareaDto>[];
   EstadoTarea? _filtroEstado;
   bool _soloAsignadas = false;
   bool _isCargando = false;
   String? _mensajeError;
+
+  AccionesTarea get _acciones => AccionesTarea(
+    sesionStore: widget.sesionStore,
+    tareasApi: widget.tareasApi,
+    organizacionId: widget.organizacionId,
+    equipoId: widget.equipoId,
+    proyectoId: widget.proyectoId,
+    tags: widget.tags,
+    responsables: widget.responsables,
+  );
 
   @override
   void initState() {
@@ -59,6 +84,9 @@ class _TareasPageState extends State<TareasPage> {
         busqueda: _busqueda.text,
         estado: _filtroEstado,
         asignadas: _soloAsignadas,
+        organizacionId: widget.organizacionId,
+        equipoId: widget.equipoId,
+        proyectoId: widget.proyectoId,
       );
       if (mounted) setState(() => _tareas = pagina.datos);
     } catch (_) {
@@ -106,19 +134,27 @@ class _TareasPageState extends State<TareasPage> {
   @override
   Widget build(BuildContext context) {
     final puedeActualizar = widget.sesionStore.puede('tareas:actualizar');
+    final permiteCrear =
+        (widget.puedeCrear ?? true) && widget.sesionStore.puede('tareas:crear');
+    final heroSuffix =
+        widget.proyectoId ?? widget.equipoId ?? widget.organizacionId ?? 0;
+
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Tareas'),
-        actions: <Widget>[
-          IconButton(
-            tooltip: 'Calendario',
-            icon: const Icon(Icons.calendar_month_outlined),
-            onPressed: () => context.push('/calendario'),
-          ),
-        ],
-      ),
-      floatingActionButton: widget.sesionStore.puede('tareas:crear')
+      appBar: widget.mostrarAppBar
+          ? AppBar(
+              title: const Text('Tareas'),
+              actions: <Widget>[
+                IconButton(
+                  tooltip: 'Calendario',
+                  icon: const Icon(Icons.calendar_month_outlined),
+                  onPressed: () => context.push('/calendario'),
+                ),
+              ],
+            )
+          : null,
+      floatingActionButton: permiteCrear
           ? FloatingActionButton(
+              heroTag: 'fab-tareas-$heroSuffix',
               tooltip: 'Nueva tarea',
               onPressed: () => _recargarSi(_acciones.crear(context)),
               child: const Icon(Icons.add_rounded),
@@ -129,8 +165,9 @@ class _TareasPageState extends State<TareasPage> {
         child: ListView(
           padding: const EdgeInsets.only(bottom: 96),
           children: <Widget>[
+            if (widget.encabezadoExtra != null) widget.encabezadoExtra!,
             Padding(
-              padding: const EdgeInsets.fromLTRB(16, 4, 16, 12),
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
               child: SearchBar(
                 controller: _busqueda,
                 hintText: 'Buscar tarea',

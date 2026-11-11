@@ -40,9 +40,10 @@ mobile/lib/
 │
 ├── modules/                        # Lógica de dominio modular (en español)
 │   ├── auth/                       # Login, Registro, Recuperar contraseña
-│   ├── tareas/                     # Pendientes y Tareas
-│   ├── notas/                      # Notas personales: carpetas (filtrar y asignar), lectura/edición markdown
-│   ├── tags/                       # Etiquetas personales
+│   ├── organizaciones/             # Organizaciones, equipos y proyectos (tareas, notas y tags compartidos; sin administración)
+│   ├── tareas/                     # Pendientes y Tareas (personales y compartidas, con responsables y tags)
+│   ├── notas/                      # Notas personales y de proyecto: carpetas, lectura/edición markdown
+│   ├── tags/                       # Etiquetas personales y de organización
 │   └── perfil/                     # Perfil de usuario, seguridad y preferencias
 │
 └── main.dart                       # Punto de entrada de la aplicación

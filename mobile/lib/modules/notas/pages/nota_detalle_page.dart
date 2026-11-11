@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+
 import '../../../core/auth/sesion_store.dart';
 import '../../../core/widgets/avisos.dart';
 import '../../../core/widgets/confirmar.dart';
@@ -56,7 +57,12 @@ class _NotaDetallePageState extends State<NotaDetallePage> {
     final a = widget.args;
     final guardada = await context.push<bool>(
       '/notas/${nota.id}/editar',
-      extra: NotaEditorArgs(nota: nota, tags: a.tags, carpetas: a.carpetas),
+      extra: NotaEditorArgs(
+        nota: nota,
+        tags: a.tags,
+        carpetas: a.carpetas,
+        proyectoId: a.proyectoId ?? nota.proyectoId,
+      ),
     );
     if (guardada ?? false) await _cargar();
   }

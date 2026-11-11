@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import '../auth/sesion_store.dart';
 
 /// Ítem declarativo de navegación (espejo de `frontend/src/core/components/layout/navegacion.ts`).
@@ -56,6 +57,12 @@ const List<GrupoNavegacion> gruposNavegacion = <GrupoNavegacion>[
         iconoActivo: Icons.sticky_note_2_rounded,
         permiso: 'notas:leer',
         enBarraInferior: true,
+      ),
+      ItemNavegacion(
+        ruta: '/organizaciones',
+        etiqueta: 'Organizaciones',
+        icono: Icons.workspaces_outlined,
+        // Secundaria: se llega desde Perfil (máx. 4 destinos en la barra).
       ),
       ItemNavegacion(
         ruta: '/tags',

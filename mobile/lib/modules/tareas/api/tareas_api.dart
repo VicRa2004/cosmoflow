@@ -30,6 +30,10 @@ class TareasApi {
     String? busqueda,
     EstadoTarea? estado,
     bool asignadas = false,
+    int? tagId,
+    int? organizacionId,
+    int? equipoId,
+    int? proyectoId,
   }) async {
     final query = <String, dynamic>{'pagina': pagina, 'limite': limite};
     if (busqueda != null && busqueda.trim().isNotEmpty) {
@@ -40,6 +44,16 @@ class TareasApi {
     }
     if (asignadas) {
       query['asignadas'] = true;
+    }
+    if (tagId != null) {
+      query['tagId'] = tagId;
+    }
+    if (proyectoId != null) {
+      query['proyectoId'] = proyectoId;
+    } else if (equipoId != null) {
+      query['equipoId'] = equipoId;
+    } else if (organizacionId != null) {
+      query['organizacionId'] = organizacionId;
     }
 
     final response = await apiClient.dio.get<Map<String, dynamic>>(
@@ -59,6 +73,11 @@ class TareasApi {
     String? fechaInicio,
     String? fechaVencimiento,
     String? color,
+    List<int> tagIds = const <int>[],
+    List<int> responsableIds = const <int>[],
+    int? organizacionId,
+    int? equipoId,
+    int? proyectoId,
   }) async {
     final datos = <String, dynamic>{
       'titulo': titulo.trim(),
@@ -73,8 +92,14 @@ class TareasApi {
           ? fechaVencimiento
           : null,
       'color': (color != null && color.isNotEmpty) ? color : null,
-      'tagIds': const <int>[],
-      'responsableIds': const <int>[],
+      'tagIds': tagIds,
+      'responsableIds': responsableIds,
+      if (proyectoId != null)
+        'proyectoId': proyectoId
+      else if (equipoId != null)
+        'equipoId': equipoId
+      else
+        'organizacionId': ?organizacionId,
     };
     final respuesta = cola == null
         ? (await apiClient.dio.post<Map<String, dynamic>>(
