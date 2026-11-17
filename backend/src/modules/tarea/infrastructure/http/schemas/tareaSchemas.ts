@@ -75,7 +75,8 @@ export const paginacionSchema = z.object({
 
 /**
  * Sin destino, las personales; `organizacionId` solo, las de la organización;
- * `asignadas=true`, en las que se es responsable.
+ * `asignadas=true`, en las que se es responsable; `asignadasPorMi=true`, las que
+ * se asignaron a otros.
  */
 export const obtenerTareasSchema = paginacionSchema
 	.extend({
@@ -89,16 +90,22 @@ export const obtenerTareasSchema = paginacionSchema
 			.literal("true")
 			.transform(() => true)
 			.optional(),
+		asignadasPorMi: z
+			.literal("true")
+			.transform(() => true)
+			.optional(),
 	})
 	.refine(sinDosDestinos, unSoloDestino)
 	.refine(
 		(v) =>
-			!v.asignadas ||
-			[v.organizacionId, v.equipoId, v.proyectoId].every(
-				(d) => d === undefined,
-			),
+			[
+				v.asignadas,
+				v.asignadasPorMi,
+				v.organizacionId ?? v.equipoId ?? v.proyectoId,
+			].filter((d) => d !== undefined).length <= 1,
 		{
-			message: "`asignadas` no se combina con un destino",
+			message:
+				"`asignadas` y `asignadasPorMi` no se combinan entre sí ni con un destino",
 			path: ["asignadas"],
 		},
 	);

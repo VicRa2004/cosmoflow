@@ -3,25 +3,29 @@ import { useOrganizacionesQuery } from "@/modules/organizaciones/hooks/useOrgani
 import { useDestinosTareas } from "../hooks/useDestinosTareas";
 import type { ListaTareasSearch } from "../schemas/tareaSchemas";
 
-/** `""` personal · `"asignadas"` · `"o:1"` · `"e:1:5"` · `"p:1:2"` ↔ búsqueda de `/tareas`. */
+/** `""` personal · `"asignadas"` · `"asignadasPorMi"` · `"o:1"` · `"e:1:5"` · `"p:1:2"` ↔ búsqueda de `/tareas`. */
 export const aValor = ({
 	asignadas,
+	asignadasPorMi,
 	organizacionId,
 	equipoId,
 	proyectoId,
 }: ListaTareasSearch) =>
 	asignadas
 		? "asignadas"
-		: !organizacionId
-			? ""
-			: equipoId
-				? `e:${organizacionId}:${equipoId}`
-				: proyectoId
-					? `p:${organizacionId}:${proyectoId}`
-					: `o:${organizacionId}`;
+		: asignadasPorMi
+			? "asignadasPorMi"
+			: !organizacionId
+				? ""
+				: equipoId
+					? `e:${organizacionId}:${equipoId}`
+					: proyectoId
+						? `p:${organizacionId}:${proyectoId}`
+						: `o:${organizacionId}`;
 
 export const aSearch = (valor: string): ListaTareasSearch => {
 	if (valor === "asignadas") return { asignadas: true };
+	if (valor === "asignadasPorMi") return { asignadasPorMi: true };
 	const [tipo, org, id] = valor.split(":");
 	if (!org) return {};
 	const organizacionId = Number(org);
@@ -79,6 +83,7 @@ export function SelectorContextoTareas({
 		>
 			<option value="">Personales</option>
 			<option value="asignadas">Asignadas a mí</option>
+			<option value="asignadasPorMi">Asignadas por mí</option>
 			{organizaciones?.datos.map((o) => (
 				<Opciones key={o.id} organizacionId={o.id} nombre={o.nombre} />
 			))}

@@ -34,15 +34,64 @@ const aFecha = (dia: string | null) => (dia ? new Date(dia) : null);
 
 const ABIERTAS = { in: ["pendiente" as const, "en_progreso" as const] };
 
+/** Misma visibilidad que `ContextosTarea`, en una sola consulta. */
+const visiblePara = (usuarioId: number): Prisma.TareaWhereInput => {
+	const esMiembro = { some: { usuarioId } };
+	return {
+		OR: [
+			{ usuarioId, organizacionId: null },
+			{ responsables: esMiembro },
+			{
+				equipoId: null,
+				proyectoId: null,
+				organizacion: { deletedAt: null, miembros: esMiembro },
+			},
+			{ equipo: { deletedAt: null, miembros: esMiembro } },
+			{
+				proyecto: {
+					deletedAt: null,
+					OR: [
+						{ integrantes: esMiembro },
+						{ equipos: { some: { equipo: { miembros: esMiembro } } } },
+					],
+				},
+			},
+		],
+	};
+};
+
+/**
+ * Las que asignó a otros y aún ve. Las asignaciones anteriores a guardar quién
+ * asignó cuentan como de quien creó la tarea.
+ */
+const asignadasPor = (usuarioId: number): Prisma.TareaWhereInput => ({
+	AND: [
+		{
+			responsables: {
+				some: {
+					usuarioId: { not: usuarioId },
+					OR: [
+						{ asignadoPorId: usuarioId },
+						{ asignadoPorId: null, tarea: { usuarioId } },
+					],
+				},
+			},
+		},
+		visiblePara(usuarioId),
+	],
+});
+
 /** Las personales son las suyas sin organización: las que movió ya no. */
 const dondeAmbito = (ambito: AmbitoTareas): Prisma.TareaWhereInput =>
 	"usuarioId" in ambito
 		? { usuarioId: ambito.usuarioId, organizacionId: null }
 		: "responsableId" in ambito
 			? { responsables: { some: { usuarioId: ambito.responsableId } } }
-			: "organizacionId" in ambito
-				? { ...ambito, equipoId: null, proyectoId: null }
-				: ambito;
+			: "asignadorId" in ambito
+				? asignadasPor(ambito.asignadorId)
+				: "organizacionId" in ambito
+					? { ...ambito, equipoId: null, proyectoId: null }
+					: ambito;
 
 /** Vencimiento más próximo (sin fecha al final) y, a igual fecha, prioridad (RN-43). */
 const ORDEN_POR_VENCIMIENTO: Prisma.TareaOrderByWithRelationInput[] = [
@@ -145,7 +194,6 @@ export class PrismaTareaRepository implements TareaRepository {
 		hasta: string,
 	): Promise<Tarea[]> {
 		const rango = { gte: new Date(desde), lte: new Date(hasta) };
-		const esMiembro = { some: { usuarioId } };
 		const registros = await prisma.tarea.findMany({
 			where: {
 				deletedAt: null,
@@ -156,28 +204,7 @@ export class PrismaTareaRepository implements TareaRepository {
 							{ fechaVencimiento: null, fechaInicio: rango },
 						],
 					},
-					// Misma visibilidad que `ContextosTarea`, en una sola consulta.
-					{
-						OR: [
-							{ usuarioId, organizacionId: null },
-							{ responsables: esMiembro },
-							{
-								equipoId: null,
-								proyectoId: null,
-								organizacion: { deletedAt: null, miembros: esMiembro },
-							},
-							{ equipo: { deletedAt: null, miembros: esMiembro } },
-							{
-								proyecto: {
-									deletedAt: null,
-									OR: [
-										{ integrantes: esMiembro },
-										{ equipos: { some: { equipo: { miembros: esMiembro } } } },
-									],
-								},
-							},
-						],
-					},
+					visiblePara(usuarioId),
 				],
 			},
 			include,

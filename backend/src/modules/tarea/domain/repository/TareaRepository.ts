@@ -11,12 +11,14 @@ export interface TareaFiltros {
 }
 
 /**
- * Las personales de un usuario, las que tiene asignadas en cualquier contexto,
- * o las de una organización (sin equipo ni proyecto), equipo o proyecto.
+ * Las personales de un usuario, las que tiene asignadas o las que asignó a otros
+ * (que aún ve) en cualquier contexto, o las de una organización (sin equipo ni
+ * proyecto), equipo o proyecto.
  */
 export type AmbitoTareas =
 	| { usuarioId: number }
 	| { responsableId: number }
+	| { asignadorId: number }
 	| { organizacionId: number }
 	| { equipoId: number }
 	| { proyectoId: number };

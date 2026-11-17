@@ -8,7 +8,7 @@ import type { ContextosTarea } from "../services/ContextosTarea";
 import { destinoDe } from "./destinoDe";
 
 /**
- * Las personales, las asignadas, o las de una organización, equipo o proyecto
+ * Las personales, las asignadas, las que asignó, o las de una organización, equipo o proyecto
  * del que se es miembro. Ser responsable implica verla (decisión 27).
  */
 export class ObtenerTareasUseCase {
@@ -21,6 +21,7 @@ export class ObtenerTareasUseCase {
 		usuarioId: number,
 		{
 			asignadas,
+			asignadasPorMi,
 			organizacionId,
 			equipoId,
 			proyectoId,
@@ -32,7 +33,12 @@ export class ObtenerTareasUseCase {
 			throw new ContextoNoEncontradoError();
 		}
 		const resultado = await this.tareaRepository.buscar(
-			destino ?? (asignadas ? { responsableId: usuarioId } : { usuarioId }),
+			destino ??
+				(asignadas
+					? { responsableId: usuarioId }
+					: asignadasPorMi
+						? { asignadorId: usuarioId }
+						: { usuarioId }),
 			filtros,
 		);
 		return { ...resultado, datos: resultado.datos.map(TareaMapper.toDto) };

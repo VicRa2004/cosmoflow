@@ -100,10 +100,11 @@ export function registrarHerramientas(servidor: McpServer, api: Api): void {
 		"listar_tareas",
 		{
 			description:
-				"Lista tareas. Sin destino, las personales; con organizacionId solo, las de la organización (sin equipo ni proyecto); con equipoId o proyectoId, las de ese sitio; asignadas=true, en las que el usuario es responsable.",
+				"Lista tareas. Sin destino, las personales; con organizacionId solo, las de la organización (sin equipo ni proyecto); con equipoId o proyectoId, las de ese sitio; asignadas=true, en las que el usuario es responsable; asignadasPorMi=true, las que asignó a otros.",
 			inputSchema: {
 				...destino,
 				asignadas: z.boolean().optional(),
+				asignadasPorMi: z.boolean().optional(),
 				busqueda: z.string().min(1).max(128).optional(),
 				estado: z.enum(ESTADOS).optional(),
 				tagId: id.optional(),
@@ -111,11 +112,15 @@ export function registrarHerramientas(servidor: McpServer, api: Api): void {
 			},
 			annotations: { readOnlyHint: true },
 		},
-		({ asignadas, ...args }) =>
+		({ asignadas, asignadasPorMi, ...args }) =>
 			resultado(() =>
 				api(
 					"GET",
-					`/api/tareas?${consulta({ ...args, asignadas: asignadas ? "true" : undefined })}`,
+					`/api/tareas?${consulta({
+						...args,
+						asignadas: asignadas ? "true" : undefined,
+						asignadasPorMi: asignadasPorMi ? "true" : undefined,
+					})}`,
 				),
 			),
 	);

@@ -2947,6 +2947,7 @@ export interface paths {
                     equipoId?: string;
                     proyectoId?: string;
                     asignadas?: "true";
+                    asignadasPorMi?: "true";
                 };
                 header?: never;
                 path?: never;

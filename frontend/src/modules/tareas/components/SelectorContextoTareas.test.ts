@@ -5,6 +5,7 @@ describe("SelectorContextoTareas", () => {
 	it.each([
 		[{}, ""],
 		[{ asignadas: true as const }, "asignadas"],
+		[{ asignadasPorMi: true as const }, "asignadasPorMi"],
 		[{ organizacionId: 1 }, "o:1"],
 		[{ organizacionId: 1, equipoId: 5 }, "e:1:5"],
 		[{ organizacionId: 1, proyectoId: 2 }, "p:1:2"],

@@ -24,6 +24,8 @@ export interface ObtenerTareasParams {
 	organizacionId?: number;
 	/** En las que se es responsable, de cualquier contexto (sin destino). */
 	asignadas?: boolean;
+	/** Las que se asignaron a otros, de cualquier contexto (sin destino). */
+	asignadasPorMi?: boolean;
 	equipoId?: number;
 	proyectoId?: number;
 }

@@ -40,14 +40,23 @@ function TituloContexto({
 
 /**
  * Sin `contexto`, las personales; con él, las de esa organización, equipo o
- * proyecto, o las asignadas. El selector cambia de una vista a otra.
+ * proyecto, o las asignadas (a mí o por mí). El selector cambia de una vista a otra.
  */
 export function TareasPage({
 	contexto = {},
 }: {
 	contexto?: ListaTareasSearch;
 }) {
-	const { organizacionId, equipoId, proyectoId, asignadas, vista } = contexto;
+	const {
+		organizacionId,
+		equipoId,
+		proyectoId,
+		asignadas,
+		asignadasPorMi,
+		vista,
+	} = contexto;
+	// Las asignadas (a mí o por mí) mezclan organizaciones.
+	const cruzadas = asignadas || asignadasPorMi;
 	const enTablero = vista === "tablero";
 	const enContexto = organizacionId !== undefined;
 	const [pagina, setPagina] = useState(1);
@@ -57,8 +66,8 @@ export function TareasPage({
 	const { tags: tagsDisponibles } = useTagsDisponibles(
 		enContexto ? organizacionId : undefined,
 	);
-	// Las asignadas mezclan organizaciones: sin filtro de tag.
-	const tags = asignadas ? [] : tagsDisponibles;
+	// Sin filtro de tag: cada organización tiene los suyos.
+	const tags = cruzadas ? [] : tagsDisponibles;
 	const navigate = useNavigate();
 	const [asignando, setAsignando] = useState<
 		(TareaDto & { organizacionId: number }) | null
@@ -74,7 +83,9 @@ export function TareasPage({
 		tagId: tagId ? Number(tagId) : undefined,
 		...(asignadas
 			? { asignadas }
-			: enContexto && destinoDe({ organizacionId, equipoId, proyectoId })),
+			: asignadasPorMi
+				? { asignadasPorMi }
+				: enContexto && destinoDe({ organizacionId, equipoId, proyectoId })),
 	};
 	const { data, isLoading, error } = useTareasQuery(
 		{ ...filtros, pagina, limite: 10, estado: estado || undefined },
@@ -93,6 +104,8 @@ export function TareasPage({
 						/>
 					) : asignadas ? (
 						"Tareas · Asignadas a mí"
+					) : asignadasPorMi ? (
+						"Tareas · Asignadas por mí"
 					) : (
 						"Tareas"
 					)
@@ -196,8 +209,8 @@ export function TareasPage({
 					onAbrir={abrir}
 					onEditar={editar}
 					onEliminar={setEliminando}
-					onAsignar={enContexto || asignadas ? setAsignando : undefined}
-					mostrarDonde={asignadas}
+					onAsignar={enContexto || cruzadas ? setAsignando : undefined}
+					mostrarDonde={cruzadas}
 				/>
 			)}
 

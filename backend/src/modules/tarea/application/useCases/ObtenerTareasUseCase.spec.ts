@@ -44,4 +44,23 @@ describe("ObtenerTareasUseCase", () => {
 			{ pagina: 1, limite: 10 },
 		);
 	});
+
+	it("con `asignadasPorMi`, busca las que asignó", async () => {
+		const repo = {
+			buscar: mock(async () => ({
+				datos: [],
+				pagina: 1,
+				totalElementos: 0,
+				totalPaginas: 0,
+			})),
+		};
+		const useCase = new ObtenerTareasUseCase(repo as never, {} as never);
+
+		await useCase.ejecutar(7, { pagina: 1, limite: 10, asignadasPorMi: true });
+
+		expect(repo.buscar).toHaveBeenCalledWith(
+			{ asignadorId: 7 },
+			{ pagina: 1, limite: 10 },
+		);
+	});
 });
