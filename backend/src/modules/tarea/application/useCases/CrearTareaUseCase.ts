@@ -32,7 +32,7 @@ export class CrearTareaUseCase {
 				? { organizacionId: contexto.organizacionId, ...destino }
 				: undefined,
 		);
-		if (responsableIds) tarea.asignar(responsableIds);
+		if (responsableIds) tarea.asignar(responsableIds, usuarioId);
 		tarea.mencionar(contexto?.miembroIds ?? []);
 		await validarTarea(this.tareaRepository, tarea, contexto);
 		// Tarea y evento en la misma transacción: con el outbox, o ambos o ninguno.

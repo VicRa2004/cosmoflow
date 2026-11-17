@@ -47,6 +47,24 @@ describe("Tarea", () => {
 		});
 	});
 
+	it("guarda quién asignó a cada responsable y lo conserva en los que siguen", () => {
+		const tarea = Tarea.reconstituir(
+			1,
+			7,
+			Tarea.crear(7, { titulo: "Demo" }).getDatos(),
+			{ organizacionId: 10, equipoId: null, proyectoId: null },
+			[8, 9],
+			[],
+			false,
+			{ 8: 7 },
+		);
+
+		tarea.asignar([8, 9, 11], 5);
+
+		// 9 venía sin asignador (asignación antigua): sigue sin él.
+		expect(tarea.getAsignadoPor()).toEqual({ 8: 7, 11: 5 });
+	});
+
 	it("no repite tags", () => {
 		const tarea = Tarea.crear(7, { titulo: "Demo", tagIds: [1, 2, 1] });
 		expect(tarea.getDatos().tagIds).toEqual([1, 2]);

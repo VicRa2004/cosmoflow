@@ -8128,6 +8128,9 @@ export interface components {
             equipoId: number | null;
             proyectoId: number | null;
             responsableIds: number[];
+            asignadoPor: {
+                [key: string]: number;
+            };
             dependeDeId: number | null;
             bloqueada: boolean;
         };

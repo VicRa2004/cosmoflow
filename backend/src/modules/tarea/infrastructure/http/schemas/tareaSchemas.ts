@@ -146,6 +146,8 @@ export const tareaDtoSchema = z
 		equipoId: z.number().int().nullable(),
 		proyectoId: z.number().int().nullable(),
 		responsableIds: z.array(z.number().int()),
+		/** Responsable → quien lo asignó; sin entrada en las asignaciones antiguas. */
+		asignadoPor: z.record(z.string(), z.number().int()),
 		dependeDeId: z.number().int().nullable(),
 		bloqueada: z.boolean(),
 	})

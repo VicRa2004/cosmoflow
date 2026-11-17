@@ -49,6 +49,7 @@ model Usuario {
   preferenciaInterfaz      PreferenciaInterfaz?
   vinculoTelegram          VinculoTelegram?
   mencionesTarea           TareaMencion[]
+  asignacionesTarea        TareaResponsable[]
   clavesIdempotencia       ClaveIdempotencia[]
 
   @@map("usuario")
@@ -358,9 +359,12 @@ model TareaResponsable {
   organizacionId Int @map("tre_fkorganizacion")
   tareaId        Int @map("tre_fktarea")
   usuarioId      Int @map("tre_fkusuario")
+  /// Quien lo asignó; nulo en las asignaciones anteriores a guardarlo
+  asignadoPorId  Int? @map("tre_fkasignado_por")
 
-  tarea   Tarea               @relation(fields: [organizacionId, tareaId], references: [organizacionId, id], onDelete: Cascade)
-  miembro MiembroOrganizacion @relation(fields: [organizacionId, usuarioId], references: [organizacionId, usuarioId], onDelete: Cascade)
+  tarea       Tarea               @relation(fields: [organizacionId, tareaId], references: [organizacionId, id], onDelete: Cascade)
+  miembro     MiembroOrganizacion @relation(fields: [organizacionId, usuarioId], references: [organizacionId, usuarioId], onDelete: Cascade)
+  asignadoPor Usuario?            @relation(fields: [asignadoPorId], references: [id], onDelete: SetNull)
 
   @@id([tareaId, usuarioId])
   @@index([organizacionId, usuarioId])

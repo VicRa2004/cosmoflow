@@ -98,10 +98,24 @@ export function ResponsablesTarea({ tarea }: { tarea: TareaCompartida }) {
 	if (tarea.responsableIds.length === 0) {
 		return <span className="text-tinta-tenue">Sin asignar</span>;
 	}
-	const nombres = tarea.responsableIds.map(
-		(id) => miembros.find((m) => m.usuarioId === id)?.nombre ?? "…",
+	const nombre = (id: number) =>
+		miembros.find((m) => m.usuarioId === id)?.nombre ?? "…";
+	const nombres = tarea.responsableIds.map(nombre);
+	// Quién asignó a cada uno, al pasar el ratón (las asignaciones antiguas no lo tienen).
+	const asignaciones = tarea.responsableIds.flatMap((id) => {
+		const por = tarea.asignadoPor[id];
+		return por === undefined
+			? []
+			: [`${nombre(id)}: asignado por ${nombre(por)}`];
+	});
+	return (
+		<span
+			className="text-tinta-suave"
+			title={asignaciones.join("\n") || undefined}
+		>
+			{nombres.join(", ")}
+		</span>
 	);
-	return <span className="text-tinta-suave">{nombres.join(", ")}</span>;
 }
 
 /** Botón «Asignar», solo si se puede asignar en su destino (RN-22). */

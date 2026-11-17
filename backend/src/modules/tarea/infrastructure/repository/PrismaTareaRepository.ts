@@ -18,7 +18,10 @@ import {
 // Los tags borrados siguen en `tarea_tag`, pero ya no forman parte de la tarea.
 const include = {
 	tags: { where: { tag: { deletedAt: null } }, select: { tagId: true } },
-	responsables: { select: { usuarioId: true }, orderBy: { usuarioId: "asc" } },
+	responsables: {
+		select: { usuarioId: true, asignadoPorId: true },
+		orderBy: { usuarioId: "asc" },
+	},
 	menciones: { select: { usuarioId: true } },
 	dependeDe: { select: { estado: true, deletedAt: true } },
 } satisfies Prisma.TareaInclude;
@@ -76,6 +79,11 @@ export class PrismaTareaRepository implements TareaRepository {
 			!!raw.dependeDe &&
 				!raw.dependeDe.deletedAt &&
 				raw.dependeDe.estado !== "completada",
+			Object.fromEntries(
+				raw.responsables.flatMap((r) =>
+					r.asignadoPorId === null ? [] : [[r.usuarioId, r.asignadoPorId]],
+				),
+			),
 		);
 	}
 
@@ -295,6 +303,14 @@ export class PrismaTareaRepository implements TareaRepository {
 		return propios === unicos.length;
 	}
 
+	private responsables(tarea: Tarea) {
+		const asignadoPor = tarea.getAsignadoPor();
+		return tarea.getResponsableIds().map((usuarioId) => ({
+			usuarioId,
+			asignadoPorId: asignadoPor[usuarioId] ?? null,
+		}));
+	}
+
 	async crear(data: Tarea): Promise<Tarea> {
 		const datos = data.getDatos();
 		const registro = await prisma.tarea.create({
@@ -305,7 +321,7 @@ export class PrismaTareaRepository implements TareaRepository {
 				tags: { create: datos.tagIds.map((tagId) => ({ tagId })) },
 				responsables: {
 					createMany: {
-						data: data.getResponsableIds().map((usuarioId) => ({ usuarioId })),
+						data: this.responsables(data),
 					},
 				},
 				menciones: {
@@ -333,7 +349,7 @@ export class PrismaTareaRepository implements TareaRepository {
 				responsables: {
 					deleteMany: {},
 					createMany: {
-						data: data.getResponsableIds().map((usuarioId) => ({ usuarioId })),
+						data: this.responsables(data),
 					},
 				},
 				menciones: {

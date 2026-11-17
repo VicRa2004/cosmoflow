@@ -33,7 +33,7 @@ export class ActualizarTareaUseCase {
 		const { responsableIds, ...campos } = dto;
 		if (responsableIds !== undefined) {
 			if (contexto && !contexto.puedeCrear) throw new SinPermisoTareasError();
-			tarea.asignar(responsableIds);
+			tarea.asignar(responsableIds, usuarioId);
 		}
 		tarea.actualizar(campos);
 		tarea.mencionar(contexto?.miembroIds ?? []);

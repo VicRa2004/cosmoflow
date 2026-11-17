@@ -67,6 +67,8 @@ export class Tarea extends Entity {
 	private datos: DatosTarea;
 	private ubicacion: UbicacionTarea;
 	private responsableIds: number[];
+	/** Responsable → quien lo asignó (las asignaciones antiguas no lo tienen). */
+	private asignadoPor: Record<number, number>;
 	private mencionIds: number[];
 	/** Su principal sigue sin completar (dato de lectura). */
 	private readonly bloqueada: boolean;
@@ -79,8 +81,10 @@ export class Tarea extends Entity {
 		responsableIds: number[],
 		mencionIds: number[],
 		bloqueada = false,
+		asignadoPor: Record<number, number> = {},
 	) {
 		super(id);
+		this.asignadoPor = asignadoPor;
 		this.bloqueada = bloqueada;
 		this.usuarioId = usuarioId;
 		this.datos = Tarea.validar(datos);
@@ -143,6 +147,7 @@ export class Tarea extends Entity {
 		responsableIds: number[] = [],
 		mencionIds: number[] = [],
 		bloqueada = false,
+		asignadoPor: Record<number, number> = {},
 	): Tarea {
 		return new Tarea(
 			new EntityId(id),
@@ -152,6 +157,7 @@ export class Tarea extends Entity {
 			responsableIds,
 			mencionIds,
 			bloqueada,
+			asignadoPor,
 		);
 	}
 
@@ -181,6 +187,10 @@ export class Tarea extends Entity {
 
 	getResponsableIds(): readonly number[] {
 		return this.responsableIds;
+	}
+
+	getAsignadoPor(): Readonly<Record<number, number>> {
+		return this.asignadoPor;
 	}
 
 	getMencionIds(): readonly number[] {
@@ -222,13 +232,20 @@ export class Tarea extends Entity {
 	}
 
 	/** RN-44: varios responsables; las personales no tienen. */
-	public asignar(responsableIds: number[]): void {
+	/** `porUsuarioId` queda como quien asignó a los nuevos; los que siguen conservan el suyo. */
+	public asignar(responsableIds: number[], porUsuarioId: number): void {
 		if (this.esPersonal() && responsableIds.length > 0) {
 			throw new TareaInvalidaError("Una tarea personal no tiene responsables");
 		}
 		const unicos = [...new Set(responsableIds)];
 		const nuevos = unicos.filter((id) => !this.responsableIds.includes(id));
 		this.responsableIds = unicos;
+		const anterior = this.asignadoPor;
+		this.asignadoPor = {};
+		for (const id of unicos) {
+			const por = nuevos.includes(id) ? porUsuarioId : anterior[id];
+			if (por !== undefined) this.asignadoPor[id] = por;
+		}
 		// Al crear aún no hay id: el caso de uso avisa tras guardar (`agregarEventoCreada`).
 		if (nuevos.length > 0 && this.id.isPersisted()) {
 			this.addDomainEvent(

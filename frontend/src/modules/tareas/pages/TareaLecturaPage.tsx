@@ -19,18 +19,33 @@ import { useEliminarTareaMutation } from "../hooks/useTareasMutation";
 import { useTareaQuery } from "../hooks/useTareasQuery";
 import { ETIQUETAS_ESTADO, ETIQUETAS_PRIORIDAD } from "../schemas/tareaSchemas";
 
+/** Cada responsable con quien lo asignó, si se sabe. */
 function Responsables({
-	organizacionId,
-	ids,
+	tarea,
 }: {
-	organizacionId: number;
-	ids: number[];
+	tarea: TareaDto & { organizacionId: number };
 }) {
-	const { data: miembros = [] } = useMiembrosQuery(organizacionId);
-	const nombres = ids.map(
-		(id) => miembros.find((m) => m.usuarioId === id)?.nombre ?? "…",
+	const { data: miembros = [] } = useMiembrosQuery(tarea.organizacionId);
+	const nombre = (id: number) =>
+		miembros.find((m) => m.usuarioId === id)?.nombre;
+	return (
+		<ul className="space-y-0.5">
+			{tarea.responsableIds.map((id) => {
+				const por = tarea.asignadoPor[id];
+				return (
+					<li key={id}>
+						{nombre(id) ?? "…"}
+						{por !== undefined && (
+							<span className="text-tinta-tenue">
+								{" "}
+								· asignado por {por === id ? "sí mismo" : (nombre(por) ?? "…")}
+							</span>
+						)}
+					</li>
+				);
+			})}
+		</ul>
 	);
-	return <>{nombres.join(", ")}</>;
 }
 
 function Detalles({ tarea }: { tarea: TareaDto }) {
@@ -58,8 +73,7 @@ function Detalles({ tarea }: { tarea: TareaDto }) {
 					<dt className="text-tinta-tenue">Responsables</dt>
 					<dd>
 						<Responsables
-							organizacionId={tarea.organizacionId}
-							ids={tarea.responsableIds}
+							tarea={{ ...tarea, organizacionId: tarea.organizacionId }}
 						/>
 					</dd>
 				</>
