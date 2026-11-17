@@ -106,3 +106,4 @@ frontend/  # Vite + React + TanStack Suite + Tailwind v4 (modular y core)
 - Variables: `cp backend/.env.example backend/.env`.
 - Dependencias: Renovate (`renovate.json`) agrupa y fija versiones exactas; Prisma no pasa de `7.x` (ADR 0001).
 - El template asume una sola réplica. Qué cambiar para pasar a N: [docs/escalado.md](docs/escalado.md).
+- Respaldos (BD, volúmenes y VPS) los hace Dokploy en la nube; cómo restaurar: [docs/respaldos.md](docs/respaldos.md).
