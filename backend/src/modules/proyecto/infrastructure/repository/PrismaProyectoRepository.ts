@@ -68,11 +68,30 @@ export class PrismaProyectoRepository implements ProyectoRepository {
 
 	async buscar(
 		organizacionId: number,
-		{ estado }: { estado?: EstadoProyecto },
+		{ estado, miembroId }: { estado?: EstadoProyecto; miembroId?: number },
 	) {
 		// shortcut: sin paginar; paginar si una organización llega a cientos de proyectos.
 		const registros = await prisma.proyecto.findMany({
-			where: { organizacionId, deletedAt: null, estado },
+			where: {
+				organizacionId,
+				deletedAt: null,
+				estado,
+				...(miembroId && {
+					OR: [
+						{ integrantes: { some: { usuarioId: miembroId } } },
+						{
+							equipos: {
+								some: {
+									equipo: {
+										deletedAt: null,
+										miembros: { some: { usuarioId: miembroId } },
+									},
+								},
+							},
+						},
+					],
+				}),
+			},
 			include,
 			orderBy: { nombre: "asc" },
 		});

@@ -123,6 +123,34 @@ describe("Equipos (e2e)", () => {
 		});
 	});
 
+	it("solo sus miembros ven el equipo; el admin los ve todos", async () => {
+		const crear = await api(equipos(acme), {
+			method: "POST",
+			token: t.ana,
+			body: {
+				nombre: "Ventas",
+				color: "#6366f1",
+				miembroIds: [id.ana, id.beto],
+			},
+		});
+		const ventas = await crear.json();
+		const nombres = async (token: string) =>
+			(await (await api(equipos(acme), { token })).json()).map(
+				(e: { nombre: string }) => e.nombre,
+			);
+
+		expect(await nombres(t.ana)).toEqual(["Plataforma", "Ventas"]);
+		expect(await nombres(t.caro)).toEqual(["Plataforma"]);
+		expect(
+			(await api(equipos(acme, `/${ventas.id}`), { token: t.caro })).status,
+		).toBe(404);
+
+		await api(equipos(acme, `/${ventas.id}`), {
+			method: "DELETE",
+			token: t.ana,
+		});
+	});
+
 	it("con 2 miembros nadie sale de la organización ni se le expulsa (RN-26)", async () => {
 		const salir = await api(`/api/organizaciones/${acme}/miembros/${id.caro}`, {
 			method: "DELETE",

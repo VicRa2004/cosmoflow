@@ -31,4 +31,13 @@ export class AccesoOrganizacionService implements AccesoOrganizacion {
 		if (!miembro) throw new OrganizacionNoEncontradaError();
 		return permisosEfectivos(miembro);
 	}
+
+	async esAdmin(usuarioId: number, organizacionId: number): Promise<boolean> {
+		const miembro = await this.organizacionRepository.buscarPorId(
+			usuarioId,
+			organizacionId,
+		);
+		if (!miembro) throw new OrganizacionNoEncontradaError();
+		return miembro.isAdmin;
+	}
 }

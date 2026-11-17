@@ -14,4 +14,6 @@ export interface AccesoOrganizacion {
 		organizacionId: number,
 		permiso?: PermisoOrganizacion,
 	) => Promise<PermisoOrganizacion[]>;
+	/** 404 si no es miembro, como `exigir`. El admin ve todos los equipos y proyectos. */
+	esAdmin: (usuarioId: number, organizacionId: number) => Promise<boolean>;
 }

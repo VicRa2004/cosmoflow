@@ -1,7 +1,11 @@
 import type { Equipo } from "../Equipo";
 
 export interface EquipoRepository {
-	buscar(organizacionId: number, filtro: { tagId?: number }): Promise<Equipo[]>;
+	/** Con `miembroId`, solo los equipos de los que es miembro. */
+	buscar(
+		organizacionId: number,
+		filtro: { tagId?: number; miembroId?: number },
+	): Promise<Equipo[]>;
 	buscarPorId(organizacionId: number, id: number): Promise<Equipo | null>;
 	/** Sin acotar a una organización: solo para resolver el contexto de una tarea. */
 	buscarSoloPorId(id: number): Promise<Equipo | null>;

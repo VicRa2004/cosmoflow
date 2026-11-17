@@ -114,6 +114,27 @@ describe("Proyectos (e2e)", () => {
 		expect(terminados).toEqual([]);
 	});
 
+	it("solo lo ven sus integrantes (sueltos o por equipo); el admin, todos", async () => {
+		const interno = await (
+			await post(org(acme, "/proyectos"), t.ana, {
+				nombre: "Interno",
+				equipoIds: [plataforma],
+			})
+		).json();
+		const nombres = async (token: string) =>
+			(await (await api(org(acme, "/proyectos"), { token })).json()).map(
+				(p: { nombre: string }) => p.nombre,
+			);
+
+		expect(await nombres(t.beto)).toEqual(["Interno", "Lanzamiento"]);
+		expect(await nombres(t.caro)).toEqual(["Lanzamiento"]);
+		const ruta = org(acme, `/proyectos/${interno.id}`);
+		expect((await api(ruta, { token: t.caro })).status).toBe(404);
+		expect((await api(ruta, { token: t.ana })).status).toBe(200);
+
+		await api(ruta, { method: "DELETE", token: t.ana });
+	});
+
 	it("guarda fechas y da el progreso de sus tareas, sin las canceladas", async () => {
 		const ruta = org(acme, "/proyectos");
 		expect(

@@ -56,13 +56,17 @@ export class PrismaEquipoRepository implements EquipoRepository {
 		};
 	}
 
-	async buscar(organizacionId: number, { tagId }: { tagId?: number }) {
+	async buscar(
+		organizacionId: number,
+		{ tagId, miembroId }: { tagId?: number; miembroId?: number },
+	) {
 		// shortcut: sin paginar; paginar si una organización llega a cientos de equipos.
 		const registros = await prisma.equipo.findMany({
 			where: {
 				organizacionId,
 				deletedAt: null,
 				...(tagId && { tags: { some: { tagId } } }),
+				...(miembroId && { miembros: { some: { usuarioId: miembroId } } }),
 			},
 			include,
 			orderBy: { nombre: "asc" },

@@ -7,9 +7,10 @@ export interface ProgresoProyecto {
 }
 
 export interface ProyectoRepository {
+	/** Con `miembroId`, solo los proyectos donde está (suelto o por uno de sus equipos). */
 	buscar(
 		organizacionId: number,
-		filtro: { estado?: EstadoProyecto },
+		filtro: { estado?: EstadoProyecto; miembroId?: number },
 	): Promise<Proyecto[]>;
 	buscarPorId(organizacionId: number, id: number): Promise<Proyecto | null>;
 	/** Sin acotar a una organización: solo para resolver el contexto de una tarea. */
