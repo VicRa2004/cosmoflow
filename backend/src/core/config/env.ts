@@ -45,6 +45,8 @@ const EnvSchema = z
 		GOOGLE_CLIENT_SECRET: z.string().optional(),
 		// Sin él, el canal Telegram de las notificaciones queda desactivado.
 		TELEGRAM_BOT_TOKEN: z.string().optional(),
+		// Sentry o GlitchTip; sin él, no se envían errores.
+		SENTRY_DSN: z.url("SENTRY_DSN debe ser una URL valida").optional(),
 		// Zona IANA en la que se decide qué día es «hoy» (recordatorios de vencimiento).
 		ZONA_HORARIA: z
 			.string()
@@ -90,6 +92,7 @@ const envPrev = {
 	GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID || undefined,
 	GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET || undefined,
 	TELEGRAM_BOT_TOKEN: process.env.TELEGRAM_BOT_TOKEN || undefined,
+	SENTRY_DSN: process.env.SENTRY_DSN || undefined,
 	ZONA_HORARIA: process.env.ZONA_HORARIA || undefined,
 };
 

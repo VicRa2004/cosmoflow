@@ -4,6 +4,9 @@ import { prisma } from "@/core/config/prisma";
 import { container } from "@/core/shared/infrastructure/di/container";
 import { TOKENS } from "@/core/shared/infrastructure/di/tokens";
 import { modules } from "@/modules";
+import { iniciarMonitoreo } from "@/core/shared/infrastructure/monitoreo";
+
+iniciarMonitoreo();
 
 const server = Bun.serve({
 	port: env.PORT,

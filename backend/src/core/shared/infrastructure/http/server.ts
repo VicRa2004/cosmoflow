@@ -16,6 +16,7 @@ import path from "node:path";
 import { contexto } from "@/core/shared/infrastructure/contexto";
 import { container } from "@/core/shared/infrastructure/di/container";
 import { log } from "@/core/shared/infrastructure/logger";
+import { reportarError } from "@/core/shared/infrastructure/monitoreo";
 import { modules } from "@/modules";
 
 const app = new OpenAPIHono();
@@ -101,6 +102,12 @@ app.onError((err, c) => {
 			status = parsedStatus as ContentfulStatusCode;
 		}
 	}
+
+	if (status >= 500)
+		reportarError(err, {
+			requestId: id,
+			usuarioId: contexto.actual().usuarioId,
+		});
 
 	// En los 5xx no se expone el mensaje interno (ya queda en el log), sí el id para reportarlo.
 	return c.json(

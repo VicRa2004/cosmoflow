@@ -11,8 +11,10 @@ import {
 import { routeTree } from "./routeTree.gen";
 import "@fontsource-variable/inter";
 import "./index.css";
+import { iniciarMonitoreo } from "@/core/monitoreo";
 import { aplicarPreferenciasGuardadas } from "@/modules/configuracion/aplicarPreferencias";
 
+iniciarMonitoreo();
 aplicarPreferenciasGuardadas();
 
 const router = createRouter({

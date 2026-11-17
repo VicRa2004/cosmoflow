@@ -4,6 +4,8 @@ x-app: &app
   build:
     context: .
     dockerfile: backend/Dockerfile
+    args:
+      VITE_SENTRY_DSN: ${SENTRY_DSN:-}
   # Red donde vive la BD de Dokploy. Dokploy solo conecta a Traefik los servicios
   # con dominio, así que `migrate` no llegaría a la BD sin declararla aquí.
   networks:
@@ -29,6 +31,8 @@ x-app: &app
     GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
     # Bot de Telegram de las notificaciones; vacío, canal desactivado.
     TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN:-}
+    # Sentry o GlitchTip; vacío, desactivado. La web lo recibe al compilar (build arg).
+    SENTRY_DSN: ${SENTRY_DSN:-}
     # Zona de los recordatorios de vencimiento (avisan desde las 8:00 locales).
     ZONA_HORARIA: ${ZONA_HORARIA:-America/Mexico_City}
     PORT: 3000
