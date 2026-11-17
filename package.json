@@ -38,6 +38,7 @@
 		"gen:module:web": "bun scripts/gen-module-web.ts",
 		"gen:api": "pnpm --filter backend exec bun scripts/export-openapi.ts ../node_modules/.cache/openapi.json && openapi-typescript node_modules/.cache/openapi.json --root-types --root-types-no-schema-prefix -o frontend/src/core/api/schema.gen.ts",
 		"init:project": "bun scripts/init-project.ts",
+		"version:bump": "bun scripts/version-bump.ts",
 		"check:api": "pnpm gen:api && git diff --exit-code frontend/src/core/api/schema.gen.ts"
 	},
 	"keywords": [],

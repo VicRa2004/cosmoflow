@@ -56,6 +56,7 @@ pnpm db:up / db:down    # PostgreSQL de desarrollo en Docker (docker-compose.dev
 pnpm db:seed            # catálogo de roles y permisos (seguro en cualquier entorno)
 pnpm db:seed:demo       # catálogo + usuarios de prueba y de ejemplo (solo desarrollo)
 pnpm init:project       # renombra el template (cosmoflow) a un proyecto nuevo; idempotente
+pnpm version:bump X.Y.Z # sube la versión en package.json (raíz, backend, frontend) y mobile/pubspec.yaml
 ```
 
 Bun solo ejecuta el backend: `dev`, `test`, `start`, `scripts/*`, `prisma.seed`. Nunca instala.
@@ -66,7 +67,7 @@ Bun solo ejecuta el backend: `dev`, `test`, `start`, `scripts/*`, `prisma.seed`.
 
 Una sola versión SemVer para todo el monorepo, empezando en `0.0.1`. Vive en `package.json` (raíz, `backend/`, `frontend/`) y en `mobile/pubspec.yaml` (`X.Y.Z+1`); la web la muestra en el menú de usuario y la app en Perfil.
 
-Para publicar: subir la versión en esos cuatro archivos, commit, y `git tag vX.Y.Z && git push --tags`. El workflow `APK Android` (`.github/workflows/mobile.yml`) comprueba que tag y archivos coinciden, compila el APK y lo adjunta a un Release de GitHub. También se puede lanzar a mano desde Actions (deja el APK como artefacto).
+Para publicar: `pnpm version:bump X.Y.Z` (actualiza los cuatro archivos), commit, y `git tag vX.Y.Z && git push --tags`. El workflow `APK Android` (`.github/workflows/mobile.yml`) comprueba que tag y archivos coinciden, compila el APK y lo adjunta a un Release de GitHub. También se puede lanzar a mano desde Actions (deja el APK como artefacto).
 
 ## Idioma del código
 
