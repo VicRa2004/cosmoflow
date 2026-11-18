@@ -7,7 +7,7 @@ export class ResendMailer implements Mailer {
 		private readonly remitente: string,
 	) {}
 
-	async enviar({ para, asunto, texto }: Correo): Promise<void> {
+	async enviar({ para, asunto, texto, html }: Correo): Promise<void> {
 		const res = await fetch("https://api.resend.com/emails", {
 			method: "POST",
 			headers: {
@@ -19,6 +19,7 @@ export class ResendMailer implements Mailer {
 				to: para,
 				subject: asunto,
 				text: texto,
+				...(html ? { html } : {}),
 			}),
 		});
 		if (!res.ok) {

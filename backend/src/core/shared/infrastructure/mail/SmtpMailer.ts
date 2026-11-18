@@ -8,12 +8,13 @@ export class SmtpMailer implements Mailer {
 		private readonly remitente: string,
 	) {}
 
-	async enviar({ para, asunto, texto }: Correo): Promise<void> {
+	async enviar({ para, asunto, texto, html }: Correo): Promise<void> {
 		await this.transporte.sendMail({
 			from: this.remitente,
 			to: para,
 			subject: asunto,
 			text: texto,
+			...(html ? { html } : {}),
 		});
 	}
 }

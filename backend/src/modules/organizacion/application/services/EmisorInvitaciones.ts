@@ -1,5 +1,6 @@
 import { createHash, randomBytes } from "node:crypto";
 import type { Mailer } from "@/core/shared/domain/Mailer";
+import { construirCorreoHtml } from "@/core/shared/domain/plantillaCorreo";
 
 const VIGENCIA_MS = 7 * 24 * 60 * 60 * 1000;
 
@@ -24,10 +25,26 @@ export class EmisorInvitaciones {
 	}
 
 	async enviar(email: string, nombreOrganizacion: string, token: string) {
+		const enlace = `${this.appUrl}/invitacion?token=${token}`;
 		await this.mailer.enviar({
 			para: email,
 			asunto: `Te han invitado a ${nombreOrganizacion} en Cosmoflow`,
-			texto: `Hola:\n\nTe han invitado a unirte a «${nombreOrganizacion}» en Cosmoflow. Abre este enlace para aceptar o rechazar (caduca en 7 días):\n${this.appUrl}/invitacion?token=${token}\n\nSi no tienes cuenta, créala con este mismo email. Si no esperabas esta invitación, ignora este correo.`,
+			texto: `Hola:\n\nTe han invitado a unirte a «${nombreOrganizacion}» en Cosmoflow. Abre este enlace para aceptar o rechazar (caduca en 7 días):\n${enlace}\n\nSi no tienes cuenta, créala con este mismo email. Si no esperabas esta invitación, ignora este correo.`,
+			html: construirCorreoHtml({
+				categoria: "Invitación",
+				titulo: `Invitación a ${nombreOrganizacion}`,
+				saludo: "Hola:",
+				parrafos: [
+					`Te han invitado a unirte a «${nombreOrganizacion}» en Cosmoflow.`,
+					"Abre el siguiente enlace para aceptar o rechazar la invitación (caduca en 7 días).",
+				],
+				accion: {
+					texto: "Ver invitación",
+					url: enlace,
+				},
+				nota: "Si aún no tienes cuenta, créala usando este mismo correo electrónico. Si no esperabas esta invitación, ignora este mensaje.",
+				appUrl: this.appUrl,
+			}),
 		});
 	}
 }
