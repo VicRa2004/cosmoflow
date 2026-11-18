@@ -61,6 +61,7 @@ export class AvisarVencimientos {
 					asunto: `«${tarea.titulo}» vence ${cuando}`,
 					texto: `La tarea «${tarea.titulo}» vence ${cuando} (${tarea.fechaVencimiento}).`,
 					enlace: `${this.appUrl}/tareas/${tarea.id}`,
+					destino: { tipo: "tarea", id: tarea.id },
 				},
 			});
 		}

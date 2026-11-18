@@ -31,6 +31,10 @@ x-app: &app
     GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
     # Bot de Telegram de las notificaciones; vacío, canal desactivado.
     TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN:-}
+    # Push móvil con Firebase Cloud Messaging (HTTP v1); vacías, canal desactivado.
+    FCM_PROJECT_ID: ${FCM_PROJECT_ID:-}
+    FCM_CLIENT_EMAIL: ${FCM_CLIENT_EMAIL:-}
+    FCM_PRIVATE_KEY: ${FCM_PRIVATE_KEY:-}
     # Sentry o GlitchTip; vacío, desactivado. La web lo recibe al compilar (build arg).
     SENTRY_DSN: ${SENTRY_DSN:-}
     # Zona de los recordatorios de vencimiento (avisan desde las 8:00 locales).

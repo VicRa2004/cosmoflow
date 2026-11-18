@@ -48,6 +48,7 @@ model Usuario {
   preferenciasNotificacion PreferenciaNotificacion[]
   preferenciaInterfaz      PreferenciaInterfaz?
   vinculoTelegram          VinculoTelegram?
+  dispositivosPush         DispositivoPush[]
   mencionesTarea           TareaMencion[]
   asignacionesTarea        TareaResponsable[]
   clavesIdempotencia       ClaveIdempotencia[]
@@ -794,6 +795,22 @@ model VinculoTelegram {
   usuario Usuario @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
 
   @@map("vinculo_telegram")
+}
+
+/// Dispositivo móvil registrado para notificaciones push (FCM). El token es único:
+/// si otro usuario inicia sesión en el mismo teléfono se reasigna a su cuenta.
+model DispositivoPush {
+  id         Int       @id @default(autoincrement()) @map("dpu_id")
+  usuarioId  Int       @map("dpu_fkusuario")
+  token      String    @unique @map("dpu_token") @db.VarChar(512)
+  plataforma String    @map("dpu_plataforma") @db.VarChar(20)
+  createdAt  DateTime  @default(now()) @map("created_at")
+  updatedAt  DateTime? @updatedAt @map("updated_at")
+
+  usuario Usuario @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+
+  @@index([usuarioId])
+  @@map("dispositivo_push")
 }
 
 /// Avisos ya enviados: el outbox entrega «al menos una vez» y esto evita repetirlos.

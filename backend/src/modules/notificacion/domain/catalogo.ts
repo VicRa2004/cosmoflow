@@ -8,13 +8,14 @@ export const EVENTOS_NOTIFICACION = [
 export type EventoNotificacion = (typeof EVENTOS_NOTIFICACION)[number];
 
 /** Canales con adaptador (`CanalNotificacion`). */
-export const CANALES_NOTIFICACION = ["correo", "telegram"] as const;
+export const CANALES_NOTIFICACION = ["correo", "telegram", "movil"] as const;
 export type CanalId = (typeof CANALES_NOTIFICACION)[number];
 
-/** Sin preferencia guardada: el correo avisa de todo; Telegram, solo si se activa. */
+/** Sin preferencia guardada: el correo avisa de todo; Telegram y móvil, solo si se activan. */
 export const ACTIVO_POR_DEFECTO: Record<CanalId, boolean> = {
 	correo: true,
 	telegram: false,
+	movil: false,
 };
 
 export interface Preferencia {

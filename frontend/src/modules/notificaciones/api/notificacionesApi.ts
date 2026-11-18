@@ -1,6 +1,7 @@
 import { apiClient } from "@/core/api/client";
 import type { components } from "@/core/api/schema.gen";
 
+export type EstadoMovil = components["schemas"]["EstadoMovil"];
 export type EstadoTelegram = components["schemas"]["EstadoTelegram"];
 export type PreferenciaNotificacion =
 	components["schemas"]["PreferenciaNotificacion"];
@@ -52,5 +53,10 @@ export const notificacionesApi = {
 
 	async desvincularTelegram(): Promise<void> {
 		await apiClient.delete("/notificaciones/telegram");
+	},
+
+	async estadoMovil(): Promise<EstadoMovil> {
+		const response = await apiClient.get<EstadoMovil>("/notificaciones/movil");
+		return response.data;
 	},
 };

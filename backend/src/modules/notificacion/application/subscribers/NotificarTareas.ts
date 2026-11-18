@@ -66,6 +66,7 @@ export class NotificarTareas {
 				asunto: `Te asignaron «${titulo}»`,
 				texto: `Ahora eres responsable de la tarea «${titulo}».`,
 				enlace: this.enlace(tareaId),
+				destino: { tipo: "tarea", id: tareaId },
 			},
 		});
 	}
@@ -85,6 +86,7 @@ export class NotificarTareas {
 				asunto: `Te mencionaron en «${titulo}»`,
 				texto: `Te mencionaron en la tarea «${titulo}».`,
 				enlace: this.enlace(tareaId),
+				destino: { tipo: "tarea", id: tareaId },
 			},
 		});
 	}
@@ -105,6 +107,7 @@ export class NotificarTareas {
 				asunto: `«${titulo}» pasó a ${etiqueta(nuevo)}`,
 				texto: `La tarea «${titulo}» que creaste pasó de ${etiqueta(anterior)} a ${etiqueta(nuevo)}.`,
 				enlace: this.enlace(tareaId),
+				destino: { tipo: "tarea", id: tareaId },
 			},
 		});
 	}

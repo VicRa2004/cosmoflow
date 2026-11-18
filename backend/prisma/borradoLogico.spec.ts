@@ -28,6 +28,7 @@ const EXENTOS: Record<string, string> = {
 	CodigoOAuth: "técnica: de un solo uso y caduca en minutos",
 	NotificacionEnviada: "técnica: claves de idempotencia que se purgan",
 	VinculoTelegram: "técnica: desvincular borra el vínculo",
+	DispositivoPush: "técnica: tokens FCM que se dan de baja o caducan",
 	PreferenciaNotificacion: "ajuste del usuario; se sobrescribe, no se borra",
 	PreferenciaInterfaz: "ajuste del usuario; se sobrescribe, no se borra",
 	PreferenciaNotificacionOrganizacion:

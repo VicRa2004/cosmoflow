@@ -114,6 +114,7 @@ describe("Notificaciones (e2e)", () => {
 				(evento) => [
 					{ evento, canal: "correo", activo: true, personalizado: false },
 					{ evento, canal: "telegram", activo: false, personalizado: false },
+					{ evento, canal: "movil", activo: false, personalizado: false },
 				],
 			),
 		);
@@ -207,5 +208,69 @@ describe("Notificaciones (e2e)", () => {
 		).toEqual([{ tareaId: id, usuarioId: betoId }]);
 		expect(paraBuscar("beto@avisos.dev", "Te mencionaron")).toHaveLength(1);
 		expect(paraBuscar("zoe@avisos.dev", "Te mencionaron")).toEqual([]);
+	});
+
+	it("registra, reasigna y da de baja dispositivos push", async () => {
+		const tokenPush = "fcm_token_dispositivo_de_prueba_123456";
+		const dispositivos = "/api/notificaciones/dispositivos";
+
+		const altaAna = await api(dispositivos, {
+			method: "POST",
+			token: t.ana,
+			body: { token: tokenPush, plataforma: "android" },
+		});
+		expect(altaAna.status).toBe(204);
+		expect(
+			await prisma.dispositivoPush.findUnique({ where: { token: tokenPush } }),
+		).toMatchObject({ plataforma: "android" });
+
+		// Si otro usuario inicia sesión en el mismo teléfono, el token se reasigna.
+		const altaBeto = await api(dispositivos, {
+			method: "POST",
+			token: t.beto,
+			body: { token: tokenPush, plataforma: "android" },
+		});
+		expect(altaBeto.status).toBe(204);
+		expect(
+			await prisma.dispositivoPush.findUnique({ where: { token: tokenPush } }),
+		).toMatchObject({ usuarioId: betoId });
+
+		// Ana ya no puede borrar el token que ahora pertenece a Beto.
+		const bajaAjena = await api(dispositivos, {
+			method: "DELETE",
+			token: t.ana,
+			body: { token: tokenPush },
+		});
+		expect(bajaAjena.status).toBe(204);
+		expect(
+			await prisma.dispositivoPush.findUnique({ where: { token: tokenPush } }),
+		).not.toBeNull();
+
+		// Beto sí da de baja su dispositivo.
+		const bajaBeto = await api(dispositivos, {
+			method: "DELETE",
+			token: t.beto,
+			body: { token: tokenPush },
+		});
+		expect(bajaBeto.status).toBe(204);
+		expect(
+			await prisma.dispositivoPush.findUnique({ where: { token: tokenPush } }),
+		).toBeNull();
+
+		// Valida payload.
+		const invalido = await api(dispositivos, {
+			method: "POST",
+			token: t.ana,
+			body: { token: "corto", plataforma: "windows" },
+		});
+		expect(invalido.status).toBe(400);
+	});
+
+	it.skipIf(
+		Boolean(env.FCM_PROJECT_ID && env.FCM_CLIENT_EMAIL && env.FCM_PRIVATE_KEY),
+	)("sin credenciales FCM, el canal móvil no está disponible", async () => {
+		const res = await api("/api/notificaciones/movil", { token: t.ana });
+		expect(res.status).toBe(200);
+		expect(await res.json()).toEqual({ disponible: false, dispositivos: 0 });
 	});
 });

@@ -7,6 +7,7 @@ import {
 import { Checkbox } from "@/core/components/ui/Checkbox";
 import { Spinner } from "@/core/components/ui/Spinner";
 import type { PreferenciaNotificacion } from "../api/notificacionesApi";
+import { useEstadoMovilQuery } from "../hooks/useMovil";
 import {
 	useActualizarPreferenciasMutation,
 	usePreferenciasNotificacionQuery,
@@ -23,6 +24,7 @@ const EVENTOS: Record<PreferenciaNotificacion["evento"], string> = {
 const CANALES: Record<PreferenciaNotificacion["canal"], string> = {
 	correo: "Correo",
 	telegram: "Telegram",
+	movil: "Móvil",
 };
 
 /**
@@ -39,13 +41,20 @@ export function PreferenciasNotificacionCard({
 		usePreferenciasNotificacionQuery(organizacionId);
 	const actualizar = useActualizarPreferenciasMutation(organizacionId);
 	const { data: telegram } = useEstadoTelegramQuery();
-	// Sin bot en el servidor, Telegram no se muestra.
+	const { data: movil } = useEstadoMovilQuery();
+	// Sin credenciales en el servidor, Telegram o móvil no se muestran.
 	const visibles = preferencias?.filter(
-		(p) => p.canal !== "telegram" || telegram?.disponible,
+		(p) =>
+			(p.canal !== "telegram" || telegram?.disponible) &&
+			(p.canal !== "movil" || movil?.disponible),
 	);
 	// El usuario no puede activarlo sin vincular; la organización sí (vale para quien lo vincule).
-	const bloqueado = (p: PreferenciaNotificacion) =>
-		p.canal === "telegram" && !deOrganizacion && !telegram?.vinculado;
+	const bloqueado = (p: PreferenciaNotificacion) => {
+		if (deOrganizacion) return false;
+		if (p.canal === "telegram") return !telegram?.vinculado;
+		if (p.canal === "movil") return (movil?.dispositivos ?? 0) === 0;
+		return false;
+	};
 
 	return (
 		<Card className="space-y-4">
@@ -70,6 +79,15 @@ export function PreferenciasNotificacionCard({
 				<>
 					{!deOrganizacion && telegram?.disponible && (
 						<VinculoTelegram vinculado={telegram.vinculado} />
+					)}
+					{!deOrganizacion && movil?.disponible && (
+						<div className="rounded-lg border border-borde p-4">
+							<p className="text-sm text-tinta-suave">
+								{movil.dispositivos > 0
+									? `Notificaciones push activas en ${movil.dispositivos} ${movil.dispositivos === 1 ? "dispositivo" : "dispositivos"}.`
+									: "Inicia sesión en la app móvil para activar las notificaciones push en tu teléfono."}
+							</p>
+						</div>
 					)}
 					<ul className="divide-y divide-borde">
 						{Object.entries(EVENTOS).map(([evento, descripcion]) => (

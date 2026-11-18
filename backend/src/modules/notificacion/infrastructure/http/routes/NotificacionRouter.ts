@@ -4,12 +4,16 @@ import {
 	jsonResponse,
 } from "@/core/shared/infrastructure/http/openapi";
 import type { AuthMiddleware } from "@/modules/auth";
+import type { DispositivoPushController } from "../controllers/DispositivoPushController";
 import type { NotificacionController } from "../controllers/NotificacionController";
 import {
+	eliminarDispositivoPushSchema,
 	enlaceTelegramSchema,
+	estadoMovilSchema,
 	estadoTelegramSchema,
 	preferenciasSchema,
 	preferenciasUsuarioSchema,
+	registrarDispositivoPushSchema,
 } from "../schemas/notificacionSchemas";
 
 const tags = ["Notificaciones"];
@@ -22,6 +26,7 @@ export class NotificacionRouter {
 	constructor(
 		authMiddleware: AuthMiddleware,
 		controller: NotificacionController,
+		dispositivosController: DispositivoPushController,
 	) {
 		const docs = this.router.openAPIRegistry;
 		this.router.use(authMiddleware.handle);
@@ -99,5 +104,62 @@ export class NotificacionRouter {
 			},
 		});
 		this.router.delete("/telegram", controller.desvincularTelegram);
+
+		docs.registerPath({
+			method: "get",
+			path: "/movil",
+			tags,
+			security,
+			summary: "¿Hay push móvil configurado y cuántos dispositivos tengo?",
+			responses: {
+				200: jsonResponse(estadoMovilSchema, "Estado del canal móvil"),
+				401: errorResponse("No autenticado"),
+			},
+		});
+		this.router.get("/movil", dispositivosController.estado);
+
+		docs.registerPath({
+			method: "post",
+			path: "/dispositivos",
+			tags,
+			security,
+			summary: "Registrar o actualizar el token push de un dispositivo móvil",
+			request: {
+				body: {
+					required: true,
+					content: {
+						"application/json": { schema: registrarDispositivoPushSchema },
+					},
+				},
+			},
+			responses: {
+				204: { description: "Dispositivo registrado" },
+				400: errorResponse("Token o plataforma no válidos"),
+				401: errorResponse("No autenticado"),
+			},
+		});
+		this.router.post("/dispositivos", dispositivosController.registrar);
+
+		docs.registerPath({
+			method: "delete",
+			path: "/dispositivos",
+			tags,
+			security,
+			summary: "Dar de baja el token push de un dispositivo móvil",
+			request: {
+				body: {
+					required: true,
+					content: {
+						"application/json": { schema: eliminarDispositivoPushSchema },
+					},
+				},
+			},
+			responses: {
+				204: { description: "Dispositivo dado de baja" },
+				400: errorResponse("Token no válido"),
+				401: errorResponse("No autenticado"),
+			},
+		});
+		this.router.delete("/dispositivos", dispositivosController.eliminar);
 	}
 }

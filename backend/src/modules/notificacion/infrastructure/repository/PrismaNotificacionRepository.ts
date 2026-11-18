@@ -72,14 +72,18 @@ export class PrismaNotificacionRepository implements NotificacionRepository {
 				email: true,
 				nombre: true,
 				vinculoTelegram: { select: { chatId: true } },
+				dispositivosPush: { select: { token: true } },
 			},
 		});
-		return usuarios.map(({ id, email, nombre, vinculoTelegram }) => ({
-			usuarioId: id,
-			email,
-			nombre,
-			telegramChatId: vinculoTelegram?.chatId ?? null,
-		}));
+		return usuarios.map(
+			({ id, email, nombre, vinculoTelegram, dispositivosPush }) => ({
+				usuarioId: id,
+				email,
+				nombre,
+				telegramChatId: vinculoTelegram?.chatId ?? null,
+				pushTokens: dispositivosPush.map((d) => d.token),
+			}),
+		);
 	}
 
 	async tarea(tareaId: number) {

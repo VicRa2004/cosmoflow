@@ -8,34 +8,52 @@ import { AvisarVencimientos } from "./application/services/AvisarVencimientos";
 import { Notificador } from "./application/services/Notificador";
 import { AtenderBotTelegram } from "./application/telegram/AtenderBotTelegram";
 import { NotificarTareas } from "./application/subscribers/NotificarTareas";
-import { DesvincularTelegramUseCase } from "./application/useCases/DesvincularTelegramUseCase";
-import { IniciarVinculoTelegramUseCase } from "./application/useCases/IniciarVinculoTelegramUseCase";
-import { ObtenerEstadoTelegramUseCase } from "./application/useCases/ObtenerEstadoTelegramUseCase";
 import { ActualizarPreferenciasOrganizacionUseCase } from "./application/useCases/ActualizarPreferenciasOrganizacionUseCase";
 import { ActualizarPreferenciasUseCase } from "./application/useCases/ActualizarPreferenciasUseCase";
+import { DesvincularTelegramUseCase } from "./application/useCases/DesvincularTelegramUseCase";
+import { EliminarDispositivoPushUseCase } from "./application/useCases/EliminarDispositivoPushUseCase";
+import { IniciarVinculoTelegramUseCase } from "./application/useCases/IniciarVinculoTelegramUseCase";
+import { ObtenerEstadoMovilUseCase } from "./application/useCases/ObtenerEstadoMovilUseCase";
+import { ObtenerEstadoTelegramUseCase } from "./application/useCases/ObtenerEstadoTelegramUseCase";
 import { ObtenerPreferenciasOrganizacionUseCase } from "./application/useCases/ObtenerPreferenciasOrganizacionUseCase";
 import { ObtenerPreferenciasUseCase } from "./application/useCases/ObtenerPreferenciasUseCase";
+import { RegistrarDispositivoPushUseCase } from "./application/useCases/RegistrarDispositivoPushUseCase";
 import { CorreoCanal } from "./infrastructure/canales/CorreoCanal";
+import { MovilCanal } from "./infrastructure/canales/MovilCanal";
 import { TelegramCanal } from "./infrastructure/canales/TelegramCanal";
+import { DispositivoPushController } from "./infrastructure/http/controllers/DispositivoPushController";
 import { NotificacionController } from "./infrastructure/http/controllers/NotificacionController";
 import { NotificacionOrganizacionRouter } from "./infrastructure/http/routes/NotificacionOrganizacionRouter";
 import { NotificacionRouter } from "./infrastructure/http/routes/NotificacionRouter";
+import { FcmCliente } from "./infrastructure/push/FcmCliente";
+import { PrismaDispositivoPushRepository } from "./infrastructure/repository/PrismaDispositivoPushRepository";
 import { PrismaNotificacionRepository } from "./infrastructure/repository/PrismaNotificacionRepository";
 import { PrismaVinculoTelegramRepository } from "./infrastructure/repository/PrismaVinculoTelegramRepository";
 import { TelegramBotApi } from "./infrastructure/telegram/TelegramBotApi";
 
 const repo = new PrismaNotificacionRepository();
-// Sin estado: `mount` y `onStart` crean el suyo con los canales activos.
-const crearNotificador = (container: DependencyContainer) =>
-	new Notificador(repo, [
-		new CorreoCanal(container.get(TOKENS.Mailer)),
-		...(bot ? [new TelegramCanal(bot)] : []),
-	]);
+const dispositivos = new PrismaDispositivoPushRepository();
 const vinculos = new PrismaVinculoTelegramRepository();
 // Sin TELEGRAM_BOT_TOKEN no hay canal Telegram ni polling.
 const bot = env.TELEGRAM_BOT_TOKEN
 	? new TelegramBotApi(env.TELEGRAM_BOT_TOKEN)
 	: null;
+// Sin credenciales FCM no hay canal móvil.
+const fcm =
+	env.FCM_PROJECT_ID && env.FCM_CLIENT_EMAIL && env.FCM_PRIVATE_KEY
+		? new FcmCliente(
+				env.FCM_PROJECT_ID,
+				env.FCM_CLIENT_EMAIL,
+				env.FCM_PRIVATE_KEY,
+			)
+		: null;
+// Sin estado: `mount` y `onStart` crean el suyo con los canales activos.
+const crearNotificador = (container: DependencyContainer) =>
+	new Notificador(repo, [
+		new CorreoCanal(container.get(TOKENS.Mailer)),
+		...(bot ? [new TelegramCanal(bot)] : []),
+		...(fcm ? [new MovilCanal(fcm, dispositivos)] : []),
+	]);
 
 /**
  * Avisos por correo de los eventos de tarea, según las preferencias de cada usuario y,
@@ -67,9 +85,15 @@ export const notificacionModule: AppModule = {
 			vincularTelegram: new IniciarVinculoTelegramUseCase(vinculos, bot),
 			desvincularTelegram: new DesvincularTelegramUseCase(vinculos),
 		});
+		const dispositivosController = new DispositivoPushController({
+			estadoMovil: new ObtenerEstadoMovilUseCase(dispositivos, fcm),
+			registrarDispositivo: new RegistrarDispositivoPushUseCase(dispositivos),
+			eliminarDispositivo: new EliminarDispositivoPushUseCase(dispositivos),
+		});
 		app.route(
 			"/api/notificaciones",
-			new NotificacionRouter(authMiddleware, controller).router,
+			new NotificacionRouter(authMiddleware, controller, dispositivosController)
+				.router,
 		);
 		app.route(
 			"/api/organizaciones/:organizacionId/notificaciones",

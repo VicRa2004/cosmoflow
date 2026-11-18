@@ -45,6 +45,10 @@ const EnvSchema = z
 		GOOGLE_CLIENT_SECRET: z.string().optional(),
 		// Sin él, el canal Telegram de las notificaciones queda desactivado.
 		TELEGRAM_BOT_TOKEN: z.string().optional(),
+		// Firebase Cloud Messaging (HTTP v1). Sin las tres, el canal móvil queda desactivado.
+		FCM_PROJECT_ID: z.string().optional(),
+		FCM_CLIENT_EMAIL: z.string().optional(),
+		FCM_PRIVATE_KEY: z.string().optional(),
 		// Sentry o GlitchTip; sin él, no se envían errores.
 		SENTRY_DSN: z.url("SENTRY_DSN debe ser una URL valida").optional(),
 		// Zona IANA en la que se decide qué día es «hoy» (recordatorios de vencimiento).
@@ -92,6 +96,9 @@ const envPrev = {
 	GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID || undefined,
 	GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET || undefined,
 	TELEGRAM_BOT_TOKEN: process.env.TELEGRAM_BOT_TOKEN || undefined,
+	FCM_PROJECT_ID: process.env.FCM_PROJECT_ID || undefined,
+	FCM_CLIENT_EMAIL: process.env.FCM_CLIENT_EMAIL || undefined,
+	FCM_PRIVATE_KEY: process.env.FCM_PRIVATE_KEY || undefined,
 	SENTRY_DSN: process.env.SENTRY_DSN || undefined,
 	ZONA_HORARIA: process.env.ZONA_HORARIA || undefined,
 };

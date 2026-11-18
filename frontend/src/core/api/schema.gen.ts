@@ -7410,6 +7410,147 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/notificaciones/movil": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** ¿Hay push móvil configurado y cuántos dispositivos tengo? */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Estado del canal móvil */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["EstadoMovil"];
+                    };
+                };
+                /** @description No autenticado */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/notificaciones/dispositivos": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Registrar o actualizar el token push de un dispositivo móvil */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["RegistrarDispositivoPush"];
+                };
+            };
+            responses: {
+                /** @description Dispositivo registrado */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Token o plataforma no válidos */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description No autenticado */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        /** Dar de baja el token push de un dispositivo móvil */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["EliminarDispositivoPush"];
+                };
+            };
+            responses: {
+                /** @description Dispositivo dado de baja */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Token no válido */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description No autenticado */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/organizaciones/{organizacionId}/notificaciones": {
         parameters: {
             query?: never;
@@ -8376,7 +8517,7 @@ export interface components {
              * @example correo
              * @enum {string}
              */
-            canal: "correo" | "telegram";
+            canal: "correo" | "telegram" | "movil";
             activo: boolean;
         };
         EstadoTelegram: {
@@ -8386,6 +8527,23 @@ export interface components {
         EnlaceTelegram: {
             /** @example https://t.me/cosmoflow_bot?start=abc123 */
             enlace: string;
+        };
+        EstadoMovil: {
+            disponible: boolean;
+            dispositivos: number;
+        };
+        RegistrarDispositivoPush: {
+            /** @example fcm_token_dispositivo_abc123 */
+            token: string;
+            /**
+             * @example android
+             * @enum {string}
+             */
+            plataforma: "android" | "ios";
+        };
+        EliminarDispositivoPush: {
+            /** @example fcm_token_dispositivo_abc123 */
+            token: string;
         };
         PreferenciasInterfaz: {
             /** @enum {string} */
@@ -8450,6 +8608,9 @@ export type PreferenciaNotificacionUsuario = components['schemas']['PreferenciaN
 export type PreferenciaNotificacion = components['schemas']['PreferenciaNotificacion'];
 export type EstadoTelegram = components['schemas']['EstadoTelegram'];
 export type EnlaceTelegram = components['schemas']['EnlaceTelegram'];
+export type EstadoMovil = components['schemas']['EstadoMovil'];
+export type RegistrarDispositivoPush = components['schemas']['RegistrarDispositivoPush'];
+export type EliminarDispositivoPush = components['schemas']['EliminarDispositivoPush'];
 export type PreferenciasInterfaz = components['schemas']['PreferenciasInterfaz'];
 export type DestinoConexion = components['schemas']['DestinoConexion'];
 export type ConexionAutorizada = components['schemas']['ConexionAutorizada'];
