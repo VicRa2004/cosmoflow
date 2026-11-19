@@ -1,11 +1,13 @@
 import 'dart:async';
 
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import 'core/api/api_client.dart';
 import 'core/auth/sesion_store.dart';
 import 'core/offline/cola_sin_conexion.dart';
+import 'core/push/push_service.dart';
 import 'core/router/app_router.dart';
 import 'core/theme/tema_app.dart';
 import 'modules/auth/api/auth_api.dart';
@@ -15,12 +17,13 @@ import 'modules/organizaciones/api/organizaciones_api.dart';
 import 'modules/tags/api/tags_api.dart';
 import 'modules/tareas/api/tareas_api.dart';
 
-void main() {
+Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   final sesionStore = SesionStore();
   final apiClient = ApiClient(sesionStore: sesionStore);
-  final authApi = AuthApi(apiClient: apiClient);
+  final push = await _iniciarPush(apiClient);
+  final authApi = AuthApi(apiClient: apiClient, push: push);
   final cola = ColaSinConexion(apiClient: apiClient);
   final tareasApi = TareasApi(apiClient: apiClient, cola: cola);
   final notasApi = NotasApi(apiClient: apiClient, cola: cola);
@@ -38,6 +41,18 @@ void main() {
       cola: cola,
     ),
   );
+}
+
+/// Sin configuración de Firebase (p. ej. iOS sin GoogleService-Info.plist) la app
+/// funciona igual, solo sin notificaciones push.
+Future<PushService?> _iniciarPush(ApiClient apiClient) async {
+  try {
+    await Firebase.initializeApp();
+  } catch (e) {
+    debugPrint('Firebase no configurado, push desactivado: $e');
+    return null;
+  }
+  return PushService(apiClient: apiClient)..iniciar();
 }
 
 /// Raíz de la aplicación móvil Cosmoflow.
