@@ -1,6 +1,6 @@
 import { describe, expect, it } from "bun:test";
 import type { ErrorEvent } from "@sentry/bun";
-import { limpiarEvento } from "./monitoreo";
+import { limpiarEvento, urlIngesta } from "./monitoreo";
 
 describe("limpiarEvento", () => {
 	it("debería quitar cuerpo, cookies, cabeceras, query y datos del usuario salvo el id", () => {
@@ -23,5 +23,26 @@ describe("limpiarEvento", () => {
 		});
 		expect(evento.user).toEqual({ id: "7" });
 		expect(evento.breadcrumbs).toBeUndefined();
+	});
+});
+
+describe("urlIngesta", () => {
+	const dsn = "https://clave@glitchtip.dev/7";
+	const sobre = (d: string) =>
+		`${JSON.stringify({ dsn: d })}\n{"type":"event"}\n{}`;
+
+	it("debería devolver el endpoint de ingesta cuando el sobre va a nuestro DSN", () => {
+		expect(urlIngesta(sobre(dsn), dsn)).toBe(
+			"https://glitchtip.dev/api/7/envelope/?sentry_key=clave",
+		);
+	});
+
+	it("debería rechazar otro host, otro proyecto, un sobre inválido o sin DSN configurado", () => {
+		expect(urlIngesta(sobre("https://clave@evil.dev/7"), dsn)).toBeUndefined();
+		expect(
+			urlIngesta(sobre("https://clave@glitchtip.dev/8"), dsn),
+		).toBeUndefined();
+		expect(urlIngesta("no es json", dsn)).toBeUndefined();
+		expect(urlIngesta(sobre(dsn), undefined)).toBeUndefined();
 	});
 });

@@ -11,6 +11,8 @@ export function iniciarMonitoreo() {
 	if (!dsn) return;
 	Sentry.init({
 		dsn,
+		// Por el backend: los bloqueadores de anuncios cortan los envíos directos a GlitchTip.
+		tunnel: "/api/monitoreo",
 		environment: import.meta.env.MODE,
 		release: import.meta.env.VITE_APP_VERSION,
 		beforeSend: (evento) => {

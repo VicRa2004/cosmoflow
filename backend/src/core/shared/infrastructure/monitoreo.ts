@@ -39,3 +39,22 @@ export function reportarError(
 		Sentry.captureException(error);
 	});
 }
+
+/**
+ * Destino en GlitchTip de un sobre que la web manda por el túnel (`/api/monitoreo`,
+ * para que los bloqueadores de anuncios no lo corten). Solo si el sobre va a nuestro
+ * DSN: así el túnel no sirve de proxy hacia otros servidores.
+ */
+export function urlIngesta(sobre: string, dsn = env.SENTRY_DSN) {
+	if (!dsn) return;
+	try {
+		const destino = new URL(JSON.parse(sobre.split("\n", 1)[0] ?? "").dsn);
+		const propio = new URL(dsn);
+		if (destino.host !== propio.host || destino.pathname !== propio.pathname)
+			return;
+		const ruta = propio.pathname.replace(/\/(\d+)$/, "/api/$1/envelope/");
+		return `${propio.origin}${ruta}?sentry_key=${propio.username}`;
+	} catch {
+		return;
+	}
+}

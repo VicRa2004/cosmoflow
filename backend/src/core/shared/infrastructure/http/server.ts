@@ -1,6 +1,7 @@
 import { OpenAPIHono } from "@hono/zod-openapi";
 import { cors } from "hono/cors";
 import type { MiddlewareHandler } from "hono";
+import { bodyLimit } from "hono/body-limit";
 import { logger } from "hono/logger";
 import { requestId } from "hono/request-id";
 import { secureHeaders } from "hono/secure-headers";
@@ -16,7 +17,11 @@ import path from "node:path";
 import { contexto } from "@/core/shared/infrastructure/contexto";
 import { container } from "@/core/shared/infrastructure/di/container";
 import { log } from "@/core/shared/infrastructure/logger";
-import { reportarError } from "@/core/shared/infrastructure/monitoreo";
+import { rateLimit } from "@/core/shared/infrastructure/http/rateLimit";
+import {
+	reportarError,
+	urlIngesta,
+} from "@/core/shared/infrastructure/monitoreo";
 import { modules } from "@/modules";
 
 const app = new OpenAPIHono();
@@ -77,6 +82,24 @@ app.get("/ready", async (c) => {
 		return c.json({ status: "unavailable" }, 503);
 	}
 });
+
+// Túnel de la web hacia GlitchTip: desde el propio dominio no lo cortan los bloqueadores.
+app.post(
+	"/api/monitoreo",
+	rateLimit({ windowMs: 60_000, limit: 30 }),
+	bodyLimit({ maxSize: 256 * 1024 }),
+	async (c) => {
+		const sobre = await c.req.text();
+		const destino = urlIngesta(sobre);
+		if (!destino) return c.body(null, 400);
+		try {
+			const res = await fetch(destino, { method: "POST", body: sobre });
+			return c.body(null, res.ok ? 200 : 502);
+		} catch {
+			return c.body(null, 502);
+		}
+	},
+);
 
 // 3-4. Rutas de cada módulo activo (lista en src/modules.ts)
 for (const module of modules) module.mount?.(app, container);
