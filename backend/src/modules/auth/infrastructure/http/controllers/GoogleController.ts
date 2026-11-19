@@ -48,7 +48,11 @@ export class GoogleController extends BaseController {
 	};
 
 	callback = async (c: Context): Promise<Response> => {
-		const [state, codeVerifier] = (getCookie(c, COOKIE_OAUTH) ?? "").split(".");
+		// Corta por el último punto: el state móvil también lleva uno (`<hex>.movil`).
+		const cookie = getCookie(c, COOKIE_OAUTH) ?? "";
+		const corte = cookie.lastIndexOf(".");
+		const state = cookie.slice(0, Math.max(corte, 0));
+		const codeVerifier = cookie.slice(corte + 1);
 		deleteCookie(c, COOKIE_OAUTH, opcionesCookie);
 
 		const code = c.req.query("code");
