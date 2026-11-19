@@ -5,8 +5,8 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../api/auth_api.dart';
 
-/// Servicio encargado del flujo OAuth con Google utilizando el navegador
-/// externo del dispositivo (Chrome, Safari, etc.) y deep linking (`cosmoflow://login-callback`).
+/// Servicio encargado del flujo OAuth con Google en una Custom Tab del navegador
+/// del dispositivo (Chrome, Safari, etc.) y deep linking (`cosmoflow://login-callback`).
 class OAuthGoogleService {
   OAuthGoogleService({AppLinks? appLinks}) : _appLinks = appLinks ?? AppLinks();
 
@@ -47,12 +47,22 @@ class OAuthGoogleService {
       return false;
     }
 
-    await authApi.apiClient.sesionStore.almacenamiento.guardarRefreshToken(
-      refreshToken,
-    );
-    await authApi.restaurarSesion();
+    await _canjear(refreshToken, authApi);
     return true;
   }
+
+  /// Canjes por refresh token, compartidos entre instancias: el listener global y el
+  /// de [autenticar] reciben el mismo deep link, y canjear dos veces el mismo token
+  /// hace que el backend (que lo rota) rechace el segundo y la sesión falle.
+  static final Map<String, Future<bool>> _canjes = {};
+
+  static Future<bool> _canjear(String refreshToken, AuthApi authApi) =>
+      _canjes[refreshToken] ??= () async {
+        await authApi.apiClient.sesionStore.almacenamiento.guardarRefreshToken(
+          refreshToken,
+        );
+        return authApi.restaurarSesion();
+      }();
 
   /// Inicia la autenticación con Google abriendo el navegador del dispositivo.
   /// Escucha el retorno mediante deep link (`cosmoflow://login-callback`) y canjea la sesión.
@@ -85,9 +95,7 @@ class OAuthGoogleService {
           final refreshToken = uri.queryParameters['refreshToken'];
           if (refreshToken != null && refreshToken.isNotEmpty) {
             try {
-              await authApi.apiClient.sesionStore.almacenamiento
-                  .guardarRefreshToken(refreshToken);
-              final ok = await authApi.restaurarSesion();
+              final ok = await _canjear(refreshToken, authApi);
               if (!ok) {
                 if (!completer.isCompleted) {
                   completer.completeError(
@@ -117,9 +125,11 @@ class OAuthGoogleService {
     );
 
     try {
+      // Custom Tab (Android) / SFSafariViewController (iOS): ventana dentro de la app
+      // que comparte cookies y cuentas con el navegador principal (no es un WebView).
       final lanzado = await launchUrl(
         urlAutorizacion,
-        mode: LaunchMode.externalApplication,
+        mode: LaunchMode.inAppBrowserView,
       );
       if (!lanzado) {
         throw const OAuthGoogleException(
@@ -130,6 +140,9 @@ class OAuthGoogleService {
       return await completer.future.timeout(timeout, onTimeout: () => false);
     } finally {
       await subLocal.cancel();
+      // En iOS cierra el SFSafariViewController; en Android la Custom Tab la cierra
+      // `singleTask` del AndroidManifest al volver por el deep link.
+      await closeInAppWebView().catchError((_) {});
     }
   }
 

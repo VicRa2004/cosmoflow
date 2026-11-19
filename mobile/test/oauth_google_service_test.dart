@@ -118,4 +118,26 @@ void main() {
       isFalse,
     );
   });
+
+  test('El mismo deep link recibido por dos listeners solo canjea el token una vez', () async {
+    final sesionStore = SesionStore(
+      almacenamientoSeguro: MemoriaAlmacenamientoSeguro(),
+    );
+    var canjes = 0;
+    final authApi = _AuthApiFalsa(
+      apiClient: ApiClient(sesionStore: sesionStore),
+      onRestaurar: () async {
+        canjes++;
+        return true;
+      },
+    );
+    final uri = Uri.parse('cosmoflow://login-callback?refreshToken=unico_1');
+
+    await Future.wait([
+      OAuthGoogleService().procesarDeepLink(uri: uri, authApi: authApi),
+      OAuthGoogleService().procesarDeepLink(uri: uri, authApi: authApi),
+    ]);
+
+    expect(canjes, 1);
+  });
 }
