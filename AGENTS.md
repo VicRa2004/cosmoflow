@@ -94,6 +94,7 @@ El porqué de las reglas no negociables está en `docs/decisions/`. Leer el ADR 
 - [0004 — Un solo contenedor en Dokploy](docs/decisions/0004-un-solo-contenedor-dokploy.md)
 - [0005 — Zustand solo para la sesión](docs/decisions/0005-zustand-solo-sesion.md)
 - [0006 — Contenedor propio en lugar de TSyringe](docs/decisions/0006-contenedor-propio.md)
+- [0007 — Chats dentro de organizaciones, equipos y proyectos](docs/decisions/0007-chats-de-organizacion.md)
 
 ## Estructura
 
