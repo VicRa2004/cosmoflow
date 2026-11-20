@@ -27,9 +27,13 @@ export interface NotificacionRepository {
 	/** Usuarios activos y no borrados; los demás se omiten. */
 	destinatarios(usuarioIds: number[]): Promise<Destinatario[]>;
 	/** `null` si la tarea ya no existe o está borrada. */
-	tarea(
-		tareaId: number,
-	): Promise<{ titulo: string; organizacionId: number | null } | null>;
+	tarea(tareaId: number): Promise<{
+		titulo: string;
+		organizacionId: number | null;
+		/** Quien la creó */
+		usuarioId: number;
+		responsableIds: number[];
+	} | null>;
 	/** Sin completar ni cancelar ni borrar, que vencen alguno de esos días (`AAAA-MM-DD`). */
 	tareasPorVencer(dias: string[]): Promise<TareaPorVencer[]>;
 	/** `false` si ya estaba registrado: otro intento ya lo envió. */

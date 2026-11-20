@@ -4,6 +4,7 @@ export const EVENTOS_NOTIFICACION = [
 	"mencion",
 	"estadoCambiado",
 	"vencimiento",
+	"comentario",
 ] as const;
 export type EventoNotificacion = (typeof EVENTOS_NOTIFICACION)[number];
 

@@ -87,10 +87,18 @@ export class PrismaNotificacionRepository implements NotificacionRepository {
 	}
 
 	async tarea(tareaId: number) {
-		return prisma.tarea.findFirst({
+		const tarea = await prisma.tarea.findFirst({
 			where: { id: tareaId, deletedAt: null },
-			select: { titulo: true, organizacionId: true },
+			select: {
+				titulo: true,
+				organizacionId: true,
+				usuarioId: true,
+				responsables: { select: { usuarioId: true } },
+			},
 		});
+		if (!tarea) return null;
+		const { responsables, ...resto } = tarea;
+		return { ...resto, responsableIds: responsables.map((r) => r.usuarioId) };
 	}
 
 	async tareasPorVencer(dias: string[]): Promise<TareaPorVencer[]> {

@@ -248,6 +248,39 @@ export function registrarHerramientas(servidor: McpServer, api: Api): void {
 	);
 
 	servidor.registerTool(
+		"comentar_tarea",
+		{
+			description:
+				"Añade un comentario en Markdown a una tarea. Para mencionar a alguien: [@Nombre](mencion:<usuarioId>) (ids de listar_miembros); se avisa a los mencionados, responsables y creador.",
+			inputSchema: {
+				id: z.number().int().positive(),
+				contenido: z.string().min(1).max(10_000),
+			},
+		},
+		({ id, contenido }) =>
+			resultado(() =>
+				api("POST", `/api/tareas/${id}/comentarios`, { contenido }),
+			),
+	);
+
+	servidor.registerTool(
+		"listar_comentarios",
+		{
+			description:
+				"Comentarios de una tarea, los más antiguos primero (50 por página).",
+			inputSchema: {
+				id: z.number().int().positive(),
+				pagina: z.number().int().positive().optional(),
+			},
+			annotations: { readOnlyHint: true },
+		},
+		({ id, ...args }) =>
+			resultado(() =>
+				api("GET", `/api/tareas/${id}/comentarios?${consulta(args)}`),
+			),
+	);
+
+	servidor.registerTool(
 		"buscar_notas",
 		{
 			description:

@@ -435,9 +435,11 @@ describe("Conector MCP (e2e)", () => {
 			expect(tools.map((t) => t.name).sort()).toEqual([
 				"actualizar_tarea",
 				"buscar_notas",
+				"comentar_tarea",
 				"completar_tarea",
 				"crear_nota",
 				"crear_tarea",
+				"listar_comentarios",
 				"listar_equipos",
 				"listar_miembros",
 				"listar_organizaciones",
@@ -532,6 +534,24 @@ describe("Conector MCP (e2e)", () => {
 			expect(await datos(token, "obtener_tarea", { id: tarea.id })).toEqual(
 				asignada,
 			);
+		});
+
+		it("debería comentar una tarea y leer sus comentarios", async () => {
+			const tarea = await datos(token, "crear_tarea", { titulo: "Comentable" });
+
+			const comentario = await datos(token, "comentar_tarea", {
+				id: tarea.id,
+				contenido: "Hecho desde Claude",
+			});
+			const { datos: lista } = await datos(token, "listar_comentarios", {
+				id: tarea.id,
+			});
+
+			expect(comentario).toMatchObject({
+				tareaId: tarea.id,
+				contenido: "Hecho desde Claude",
+			});
+			expect(lista.map((c: { id: number }) => c.id)).toEqual([comentario.id]);
 		});
 
 		it("debería crear y buscar notas", async () => {

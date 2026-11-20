@@ -8,7 +8,11 @@ import { PROYECTO_TOKENS } from "@/modules/proyecto";
 import { ReubicarTareas } from "./application/subscribers/ReubicarTareas";
 import { ContextosTarea } from "./application/services/ContextosTarea";
 import { MoverTareaUseCase } from "./application/useCases/MoverTareaUseCase";
+import { ActualizarComentarioUseCase } from "./application/useCases/ActualizarComentarioUseCase";
 import { ActualizarTareaUseCase } from "./application/useCases/ActualizarTareaUseCase";
+import { CrearComentarioUseCase } from "./application/useCases/CrearComentarioUseCase";
+import { EliminarComentarioUseCase } from "./application/useCases/EliminarComentarioUseCase";
+import { ObtenerComentariosUseCase } from "./application/useCases/ObtenerComentariosUseCase";
 import { CrearTareaUseCase } from "./application/useCases/CrearTareaUseCase";
 import { EliminarTareaDefinitivoUseCase } from "./application/useCases/EliminarTareaDefinitivoUseCase";
 import { EliminarTareaUseCase } from "./application/useCases/EliminarTareaUseCase";
@@ -22,9 +26,12 @@ import { ObtenerEstadisticasTareasUseCase } from "./application/useCases/Obtener
 import { ObtenerTareaUseCase } from "./application/useCases/ObtenerTareaUseCase";
 import { ObtenerPendientesUseCase } from "./application/useCases/ObtenerPendientesUseCase";
 import { ObtenerTareasUseCase } from "./application/useCases/ObtenerTareasUseCase";
+import { ComentarioTareaController } from "./infrastructure/http/controllers/ComentarioTareaController";
 import { PapeleraTareaController } from "./infrastructure/http/controllers/PapeleraTareaController";
+import { ComentarioTareaRouter } from "./infrastructure/http/routes/ComentarioTareaRouter";
 import { TareaController } from "./infrastructure/http/controllers/TareaController";
 import { TareaRouter } from "./infrastructure/http/routes/TareaRouter";
+import { PrismaComentarioTareaRepository } from "./infrastructure/repository/PrismaComentarioTareaRepository";
 import { PrismaTareaRepository } from "./infrastructure/repository/PrismaTareaRepository";
 
 const repo = new PrismaTareaRepository();
@@ -62,6 +69,34 @@ export const tareaModule: AppModule = {
 				restaurar: new RestaurarTareaUseCase(repo, contextos),
 				eliminar: new EliminarTareaDefinitivoUseCase(repo, contextos),
 			}),
+		);
+		const comentarios = new PrismaComentarioTareaRepository();
+		app.route(
+			"/api/tareas",
+			new ComentarioTareaRouter(
+				container.get(AUTH_TOKENS.AuthMiddleware),
+				container.get(TOKENS.PermisoGuard),
+				new ComentarioTareaController({
+					obtenerTodos: new ObtenerComentariosUseCase(
+						repo,
+						contextos,
+						comentarios,
+					),
+					crear: new CrearComentarioUseCase(
+						repo,
+						contextos,
+						comentarios,
+						eventBus,
+						uow,
+					),
+					actualizar: new ActualizarComentarioUseCase(
+						repo,
+						contextos,
+						comentarios,
+					),
+					eliminar: new EliminarComentarioUseCase(repo, contextos, comentarios),
+				}),
+			).router,
 		);
 		app.route("/api/tareas", router.router);
 	},

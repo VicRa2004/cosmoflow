@@ -12,6 +12,11 @@ interface Mencionados {
 	tareaId: number;
 	usuarioIds: number[];
 }
+interface Comentada {
+	tareaId: number;
+	autorId: number;
+	mencionIds: number[];
+}
 interface EstadoCambiado {
 	tareaId: number;
 	creadorId: number;
@@ -29,7 +34,8 @@ const etiqueta = (estado: string) => ETIQUETAS_ESTADO[estado] ?? estado;
 
 /**
  * Tarea asignada → sus responsables nuevos; mención → los mencionados nuevos; cambio
- * de estado → quien la creó.
+ * de estado → quien la creó; comentario → los mencionados (como mención) y, el resto,
+ * sus responsables y quien la creó, nunca el autor.
  */
 export class NotificarTareas {
 	constructor(
@@ -48,6 +54,9 @@ export class NotificarTareas {
 		);
 		this.eventBus.subscribe("tarea.estadoCambiado", (event) =>
 			this.onEstadoCambiado(event),
+		);
+		this.eventBus.subscribe("tarea.comentada", (event) =>
+			this.onComentada(event),
 		);
 	}
 
@@ -108,6 +117,45 @@ export class NotificarTareas {
 				texto: `La tarea «${titulo}» que creaste pasó de ${etiqueta(anterior)} a ${etiqueta(nuevo)}.`,
 				enlace: this.enlace(tareaId),
 				destino: { tipo: "tarea", id: tareaId },
+			},
+		});
+	}
+
+	private async onComentada(event: DomainEvent): Promise<void> {
+		const { tareaId, autorId, mencionIds } = event.data as Comentada;
+		const tarea = await this.repo.tarea(tareaId);
+		if (tarea === null) return;
+		const { titulo, organizacionId } = tarea;
+		const enlace = this.enlace(tareaId);
+		const destino = { tipo: "tarea" as const, id: tareaId };
+		const interesados = [
+			...new Set([tarea.usuarioId, ...tarea.responsableIds]),
+		].filter((id) => id !== autorId && !mencionIds.includes(id));
+		// Clave por grupo: cada envío se registra aparte y no se pisan.
+		await this.notificador.notificar({
+			evento: "mencion",
+			usuarioIds: mencionIds,
+			organizacionId,
+			actorId: event.meta?.usuarioId,
+			clave: `${this.clave(event, tareaId)}:mencion`,
+			aviso: {
+				asunto: `Te mencionaron en un comentario de «${titulo}»`,
+				texto: `Te mencionaron en un comentario de la tarea «${titulo}».`,
+				enlace,
+				destino,
+			},
+		});
+		await this.notificador.notificar({
+			evento: "comentario",
+			usuarioIds: interesados,
+			organizacionId,
+			actorId: event.meta?.usuarioId,
+			clave: `${this.clave(event, tareaId)}:comentario`,
+			aviso: {
+				asunto: `Nuevo comentario en «${titulo}»`,
+				texto: `Hay un comentario nuevo en la tarea «${titulo}».`,
+				enlace,
+				destino,
 			},
 		});
 	}

@@ -216,6 +216,49 @@ describe("Tareas de equipo y proyecto (e2e)", () => {
 		expect((await restaurar(t.beto)).status).toBe(204);
 	});
 
+	it("comentarios: los ven los miembros; edita su autor y modera quien gestiona", async () => {
+		const ruta = `/api/tareas/${tareaEquipo}/comentarios`;
+		const crear = await post(ruta, t.caro, { contenido: "  Empiezo yo  " });
+		expect(crear.status).toBe(201);
+		const comentario = await crear.json();
+		expect(comentario).toMatchObject({
+			autorId: id.caro,
+			autorNombre: expect.any(String),
+			contenido: "Empiezo yo",
+			editadoEn: null,
+		});
+		await post(ruta, t.ana, { contenido: "Y yo después" });
+
+		const lista = await (await api(ruta, { token: t.ana })).json();
+		expect(lista.datos.map((c: { contenido: string }) => c.contenido)).toEqual([
+			"Empiezo yo",
+			"Y yo después",
+		]);
+		expect((await api(ruta, { token: t.zoe })).status).toBe(404);
+		expect((await post(ruta, t.caro, { contenido: "   " })).status).toBe(400);
+
+		const deCaro = `${ruta}/${comentario.id}`;
+		expect(
+			(await put(deCaro, t.ana, { contenido: "Cambiado por otra" })).status,
+		).toBe(403);
+		const editado = await put(deCaro, t.caro, { contenido: "Empiezo yo (v2)" });
+		expect(await editado.json()).toMatchObject({
+			contenido: "Empiezo yo (v2)",
+			editadoEn: expect.any(String),
+		});
+
+		// ana es miembro sin ser líder ni delegada: no modera; beto (líder) sí.
+		expect((await api(deCaro, { method: "DELETE", token: t.ana })).status).toBe(
+			403,
+		);
+		expect(
+			(await api(deCaro, { method: "DELETE", token: t.beto })).status,
+		).toBe(204);
+		expect(
+			(await api(deCaro, { method: "DELETE", token: t.beto })).status,
+		).toBe(404);
+	});
+
 	it("asignadasPorMi da las que asignó a otros y guarda quién asignó", async () => {
 		const res = await api("/api/tareas?asignadasPorMi=true", { token: t.beto });
 		const { datos } = await res.json();

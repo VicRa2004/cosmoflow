@@ -43,7 +43,7 @@ export function AccionesNota({
 			<ConfirmDialog
 				abierto={confirmando}
 				titulo="¿Eliminar nota?"
-				mensaje="Esta acción no se puede deshacer."
+				mensaje="Irá a la papelera, donde podrás restaurarla durante 30 días."
 				textoConfirmar="Eliminar"
 				peligroso
 				isLoading={eliminar.isPending}

@@ -1,3 +1,4 @@
+import { extraerMenciones } from "@/core/shared/domain/menciones";
 import { Entity } from "@/core/shared/domain/Entity";
 import { EntityId } from "@/core/shared/domain/EntityId";
 import { TareaInvalidaError } from "./error/TareaInvalidaError";
@@ -44,13 +45,6 @@ export interface UbicacionTarea {
 	equipoId: number | null;
 	proyectoId: number | null;
 }
-
-/** `[@Ana](mencion:12)` → 12: las menciones del markdown (decisión 22). */
-const extraerMenciones = (markdown: string): number[] => [
-	...new Set(
-		[...markdown.matchAll(/\]\(mencion:(\d+)\)/g)].map((m) => Number(m[1])),
-	),
-];
 
 const PERSONAL: UbicacionTarea = {
 	organizacionId: null,

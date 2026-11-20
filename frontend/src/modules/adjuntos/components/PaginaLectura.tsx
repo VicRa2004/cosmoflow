@@ -13,6 +13,8 @@ interface PaginaLecturaProps {
 	contenido: string;
 	/** Dónde resolver los `[[wikilinks]]`; sin él, en las notas personales. */
 	ambito?: AmbitoWikilinks;
+	/** Tras el contenido (p. ej. los comentarios de una tarea). */
+	pie?: ReactNode;
 }
 
 /** Lectura de una tarea o nota a página completa: el markdown renderizado y sus acciones. */
@@ -23,6 +25,7 @@ export function PaginaLectura({
 	detalles,
 	contenido,
 	ambito,
+	pie,
 }: PaginaLecturaProps) {
 	return (
 		<article className="mx-auto max-w-3xl space-y-6">
@@ -46,6 +49,7 @@ export function PaginaLectura({
 					<p className="text-sm text-tinta-tenue">Sin contenido.</p>
 				)}
 			</div>
+			{pie && <div className="border-t border-borde pt-6">{pie}</div>}
 		</article>
 	);
 }

@@ -50,6 +50,7 @@ model Usuario {
   vinculoTelegram          VinculoTelegram?
   dispositivosPush         DispositivoPush[]
   mencionesTarea           TareaMencion[]
+  comentariosTarea         ComentarioTarea[]
   asignacionesTarea        TareaResponsable[]
   clavesIdempotencia       ClaveIdempotencia[]
 
@@ -351,6 +352,7 @@ model Tarea {
   tags         TareaTag[]
   responsables TareaResponsable[]
   menciones    TareaMencion[]
+  comentarios  ComentarioTarea[]
   dependeDe    Tarea?             @relation("DependenciaTarea", fields: [dependeDeId], references: [id], onDelete: SetNull)
   dependientes Tarea[]            @relation("DependenciaTarea")
 
@@ -366,9 +368,9 @@ model Tarea {
 /// RN-44. FK a `MiembroOrganizacion`: salir de la organización lo quita como
 /// responsable (decisión 20); las personales no pueden tenerlos (organización nula).
 model TareaResponsable {
-  organizacionId Int @map("tre_fkorganizacion")
-  tareaId        Int @map("tre_fktarea")
-  usuarioId      Int @map("tre_fkusuario")
+  organizacionId Int  @map("tre_fkorganizacion")
+  tareaId        Int  @map("tre_fktarea")
+  usuarioId      Int  @map("tre_fkusuario")
   /// Quien lo asignó; nulo en las asignaciones anteriores a guardarlo
   asignadoPorId  Int? @map("tre_fkasignado_por")
 
@@ -393,6 +395,24 @@ model TareaMencion {
   @@id([tareaId, usuarioId])
   @@index([usuarioId])
   @@map("tarea_mencion")
+}
+
+/// Comentario en Markdown de una tarea (#50). Lo ven quienes ven la tarea; se borra
+/// del todo (sin papelera) y cae con ella.
+model ComentarioTarea {
+  id        Int       @id @default(autoincrement()) @map("cot_id")
+  tareaId   Int       @map("cot_fktarea")
+  autorId   Int       @map("cot_fkautor")
+  contenido String    @map("cot_contenido")
+  createdAt DateTime  @default(now()) @map("created_at")
+  /// Solo si se editó después de publicarlo
+  editadoEn DateTime? @map("cot_editado_en")
+
+  tarea Tarea   @relation(fields: [tareaId], references: [id], onDelete: Cascade)
+  autor Usuario @relation(fields: [autorId], references: [id], onDelete: Cascade)
+
+  @@index([tareaId, id])
+  @@map("comentario_tarea")
 }
 
 model TareaTag {

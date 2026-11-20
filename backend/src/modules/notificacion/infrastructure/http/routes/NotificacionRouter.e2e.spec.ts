@@ -110,13 +110,17 @@ describe("Notificaciones (e2e)", () => {
 		const res = await api(preferencias, { token: t.beto });
 		expect(res.status).toBe(200);
 		expect(await res.json()).toEqual(
-			["tareaAsignada", "mencion", "estadoCambiado", "vencimiento"].flatMap(
-				(evento) => [
-					{ evento, canal: "correo", activo: true, personalizado: false },
-					{ evento, canal: "telegram", activo: false, personalizado: false },
-					{ evento, canal: "movil", activo: false, personalizado: false },
-				],
-			),
+			[
+				"tareaAsignada",
+				"mencion",
+				"estadoCambiado",
+				"vencimiento",
+				"comentario",
+			].flatMap((evento) => [
+				{ evento, canal: "correo", activo: true, personalizado: false },
+				{ evento, canal: "telegram", activo: false, personalizado: false },
+				{ evento, canal: "movil", activo: false, personalizado: false },
+			]),
 		);
 	});
 
@@ -208,6 +212,46 @@ describe("Notificaciones (e2e)", () => {
 		).toEqual([{ tareaId: id, usuarioId: betoId }]);
 		expect(paraBuscar("beto@avisos.dev", "Te mencionaron")).toHaveLength(1);
 		expect(paraBuscar("zoe@avisos.dev", "Te mencionaron")).toEqual([]);
+	});
+
+	it("un comentario avisa a los mencionados y al creador, nunca al autor", async () => {
+		const anaId = (
+			await prisma.usuario.findUniqueOrThrow({
+				where: { email: "ana@avisos.dev" },
+			})
+		).id;
+		const { id } = await (
+			await api("/api/tareas", {
+				method: "POST",
+				token: t.ana,
+				body: { titulo: "Para comentar", organizacionId: acme },
+			})
+		).json();
+		const comentar = (token: string, contenido: string) =>
+			api(`/api/tareas/${id}/comentarios`, {
+				method: "POST",
+				token,
+				body: { contenido },
+			});
+
+		expect(
+			(await comentar(t.ana, `Mira [@Beto](mencion:${betoId})`)).status,
+		).toBe(201);
+		expect(
+			(await comentar(t.beto, `Visto [@Ana](mencion:${anaId})`)).status,
+		).toBe(201);
+		await comentar(t.beto, "Y otra cosa");
+		await despacharEventos();
+
+		expect(
+			paraBuscar("beto@avisos.dev", "Te mencionaron en un comentario"),
+		).toHaveLength(1);
+		expect(paraBuscar("beto@avisos.dev", "Nuevo comentario")).toEqual([]);
+		// Ana es la creadora: la mención le llega como mención, el resto como comentario.
+		expect(
+			paraBuscar("ana@avisos.dev", "Te mencionaron en un comentario"),
+		).toHaveLength(1);
+		expect(paraBuscar("ana@avisos.dev", "Nuevo comentario")).toHaveLength(1);
 	});
 
 	it("registra, reasigna y da de baja dispositivos push", async () => {

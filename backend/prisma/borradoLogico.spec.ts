@@ -34,7 +34,10 @@ const EXENTOS: Record<string, string> = {
 	PreferenciaNotificacionOrganizacion:
 		"ajuste de la organización; se sobrescribe, no se borra",
 	Auditoria: "registro histórico, nunca se borra",
-	Adjunto: "sin endpoint de borrado; solo cambia con quién se comparte",
+	Adjunto:
+		"sin endpoint de borrado; la limpieza de huérfanos borra los que nada enlaza",
+	ComentarioTarea:
+		"se borra del todo a propósito: sin papelera, cae con su tarea",
 	Invitacion: "cancelarla cambia su estado; nunca se borra",
 	// Catálogo global de la plantilla; los roles por organización (RolOrganizacion) sí lo llevan.
 	Rol: "catálogo global de la plantilla",

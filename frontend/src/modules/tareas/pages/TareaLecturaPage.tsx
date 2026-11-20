@@ -14,6 +14,7 @@ import {
 	formatearDia,
 	VencimientoTarea,
 } from "../components/celdas";
+import { ComentariosTarea } from "../components/ComentariosTarea";
 import { MoverTareaDialog } from "../components/MoverTareaDialog";
 import { useEliminarTareaMutation } from "../hooks/useTareasMutation";
 import { useTareaQuery } from "../hooks/useTareasQuery";
@@ -122,6 +123,7 @@ export function TareaLecturaPage({ id }: { id: number }) {
 				titulo={tarea.titulo}
 				contenido={tarea.contenido}
 				detalles={<Detalles tarea={tarea} />}
+				pie={<ComentariosTarea tarea={tarea} />}
 				acciones={
 					<>
 						{puede("tareas:eliminar") && (
@@ -170,7 +172,7 @@ export function TareaLecturaPage({ id }: { id: number }) {
 			<ConfirmDialog
 				abierto={eliminando}
 				titulo="¿Eliminar tarea?"
-				mensaje="Esta acción no se puede deshacer."
+				mensaje="Irá a la papelera, donde podrás restaurarla durante 30 días."
 				textoConfirmar="Eliminar"
 				peligroso
 				isLoading={eliminar.isPending}
