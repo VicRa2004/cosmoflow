@@ -151,11 +151,17 @@ export class PrismaTareaRepository implements TareaRepository {
 
 	async buscar(
 		ambito: AmbitoTareas,
-		{ pagina, limite, busqueda, estado, tagId }: TareaFiltros,
+		{ pagina, limite, busqueda, estado, tagId, responsableId }: TareaFiltros,
 	): Promise<Paginacion<Tarea>> {
 		return this.paginar(
 			{
-				...dondeAmbito(ambito),
+				// En AND: el ámbito también puede filtrar por `responsables` o usar `AND`.
+				AND: [
+					dondeAmbito(ambito),
+					...(responsableId
+						? [{ responsables: { some: { usuarioId: responsableId } } }]
+						: []),
+				],
 				deletedAt: null,
 				...(busqueda && {
 					titulo: { contains: busqueda, mode: "insensitive" },

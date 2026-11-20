@@ -8,6 +8,8 @@ export interface TareaFiltros {
 	busqueda?: string;
 	estado?: EstadoTarea;
 	tagId?: number;
+	/** Las que tienen a este usuario entre sus responsables. */
+	responsableId?: number;
 }
 
 /**

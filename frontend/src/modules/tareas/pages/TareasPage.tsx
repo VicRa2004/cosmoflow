@@ -12,6 +12,7 @@ import { MenuNuevo } from "../components/MenuNuevo";
 import { SelectorContextoTareas } from "../components/SelectorContextoTareas";
 import { TableroTareas } from "../components/TableroTareas";
 import { TareasTable } from "../components/TareasTable";
+import { useMiembrosDestino } from "../hooks/useMiembrosDestino";
 import { useEliminarTareaMutation } from "../hooks/useTareasMutation";
 import { useTagsDisponibles } from "@/modules/tags/hooks/useTagsDisponibles";
 import { useTareasQuery } from "../hooks/useTareasQuery";
@@ -36,6 +37,35 @@ function TituloContexto({
 	});
 	const nombre = equipoId || proyectoId ? grupo : organizacion;
 	return <>Tareas · {nombre ?? "…"}</>;
+}
+
+/** Quienes ven las tareas del contexto (RN-23); oculto mientras cargan. */
+function FiltroResponsable({
+	organizacionId,
+	equipoId,
+	proyectoId,
+	valor,
+	onChange,
+}: Required<Pick<ContextoTareaSearch, "organizacionId">> &
+	ContextoTareaSearch & { valor: string; onChange: (valor: string) => void }) {
+	const miembros = useMiembrosDestino(organizacionId, equipoId, proyectoId);
+	if (miembros.length === 0) return null;
+	return (
+		<div className="w-full sm:w-48">
+			<Select
+				aria-label="Filtrar por responsable"
+				value={valor}
+				onChange={(e) => onChange(e.target.value)}
+			>
+				<option value="">Todos los responsables</option>
+				{miembros.map((m) => (
+					<option key={m.id} value={m.id}>
+						{m.nombre}
+					</option>
+				))}
+			</Select>
+		</div>
+	);
 }
 
 /**
@@ -63,6 +93,7 @@ export function TareasPage({
 	const [busqueda, setBusqueda] = useState("");
 	const [estado, setEstado] = useState<EstadoTarea | "">("pendiente");
 	const [tagId, setTagId] = useState("");
+	const [responsableId, setResponsableId] = useState("");
 	const { tags: tagsDisponibles } = useTagsDisponibles(
 		enContexto ? organizacionId : undefined,
 	);
@@ -81,6 +112,7 @@ export function TareasPage({
 	const filtros = {
 		busqueda: busqueda.trim() || undefined,
 		tagId: tagId ? Number(tagId) : undefined,
+		responsableId: responsableId ? Number(responsableId) : undefined,
 		...(asignadas
 			? { asignadas }
 			: asignadasPorMi
@@ -143,6 +175,7 @@ export function TareasPage({
 						onChange={(search) => {
 							setPagina(1);
 							setTagId("");
+							setResponsableId("");
 							navigate({ to: "/tareas", search: { ...search, vista } });
 						}}
 					/>
@@ -182,6 +215,18 @@ export function TareasPage({
 							))}
 						</Select>
 					</div>
+				)}
+				{enContexto && organizacionId && (
+					<FiltroResponsable
+						organizacionId={organizacionId}
+						equipoId={equipoId}
+						proyectoId={proyectoId}
+						valor={responsableId}
+						onChange={(valor) => {
+							setResponsableId(valor);
+							setPagina(1);
+						}}
+					/>
 				)}
 				<div className="relative w-full sm:w-64">
 					<Input

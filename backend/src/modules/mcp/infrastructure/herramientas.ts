@@ -108,6 +108,9 @@ export function registrarHerramientas(servidor: McpServer, api: Api): void {
 				busqueda: z.string().min(1).max(128).optional(),
 				estado: z.enum(ESTADOS).optional(),
 				tagId: id.optional(),
+				responsableId: id
+					.optional()
+					.describe("Solo las que tienen a este miembro como responsable"),
 				...paginacion,
 			},
 			annotations: { readOnlyHint: true },

@@ -2943,6 +2943,7 @@ export interface paths {
                     busqueda?: string;
                     estado?: "pendiente" | "en_progreso" | "completada" | "cancelada";
                     tagId?: string;
+                    responsableId?: string;
                     organizacionId?: string;
                     equipoId?: string;
                     proyectoId?: string;

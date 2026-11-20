@@ -20,6 +20,8 @@ export interface ObtenerTareasParams {
 	busqueda?: string;
 	estado?: EstadoTarea;
 	tagId?: number;
+	/** Las que tienen a este usuario como responsable. */
+	responsableId?: number;
 	/** Sin destino, las personales; `organizacionId` solo, las de la organización. */
 	organizacionId?: number;
 	/** En las que se es responsable, de cualquier contexto (sin destino). */

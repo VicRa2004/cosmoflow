@@ -175,6 +175,22 @@ describe("Tareas de equipo y proyecto (e2e)", () => {
 		).toBe(400);
 	});
 
+	it("responsableId filtra por responsable dentro del contexto", async () => {
+		const ids = async (responsableId: number, extra = `equipoId=${equipo}`) =>
+			(
+				await (
+					await api(`/api/tareas?${extra}&responsableId=${responsableId}`, {
+						token: t.beto,
+					})
+				).json()
+			).datos.map((d: { id: number }) => d.id);
+		expect(await ids(id.caro)).toEqual([tareaEquipo]);
+		expect(await ids(id.ana)).toEqual([]);
+		// Combinado con un ámbito que ya filtra por responsables.
+		expect(await ids(id.caro, "asignadasPorMi=true")).toContain(tareaEquipo);
+		expect(await ids(id.ana, "asignadasPorMi=true")).toEqual([]);
+	});
+
 	it("asignadasPorMi da las que asignó a otros y guarda quién asignó", async () => {
 		const res = await api("/api/tareas?asignadasPorMi=true", { token: t.beto });
 		const { datos } = await res.json();

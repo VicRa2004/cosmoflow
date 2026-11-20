@@ -83,6 +83,7 @@ export const obtenerTareasSchema = paginacionSchema
 		busqueda: z.string().trim().min(1).max(128).optional(),
 		estado: z.enum(ESTADOS_TAREA).optional(),
 		tagId: numero.optional(),
+		responsableId: numero.optional(),
 		organizacionId: numero.optional(),
 		equipoId: numero.optional(),
 		proyectoId: numero.optional(),
