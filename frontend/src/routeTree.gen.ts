@@ -22,6 +22,7 @@ import { Route as AuthenticatedConfiguracionRouteImport } from './routes/_authen
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedInvitacionRouteImport } from './routes/_authenticated/invitacion'
 import { Route as AuthenticatedNotasRouteRouteImport } from './routes/_authenticated/notas/route'
+import { Route as AuthenticatedPapeleraRouteImport } from './routes/_authenticated/papelera'
 import { Route as AuthenticatedPerfilRouteImport } from './routes/_authenticated/perfil'
 import { Route as AuthenticatedRolesRouteImport } from './routes/_authenticated/roles'
 import { Route as AuthenticatedTagsRouteImport } from './routes/_authenticated/tags'
@@ -117,6 +118,11 @@ const AuthenticatedInvitacionRoute = AuthenticatedInvitacionRouteImport.update({
 const AuthenticatedNotasRouteRoute = AuthenticatedNotasRouteRouteImport.update({
   id: '/notas',
   path: '/notas',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedPapeleraRoute = AuthenticatedPapeleraRouteImport.update({
+  id: '/papelera',
+  path: '/papelera',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
 const AuthenticatedPerfilRoute = AuthenticatedPerfilRouteImport.update({
@@ -304,6 +310,7 @@ export interface FileRoutesByFullPath {
   '/configuracion': typeof AuthenticatedConfiguracionRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/invitacion': typeof AuthenticatedInvitacionRoute
+  '/papelera': typeof AuthenticatedPapeleraRoute
   '/perfil': typeof AuthenticatedPerfilRouteWithChildren
   '/roles': typeof AuthenticatedRolesRoute
   '/tags': typeof AuthenticatedTagsRoute
@@ -347,6 +354,7 @@ export interface FileRoutesByTo {
   '/configuracion': typeof AuthenticatedConfiguracionRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/invitacion': typeof AuthenticatedInvitacionRoute
+  '/papelera': typeof AuthenticatedPapeleraRoute
   '/roles': typeof AuthenticatedRolesRoute
   '/tags': typeof AuthenticatedTagsRoute
   '/usuarios': typeof AuthenticatedUsuariosRoute
@@ -391,6 +399,7 @@ export interface FileRoutesById {
   '/_authenticated/configuracion': typeof AuthenticatedConfiguracionRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/invitacion': typeof AuthenticatedInvitacionRoute
+  '/_authenticated/papelera': typeof AuthenticatedPapeleraRoute
   '/_authenticated/perfil': typeof AuthenticatedPerfilRouteWithChildren
   '/_authenticated/roles': typeof AuthenticatedRolesRoute
   '/_authenticated/tags': typeof AuthenticatedTagsRoute
@@ -437,6 +446,7 @@ export interface FileRouteTypes {
     | '/configuracion'
     | '/dashboard'
     | '/invitacion'
+    | '/papelera'
     | '/perfil'
     | '/roles'
     | '/tags'
@@ -480,6 +490,7 @@ export interface FileRouteTypes {
     | '/configuracion'
     | '/dashboard'
     | '/invitacion'
+    | '/papelera'
     | '/roles'
     | '/tags'
     | '/usuarios'
@@ -523,6 +534,7 @@ export interface FileRouteTypes {
     | '/_authenticated/configuracion'
     | '/_authenticated/dashboard'
     | '/_authenticated/invitacion'
+    | '/_authenticated/papelera'
     | '/_authenticated/perfil'
     | '/_authenticated/roles'
     | '/_authenticated/tags'
@@ -657,6 +669,13 @@ declare module '@tanstack/react-router' {
       path: '/notas'
       fullPath: '/notas'
       preLoaderRoute: typeof AuthenticatedNotasRouteRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/papelera': {
+      id: '/_authenticated/papelera'
+      path: '/papelera'
+      fullPath: '/papelera'
+      preLoaderRoute: typeof AuthenticatedPapeleraRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/perfil': {
@@ -960,6 +979,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedConfiguracionRoute: typeof AuthenticatedConfiguracionRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedInvitacionRoute: typeof AuthenticatedInvitacionRoute
+  AuthenticatedPapeleraRoute: typeof AuthenticatedPapeleraRoute
   AuthenticatedPerfilRoute: typeof AuthenticatedPerfilRouteWithChildren
   AuthenticatedRolesRoute: typeof AuthenticatedRolesRoute
   AuthenticatedTagsRoute: typeof AuthenticatedTagsRoute
@@ -979,6 +999,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedConfiguracionRoute: AuthenticatedConfiguracionRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedInvitacionRoute: AuthenticatedInvitacionRoute,
+  AuthenticatedPapeleraRoute: AuthenticatedPapeleraRoute,
   AuthenticatedPerfilRoute: AuthenticatedPerfilRouteWithChildren,
   AuthenticatedRolesRoute: AuthenticatedRolesRoute,
   AuthenticatedTagsRoute: AuthenticatedTagsRoute,

@@ -10,19 +10,27 @@ import { ContextosTarea } from "./application/services/ContextosTarea";
 import { MoverTareaUseCase } from "./application/useCases/MoverTareaUseCase";
 import { ActualizarTareaUseCase } from "./application/useCases/ActualizarTareaUseCase";
 import { CrearTareaUseCase } from "./application/useCases/CrearTareaUseCase";
+import { EliminarTareaDefinitivoUseCase } from "./application/useCases/EliminarTareaDefinitivoUseCase";
 import { EliminarTareaUseCase } from "./application/useCases/EliminarTareaUseCase";
+import {
+	DIAS_PAPELERA_TAREAS,
+	ObtenerPapeleraTareasUseCase,
+} from "./application/useCases/ObtenerPapeleraTareasUseCase";
+import { RestaurarTareaUseCase } from "./application/useCases/RestaurarTareaUseCase";
 import { ObtenerCalendarioUseCase } from "./application/useCases/ObtenerCalendarioUseCase";
 import { ObtenerEstadisticasTareasUseCase } from "./application/useCases/ObtenerEstadisticasTareasUseCase";
 import { ObtenerTareaUseCase } from "./application/useCases/ObtenerTareaUseCase";
 import { ObtenerPendientesUseCase } from "./application/useCases/ObtenerPendientesUseCase";
 import { ObtenerTareasUseCase } from "./application/useCases/ObtenerTareasUseCase";
+import { PapeleraTareaController } from "./infrastructure/http/controllers/PapeleraTareaController";
 import { TareaController } from "./infrastructure/http/controllers/TareaController";
 import { TareaRouter } from "./infrastructure/http/routes/TareaRouter";
 import { PrismaTareaRepository } from "./infrastructure/repository/PrismaTareaRepository";
 
+const repo = new PrismaTareaRepository();
+
 export const tareaModule: AppModule = {
 	mount(app, container) {
-		const repo = new PrismaTareaRepository();
 		const contextos = new ContextosTarea(
 			container.get(EQUIPO_TOKENS.TareasEquipo),
 			container.get(PROYECTO_TOKENS.TareasProyecto),
@@ -49,7 +57,22 @@ export const tareaModule: AppModule = {
 					container.get(ADJUNTO_TOKENS.CompartirAdjuntos),
 				),
 			}),
+			new PapeleraTareaController({
+				obtenerTodos: new ObtenerPapeleraTareasUseCase(repo),
+				restaurar: new RestaurarTareaUseCase(repo, contextos),
+				eliminar: new EliminarTareaDefinitivoUseCase(repo, contextos),
+			}),
 		);
 		app.route("/api/tareas", router.router);
+	},
+	onStart(container) {
+		container
+			.get(TOKENS.Scheduler)
+			.programar("tarea.purgar-papelera", 60 * 60 * 1000, async () => {
+				await repo.purgarEliminadas(
+					new Date(Date.now() - DIAS_PAPELERA_TAREAS * 24 * 60 * 60 * 1000),
+				);
+			});
+		return undefined;
 	},
 };

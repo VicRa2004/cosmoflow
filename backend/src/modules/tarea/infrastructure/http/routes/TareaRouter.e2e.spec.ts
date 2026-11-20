@@ -1,6 +1,7 @@
 import { beforeAll, describe, expect, it } from "bun:test";
 import { prisma } from "@/core/config/prisma";
 import { api, crearUsuario, login, vaciarUsuarios } from "@/test/e2e";
+import { PrismaTareaRepository } from "../../repository/PrismaTareaRepository";
 
 describe("Tareas personales (e2e)", () => {
 	let ana: string;
@@ -142,5 +143,90 @@ describe("Tareas personales (e2e)", () => {
 		expect(await prisma.tarea.findUnique({ where: { id } })).toMatchObject({
 			deletedAt: expect.any(Date),
 		});
+	});
+
+	it("papelera: lista las borradas, restaura y borra del todo solo lo suyo", async () => {
+		const crear = async (titulo: string) =>
+			(await (await post(ana, "/api/tareas", { titulo })).json()).id as number;
+		const ids = async (ruta: string, token = ana) =>
+			(await (await api(ruta, { token })).json()).datos.map(
+				(d: { id: number }) => d.id,
+			);
+		const aRestaurar = await crear("Volverá");
+		const aBorrar = await crear("Se va del todo");
+		for (const id of [aRestaurar, aBorrar]) {
+			await api(`/api/tareas/${id}`, { method: "DELETE", token: ana });
+		}
+
+		expect(await ids("/api/tareas/papelera")).toEqual(
+			expect.arrayContaining([aRestaurar, aBorrar]),
+		);
+		expect(await ids("/api/tareas/papelera", beto)).not.toContain(aRestaurar);
+		// Ajenas o vivas: no están en la papelera.
+		expect(
+			(
+				await api(`/api/tareas/papelera/${aRestaurar}/restaurar`, {
+					method: "POST",
+					token: beto,
+				})
+			).status,
+		).toBe(404);
+
+		expect(
+			(
+				await api(`/api/tareas/papelera/${aRestaurar}/restaurar`, {
+					method: "POST",
+					token: ana,
+				})
+			).status,
+		).toBe(204);
+		expect(
+			(await api(`/api/tareas/${aRestaurar}`, { token: ana })).status,
+		).toBe(200);
+		expect(
+			(
+				await api(`/api/tareas/papelera/${aRestaurar}`, {
+					method: "DELETE",
+					token: ana,
+				})
+			).status,
+		).toBe(404);
+
+		expect(
+			(
+				await api(`/api/tareas/papelera/${aBorrar}`, {
+					method: "DELETE",
+					token: ana,
+				})
+			).status,
+		).toBe(204);
+		expect(
+			await prisma.tarea.findUnique({ where: { id: aBorrar } }),
+		).toBeNull();
+	});
+
+	it("la purga borra del todo solo lo que lleva en la papelera más del plazo", async () => {
+		const crear = async (titulo: string) =>
+			(await (await post(ana, "/api/tareas", { titulo })).json()).id as number;
+		const vieja = await crear("Borrada hace mucho");
+		const reciente = await crear("Borrada hoy");
+		const viva = await crear("Viva");
+		for (const id of [vieja, reciente]) {
+			await api(`/api/tareas/${id}`, { method: "DELETE", token: ana });
+		}
+		await prisma.tarea.update({
+			where: { id: vieja },
+			data: { deletedAt: new Date(Date.now() - 31 * 24 * 60 * 60 * 1000) },
+		});
+
+		await new PrismaTareaRepository().purgarEliminadas(
+			new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
+		);
+
+		const quedan = await prisma.tarea.findMany({
+			where: { id: { in: [vieja, reciente, viva] } },
+			select: { id: true },
+		});
+		expect(quedan.map((t) => t.id).sort()).toEqual([reciente, viva].sort());
 	});
 });

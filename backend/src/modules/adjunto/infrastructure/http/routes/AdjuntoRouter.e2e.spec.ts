@@ -1,6 +1,8 @@
 import { beforeAll, describe, expect, it } from "bun:test";
+import { prisma } from "@/core/config/prisma";
 import { app } from "@/core/shared/infrastructure/http/server";
 import { api, crearUsuario, login } from "@/test/e2e";
+import { PrismaAdjuntoRepository } from "../../repository/PrismaAdjuntoRepository";
 
 const PNG = new Uint8Array([
 	0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 1, 2,
@@ -55,5 +57,43 @@ describe("Adjuntos (e2e)", () => {
 
 		expect((await api(url, { token: beto })).status).toBe(404);
 		expect((await api(url)).status).toBe(401);
+	});
+
+	it("huérfanas: las que no enlaza ninguna tarea ni nota (tampoco borrada)", async () => {
+		const idDe = async () =>
+			Number((await (await subir(ana, PNG)).json()).url.split("/").pop());
+		const [enNota, enTareaBorrada, huerfana] = [
+			await idDe(),
+			await idDe(),
+			await idDe(),
+		];
+		const crear = (ruta: string, body: unknown) =>
+			api(ruta, { method: "POST", token: ana, body }).then((r) => r.json());
+		// `${huerfana}0` es otra imagen: no debe contar como enlace a `huerfana`.
+		await crear("/api/notas", {
+			titulo: "Con imagen",
+			contenido: `![](/api/adjuntos/${enNota}) ![](/api/adjuntos/${huerfana}0)`,
+		});
+		const tarea = await crear("/api/tareas", {
+			titulo: "Con imagen",
+			contenido: `![](/api/adjuntos/${enTareaBorrada})`,
+		});
+		await api(`/api/tareas/${tarea.id}`, { method: "DELETE", token: ana });
+		const ayer = new Date(Date.now() - 25 * 60 * 60 * 1000);
+		await prisma.adjunto.updateMany({
+			where: { id: { in: [enNota, enTareaBorrada, huerfana] } },
+			data: { createdAt: ayer },
+		});
+
+		const huerfanas = (
+			await new PrismaAdjuntoRepository().buscarHuerfanos(
+				new Date(Date.now() - 60 * 60 * 1000),
+				1000,
+			)
+		).map((a) => a.id);
+
+		expect(huerfanas).toContain(huerfana);
+		expect(huerfanas).not.toContain(enNota);
+		expect(huerfanas).not.toContain(enTareaBorrada);
 	});
 });

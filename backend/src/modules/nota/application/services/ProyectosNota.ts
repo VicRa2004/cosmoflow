@@ -47,8 +47,15 @@ export class ProyectosNota {
 			: x.getUsuarioId() === usuarioId;
 	}
 
-	async buscarVisible(usuarioId: number, id: number): Promise<Nota> {
-		const nota = await this.notaRepository.buscarPorId(id);
+	/** Con `enPapelera`, solo entre las borradas. */
+	async buscarVisible(
+		usuarioId: number,
+		id: number,
+		enPapelera = false,
+	): Promise<Nota> {
+		const nota = enPapelera
+			? await this.notaRepository.buscarEliminadaPorId(id)
+			: await this.notaRepository.buscarPorId(id);
 		if (!nota || !(await this.ve(usuarioId, nota))) {
 			throw new NotaNoEncontradaError();
 		}

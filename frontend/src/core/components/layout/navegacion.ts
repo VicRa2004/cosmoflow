@@ -8,6 +8,7 @@ import {
 	ShieldCheck,
 	StickyNote,
 	Tag,
+	Trash2,
 	Users,
 } from "lucide-react";
 
@@ -56,6 +57,12 @@ export const NAVEGACION: GrupoNavegacion[] = [
 				permiso: "notas:leer",
 			},
 			{ to: "/tags", etiqueta: "Tags", icono: Tag, permiso: "tags:leer" },
+			{
+				to: "/papelera",
+				etiqueta: "Papelera",
+				icono: Trash2,
+				permiso: "tareas:leer",
+			},
 		],
 	},
 	{

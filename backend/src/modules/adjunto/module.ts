@@ -6,11 +6,14 @@ import { ORGANIZACION_TOKENS } from "@/modules/organizacion";
 import { PROYECTO_TOKENS } from "@/modules/proyecto";
 import { MiembrosAmbito } from "./application/services/MiembrosAmbito";
 import { ADJUNTO_TOKENS } from "./infrastructure/tokens";
+import { LimpiarAdjuntosHuerfanosUseCase } from "./application/useCases/LimpiarAdjuntosHuerfanosUseCase";
 import { ObtenerAdjuntoUseCase } from "./application/useCases/ObtenerAdjuntoUseCase";
 import { SubirAdjuntoUseCase } from "./application/useCases/SubirAdjuntoUseCase";
 import { AdjuntoController } from "./infrastructure/http/controllers/AdjuntoController";
 import { AdjuntoRouter } from "./infrastructure/http/routes/AdjuntoRouter";
 import { PrismaAdjuntoRepository } from "./infrastructure/repository/PrismaAdjuntoRepository";
+
+const repo = new PrismaAdjuntoRepository();
 
 export const adjuntoModule: AppModule = {
 	register(container) {
@@ -20,7 +23,6 @@ export const adjuntoModule: AppModule = {
 		);
 	},
 	mount(app, container) {
-		const repo = new PrismaAdjuntoRepository();
 		const almacenamiento = container.get(TOKENS.Almacenamiento);
 		const eventBus = container.get(TOKENS.EventBus);
 		for (const evento of ["equipo.eliminado", "proyecto.eliminado"]) {
@@ -45,5 +47,17 @@ export const adjuntoModule: AppModule = {
 			}),
 		);
 		app.route("/api/adjuntos", router.router);
+	},
+	onStart(container) {
+		const limpiar = new LimpiarAdjuntosHuerfanosUseCase(
+			repo,
+			container.get(TOKENS.Almacenamiento),
+		);
+		container
+			.get(TOKENS.Scheduler)
+			.programar("adjunto.limpiar-huerfanos", 60 * 60 * 1000, async () => {
+				await limpiar.ejecutar();
+			});
+		return undefined;
 	},
 };

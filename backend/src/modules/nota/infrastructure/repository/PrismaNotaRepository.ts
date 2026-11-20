@@ -173,6 +173,78 @@ export class PrismaNotaRepository implements NotaRepository {
 		return this.toDomain(registro);
 	}
 
+	async buscarPapelera(
+		usuarioId: number,
+		{ pagina, limite }: { pagina: number; limite: number },
+	): Promise<Paginacion<Nota>> {
+		const esMiembro = { some: { usuarioId } };
+		// Misma visibilidad que `ProyectosNota.ve`, en una sola consulta.
+		const where: Prisma.NotaWhereInput = {
+			deletedAt: { not: null },
+			OR: [
+				{ usuarioId, proyectoId: null },
+				{
+					proyecto: {
+						deletedAt: null,
+						OR: [
+							{ integrantes: esMiembro },
+							{ equipos: { some: { equipo: { miembros: esMiembro } } } },
+						],
+					},
+				},
+			],
+		};
+		const [registros, totalElementos] = await prisma.$transaction([
+			prisma.nota.findMany({
+				where,
+				include,
+				orderBy: [{ deletedAt: "desc" }, { id: "desc" }],
+				skip: (pagina - 1) * limite,
+				take: limite,
+			}),
+			prisma.nota.count({ where }),
+		]);
+		return {
+			datos: registros.map((registro) => this.toDomain(registro)),
+			pagina,
+			totalElementos,
+			totalPaginas: Math.ceil(totalElementos / limite),
+		};
+	}
+
+	async buscarEliminadaPorId(id: number): Promise<Nota | null> {
+		const registro = await prisma.nota.findFirst({
+			where: { id, deletedAt: { not: null } },
+			include,
+		});
+		return registro ? this.toDomain(registro) : null;
+	}
+
+	async restaurar(id: number): Promise<void> {
+		const { carpeta } = await prisma.nota.findUniqueOrThrow({
+			where: { id },
+			select: { carpeta: { select: { deletedAt: true } } },
+		});
+		await prisma.nota.update({
+			where: { id },
+			data: {
+				deletedAt: null,
+				...(carpeta?.deletedAt && { carpetaId: null }),
+			},
+		});
+	}
+
+	async eliminarDefinitivo(id: number): Promise<void> {
+		await prisma.nota.delete({ where: { id } });
+	}
+
+	async purgarEliminadas(antesDe: Date): Promise<number> {
+		const { count } = await prisma.nota.deleteMany({
+			where: { deletedAt: { lt: antesDe } },
+		});
+		return count;
+	}
+
 	async eliminar(id: number): Promise<void> {
 		await prisma.nota.update({
 			where: { id },

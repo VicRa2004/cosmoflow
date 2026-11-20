@@ -8,6 +8,7 @@ import type { AuthMiddleware } from "@/modules/auth";
 import { idempotencia } from "@/core/shared/infrastructure/http/idempotencia";
 import type { PermisoGuard } from "@/core/shared/infrastructure/http/permisoGuard";
 import { NotaController } from "../controllers/NotaController";
+import type { PapeleraNotaController } from "../controllers/PapeleraNotaController";
 import {
 	actualizarNotaSchema,
 	crearNotaSchema,
@@ -18,6 +19,7 @@ import {
 	notaIdSchema,
 	notaIndiceDtoSchema,
 	notaPaginaSchema,
+	papeleraNotasSchema,
 	resultadoImportacionSchema,
 } from "../schemas/notaSchemas";
 
@@ -32,6 +34,7 @@ export class NotaRouter {
 		authMiddleware: AuthMiddleware,
 		guard: PermisoGuard,
 		controller: NotaController,
+		papelera: PapeleraNotaController,
 	) {
 		const docs = this.router.openAPIRegistry;
 		this.router.use(authMiddleware.handle);
@@ -112,6 +115,65 @@ export class NotaRouter {
 		);
 
 		// Antes de `/:id`, que la capturaría.
+		docs.registerPath({
+			method: "get",
+			path: "/papelera",
+			tags,
+			security,
+			summary: "Papelera de notas",
+			description:
+				"Las borradas que el usuario aún vería, las borradas más recientemente primero. Se borran del todo a los 30 días.",
+			request: { query: papeleraNotasSchema },
+			responses: {
+				200: jsonResponse(notaPaginaSchema, "Lista paginada"),
+				400: errorResponse("Parámetros inválidos"),
+				...protectedErrorResponses(`${recurso}:leer`),
+			},
+		});
+		this.router.get(
+			"/papelera",
+			guard.handle(recurso, "leer"),
+			papelera.obtenerTodos,
+		);
+
+		docs.registerPath({
+			method: "post",
+			path: "/papelera/{id}/restaurar",
+			tags,
+			security,
+			summary: "Restaurar una nota de la papelera",
+			request: { params: notaIdSchema },
+			responses: {
+				204: { description: "Nota restaurada" },
+				...protectedErrorResponses(`${recurso}:eliminar`),
+				404: errorResponse("No está en la papelera"),
+			},
+		});
+		this.router.post(
+			"/papelera/:id/restaurar",
+			guard.handle(recurso, "eliminar"),
+			papelera.restaurar,
+		);
+
+		docs.registerPath({
+			method: "delete",
+			path: "/papelera/{id}",
+			tags,
+			security,
+			summary: "Borrar del todo una nota de la papelera",
+			request: { params: notaIdSchema },
+			responses: {
+				204: { description: "Nota borrada" },
+				...protectedErrorResponses(`${recurso}:eliminar`),
+				404: errorResponse("No está en la papelera"),
+			},
+		});
+		this.router.delete(
+			"/papelera/:id",
+			guard.handle(recurso, "eliminar"),
+			papelera.eliminar,
+		);
+
 		docs.registerPath({
 			method: "get",
 			path: "/indice",

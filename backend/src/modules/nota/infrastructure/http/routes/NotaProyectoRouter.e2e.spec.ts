@@ -129,6 +129,33 @@ describe("Notas de proyecto e imágenes compartidas (e2e)", () => {
 		).toBe(404);
 	});
 
+	it("papelera del proyecto: la ven y restauran sus miembros, no los demás", async () => {
+		const borrada = (
+			await (
+				await post("/api/notas", t.beto, {
+					titulo: "Borrador",
+					proyectoId: proyecto,
+				})
+			).json()
+		).id;
+		await api(`/api/notas/${borrada}`, { method: "DELETE", token: t.beto });
+
+		const enPapelera = async (token: string) =>
+			(await (await api("/api/notas/papelera", { token })).json()).datos.map(
+				(n: { id: number }) => n.id,
+			);
+		expect(await enPapelera(t.ana)).toContain(borrada);
+		expect(await enPapelera(t.caro)).not.toContain(borrada);
+
+		const restaurar = (token: string) =>
+			api(`/api/notas/papelera/${borrada}/restaurar`, {
+				method: "POST",
+				token,
+			});
+		expect((await restaurar(t.caro)).status).toBe(404);
+		expect((await restaurar(t.ana)).status).toBe(204);
+	});
+
 	it("usa los tags de la organización, no los personales (RN-60)", async () => {
 		const deOrg = await (
 			await post(org("/tags"), t.ana, { nombre: "acta" })

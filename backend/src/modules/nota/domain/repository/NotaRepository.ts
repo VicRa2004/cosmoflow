@@ -49,6 +49,19 @@ export interface NotaRepository {
 		filtros: NotaIndiceFiltros,
 	) => Promise<NotaIndice[]>;
 	buscarPorId: (id: number) => Promise<Nota | null>;
+	/** Las borradas que el usuario aún vería, las borradas más recientemente primero. */
+	buscarPapelera: (
+		usuarioId: number,
+		paginacion: { pagina: number; limite: number },
+	) => Promise<Paginacion<Nota>>;
+	/** Solo si está borrada (en la papelera). */
+	buscarEliminadaPorId: (id: number) => Promise<Nota | null>;
+	/** La saca de la papelera; si su carpeta ya no existe, vuelve a la raíz. */
+	restaurar: (id: number) => Promise<void>;
+	/** Borrado físico: sus tags caen en cascada. */
+	eliminarDefinitivo: (id: number) => Promise<void>;
+	/** Borra físicamente las que llevan en la papelera desde antes de `antesDe`. */
+	purgarEliminadas: (antesDe: Date) => Promise<number>;
 	/** `true` si todos son tags vivos (no borrados) de ese dueño. */
 	sonTagsDe: (
 		dueno: { usuarioId: number } | { organizacionId: number },

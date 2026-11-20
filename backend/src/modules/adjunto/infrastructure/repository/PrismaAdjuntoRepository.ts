@@ -11,6 +11,32 @@ export class PrismaAdjuntoRepository implements AdjuntoRepository {
 		return prisma.adjunto.findUnique({ where: { id } });
 	}
 
+	// Consulta las tablas de tareas y notas sin importar sus módulos: solo el dato.
+	// shortcut: recorre los contenidos por cada adjunto (sin índice); con muchos datos, guardar los enlaces en una tabla al guardar.
+	buscarHuerfanos(
+		antesDe: Date,
+		limite: number,
+	): Promise<{ id: number; clave: string }[]> {
+		return prisma.$queryRaw<{ id: number; clave: string }[]>`
+			SELECT a.adj_id AS id, a.adj_clave AS clave
+			FROM adjunto a
+			WHERE a.created_at < ${antesDe}
+				AND NOT EXISTS (
+					SELECT 1 FROM tarea t
+					WHERE t.tar_contenido ~ ('/api/adjuntos/' || a.adj_id || '([^0-9]|$)')
+				)
+				AND NOT EXISTS (
+					SELECT 1 FROM nota n
+					WHERE n.not_contenido ~ ('/api/adjuntos/' || a.adj_id || '([^0-9]|$)')
+				)
+			ORDER BY a.adj_id
+			LIMIT ${limite}`;
+	}
+
+	async eliminar(id: number): Promise<void> {
+		await prisma.adjunto.delete({ where: { id } });
+	}
+
 	async pasarAOrganizacion(
 		organizacionId: number,
 		grupo: { equipoId: number } | { proyectoId: number },

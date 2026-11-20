@@ -52,6 +52,11 @@ export const obtenerNotasSchema = z.object({
 	proyectoId: numero.optional(),
 });
 
+export const papeleraNotasSchema = obtenerNotasSchema.pick({
+	pagina: true,
+	limite: true,
+});
+
 export const obtenerIndiceNotasSchema = obtenerNotasSchema.omit({
 	pagina: true,
 	limite: true,

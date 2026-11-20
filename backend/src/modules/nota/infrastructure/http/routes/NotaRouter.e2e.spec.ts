@@ -121,4 +121,61 @@ describe("Notas personales (e2e)", () => {
 			deletedAt: expect.any(Date),
 		});
 	});
+
+	it("papelera: restaura (a la raíz si su carpeta ya no existe) y borra del todo", async () => {
+		const carpeta = await post(ana, "/api/carpetas", { nombre: "Viejas" });
+		const enCarpeta = await post(ana, "/api/notas", {
+			titulo: "En carpeta",
+			carpetaId: carpeta.id,
+		});
+		const suelta = await post(ana, "/api/notas", { titulo: "Suelta" });
+		for (const id of [enCarpeta.id, suelta.id]) {
+			await api(`/api/notas/${id}`, { method: "DELETE", token: ana });
+		}
+		// La carpeta se borra a mano en la BD: al restaurar ya no existe.
+		await prisma.carpetaNota.update({
+			where: { id: carpeta.id },
+			data: { deletedAt: new Date() },
+		});
+
+		const papelera = await (
+			await api("/api/notas/papelera", { token: ana })
+		).json();
+		expect(titulos(papelera)).toEqual(
+			expect.arrayContaining(["En carpeta", "Suelta"]),
+		);
+		const deBeto = await (
+			await api("/api/notas/papelera", { token: beto })
+		).json();
+		expect(titulos(deBeto)).not.toContain("Suelta");
+		expect(
+			(
+				await api(`/api/notas/papelera/${suelta.id}`, {
+					method: "DELETE",
+					token: beto,
+				})
+			).status,
+		).toBe(404);
+
+		const restaurada = await api(
+			`/api/notas/papelera/${enCarpeta.id}/restaurar`,
+			{ method: "POST", token: ana },
+		);
+		expect(restaurada.status).toBe(204);
+		expect(
+			await (await api(`/api/notas/${enCarpeta.id}`, { token: ana })).json(),
+		).toMatchObject({ titulo: "En carpeta", carpetaId: null });
+
+		expect(
+			(
+				await api(`/api/notas/papelera/${suelta.id}`, {
+					method: "DELETE",
+					token: ana,
+				})
+			).status,
+		).toBe(204);
+		expect(
+			await prisma.nota.findUnique({ where: { id: suelta.id } }),
+		).toBeNull();
+	});
 });

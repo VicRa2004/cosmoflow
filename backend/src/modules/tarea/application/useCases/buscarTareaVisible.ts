@@ -5,15 +5,18 @@ import type { ContextoTarea, ContextosTarea } from "../services/ContextosTarea";
 
 /**
  * Personal: solo su dueño. Compartida: los miembros de su equipo o proyecto.
- * Para cualquier otro no existe (404, RN-90).
+ * Para cualquier otro no existe (404, RN-90). Con `enPapelera`, solo entre las borradas.
  */
 export async function buscarTareaVisible(
 	repo: TareaRepository,
 	contextos: ContextosTarea,
 	usuarioId: number,
 	id: number,
+	enPapelera = false,
 ): Promise<{ tarea: Tarea; contexto: ContextoTarea | null }> {
-	const tarea = await repo.buscarPorId(id);
+	const tarea = enPapelera
+		? await repo.buscarEliminadaPorId(id)
+		: await repo.buscarPorId(id);
 	if (!tarea) throw new TareaNoEncontradaError();
 	if (tarea.esPersonal()) {
 		if (tarea.getUsuarioId() !== usuarioId) throw new TareaNoEncontradaError();

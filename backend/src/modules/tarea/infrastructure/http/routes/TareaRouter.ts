@@ -7,6 +7,7 @@ import {
 import type { AuthMiddleware } from "@/modules/auth";
 import { idempotencia } from "@/core/shared/infrastructure/http/idempotencia";
 import type { PermisoGuard } from "@/core/shared/infrastructure/http/permisoGuard";
+import type { PapeleraTareaController } from "../controllers/PapeleraTareaController";
 import { TareaController } from "../controllers/TareaController";
 import {
 	actualizarTareaSchema,
@@ -33,6 +34,7 @@ export class TareaRouter {
 		authMiddleware: AuthMiddleware,
 		guard: PermisoGuard,
 		controller: TareaController,
+		papelera: PapeleraTareaController,
 	) {
 		const docs = this.router.openAPIRegistry;
 		this.router.use(authMiddleware.handle);
@@ -88,6 +90,68 @@ export class TareaRouter {
 			"/",
 			guard.handle(recurso, "leer"),
 			controller.obtenerTodos,
+		);
+
+		// Antes de "/{id}": si no, "papelera" se tomaría por un ID.
+		docs.registerPath({
+			method: "get",
+			path: "/papelera",
+			tags,
+			security,
+			summary: "Papelera de tareas",
+			description:
+				"Las borradas que el usuario aún vería, las borradas más recientemente primero. Se borran del todo a los 30 días.",
+			request: { query: paginacionSchema },
+			responses: {
+				200: jsonResponse(tareaPaginaSchema, "Lista paginada"),
+				400: errorResponse("Parámetros inválidos"),
+				...protectedErrorResponses(`${recurso}:leer`),
+			},
+		});
+		this.router.get(
+			"/papelera",
+			guard.handle(recurso, "leer"),
+			papelera.obtenerTodos,
+		);
+
+		docs.registerPath({
+			method: "post",
+			path: "/papelera/{id}/restaurar",
+			tags,
+			security,
+			summary: "Restaurar una tarea de la papelera",
+			request: { params: tareaIdSchema },
+			responses: {
+				204: { description: "Tarea restaurada" },
+				...protectedErrorResponses(`${recurso}:eliminar`),
+				403: errorResponse("Sin permiso para eliminar tareas ahí (RN-22)"),
+				404: errorResponse("No está en la papelera"),
+			},
+		});
+		this.router.post(
+			"/papelera/:id/restaurar",
+			guard.handle(recurso, "eliminar"),
+			papelera.restaurar,
+		);
+
+		docs.registerPath({
+			method: "delete",
+			path: "/papelera/{id}",
+			tags,
+			security,
+			summary: "Borrar del todo una tarea de la papelera",
+			request: { params: tareaIdSchema },
+			responses: {
+				204: { description: "Tarea borrada" },
+				...protectedErrorResponses(`${recurso}:eliminar`),
+				403: errorResponse("Sin permiso para eliminar tareas ahí (RN-22)"),
+				404: errorResponse("No está en la papelera"),
+			},
+		});
+		this.router.delete(
+			"/papelera/:id",
+			guard.handle(recurso, "eliminar"),
+			papelera.eliminar,
 		);
 
 		// Antes de "/{id}": si no, "pendientes" se tomaría por un ID.

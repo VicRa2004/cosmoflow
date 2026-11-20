@@ -191,6 +191,31 @@ describe("Tareas de equipo y proyecto (e2e)", () => {
 		expect(await ids(id.ana, "asignadasPorMi=true")).toEqual([]);
 	});
 
+	it("papelera del equipo: la ven sus miembros y solo quien puede crear la restaura", async () => {
+		const id = (
+			await (
+				await post("/api/tareas", t.beto, {
+					titulo: "Borrable",
+					equipoId: equipo,
+				})
+			).json()
+		).id;
+		await api(`/api/tareas/${id}`, { method: "DELETE", token: t.beto });
+
+		const enPapelera = async (token: string) =>
+			(await (await api("/api/tareas/papelera", { token })).json()).datos.map(
+				(d: { id: number }) => d.id,
+			);
+		expect(await enPapelera(t.caro)).toContain(id);
+		expect(await enPapelera(t.zoe)).not.toContain(id);
+
+		const restaurar = (token: string) =>
+			api(`/api/tareas/papelera/${id}/restaurar`, { method: "POST", token });
+		expect((await restaurar(t.caro)).status).toBe(403);
+		expect((await restaurar(t.zoe)).status).toBe(404);
+		expect((await restaurar(t.beto)).status).toBe(204);
+	});
+
 	it("asignadasPorMi da las que asignó a otros y guarda quién asignó", async () => {
 		const res = await api("/api/tareas?asignadasPorMi=true", { token: t.beto });
 		const { datos } = await res.json();

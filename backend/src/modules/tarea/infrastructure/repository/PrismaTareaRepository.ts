@@ -397,6 +397,41 @@ export class PrismaTareaRepository implements TareaRepository {
 		return this.toDomain(registro);
 	}
 
+	async buscarPapelera(
+		usuarioId: number,
+		{ pagina, limite }: { pagina: number; limite: number },
+	): Promise<Paginacion<Tarea>> {
+		return this.paginar(
+			{ ...visiblePara(usuarioId), deletedAt: { not: null } },
+			[{ deletedAt: "desc" }, { id: "desc" }],
+			pagina,
+			limite,
+		);
+	}
+
+	async buscarEliminadaPorId(id: number): Promise<Tarea | null> {
+		const registro = await prisma.tarea.findFirst({
+			where: { id, deletedAt: { not: null } },
+			include,
+		});
+		return registro ? this.toDomain(registro) : null;
+	}
+
+	async restaurar(id: number): Promise<void> {
+		await prisma.tarea.update({ where: { id }, data: { deletedAt: null } });
+	}
+
+	async eliminarDefinitivo(id: number): Promise<void> {
+		await prisma.tarea.delete({ where: { id } });
+	}
+
+	async purgarEliminadas(antesDe: Date): Promise<number> {
+		const { count } = await prisma.tarea.deleteMany({
+			where: { deletedAt: { lt: antesDe } },
+		});
+		return count;
+	}
+
 	async eliminar(id: number): Promise<void> {
 		await prisma.tarea.update({
 			where: { id },

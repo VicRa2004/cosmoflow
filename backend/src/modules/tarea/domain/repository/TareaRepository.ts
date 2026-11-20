@@ -75,6 +75,18 @@ export interface TareaRepository {
 		ambito: { organizacionId: number } | GrupoTareas,
 	) => Promise<EstadisticasTareas>;
 	buscarPorId: (id: number) => Promise<Tarea | null>;
+	/** Las borradas que el usuario aún vería, las borradas más recientemente primero. */
+	buscarPapelera: (
+		usuarioId: number,
+		paginacion: { pagina: number; limite: number },
+	) => Promise<Paginacion<Tarea>>;
+	/** Solo si está borrada (en la papelera). */
+	buscarEliminadaPorId: (id: number) => Promise<Tarea | null>;
+	restaurar: (id: number) => Promise<void>;
+	/** Borrado físico: responsables, tags y menciones caen en cascada. */
+	eliminarDefinitivo: (id: number) => Promise<void>;
+	/** Borra físicamente las que llevan en la papelera desde antes de `antesDe`. */
+	purgarEliminadas: (antesDe: Date) => Promise<number>;
 	/** `true` si todos son tags vivos (no borrados) de ese dueño. */
 	sonTagsDe: (
 		dueno: { usuarioId: number } | { organizacionId: number },

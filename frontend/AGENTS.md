@@ -75,6 +75,7 @@ frontend/src/
 │   ├── conexiones/                 # Conector MCP: pasos para conectar Claude en el perfil (ConectarClaudeCard) y pantalla de permiso OAuth (AutorizarConexionPage)
 │   ├── configuracion/              # /configuracion: preferencias de interfaz guardadas en la cuenta (Query; `aplicarPreferencias` las pone como `data-*` en <html> y guarda copia local para pintar sin parpadeo)
 │   ├── tags/                       # Tags personales; SelectorTags, TagsBadges y useTagsDisponibles los usan tareas y notas
+│   ├── papelera/                   # /papelera: tareas y notas borradas que el usuario aún vería; restaurar o borrar del todo (el backend las purga a los 30 días)
 │   │
 │   └── usuarios/                      # Módulo de Usuarios
 │       ├── api/                    # Llamadas a la API de usuarios (usuariosApi.ts)
@@ -101,6 +102,7 @@ frontend/src/
 │       ├── autorizar-conexion.tsx  # Permiso OAuth del conector MCP
 │       ├── calendario.tsx          # Vista /calendario (tareas personales y compartidas por día)
 │       ├── tags.tsx                # Vista /tags (tags personales)
+│       ├── papelera.tsx            # Vista /papelera
 │       ├── configuracion.tsx       # Vista /configuracion (enlace en MenuUsuario)
 │       └── perfil/                 # /perfil (layout con pestañas): general, notificaciones, seguridad y conexiones
 │
