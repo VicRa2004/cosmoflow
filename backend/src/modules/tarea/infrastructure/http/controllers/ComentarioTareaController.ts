@@ -2,6 +2,7 @@ import type { Context } from "hono";
 import { BaseController } from "@/core/shared/infrastructure/http/base.controller";
 import { validate } from "@/core/shared/infrastructure/libs/validate";
 import type { AuthEnv } from "@/modules/auth";
+import type { ObtenerActividadTareaUseCase } from "../../../application/useCases/ObtenerActividadTareaUseCase";
 import type { ActualizarComentarioUseCase } from "../../../application/useCases/ActualizarComentarioUseCase";
 import type { CrearComentarioUseCase } from "../../../application/useCases/CrearComentarioUseCase";
 import type { EliminarComentarioUseCase } from "../../../application/useCases/EliminarComentarioUseCase";
@@ -12,8 +13,9 @@ import {
 	listarComentariosSchema,
 	tareaComentariosSchema,
 } from "../schemas/comentarioSchemas";
+import { listarActividadSchema } from "../schemas/actividadSchemas";
 
-/** Comentarios de una tarea (`/api/tareas/:id/comentarios`). */
+/** Comentarios e historial de una tarea (`/api/tareas/:id/comentarios` y `/actividad`). */
 export class ComentarioTareaController extends BaseController {
 	constructor(
 		private readonly useCases: {
@@ -21,6 +23,7 @@ export class ComentarioTareaController extends BaseController {
 			crear: CrearComentarioUseCase;
 			actualizar: ActualizarComentarioUseCase;
 			eliminar: EliminarComentarioUseCase;
+			actividad: ObtenerActividadTareaUseCase;
 		},
 	) {
 		super();
@@ -36,6 +39,20 @@ export class ComentarioTareaController extends BaseController {
 					c.get("usuario").id,
 					id,
 					paginacion,
+				),
+			);
+		});
+
+	actividad = (c: Context<AuthEnv>): Promise<Response> =>
+		this.executeSafely(c, async () => {
+			const { id } = validate(tareaComentariosSchema, c.req.param());
+			const opciones = validate(listarActividadSchema, c.req.query());
+			return this.ok(
+				c,
+				await this.useCases.actividad.ejecutar(
+					c.get("usuario").id,
+					id,
+					opciones,
 				),
 			);
 		});

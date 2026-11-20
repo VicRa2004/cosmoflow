@@ -2924,6 +2924,77 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/tareas/{id}/actividad": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Historial de una tarea (lo más reciente primero)
+         * @description Creación, cambios de título, prioridad, fechas o estado, responsables, movimientos, papelera y comentarios. Pagina por cursor: `antesDe` = id de la última entrada recibida.
+         */
+        get: {
+            parameters: {
+                query?: {
+                    antesDe?: string;
+                    limite?: string;
+                };
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Historial */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ActividadTarea"];
+                    };
+                };
+                /** @description No autenticado */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Permiso denegado (requiere tareas:leer) */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Tarea no encontrada */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/tareas/{id}/comentarios": {
         parameters: {
             query?: never;
@@ -8931,6 +9002,35 @@ export interface components {
             /** @example #f59e0b */
             color: string | null;
         };
+        ActividadTarea: {
+            datos: {
+                id: number;
+                /** @enum {string} */
+                evento: "tarea.creada" | "tarea.actualizada" | "tarea.estadoCambiado" | "tarea.responsablesAsignados" | "tarea.movida" | "tarea.eliminada" | "tarea.restaurada" | "tarea.comentada";
+                /**
+                 * @example {
+                 *       "tareaId": 42,
+                 *       "anterior": "pendiente",
+                 *       "nuevo": "completada"
+                 *     }
+                 */
+                datos: {
+                    [key: string]: unknown;
+                };
+                actorId: number | null;
+                /** Format: date-time */
+                ocurridoEn: string;
+            }[];
+            /**
+             * @example {
+             *       "3": "Ana"
+             *     }
+             */
+            nombres: {
+                [key: string]: string;
+            };
+            hayMas: boolean;
+        };
         ComentarioTareaDto: {
             /** @example 1 */
             id: number;
@@ -9290,6 +9390,7 @@ export type RolDto = components['schemas']['RolDto'];
 export type AsignacionUsuario = components['schemas']['AsignacionUsuario'];
 export type RegistroAuditoria = components['schemas']['RegistroAuditoria'];
 export type TagDto = components['schemas']['TagDto'];
+export type ActividadTarea = components['schemas']['ActividadTarea'];
 export type ComentarioTareaDto = components['schemas']['ComentarioTareaDto'];
 export type TareaDto = components['schemas']['TareaDto'];
 export type EstadisticasTareasDto = components['schemas']['EstadisticasTareasDto'];

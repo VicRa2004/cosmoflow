@@ -2,7 +2,14 @@ import { beforeAll, describe, expect, it, spyOn } from "bun:test";
 import type { Correo } from "@/core/shared/domain/Mailer";
 import { container } from "@/core/shared/infrastructure/di/container";
 import { TOKENS } from "@/core/shared/infrastructure/di/tokens";
-import { api, crearUsuario, login, vaciarUsuarios } from "@/test/e2e";
+import { prisma } from "@/core/config/prisma";
+import {
+	api,
+	crearUsuario,
+	despacharEventos,
+	login,
+	vaciarUsuarios,
+} from "@/test/e2e";
 
 const correos: Correo[] = [];
 spyOn(container.get(TOKENS.Mailer), "enviar").mockImplementation(
@@ -257,6 +264,79 @@ describe("Tareas de equipo y proyecto (e2e)", () => {
 		expect(
 			(await api(deCaro, { method: "DELETE", token: t.beto })).status,
 		).toBe(404);
+	});
+
+	it("historial: quién creó, cambió, comentó y mandó a la papelera, lo último primero", async () => {
+		// Otros e2e dejan auditoría de tareas con ids que el TRUNCATE reutiliza.
+		await despacharEventos();
+		await prisma.auditoria.deleteMany({
+			where: { evento: { startsWith: "tarea." } },
+		});
+		const tarea = await (
+			await post("/api/tareas", t.beto, {
+				titulo: "Con historia",
+				equipoId: equipo,
+				responsableIds: [id.caro],
+			})
+		).json();
+		await put(`/api/tareas/${tarea.id}`, t.beto, {
+			titulo: "Con más historia",
+			estado: "en_progreso",
+		});
+		await post(`/api/tareas/${tarea.id}/comentarios`, t.caro, {
+			contenido: "Voy",
+		});
+		await api(`/api/tareas/${tarea.id}`, { method: "DELETE", token: t.beto });
+		await api(`/api/tareas/papelera/${tarea.id}/restaurar`, {
+			method: "POST",
+			token: t.beto,
+		});
+		await despacharEventos();
+
+		const ruta = `/api/tareas/${tarea.id}/actividad`;
+		const res = await api(ruta, { token: t.caro });
+		expect(res.status).toBe(200);
+		const historial = await res.json();
+		expect(
+			historial.datos.map((e: { evento: string }) => e.evento).sort(),
+		).toEqual(
+			[
+				"tarea.comentada",
+				"tarea.creada",
+				"tarea.actualizada",
+				"tarea.eliminada",
+				"tarea.estadoCambiado",
+				"tarea.responsablesAsignados",
+				"tarea.restaurada",
+			].sort(),
+		);
+		expect(historial.datos[0]).toMatchObject({
+			evento: "tarea.restaurada",
+			actorId: id.beto,
+		});
+		expect(
+			historial.datos.find(
+				(e: { evento: string }) => e.evento === "tarea.actualizada",
+			).datos.cambios,
+		).toEqual({
+			titulo: { anterior: "Con historia", nuevo: "Con más historia" },
+		});
+		expect(Object.keys(historial.nombres).map(Number).sort()).toEqual(
+			[id.beto, id.caro].sort(),
+		);
+
+		const primera = await (
+			await api(`${ruta}?limite=2`, { token: t.caro })
+		).json();
+		const resto = await (
+			await api(`${ruta}?antesDe=${primera.datos[1].id}&limite=50`, {
+				token: t.caro,
+			})
+		).json();
+		expect(primera.hayMas).toBe(true);
+		expect(resto).toMatchObject({ hayMas: false });
+		expect(resto.datos).toHaveLength(5);
+		expect((await api(ruta, { token: t.zoe })).status).toBe(404);
 	});
 
 	it("asignadasPorMi da las que asignó a otros y guarda quién asignó", async () => {

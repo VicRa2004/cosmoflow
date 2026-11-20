@@ -2,6 +2,8 @@ import { apiClient } from "@/core/api/client";
 import type { components, paths } from "@/core/api/schema.gen";
 
 export type ComentarioTareaDto = components["schemas"]["ComentarioTareaDto"];
+export type ActividadTarea = components["schemas"]["ActividadTarea"];
+export type EntradaActividad = ActividadTarea["datos"][number];
 type ComentariosPagina =
 	paths["/api/tareas/{id}/comentarios"]["get"]["responses"][200]["content"]["application/json"];
 
@@ -31,6 +33,15 @@ export const comentariosApi = {
 		const response = await apiClient.put<ComentarioTareaDto>(
 			`/tareas/${tareaId}/comentarios/${id}`,
 			{ contenido },
+		);
+		return response.data;
+	},
+
+	/** Lo más reciente primero; `antesDe` = id de la última entrada ya recibida. */
+	async actividad(tareaId: number, antesDe?: number): Promise<ActividadTarea> {
+		const response = await apiClient.get<ActividadTarea>(
+			`/tareas/${tareaId}/actividad`,
+			{ params: { antesDe } },
 		);
 		return response.data;
 	},

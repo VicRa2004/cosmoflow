@@ -12,6 +12,7 @@ import { ActualizarComentarioUseCase } from "./application/useCases/ActualizarCo
 import { ActualizarTareaUseCase } from "./application/useCases/ActualizarTareaUseCase";
 import { CrearComentarioUseCase } from "./application/useCases/CrearComentarioUseCase";
 import { EliminarComentarioUseCase } from "./application/useCases/EliminarComentarioUseCase";
+import { ObtenerActividadTareaUseCase } from "./application/useCases/ObtenerActividadTareaUseCase";
 import { ObtenerComentariosUseCase } from "./application/useCases/ObtenerComentariosUseCase";
 import { CrearTareaUseCase } from "./application/useCases/CrearTareaUseCase";
 import { EliminarTareaDefinitivoUseCase } from "./application/useCases/EliminarTareaDefinitivoUseCase";
@@ -31,6 +32,7 @@ import { PapeleraTareaController } from "./infrastructure/http/controllers/Papel
 import { ComentarioTareaRouter } from "./infrastructure/http/routes/ComentarioTareaRouter";
 import { TareaController } from "./infrastructure/http/controllers/TareaController";
 import { TareaRouter } from "./infrastructure/http/routes/TareaRouter";
+import { PrismaActividadTareaRepository } from "./infrastructure/repository/PrismaActividadTareaRepository";
 import { PrismaComentarioTareaRepository } from "./infrastructure/repository/PrismaComentarioTareaRepository";
 import { PrismaTareaRepository } from "./infrastructure/repository/PrismaTareaRepository";
 
@@ -56,17 +58,19 @@ export const tareaModule: AppModule = {
 				calendario: new ObtenerCalendarioUseCase(repo),
 				obtenerUno: new ObtenerTareaUseCase(repo, contextos),
 				actualizar: new ActualizarTareaUseCase(repo, contextos, eventBus, uow),
-				eliminar: new EliminarTareaUseCase(repo, contextos),
+				eliminar: new EliminarTareaUseCase(repo, contextos, eventBus, uow),
 				estadisticas: new ObtenerEstadisticasTareasUseCase(repo, contextos),
 				mover: new MoverTareaUseCase(
 					repo,
 					contextos,
 					container.get(ADJUNTO_TOKENS.CompartirAdjuntos),
+					eventBus,
+					uow,
 				),
 			}),
 			new PapeleraTareaController({
 				obtenerTodos: new ObtenerPapeleraTareasUseCase(repo),
-				restaurar: new RestaurarTareaUseCase(repo, contextos),
+				restaurar: new RestaurarTareaUseCase(repo, contextos, eventBus, uow),
 				eliminar: new EliminarTareaDefinitivoUseCase(repo, contextos),
 			}),
 		);
@@ -95,6 +99,11 @@ export const tareaModule: AppModule = {
 						comentarios,
 					),
 					eliminar: new EliminarComentarioUseCase(repo, contextos, comentarios),
+					actividad: new ObtenerActividadTareaUseCase(
+						repo,
+						contextos,
+						new PrismaActividadTareaRepository(),
+					),
 				}),
 			).router,
 		);

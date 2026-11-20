@@ -20,6 +20,7 @@ const preparar = (tarea: Tarea, puedeCrear = true) => {
 		})),
 	};
 	const adjuntos = { compartir: mock(async () => {}) };
+	const eventBus = { publishAll: mock(async () => {}) };
 	return {
 		repo,
 		adjuntos,
@@ -31,7 +32,10 @@ const preparar = (tarea: Tarea, puedeCrear = true) => {
 				{ contexto: mock(async () => null) },
 			),
 			adjuntos,
+			eventBus as never,
+			{ ejecutar: <T>(fn: () => Promise<T>) => fn() },
 		),
+		eventBus,
 	};
 };
 
@@ -44,9 +48,15 @@ const personal = () =>
 
 describe("MoverTareaUseCase", () => {
 	it("mueve una personal a un equipo y suelta sus tags personales (RN-45)", async () => {
-		const { useCase } = preparar(personal());
+		const { useCase, eventBus } = preparar(personal());
 		const dto = await useCase.ejecutar(USUARIO, 1, { equipoId: 5 });
 		expect(dto).toMatchObject({ organizacionId: 10, equipoId: 5, tagIds: [] });
+		expect(eventBus.publishAll).toHaveBeenCalledWith([
+			expect.objectContaining({
+				eventName: "tarea.movida",
+				data: { tareaId: 1, organizacionId: 10, equipoId: 5, proyectoId: null },
+			}),
+		]);
 	});
 
 	it("sus imágenes pasan a verse en el destino", async () => {

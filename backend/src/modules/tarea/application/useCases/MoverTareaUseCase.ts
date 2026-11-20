@@ -1,3 +1,5 @@
+import type { EventBus } from "@/core/shared/domain/events/EventBus";
+import type { UnitOfWork } from "@/core/shared/domain/UnitOfWork";
 import type { CompartirAdjuntos } from "@/modules/adjunto";
 import { TareaInvalidaError } from "../../domain/error/TareaInvalidaError";
 import type { TareaRepository } from "../../domain/repository/TareaRepository";
@@ -20,6 +22,8 @@ export class MoverTareaUseCase {
 		private readonly tareaRepository: TareaRepository,
 		private readonly contextos: ContextosTarea,
 		private readonly adjuntos: CompartirAdjuntos,
+		private readonly eventBus: EventBus,
+		private readonly uow: UnitOfWork,
 	) {}
 
 	async ejecutar(
@@ -38,7 +42,11 @@ export class MoverTareaUseCase {
 		}
 		const contexto = await this.contextos.exigirCrear(usuarioId, destino);
 		tarea.mover({ organizacionId: contexto.organizacionId, ...destino });
-		const movida = await this.tareaRepository.actualizar(tarea);
+		const movida = await this.uow.ejecutar(async () => {
+			const guardada = await this.tareaRepository.actualizar(tarea);
+			await this.eventBus.publishAll(tarea.pullDomainEvents());
+			return guardada;
+		});
 		await this.adjuntos.compartir(
 			usuarioId,
 			adjuntosEnlazados(tarea.getDatos().contenido),

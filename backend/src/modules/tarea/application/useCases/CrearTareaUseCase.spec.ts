@@ -67,6 +67,10 @@ describe("CrearTareaUseCase", () => {
 		});
 		expect(eventBus.publishAll).toHaveBeenCalledWith([
 			expect.objectContaining({
+				eventName: "tarea.creada",
+				data: { tareaId: 1 },
+			}),
+			expect.objectContaining({
 				eventName: "tarea.responsablesAsignados",
 				data: { tareaId: 1, usuarioIds: [9] },
 			}),

@@ -15,8 +15,12 @@ import {
 	listarComentariosSchema,
 	tareaComentariosSchema,
 } from "../schemas/comentarioSchemas";
+import {
+	actividadTareaSchema,
+	listarActividadSchema,
+} from "../schemas/actividadSchemas";
 
-const tags = ["Comentarios de tareas"];
+const tags = ["Comentarios e historial de tareas"];
 const security = [{ bearerAuth: [] }];
 const recurso = "tareas";
 const cuerpo = {
@@ -36,6 +40,28 @@ export class ComentarioTareaRouter {
 		const docs = this.router.openAPIRegistry;
 		this.router.use("/:id/comentarios/*", authMiddleware.handle);
 		this.router.use("/:id/comentarios", authMiddleware.handle);
+		this.router.use("/:id/actividad", authMiddleware.handle);
+
+		docs.registerPath({
+			method: "get",
+			path: "/{id}/actividad",
+			tags,
+			security,
+			summary: "Historial de una tarea (lo más reciente primero)",
+			description:
+				"Creación, cambios de título, prioridad, fechas o estado, responsables, movimientos, papelera y comentarios. Pagina por cursor: `antesDe` = id de la última entrada recibida.",
+			request: { params: tareaComentariosSchema, query: listarActividadSchema },
+			responses: {
+				200: jsonResponse(actividadTareaSchema, "Historial"),
+				...protectedErrorResponses(`${recurso}:leer`),
+				404: errorResponse("Tarea no encontrada"),
+			},
+		});
+		this.router.get(
+			"/:id/actividad",
+			guard.handle(recurso, "leer"),
+			controller.actividad,
+		);
 
 		docs.registerPath({
 			method: "get",

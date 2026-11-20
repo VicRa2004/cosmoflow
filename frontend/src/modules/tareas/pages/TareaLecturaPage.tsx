@@ -14,6 +14,7 @@ import {
 	formatearDia,
 	VencimientoTarea,
 } from "../components/celdas";
+import { ActividadTarea } from "../components/ActividadTarea";
 import { ComentariosTarea } from "../components/ComentariosTarea";
 import { MoverTareaDialog } from "../components/MoverTareaDialog";
 import { useEliminarTareaMutation } from "../hooks/useTareasMutation";
@@ -123,7 +124,12 @@ export function TareaLecturaPage({ id }: { id: number }) {
 				titulo={tarea.titulo}
 				contenido={tarea.contenido}
 				detalles={<Detalles tarea={tarea} />}
-				pie={<ComentariosTarea tarea={tarea} />}
+				pie={
+					<div className="space-y-8">
+						<ComentariosTarea tarea={tarea} />
+						<ActividadTarea tareaId={tarea.id} />
+					</div>
+				}
 				acciones={
 					<>
 						{puede("tareas:eliminar") && (

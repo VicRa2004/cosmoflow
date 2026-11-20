@@ -1,4 +1,7 @@
 import { SinPermisoTareasError } from "../../domain/error/SinPermisoTareasError";
+import type { EventBus } from "@/core/shared/domain/events/EventBus";
+import type { UnitOfWork } from "@/core/shared/domain/UnitOfWork";
+import { TareaEliminadaEvent } from "../../domain/event/TareaEliminadaEvent";
 import type { TareaRepository } from "../../domain/repository/TareaRepository";
 import type { ContextosTarea } from "../services/ContextosTarea";
 import { buscarTareaVisible } from "./buscarTareaVisible";
@@ -8,6 +11,8 @@ export class EliminarTareaUseCase {
 	constructor(
 		private readonly tareaRepository: TareaRepository,
 		private readonly contextos: ContextosTarea,
+		private readonly eventBus: EventBus,
+		private readonly uow: UnitOfWork,
 	) {}
 
 	async ejecutar(usuarioId: number, id: number): Promise<void> {
@@ -18,6 +23,9 @@ export class EliminarTareaUseCase {
 			id,
 		);
 		if (contexto && !contexto.puedeCrear) throw new SinPermisoTareasError();
-		await this.tareaRepository.eliminar(id);
+		await this.uow.ejecutar(async () => {
+			await this.tareaRepository.eliminar(id);
+			await this.eventBus.publish(new TareaEliminadaEvent({ tareaId: id }));
+		});
 	}
 }

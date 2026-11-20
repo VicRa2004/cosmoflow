@@ -93,4 +93,31 @@ describe("Tarea", () => {
 			}),
 		]);
 	});
+
+	it("al actualizar, registra solo los campos del historial que cambian", () => {
+		const tarea = Tarea.reconstituir(
+			1,
+			7,
+			Tarea.crear(7, { titulo: "Antes" }).getDatos(),
+		);
+		tarea.actualizar({
+			titulo: "Después",
+			prioridad: "media",
+			fechaVencimiento: "2030-01-15",
+			contenido: "No sale en el historial",
+		});
+		tarea.actualizar({ titulo: "Después" });
+		expect(tarea.pullDomainEvents()).toEqual([
+			expect.objectContaining({
+				eventName: "tarea.actualizada",
+				data: {
+					tareaId: 1,
+					cambios: {
+						titulo: { anterior: "Antes", nuevo: "Después" },
+						fechaVencimiento: { anterior: null, nuevo: "2030-01-15" },
+					},
+				},
+			}),
+		]);
+	});
 });

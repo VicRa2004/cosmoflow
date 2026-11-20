@@ -1,4 +1,9 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+	useInfiniteQuery,
+	useMutation,
+	useQuery,
+	useQueryClient,
+} from "@tanstack/react-query";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/core/api/client";
 import { comentariosApi } from "../api/comentariosApi";
@@ -12,6 +17,17 @@ export function useComentariosQuery(tareaId: number) {
 	return useQuery({
 		queryKey: clave(tareaId),
 		queryFn: () => comentariosApi.obtenerTodos(tareaId),
+	});
+}
+
+/** Historial por páginas; los eventos llegan a la auditoría en segundos (outbox). */
+export function useActividadQuery(tareaId: number) {
+	return useInfiniteQuery({
+		queryKey: [...tareasKeys.detalle(tareaId), "actividad"],
+		queryFn: ({ pageParam }) => comentariosApi.actividad(tareaId, pageParam),
+		initialPageParam: undefined as number | undefined,
+		getNextPageParam: (ultima) =>
+			ultima.hayMas ? ultima.datos.at(-1)?.id : undefined,
 	});
 }
 

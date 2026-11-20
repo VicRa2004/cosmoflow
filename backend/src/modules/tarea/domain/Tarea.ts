@@ -3,7 +3,13 @@ import { Entity } from "@/core/shared/domain/Entity";
 import { EntityId } from "@/core/shared/domain/EntityId";
 import { TareaInvalidaError } from "./error/TareaInvalidaError";
 import { ResponsablesAsignadosEvent } from "./event/ResponsablesAsignadosEvent";
+import {
+	type CampoHistorial,
+	TareaActualizadaEvent,
+} from "./event/TareaActualizadaEvent";
+import { TareaCreadaEvent } from "./event/TareaCreadaEvent";
 import { TareaEstadoCambiadoEvent } from "./event/TareaEstadoCambiadoEvent";
+import { TareaMovidaEvent } from "./event/TareaMovidaEvent";
 import { TareaMencionadosEvent } from "./event/TareaMencionadosEvent";
 
 export const ESTADOS_TAREA = [
@@ -223,6 +229,14 @@ export class Tarea extends Entity {
 		this.ubicacion = Tarea.ubicar(destino);
 		// Sus tags y su dependencia eran del sitio anterior.
 		this.datos = { ...this.datos, tagIds: [], dependeDeId: null };
+		this.addDomainEvent(
+			new TareaMovidaEvent({
+				tareaId: this.getId(),
+				organizacionId: destino.organizacionId,
+				equipoId: this.ubicacion.equipoId,
+				proyectoId: this.ubicacion.proyectoId,
+			}),
+		);
 	}
 
 	/** RN-44: varios responsables; las personales no tienen. */
@@ -253,6 +267,7 @@ export class Tarea extends Entity {
 
 	/** Tras guardarla por primera vez: sus responsables y menciones son todos nuevos. */
 	public agregarEventoCreada(): void {
+		this.addDomainEvent(new TareaCreadaEvent({ tareaId: this.getId() }));
 		if (this.responsableIds.length > 0) {
 			this.addDomainEvent(
 				new ResponsablesAsignadosEvent({
@@ -277,8 +292,25 @@ export class Tarea extends Entity {
 
 	/** `undefined` deja el campo como está; `null` vacía una fecha o el color. */
 	public actualizar(cambios: Partial<DatosTarea>): void {
+		const previos = this.datos;
 		const anterior = this.datos.estado;
 		this.datos = Tarea.validar({ ...this.datos, ...sinIndefinidos(cambios) });
+		const campos = CAMPOS_HISTORIAL.filter(
+			(campo) => previos[campo] !== this.datos[campo],
+		);
+		if (campos.length > 0 && this.id.isPersisted()) {
+			this.addDomainEvent(
+				new TareaActualizadaEvent({
+					tareaId: this.getId(),
+					cambios: Object.fromEntries(
+						campos.map((campo) => [
+							campo,
+							{ anterior: previos[campo], nuevo: this.datos[campo] },
+						]),
+					),
+				}),
+			);
+		}
 		if (this.datos.estado !== anterior && this.id.isPersisted()) {
 			this.addDomainEvent(
 				new TareaEstadoCambiadoEvent({
@@ -302,6 +334,13 @@ export class Tarea extends Entity {
 		return { ...datos, tagIds: [...new Set(datos.tagIds)] };
 	}
 }
+
+const CAMPOS_HISTORIAL: CampoHistorial[] = [
+	"titulo",
+	"prioridad",
+	"fechaInicio",
+	"fechaVencimiento",
+];
 
 function sinIndefinidos<T extends object>(objeto: T): Partial<T> {
 	return Object.fromEntries(
