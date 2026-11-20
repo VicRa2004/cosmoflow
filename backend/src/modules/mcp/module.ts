@@ -24,8 +24,9 @@ export const mcpModule: AppModule = {
 			autorizar: new AutorizarConexionUseCase(repo),
 			canjear: new CanjearCodigoUseCase(
 				repo,
-				container.get(AUTH_TOKENS.CrearTokenPersonal),
+				container.get(AUTH_TOKENS.EmitirTokensConexion),
 			),
+			renovar: container.get(AUTH_TOKENS.RenovarTokensConexion),
 		});
 		app.route(
 			"/mcp",

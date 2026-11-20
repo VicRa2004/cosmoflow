@@ -24,6 +24,9 @@ export const tokenPersonalDtoSchema = z
 		nombre: z.string().openapi({ example: "Claude Code" }),
 		pista: z.string().openapi({ example: "a1b2" }),
 		createdAt: z.iso.datetime().openapi({ example: "2026-11-04T10:00:00Z" }),
+		ultimoUsoEn: z.iso.datetime().nullable().openapi({
+			description: "Con precisión de minutos; null si no se ha usado",
+		}),
 	})
 	.openapi("TokenPersonalDto");
 

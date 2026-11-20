@@ -3,6 +3,7 @@ import { createHash } from "node:crypto";
 import { env } from "@/core/config/env";
 import { prisma } from "@/core/config/prisma";
 import { app } from "@/core/shared/infrastructure/http/server";
+import { PrismaTokenPersonalRepository } from "@/modules/auth/infrastructure/repository/PrismaTokenPersonalRepository";
 import { api, crearUsuario, login, vaciarUsuarios } from "@/test/e2e";
 
 const CALLBACK = "https://claude.ai/api/mcp/auth_callback";
@@ -91,6 +92,20 @@ const canjear = (campos: Record<string, string>) =>
 		}),
 	});
 
+interface RespuestaToken {
+	access_token: string;
+	refresh_token: string;
+	expires_in: number;
+	token_type: string;
+}
+
+const renovar = (campos: Record<string, string>) =>
+	app.request("/api/oauth/token", {
+		method: "POST",
+		headers: { "Content-Type": "application/x-www-form-urlencoded" },
+		body: new URLSearchParams({ grant_type: "refresh_token", ...campos }),
+	});
+
 describe("Conector MCP (e2e)", () => {
 	let sesion: string;
 	let sesionZoe: string;
@@ -104,7 +119,7 @@ describe("Conector MCP (e2e)", () => {
 		) as string;
 		const res = await canjear({ code, client_id: clientId });
 		expect(res.status).toBe(200);
-		return ((await res.json()) as { access_token: string }).access_token;
+		return { clientId, ...((await res.json()) as RespuestaToken) };
 	};
 
 	beforeAll(async () => {
@@ -119,7 +134,7 @@ describe("Conector MCP (e2e)", () => {
 			body: { titulo: "De Zoe" },
 		});
 		tareaAjena = ((await res.json()) as { id: number }).id;
-		token = await conectar();
+		token = (await conectar()).access_token;
 	}, 30_000);
 
 	describe("descubrimiento", () => {
@@ -171,6 +186,118 @@ describe("Conector MCP (e2e)", () => {
 			).json()) as { nombre: string }[];
 
 			expect(lista.map((t) => t.nombre)).toContain("Claude (claude.ai)");
+		});
+
+		it("debería dar un acceso de 1 h con refresh token y guardar solo sus hashes", async () => {
+			const conexion = await conectar();
+
+			expect(conexion).toMatchObject({
+				token_type: "Bearer",
+				expires_in: 3600,
+			});
+			expect(conexion.refresh_token).toStartWith("cfr_");
+			const fila = await prisma.tokenPersonal.findFirstOrThrow({
+				orderBy: { id: "desc" },
+			});
+			expect(fila.clientId).toBe(conexion.clientId);
+			expect(fila.refreshHash).not.toBe(conexion.refresh_token);
+			expect(fila.expiraEn?.getTime()).toBeGreaterThan(Date.now());
+		});
+
+		it("renovar debería rotar: lo anterior deja de valer y lo nuevo funciona", async () => {
+			const conexion = await conectar();
+
+			const res = await renovar({
+				refresh_token: conexion.refresh_token,
+				client_id: conexion.clientId,
+			});
+			expect(res.status).toBe(200);
+			expect(res.headers.get("Cache-Control")).toBe("no-store");
+			const nueva = (await res.json()) as RespuestaToken;
+
+			expect((await postMcp(nueva.access_token, "tools/list")).status).toBe(
+				200,
+			);
+			expect((await postMcp(conexion.access_token, "tools/list")).status).toBe(
+				401,
+			);
+			const reuso = await renovar({
+				refresh_token: conexion.refresh_token,
+				client_id: conexion.clientId,
+			});
+			expect(await reuso.json()).toMatchObject({ error: "invalid_grant" });
+			// Sigue siendo la misma conexión del perfil, no una nueva.
+			const lista = (await (
+				await api("/api/tokens-personales", { token: sesion })
+			).json()) as { id: number }[];
+			expect(new Set(lista.map((t) => t.id)).size).toBe(lista.length);
+		});
+
+		it("renovar debería exigir el mismo client_id y una conexión viva", async () => {
+			const conexion = await conectar();
+
+			const otroCliente = await renovar({
+				refresh_token: conexion.refresh_token,
+				client_id: "otro",
+			});
+			expect(await otroCliente.json()).toMatchObject({
+				error: "invalid_grant",
+			});
+
+			const [ultima] = (await (
+				await api("/api/tokens-personales", { token: sesion })
+			).json()) as { id: number }[];
+			await api(`/api/tokens-personales/${ultima.id}`, {
+				method: "DELETE",
+				token: sesion,
+			});
+			const revocada = await renovar({
+				refresh_token: conexion.refresh_token,
+				client_id: conexion.clientId,
+			});
+			expect(await revocada.json()).toMatchObject({ error: "invalid_grant" });
+		});
+
+		it("un acceso caducado debería dar 401 con la pista de OAuth", async () => {
+			const conexion = await conectar();
+			await prisma.tokenPersonal.updateMany({
+				where: { clientId: conexion.clientId },
+				data: { expiraEn: new Date(Date.now() - 1000) },
+			});
+
+			const res = await postMcp(conexion.access_token, "tools/list");
+
+			expect(res.status).toBe(401);
+			expect(res.headers.get("WWW-Authenticate")).toContain(
+				"resource_metadata",
+			);
+		});
+
+		it("debería revocar solas las conexiones sin uso, no los tokens creados a mano", async () => {
+			const conexion = await conectar();
+			const manual = (await (
+				await api("/api/tokens-personales", {
+					method: "POST",
+					token: sesion,
+					body: { nombre: "Script" },
+				})
+			).json()) as { token: string };
+			const hace100Dias = new Date(Date.now() - 100 * 24 * 60 * 60 * 1000);
+			await prisma.tokenPersonal.updateMany({
+				where: {
+					OR: [{ clientId: conexion.clientId }, { nombre: "Script" }],
+				},
+				data: { ultimoUsoEn: hace100Dias, createdAt: hace100Dias },
+			});
+
+			await new PrismaTokenPersonalRepository().revocarConexionesSinUso(
+				new Date(Date.now() - 90 * 24 * 60 * 60 * 1000),
+			);
+
+			expect((await postMcp(conexion.access_token, "tools/list")).status).toBe(
+				401,
+			);
+			expect((await postMcp(manual.token, "tools/list")).status).toBe(200);
 		});
 
 		it("debería guardar solo el hash del código", async () => {
@@ -435,7 +562,7 @@ describe("Conector MCP (e2e)", () => {
 		});
 
 		it("no debería ver los datos de otro usuario", async () => {
-			const deZoe = await conectar(sesionZoe);
+			const deZoe = (await conectar(sesionZoe)).access_token;
 
 			const { datos: pendientes } = await datos(deZoe, "listar_pendientes");
 			const { datos: notas } = await datos(deZoe, "buscar_notas");
@@ -455,7 +582,7 @@ describe("Conector MCP (e2e)", () => {
 		});
 
 		it("revocar la conexión debería pedir permiso de nuevo", async () => {
-			const propio = await conectar();
+			const propio = (await conectar()).access_token;
 			const lista = (await (
 				await api("/api/tokens-personales", { token: sesion })
 			).json()) as { id: number }[];

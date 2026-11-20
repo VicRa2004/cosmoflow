@@ -6,15 +6,26 @@ import { hashearCodigo } from "./AutorizarConexionUseCase";
 
 const CODIGO_INVALIDO = "Código inválido, caducado o ya usado";
 
+/** Tokens de OAuth: acceso que caduca y refresh para renovarlo. */
+export interface TokensOAuth {
+	accessToken: string;
+	refreshToken: string;
+	expiraEnSegundos: number;
+}
+
 /**
- * Canjea el código por un token personal: aparece en el perfil y se revoca como cualquier otro.
- * shortcut: el token no caduca y no hay refresh token; revocado, el cliente pide permiso de nuevo.
+ * Canjea el código por una conexión: un token personal que caduca y se renueva,
+ * aparece en el perfil y se revoca como cualquier otro.
  */
 export class CanjearCodigoUseCase {
 	constructor(
 		private readonly repo: CodigoOAuthRepository,
 		private readonly tokens: {
-			ejecutar(usuarioId: number, nombre: string): Promise<{ token: string }>;
+			ejecutar(dto: {
+				usuarioId: number;
+				nombre: string;
+				clientId: string;
+			}): Promise<TokensOAuth>;
 		},
 	) {}
 
@@ -23,7 +34,7 @@ export class CanjearCodigoUseCase {
 		redirectUri: string;
 		clientId: string;
 		codeVerifier: string;
-	}): Promise<string> {
+	}): Promise<TokensOAuth> {
 		// Se consume antes de comprobar nada: un intento fallido también lo quema.
 		const codigo = await this.repo.consumir(hashearCodigo(dto.code));
 		const reto = createHash("sha256")
@@ -42,7 +53,10 @@ export class CanjearCodigoUseCase {
 		const nombre = destino?.esLocal
 			? "Conexión local (Claude Code u otra app)"
 			: `${destino?.nombre} (${destino?.host})`;
-		const { token } = await this.tokens.ejecutar(codigo.usuarioId, nombre);
-		return token;
+		return this.tokens.ejecutar({
+			usuarioId: codigo.usuarioId,
+			nombre,
+			clientId: codigo.clientId,
+		});
 	}
 }

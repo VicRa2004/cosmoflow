@@ -67,7 +67,8 @@ export function TokensPersonalesCard() {
 				<CardTitle className="text-lg">Tokens personales</CardTitle>
 				<CardDescription>
 					Dan acceso a tu cuenta con tus mismos permisos y no caducan. Aquí
-					también aparecen las conexiones con Claude: revoca las que ya no uses.
+					también aparecen las conexiones con Claude: se renuevan solas y se
+					revocan tras 90 días sin uso; revoca antes las que ya no uses.
 				</CardDescription>
 			</CardHeader>
 
@@ -118,7 +119,10 @@ export function TokensPersonalesCard() {
 								</p>
 								<p className="text-xs text-tinta-tenue">
 									<span className="font-mono">…{token.pista}</span> · creado el{" "}
-									{new Date(token.createdAt).toLocaleDateString()}
+									{new Date(token.createdAt).toLocaleDateString()} ·{" "}
+									{token.ultimoUsoEn
+										? `último uso el ${new Date(token.ultimoUsoEn).toLocaleString()}`
+										: "sin usar"}
 								</p>
 							</div>
 							<Button

@@ -4,15 +4,22 @@ import { BaseController } from "@/core/shared/infrastructure/http/base.controlle
 import { validate } from "@/core/shared/infrastructure/libs/validate";
 import type { AuthEnv } from "@/modules/auth";
 import type { AutorizarConexionUseCase } from "../../../application/useCases/AutorizarConexionUseCase";
-import type { CanjearCodigoUseCase } from "../../../application/useCases/CanjearCodigoUseCase";
+import type {
+	CanjearCodigoUseCase,
+	TokensOAuth,
+} from "../../../application/useCases/CanjearCodigoUseCase";
 import { ErrorOAuth } from "../../../domain/ErrorOAuth";
 import { resolverDestino } from "../../../domain/destinoConexion";
 import {
 	autorizarConexionSchema,
 	consultaConexionSchema,
 	registroClienteSchema,
+	renovarTokenOAuthSchema,
 	tokenOAuthSchema,
 } from "../schemas/oauthSchemas";
+
+const datosInvalidos = () =>
+	new ErrorOAuth("invalid_request", "Faltan datos o no son válidos");
 
 /** Rutas públicas de OAuth 2.1 (registro y token) y las que usa la pantalla de permiso. */
 export class OAuthController extends BaseController {
@@ -21,6 +28,12 @@ export class OAuthController extends BaseController {
 		private readonly useCases: {
 			autorizar: AutorizarConexionUseCase;
 			canjear: CanjearCodigoUseCase;
+			renovar: {
+				ejecutar(
+					refreshToken: string,
+					clientId: string,
+				): Promise<TokensOAuth | null>;
+			};
 		},
 	) {
 		super();
@@ -44,7 +57,7 @@ export class OAuthController extends BaseController {
 			token_endpoint: `${this.appUrl}/api/oauth/token`,
 			registration_endpoint: `${this.appUrl}/api/oauth/registro`,
 			response_types_supported: ["code"],
-			grant_types_supported: ["authorization_code"],
+			grant_types_supported: ["authorization_code", "refresh_token"],
 			code_challenge_methods_supported: ["S256"],
 			token_endpoint_auth_methods_supported: ["none"],
 		});
@@ -63,7 +76,7 @@ export class OAuthController extends BaseController {
 				client_id: randomUUID(),
 				client_name,
 				redirect_uris,
-				grant_types: ["authorization_code"],
+				grant_types: ["authorization_code", "refresh_token"],
 				response_types: ["code"],
 				token_endpoint_auth_method: "none",
 			});
@@ -94,23 +107,21 @@ export class OAuthController extends BaseController {
 		c.header("Cache-Control", "no-store");
 		try {
 			const form = Object.fromEntries(new URLSearchParams(await c.req.text()));
-			if (form.grant_type !== "authorization_code") {
+			const tokens =
+				form.grant_type === "authorization_code"
+					? await this.canjearCodigo(form)
+					: form.grant_type === "refresh_token"
+						? await this.renovar(form)
+						: null;
+			if (!tokens) {
 				throw new ErrorOAuth("unsupported_grant_type", "Tipo no admitido");
 			}
-			const datos = tokenOAuthSchema.safeParse(form);
-			if (!datos.success) {
-				throw new ErrorOAuth(
-					"invalid_request",
-					"Faltan datos o no son válidos",
-				);
-			}
-			const accessToken = await this.useCases.canjear.ejecutar({
-				code: datos.data.code,
-				redirectUri: datos.data.redirect_uri,
-				clientId: datos.data.client_id,
-				codeVerifier: datos.data.code_verifier,
+			return c.json({
+				access_token: tokens.accessToken,
+				token_type: "Bearer",
+				expires_in: tokens.expiraEnSegundos,
+				refresh_token: tokens.refreshToken,
 			});
-			return c.json({ access_token: accessToken, token_type: "Bearer" });
 		} catch (error) {
 			if (error instanceof ErrorOAuth) {
 				return c.json(
@@ -121,4 +132,31 @@ export class OAuthController extends BaseController {
 			throw error;
 		}
 	};
+
+	private canjearCodigo(form: Record<string, string>): Promise<TokensOAuth> {
+		const datos = tokenOAuthSchema.safeParse(form);
+		if (!datos.success) throw datosInvalidos();
+		return this.useCases.canjear.ejecutar({
+			code: datos.data.code,
+			redirectUri: datos.data.redirect_uri,
+			clientId: datos.data.client_id,
+			codeVerifier: datos.data.code_verifier,
+		});
+	}
+
+	private async renovar(form: Record<string, string>): Promise<TokensOAuth> {
+		const datos = renovarTokenOAuthSchema.safeParse(form);
+		if (!datos.success) throw datosInvalidos();
+		const tokens = await this.useCases.renovar.ejecutar(
+			datos.data.refresh_token,
+			datos.data.client_id,
+		);
+		if (!tokens) {
+			throw new ErrorOAuth(
+				"invalid_grant",
+				"Refresh token inválido, revocado o ya usado",
+			);
+		}
+		return tokens;
+	}
 }

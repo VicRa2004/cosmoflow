@@ -5,6 +5,9 @@ import type {
 	TokenService,
 } from "../../domain/service/TokenService";
 
+/** «Último uso» con precisión de minutos: no se escribe en BD en cada petición. */
+const INTERVALO_ULTIMO_USO_MS = 5 * 60 * 1000;
+
 /**
  * Resuelve el token al usuario actual en cada petición: revocarlo, borrar o
  * desactivar al usuario lo invalida al instante, y los roles nunca quedan atrasados.
@@ -17,13 +20,21 @@ export class AutenticarTokenPersonalUseCase {
 	) {}
 
 	async ejecutar(token: string): Promise<AccessTokenPayload | null> {
-		const usuarioId = await this.repo.buscarUsuarioIdPorHash(
+		const registro = await this.repo.buscarPorHash(
 			this.tokenService.hashearRefreshToken(token),
 		);
-		if (usuarioId === null) return null;
+		if (!registro) return null;
 
-		const usuario = await this.usuarios.buscarPorId(usuarioId);
+		const usuario = await this.usuarios.buscarPorId(registro.usuarioId);
 		if (!usuario?.getIsActivo()) return null;
+
+		const ahora = new Date();
+		if (
+			!registro.ultimoUsoEn ||
+			ahora.getTime() - registro.ultimoUsoEn.getTime() > INTERVALO_ULTIMO_USO_MS
+		) {
+			await this.repo.marcarUso(registro.id, ahora);
+		}
 
 		return {
 			id: usuario.getId(),

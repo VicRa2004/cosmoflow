@@ -41,3 +41,8 @@ export const tokenOAuthSchema = z.object({
 	client_id: clientId,
 	code_verifier: z.string().min(43).max(128),
 });
+
+export const renovarTokenOAuthSchema = z.object({
+	refresh_token: z.string().min(1).max(256),
+	client_id: clientId,
+});

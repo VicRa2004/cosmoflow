@@ -8,6 +8,7 @@ import { CambiarPasswordUseCase } from "./application/useCases/CambiarPasswordUs
 import { AutenticarTokenPersonalUseCase } from "./application/useCases/AutenticarTokenPersonalUseCase";
 import { CerrarSesionesUseCase } from "./application/useCases/CerrarSesionesUseCase";
 import { CrearTokenPersonalUseCase } from "./application/useCases/CrearTokenPersonalUseCase";
+import { EmitirTokensConexionUseCase } from "./application/useCases/EmitirTokensConexionUseCase";
 import { LoginGoogleUseCase } from "./application/useCases/LoginGoogleUseCase";
 import { LoginUseCase } from "./application/useCases/LoginUseCase";
 import { LogoutUseCase } from "./application/useCases/LogoutUseCase";
@@ -16,7 +17,9 @@ import { RefreshTokenUseCase } from "./application/useCases/RefreshTokenUseCase"
 import { ReenviarVerificacionUseCase } from "./application/useCases/ReenviarVerificacionUseCase";
 import { RegistroUseCase } from "./application/useCases/RegistroUseCase";
 import { RestablecerPasswordUseCase } from "./application/useCases/RestablecerPasswordUseCase";
+import { RenovarTokensConexionUseCase } from "./application/useCases/RenovarTokensConexionUseCase";
 import { RevocarTokenPersonalUseCase } from "./application/useCases/RevocarTokenPersonalUseCase";
+import { DIAS_CONEXION_SIN_USO } from "./application/useCases/tokensConexion";
 import { SolicitarRecuperacionUseCase } from "./application/useCases/SolicitarRecuperacionUseCase";
 import { VerificarEmailUseCase } from "./application/useCases/VerificarEmailUseCase";
 import { CuentaController } from "./infrastructure/http/controllers/CuentaController";
@@ -53,8 +56,17 @@ const google =
 export const authModule: AppModule = {
 	register(container) {
 		container.set(
-			AUTH_TOKENS.CrearTokenPersonal,
-			() => new CrearTokenPersonalUseCase(tokenService, tokenPersonalRepo),
+			AUTH_TOKENS.EmitirTokensConexion,
+			() => new EmitirTokensConexionUseCase(tokenService, tokenPersonalRepo),
+		);
+		container.set(
+			AUTH_TOKENS.RenovarTokensConexion,
+			() =>
+				new RenovarTokensConexionUseCase(
+					tokenService,
+					tokenPersonalRepo,
+					container.get(USUARIO_TOKENS.UsuarioRepository),
+				),
 		);
 		container.set(
 			AUTH_TOKENS.AuthMiddleware,
@@ -142,7 +154,7 @@ export const authModule: AppModule = {
 			new TokenPersonalRouter(
 				container.get(AUTH_TOKENS.AuthMiddleware),
 				new TokenPersonalController({
-					crear: container.get(AUTH_TOKENS.CrearTokenPersonal),
+					crear: new CrearTokenPersonalUseCase(tokenService, tokenPersonalRepo),
 					obtenerTodos: new ObtenerTokensPersonalesUseCase(tokenPersonalRepo),
 					revocar: new RevocarTokenPersonalUseCase(tokenPersonalRepo),
 				}),
@@ -155,6 +167,9 @@ export const authModule: AppModule = {
 			.programar("auth.limpiar-tokens", 60 * 60 * 1000, async () => {
 				await refreshTokenRepo.eliminarExpirados();
 				await cuentaRepo.eliminarTokensCaducados();
+				await tokenPersonalRepo.revocarConexionesSinUso(
+					new Date(Date.now() - DIAS_CONEXION_SIN_USO * 24 * 60 * 60 * 1000),
+				);
 			});
 		return undefined;
 	},

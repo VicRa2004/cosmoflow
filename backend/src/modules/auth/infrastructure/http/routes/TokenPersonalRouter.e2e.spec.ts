@@ -35,7 +35,13 @@ describe("Tokens personales (e2e)", () => {
 
 		const lista = await (await api(RUTA, { token: jwt })).json();
 		expect(lista).toEqual([
-			{ id, nombre: "Claude Code", pista, createdAt: expect.any(String) },
+			{
+				id,
+				nombre: "Claude Code",
+				pista,
+				createdAt: expect.any(String),
+				ultimoUsoEn: null,
+			},
 		]);
 
 		const fila = await prisma.tokenPersonal.findUniqueOrThrow({

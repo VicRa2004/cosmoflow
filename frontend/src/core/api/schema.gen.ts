@@ -8180,6 +8180,11 @@ export interface components {
              * @example 2026-11-04T10:00:00Z
              */
             createdAt: string;
+            /**
+             * Format: date-time
+             * @description Con precisión de minutos; null si no se ha usado
+             */
+            ultimoUsoEn: string | null;
         };
         PermisoDto: {
             /** @example 1 */
