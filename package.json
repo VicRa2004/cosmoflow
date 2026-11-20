@@ -19,6 +19,8 @@
 		"build": "pnpm --filter frontend build",
 		"build:frontend": "pnpm --filter frontend build",
 		"build:editor-movil": "pnpm --filter frontend build:editor-movil",
+		"dev:desktop": "pnpm --filter desktop dev",
+		"build:desktop": "pnpm --filter desktop build",
 		"test:backend": "pnpm --filter backend test",
 		"test:frontend": "pnpm --filter frontend test",
 		"test:mobile": "cd mobile && flutter test",

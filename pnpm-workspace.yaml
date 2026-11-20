@@ -1,6 +1,7 @@
 packages:
   - 'backend'
   - 'frontend'
+  - 'desktop'
 allowBuilds:
   '@prisma/engines': true
   '@swc/core': false

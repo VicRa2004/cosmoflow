@@ -1,6 +1,6 @@
 # Reglas del Monorepo (Cosmoflow)
 
-Monorepo simple con dos carpetas: `backend/` y `frontend/`. Sin `apps/` ni `packages/`.
+Monorepo con `backend/`, `frontend/`, `mobile/` (Flutter) y `desktop/` (Tauri). Sin `apps/` ni `packages/`.
 
 ## Stack
 
@@ -38,6 +38,8 @@ pnpm dev                # corre frontend y backend concurrentemente en paralelo
 pnpm dev:backend        # corre el backend con Bun (se reinicia al guardar; `--watch`, no `--hot`: el WASM de Prisma se corrompe al recargar en caliente)
 pnpm dev:frontend       # corre el frontend con Vite (puerto 5173)
 pnpm build:frontend     # compila el frontend para producción
+pnpm dev:desktop        # app de escritorio Tauri contra el frontend local (requiere `pnpm dev`)
+pnpm build:desktop      # instalador de escritorio de la plataforma actual
 pnpm build:editor-movil # empaqueta el editor Crepe para el WebView de mobile (mobile/assets/editor/); commitear el resultado
 pnpm test:backend       # tests del backend con Bun
 pnpm test:frontend      # tests del frontend con Vitest
@@ -99,10 +101,13 @@ El porqué de las reglas no negociables está en `docs/decisions/`. Leer el ADR 
 biome.json / package.json / pnpm-workspace.yaml  # raíz: lint + workspaces
 backend/   # Hono + Bun + Prisma (arquitectura hexagonal)
 frontend/  # Vite + React + TanStack Suite + Tailwind v4 (modular y core)
+mobile/    # Flutter (Android/iOS)
+desktop/   # Tauri 2: ventana nativa que carga la web de producción
 ```
 
 - `backend/` tiene sus reglas propias en `backend/AGENTS.md`. Leerlo antes de tocar `backend/`.
 - `frontend/` tiene sus reglas propias en `frontend/AGENTS.md`. Leerlo antes de tocar `frontend/`.
+- `desktop/` tiene sus reglas propias en `desktop/AGENTS.md`. Leerlo antes de tocar `desktop/`.
 - Docker vive en la raíz y está pensado para Dokploy: un único servicio `app` (backend que también sirve `frontend/dist`, un solo dominio, puerto `3000`). La BD **no** va en el compose: es un servicio aparte de Dokploy y llega por `DATABASE_URL`. El servicio `migrate` ejecuta `prisma migrate deploy` antes de cada arranque de `app`. En desarrollo: `pnpm db:up` (PostgreSQL de `docker-compose.dev.yml`) y `pnpm dev`.
 - Variables: `cp backend/.env.example backend/.env`.
 - Dependencias: Renovate (`renovate.json`) agrupa y fija versiones exactas; Prisma no pasa de `7.x` (ADR 0001).
