@@ -16,6 +16,7 @@ import { Route as RecuperarPasswordRouteImport } from './routes/recuperar-passwo
 import { Route as RegistroRouteImport } from './routes/registro'
 import { Route as RestablecerPasswordRouteImport } from './routes/restablecer-password'
 import { Route as VerificarEmailRouteImport } from './routes/verificar-email'
+import { Route as AuthenticatedAuditoriaRouteImport } from './routes/_authenticated/auditoria'
 import { Route as AuthenticatedAutorizarConexionRouteImport } from './routes/_authenticated/autorizar-conexion'
 import { Route as AuthenticatedCalendarioRouteImport } from './routes/_authenticated/calendario'
 import { Route as AuthenticatedConfiguracionRouteImport } from './routes/_authenticated/configuracion'
@@ -87,6 +88,11 @@ const VerificarEmailRoute = VerificarEmailRouteImport.update({
   id: '/verificar-email',
   path: '/verificar-email',
   getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedAuditoriaRoute = AuthenticatedAuditoriaRouteImport.update({
+  id: '/auditoria',
+  path: '/auditoria',
+  getParentRoute: () => AuthenticatedRoute,
 } as any)
 const AuthenticatedAutorizarConexionRoute =
   AuthenticatedAutorizarConexionRouteImport.update({
@@ -305,6 +311,7 @@ export interface FileRoutesByFullPath {
   '/restablecer-password': typeof RestablecerPasswordRoute
   '/verificar-email': typeof VerificarEmailRoute
   '/notas': typeof AuthenticatedNotasRouteRouteWithChildren
+  '/auditoria': typeof AuthenticatedAuditoriaRoute
   '/autorizar-conexion': typeof AuthenticatedAutorizarConexionRoute
   '/calendario': typeof AuthenticatedCalendarioRoute
   '/configuracion': typeof AuthenticatedConfiguracionRoute
@@ -349,6 +356,7 @@ export interface FileRoutesByTo {
   '/registro': typeof RegistroRoute
   '/restablecer-password': typeof RestablecerPasswordRoute
   '/verificar-email': typeof VerificarEmailRoute
+  '/auditoria': typeof AuthenticatedAuditoriaRoute
   '/autorizar-conexion': typeof AuthenticatedAutorizarConexionRoute
   '/calendario': typeof AuthenticatedCalendarioRoute
   '/configuracion': typeof AuthenticatedConfiguracionRoute
@@ -394,6 +402,7 @@ export interface FileRoutesById {
   '/restablecer-password': typeof RestablecerPasswordRoute
   '/verificar-email': typeof VerificarEmailRoute
   '/_authenticated/notas': typeof AuthenticatedNotasRouteRouteWithChildren
+  '/_authenticated/auditoria': typeof AuthenticatedAuditoriaRoute
   '/_authenticated/autorizar-conexion': typeof AuthenticatedAutorizarConexionRoute
   '/_authenticated/calendario': typeof AuthenticatedCalendarioRoute
   '/_authenticated/configuracion': typeof AuthenticatedConfiguracionRoute
@@ -441,6 +450,7 @@ export interface FileRouteTypes {
     | '/restablecer-password'
     | '/verificar-email'
     | '/notas'
+    | '/auditoria'
     | '/autorizar-conexion'
     | '/calendario'
     | '/configuracion'
@@ -485,6 +495,7 @@ export interface FileRouteTypes {
     | '/registro'
     | '/restablecer-password'
     | '/verificar-email'
+    | '/auditoria'
     | '/autorizar-conexion'
     | '/calendario'
     | '/configuracion'
@@ -529,6 +540,7 @@ export interface FileRouteTypes {
     | '/restablecer-password'
     | '/verificar-email'
     | '/_authenticated/notas'
+    | '/_authenticated/auditoria'
     | '/_authenticated/autorizar-conexion'
     | '/_authenticated/calendario'
     | '/_authenticated/configuracion'
@@ -628,6 +640,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/verificar-email'
       preLoaderRoute: typeof VerificarEmailRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/auditoria': {
+      id: '/_authenticated/auditoria'
+      path: '/auditoria'
+      fullPath: '/auditoria'
+      preLoaderRoute: typeof AuthenticatedAuditoriaRouteImport
+      parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/autorizar-conexion': {
       id: '/_authenticated/autorizar-conexion'
@@ -974,6 +993,7 @@ const AuthenticatedOrganizacionesIdRouteWithChildren =
 
 interface AuthenticatedRouteChildren {
   AuthenticatedNotasRouteRoute: typeof AuthenticatedNotasRouteRouteWithChildren
+  AuthenticatedAuditoriaRoute: typeof AuthenticatedAuditoriaRoute
   AuthenticatedAutorizarConexionRoute: typeof AuthenticatedAutorizarConexionRoute
   AuthenticatedCalendarioRoute: typeof AuthenticatedCalendarioRoute
   AuthenticatedConfiguracionRoute: typeof AuthenticatedConfiguracionRoute
@@ -994,6 +1014,7 @@ interface AuthenticatedRouteChildren {
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedNotasRouteRoute: AuthenticatedNotasRouteRouteWithChildren,
+  AuthenticatedAuditoriaRoute: AuthenticatedAuditoriaRoute,
   AuthenticatedAutorizarConexionRoute: AuthenticatedAutorizarConexionRoute,
   AuthenticatedCalendarioRoute: AuthenticatedCalendarioRoute,
   AuthenticatedConfiguracionRoute: AuthenticatedConfiguracionRoute,

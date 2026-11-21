@@ -32,6 +32,7 @@ const campos = {
 	fechaInicio: dia.optional(),
 	fechaVencimiento: dia.optional(),
 	color: colorAcentoSchema.optional(),
+	isFijada: z.boolean().optional(),
 	tagIds: z.array(z.number().int().positive()).max(50).optional(),
 	/** Solo en las compartidas (RN-44). */
 	responsableIds: z.array(z.number().int().positive()).max(50).optional(),
@@ -99,6 +100,10 @@ export const obtenerTareasSchema = paginacionSchema
 	.extend({
 		busqueda: z.string().trim().min(1).max(128).optional(),
 		estado: z.enum(ESTADOS_TAREA).optional(),
+		fijada: z
+			.literal("true")
+			.transform(() => true)
+			.optional(),
 		tagId: numero.optional(),
 		responsableId: numero.optional(),
 		organizacionId: numero.optional(),
@@ -154,6 +159,35 @@ export const estadisticasTareasSchema = z
 		"Indica organizacionId, equipoId o proyectoId",
 	);
 
+const idsLote = z.array(id).min(1, "Selecciona al menos una tarea").max(100);
+
+export const accionLoteTareasSchema = z.discriminatedUnion("accion", [
+	z.object({
+		ids: idsLote,
+		accion: z.literal("estado"),
+		estado: z.enum(ESTADOS_TAREA),
+	}),
+	z.object({
+		ids: idsLote,
+		accion: z.literal("prioridad"),
+		prioridad: z.enum(PRIORIDADES_TAREA),
+	}),
+	z.object({
+		ids: idsLote,
+		accion: z.literal("agregar_tag"),
+		tagId: id,
+	}),
+	z.object({
+		ids: idsLote,
+		accion: z.literal("quitar_tag"),
+		tagId: id,
+	}),
+]);
+
+export const eliminarLoteTareasSchema = z.object({
+	ids: idsLote,
+});
+
 // ── Respuestas (sólo documentación OpenAPI) ──────────────────────────────────
 
 export const tareaDtoSchema = z
@@ -166,6 +200,7 @@ export const tareaDtoSchema = z
 		fechaInicio: dia,
 		fechaVencimiento: dia,
 		color: colorAcentoSchema,
+		isFijada: z.boolean(),
 		tagIds: z.array(z.number().int()),
 		organizacionId: z.number().int().nullable(),
 		equipoId: z.number().int().nullable(),
@@ -219,3 +254,9 @@ export const estadisticasTareasDtoSchema = z
 		),
 	})
 	.openapi("EstadisticasTareasDto");
+
+export const resultadoLoteTareasSchema = z
+	.object({
+		afectadas: z.number().int().openapi({ example: 3 }),
+	})
+	.openapi("ResultadoLoteTareasDto");

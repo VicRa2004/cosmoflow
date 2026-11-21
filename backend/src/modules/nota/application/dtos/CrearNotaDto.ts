@@ -2,6 +2,7 @@ export interface CamposNotaDto {
 	titulo: string;
 	contenido?: string;
 	color?: string | null;
+	isFijada?: boolean;
 	tagIds?: number[];
 	carpetaId?: number | null;
 }

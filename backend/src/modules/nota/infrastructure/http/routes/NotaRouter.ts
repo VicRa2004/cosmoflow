@@ -260,5 +260,24 @@ export class NotaRouter {
 			guard.handle(recurso, "eliminar"),
 			controller.eliminar,
 		);
+
+		docs.registerPath({
+			method: "post",
+			path: "/{id}/duplicar",
+			tags,
+			security,
+			summary: "Duplicar una nota en la misma carpeta y ámbito",
+			request: { params: notaIdSchema },
+			responses: {
+				201: jsonResponse(notaDtoSchema, "Nota duplicada"),
+				...protectedErrorResponses(`${recurso}:crear`),
+				404: errorResponse("Nota no encontrada"),
+			},
+		});
+		this.router.post(
+			"/:id/duplicar",
+			guard.handle(recurso, "crear"),
+			controller.duplicar,
+		);
 	}
 }

@@ -8,7 +8,11 @@ import {
 	useActualizarCarpetaMutation,
 	useEliminarCarpetaMutation,
 } from "../hooks/useCarpetas";
-import { useMoverNotaMutation } from "../hooks/useNotasMutation";
+import {
+	useDuplicarNotaMutation,
+	useFijarNotaMutation,
+	useMoverNotaMutation,
+} from "../hooks/useNotasMutation";
 import { useDescargarCarpeta } from "../hooks/useDescargarCarpeta";
 import { ExploradorCarpeta } from "./ExploradorCarpeta";
 import { CarpetaDialog } from "./CarpetaDialog";
@@ -41,6 +45,8 @@ export function PanelCarpetas({
 	const eliminar = useEliminarCarpetaMutation();
 	const descargar = useDescargarCarpeta(carpetas, proyectoId);
 	const moverNota = useMoverNotaMutation();
+	const duplicarNota = useDuplicarNotaMutation();
+	const fijarNota = useFijarNotaMutation();
 	const moverCarpeta = useActualizarCarpetaMutation();
 	const navigate = useNavigate();
 
@@ -76,6 +82,17 @@ export function PanelCarpetas({
 					if (carpeta && carpeta.padreId !== destino)
 						moverCarpeta.mutate({ id, datos: { padreId: destino } });
 				}}
+				onDuplicarNota={
+					puede("notas:crear")
+						? (nota) => duplicarNota.mutate(nota.id)
+						: undefined
+				}
+				onFijarNota={
+					puede("notas:actualizar")
+						? (nota) =>
+								fijarNota.mutate({ id: nota.id, isFijada: !nota.isFijada })
+						: undefined
+				}
 			/>
 			<CarpetaDialog
 				estado={dialogo}

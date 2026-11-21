@@ -12,6 +12,7 @@ describe("Tarea", () => {
 			fechaInicio: null,
 			fechaVencimiento: null,
 			color: null,
+			isFijada: false,
 			tagIds: [],
 			dependeDeId: null,
 			recurrencia: null,

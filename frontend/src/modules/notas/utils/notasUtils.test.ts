@@ -114,4 +114,17 @@ describe("contenidoDe", () => {
 		expect(nombres(1)).toEqual(["B/", "en A"]);
 		expect(nombres(2)).toEqual(["en B"]);
 	});
+
+	it("pone las notas fijadas primero antes de ordenar alfabéticamente", () => {
+		const c = contenidoDe(
+			null,
+			[],
+			[
+				{ titulo: "Alfa", carpetaId: null, isFijada: false },
+				{ titulo: "Zeta", carpetaId: null, isFijada: true },
+				{ titulo: "Beta", carpetaId: null, isFijada: true },
+			],
+		);
+		expect(c.notas.map((n) => n.titulo)).toEqual(["Beta", "Zeta", "Alfa"]);
+	});
 });

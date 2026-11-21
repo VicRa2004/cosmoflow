@@ -12,12 +12,14 @@ import { EmitirTokensConexionUseCase } from "./application/useCases/EmitirTokens
 import { LoginGoogleUseCase } from "./application/useCases/LoginGoogleUseCase";
 import { LoginUseCase } from "./application/useCases/LoginUseCase";
 import { LogoutUseCase } from "./application/useCases/LogoutUseCase";
+import { ObtenerSesionesUseCase } from "./application/useCases/ObtenerSesionesUseCase";
 import { ObtenerTokensPersonalesUseCase } from "./application/useCases/ObtenerTokensPersonalesUseCase";
 import { RefreshTokenUseCase } from "./application/useCases/RefreshTokenUseCase";
 import { ReenviarVerificacionUseCase } from "./application/useCases/ReenviarVerificacionUseCase";
 import { RegistroUseCase } from "./application/useCases/RegistroUseCase";
 import { RestablecerPasswordUseCase } from "./application/useCases/RestablecerPasswordUseCase";
 import { RenovarTokensConexionUseCase } from "./application/useCases/RenovarTokensConexionUseCase";
+import { RevocarSesionUseCase } from "./application/useCases/RevocarSesionUseCase";
 import { RevocarTokenPersonalUseCase } from "./application/useCases/RevocarTokenPersonalUseCase";
 import { DIAS_CONEXION_SIN_USO } from "./application/useCases/tokensConexion";
 import { SolicitarRecuperacionUseCase } from "./application/useCases/SolicitarRecuperacionUseCase";
@@ -28,6 +30,7 @@ import { LoginController } from "./infrastructure/http/controllers/LoginControll
 import { LogoutController } from "./infrastructure/http/controllers/LogoutController";
 import { RefreshTokenController } from "./infrastructure/http/controllers/RefreshTokenController";
 import { RegistroController } from "./infrastructure/http/controllers/RegistroController";
+import { SesionController } from "./infrastructure/http/controllers/SesionController";
 import { TokenPersonalController } from "./infrastructure/http/controllers/TokenPersonalController";
 import { AuthMiddleware } from "./infrastructure/http/middlewares/authMiddleware";
 import { AuthRouter } from "./infrastructure/http/routes/AuthRouter";
@@ -146,6 +149,13 @@ export const authModule: AppModule = {
 					),
 				},
 			),
+			new SesionController({
+				obtenerTodos: new ObtenerSesionesUseCase(
+					tokenService,
+					refreshTokenRepo,
+				),
+				revocar: new RevocarSesionUseCase(tokenService, refreshTokenRepo),
+			}),
 			container.get(AUTH_TOKENS.AuthMiddleware),
 		);
 		app.route("/api/auth", router.router);

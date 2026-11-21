@@ -43,7 +43,7 @@ export function subarbol(carpetaId: number, carpetas: Carpetas): Set<number> {
  */
 export function contenidoDe<
 	C extends Carpetas[number],
-	N extends { titulo: string; carpetaId: number | null },
+	N extends { titulo: string; carpetaId: number | null; isFijada?: boolean },
 >(carpetaId: number | null, carpetas: C[], notas: N[]) {
 	const conocidas = new Set(carpetas.map((c) => c.id));
 	return {
@@ -57,7 +57,12 @@ export function contenidoDe<
 						? n.carpetaId
 						: null) === carpetaId,
 			)
-			.sort((a, b) => a.titulo.localeCompare(b.titulo, "es")),
+			.sort((a, b) => {
+				if (Boolean(a.isFijada) !== Boolean(b.isFijada)) {
+					return a.isFijada ? -1 : 1;
+				}
+				return a.titulo.localeCompare(b.titulo, "es");
+			}),
 	};
 }
 

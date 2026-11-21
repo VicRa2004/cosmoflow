@@ -45,6 +45,13 @@ export const refreshTokenSchema = z.object({
 	refreshToken: z.string().min(1, "El refresh token es obligatorio"),
 });
 
+export const sesionIdSchema = z.object({
+	id: z
+		.string()
+		.regex(/^\d+$/, "El ID debe ser un número válido")
+		.transform(Number),
+});
+
 // ── Respuestas (sólo documentación OpenAPI) ──────────────────────────────────
 
 const accessTokenSchema = z
@@ -73,3 +80,12 @@ export const refreshResponseSchema = z.object({
 export const mensajeResponseSchema = z.object({
 	mensaje: z.string().openapi({ example: "Sesión cerrada correctamente" }),
 });
+
+export const sesionDtoSchema = z
+	.object({
+		id: z.number().int().openapi({ example: 12 }),
+		createdAt: z.iso.datetime(),
+		expiraEn: z.iso.datetime(),
+		isActual: z.boolean().openapi({ example: true }),
+	})
+	.openapi("SesionDto");

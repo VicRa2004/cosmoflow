@@ -9,6 +9,7 @@ const campos = {
 		.max(255, "Máximo 255 caracteres"),
 	contenido: z.string().max(100_000, "Contenido demasiado largo").optional(),
 	color: colorAcentoSchema.optional(),
+	isFijada: z.boolean().optional(),
 	tagIds: z.array(z.number().int().positive()).max(50).optional(),
 	/** `null` la saca a la raíz. */
 	carpetaId: z.number().int().positive().nullable().optional(),
@@ -40,6 +41,10 @@ export const obtenerNotasSchema = z.object({
 	limite: numero.optional().default(10),
 	busqueda: z.string().trim().min(1).max(128).optional(),
 	tagId: numero.optional(),
+	fijada: z
+		.literal("true")
+		.transform(() => true)
+		.optional(),
 	/** Solo las que están directamente en esa carpeta. */
 	carpetaId: numero.optional(),
 	/** Título exacto sin distinguir mayúsculas (wikilinks). */
@@ -92,6 +97,7 @@ export const notaDtoSchema = z
 		titulo: z.string().openapi({ example: "Ideas para el viaje" }),
 		contenido: z.string().openapi({ example: "## Lugares\n- Lisboa" }),
 		color: colorAcentoSchema,
+		isFijada: z.boolean(),
 		tagIds: z.array(z.number().int()),
 		organizacionId: z.number().int().nullable(),
 		proyectoId: z.number().int().nullable(),
@@ -106,6 +112,7 @@ export const notaIndiceDtoSchema = z
 		id: z.number().int().openapi({ example: 1 }),
 		titulo: z.string().openapi({ example: "Ideas para el viaje" }),
 		color: colorAcentoSchema,
+		isFijada: z.boolean(),
 		carpetaId: z.number().int().nullable(),
 	})
 	.openapi("NotaIndiceDto");

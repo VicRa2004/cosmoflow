@@ -10,14 +10,17 @@ import type { PermisoGuard } from "@/core/shared/infrastructure/http/permisoGuar
 import type { PapeleraTareaController } from "../controllers/PapeleraTareaController";
 import { TareaController } from "../controllers/TareaController";
 import {
+	accionLoteTareasSchema,
 	actualizarTareaSchema,
 	calendarioTareasSchema,
 	crearTareaSchema,
+	eliminarLoteTareasSchema,
 	estadisticasTareasDtoSchema,
 	estadisticasTareasSchema,
 	moverTareaSchema,
 	obtenerTareasSchema,
 	paginacionSchema,
+	resultadoLoteTareasSchema,
 	tareaDtoSchema,
 	tareaIdSchema,
 	tareaPaginaSchema,
@@ -221,6 +224,61 @@ export class TareaRouter {
 		);
 
 		docs.registerPath({
+			method: "post",
+			path: "/lote",
+			tags,
+			security,
+			summary: "Aplicar una acción en lote sobre varias tareas",
+			request: {
+				body: {
+					required: true,
+					content: { "application/json": { schema: accionLoteTareasSchema } },
+				},
+			},
+			responses: {
+				200: jsonResponse(resultadoLoteTareasSchema, "Tareas actualizadas"),
+				400: errorResponse(
+					"Validación fallida, tags ajenos o dependencia bloqueante",
+				),
+				...protectedErrorResponses(`${recurso}:actualizar`),
+				404: errorResponse("Alguna tarea no fue encontrada"),
+			},
+		});
+		this.router.post(
+			"/lote",
+			guard.handle(recurso, "actualizar"),
+			controller.accionLote,
+		);
+
+		docs.registerPath({
+			method: "post",
+			path: "/lote/eliminar",
+			tags,
+			security,
+			summary: "Mover varias tareas a la papelera",
+			request: {
+				body: {
+					required: true,
+					content: {
+						"application/json": { schema: eliminarLoteTareasSchema },
+					},
+				},
+			},
+			responses: {
+				200: jsonResponse(resultadoLoteTareasSchema, "Tareas eliminadas"),
+				400: errorResponse("Validación fallida"),
+				...protectedErrorResponses(`${recurso}:eliminar`),
+				403: errorResponse("Sin permiso para eliminar tareas ahí (RN-22)"),
+				404: errorResponse("Alguna tarea no fue encontrada"),
+			},
+		});
+		this.router.post(
+			"/lote/eliminar",
+			guard.handle(recurso, "eliminar"),
+			controller.eliminarLote,
+		);
+
+		docs.registerPath({
 			method: "get",
 			path: "/{id}",
 			tags,
@@ -318,6 +376,28 @@ export class TareaRouter {
 			"/:id/mover",
 			guard.handle(recurso, "actualizar"),
 			controller.mover,
+		);
+
+		docs.registerPath({
+			method: "post",
+			path: "/{id}/duplicar",
+			tags,
+			security,
+			summary: "Duplicar una tarea en el mismo contexto",
+			request: { params: tareaIdSchema },
+			responses: {
+				201: jsonResponse(tareaDtoSchema, "Tarea duplicada"),
+				...protectedErrorResponses(`${recurso}:crear`),
+				403: errorResponse(
+					"En un equipo con líder, sin ser líder ni delegado (RN-22)",
+				),
+				404: errorResponse("Tarea no encontrada"),
+			},
+		});
+		this.router.post(
+			"/:id/duplicar",
+			guard.handle(recurso, "crear"),
+			controller.duplicar,
 		);
 	}
 }

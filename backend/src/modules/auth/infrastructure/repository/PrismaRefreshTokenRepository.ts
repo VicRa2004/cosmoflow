@@ -69,4 +69,48 @@ export class PrismaRefreshTokenRepository implements RefreshTokenRepository {
 			where: { expiraEn: { lt: new Date() } },
 		});
 	}
+
+	async listarActivosPorUsuario(usuarioId: number): Promise<
+		{
+			id: number;
+			tokenHash: string;
+			createdAt: Date;
+			expiraEn: Date;
+		}[]
+	> {
+		return prisma.refreshToken.findMany({
+			where: {
+				usuarioId,
+				revocado: false,
+				expiraEn: { gt: new Date() },
+			},
+			select: {
+				id: true,
+				tokenHash: true,
+				createdAt: true,
+				expiraEn: true,
+			},
+			orderBy: { createdAt: "desc" },
+		});
+	}
+
+	async buscarPorIdYUsuario(
+		id: number,
+		usuarioId: number,
+	): Promise<{
+		id: number;
+		tokenHash: string;
+		revocado: boolean;
+		expiraEn: Date;
+	} | null> {
+		return prisma.refreshToken.findFirst({
+			where: { id, usuarioId },
+			select: {
+				id: true,
+				tokenHash: true,
+				revocado: true,
+				expiraEn: true,
+			},
+		});
+	}
 }

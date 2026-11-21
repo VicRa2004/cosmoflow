@@ -8,6 +8,7 @@ import { ActualizarCarpetaUseCase } from "./application/useCases/ActualizarCarpe
 import { ActualizarNotaUseCase } from "./application/useCases/ActualizarNotaUseCase";
 import { CrearCarpetaUseCase } from "./application/useCases/CrearCarpetaUseCase";
 import { CrearNotaUseCase } from "./application/useCases/CrearNotaUseCase";
+import { DuplicarNotaUseCase } from "./application/useCases/DuplicarNotaUseCase";
 import { EliminarCarpetaUseCase } from "./application/useCases/EliminarCarpetaUseCase";
 import { EliminarNotaDefinitivoUseCase } from "./application/useCases/EliminarNotaDefinitivoUseCase";
 import { EliminarNotaUseCase } from "./application/useCases/EliminarNotaUseCase";
@@ -57,6 +58,7 @@ export const notaModule: AppModule = {
 				obtenerUno: new ObtenerNotaUseCase(proyectos),
 				actualizar: new ActualizarNotaUseCase(repo, proyectos),
 				eliminar: new EliminarNotaUseCase(repo, proyectos),
+				duplicar: new DuplicarNotaUseCase(repo, proyectos),
 				importar: new ImportarNotasUseCase(
 					repo,
 					carpetaRepo,

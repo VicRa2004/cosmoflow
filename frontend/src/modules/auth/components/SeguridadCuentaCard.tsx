@@ -13,6 +13,7 @@ import {
 	useCerrarSesionesMutation,
 	useReenviarVerificacionMutation,
 } from "../hooks/useCuentaMutation";
+import { ListaSesiones } from "./ListaSesiones";
 
 /** Aviso de email sin verificar y cierre de sesión en todos los dispositivos. */
 export function SeguridadCuentaCard() {
@@ -61,6 +62,8 @@ export function SeguridadCuentaCard() {
 					Cerrar todas las sesiones
 				</Button>
 			</div>
+
+			<ListaSesiones />
 
 			<ConfirmDialog
 				abierto={confirmando}

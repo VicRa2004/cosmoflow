@@ -1,6 +1,7 @@
 import { useNavigate } from "@tanstack/react-router";
-import { Columns3, List, Search } from "lucide-react";
+import { Columns3, List, Pin, Search } from "lucide-react";
 import { useState } from "react";
+import { usePermisos } from "@/core/auth/usePermisos";
 import { EncabezadoPagina } from "@/core/components/ui/EncabezadoPagina";
 import { Button } from "@/core/components/ui/Button";
 import { ConfirmDialog } from "@/core/components/ui/ConfirmDialog";
@@ -8,12 +9,17 @@ import { Input } from "@/core/components/ui/Input";
 import { Select } from "@/core/components/ui/Select";
 import { destinoDe, type EstadoTarea, type TareaDto } from "../api/tareasApi";
 import { AsignarTareaDialog } from "../components/AsignarTareaDialog";
+import { BarraAccionesLote } from "../components/BarraAccionesLote";
 import { MenuNuevo } from "../components/MenuNuevo";
 import { SelectorContextoTareas } from "../components/SelectorContextoTareas";
 import { TableroTareas } from "../components/TableroTareas";
 import { TareasTable } from "../components/TareasTable";
 import { useMiembrosDestino } from "../hooks/useMiembrosDestino";
-import { useEliminarTareaMutation } from "../hooks/useTareasMutation";
+import {
+	useDuplicarTareaMutation,
+	useEliminarTareaMutation,
+	useFijarTareaMutation,
+} from "../hooks/useTareasMutation";
 import { useTagsDisponibles } from "@/modules/tags/hooks/useTagsDisponibles";
 import { useTareasQuery } from "../hooks/useTareasQuery";
 import {
@@ -92,8 +98,13 @@ export function TareasPage({
 	const [pagina, setPagina] = useState(1);
 	const [busqueda, setBusqueda] = useState("");
 	const [estado, setEstado] = useState<EstadoTarea | "">("pendiente");
+	const [soloFijadas, setSoloFijadas] = useState(false);
 	const [tagId, setTagId] = useState("");
 	const [responsableId, setResponsableId] = useState("");
+	const [seleccionadas, setSeleccionadas] = useState<Set<number>>(
+		() => new Set(),
+	);
+	const { puede } = usePermisos();
 	const { tags: tagsDisponibles } = useTagsDisponibles(
 		enContexto ? organizacionId : undefined,
 	);
@@ -109,8 +120,28 @@ export function TareasPage({
 		navigate({ to: "/tareas/$id/editar", params: { id: String(tarea.id) } });
 	const [eliminando, setEliminando] = useState<TareaDto | null>(null);
 	const eliminar = useEliminarTareaMutation();
+	const duplicar = useDuplicarTareaMutation();
+	const fijar = useFijarTareaMutation();
+	const limpiarSeleccion = () => setSeleccionadas(new Set());
+	const toggleSeleccion = (id: number) =>
+		setSeleccionadas((prev) => {
+			const next = new Set(prev);
+			if (next.has(id)) next.delete(id);
+			else next.add(id);
+			return next;
+		});
+	const toggleTodas = (ids: number[], seleccionar: boolean) =>
+		setSeleccionadas((prev) => {
+			const next = new Set(prev);
+			for (const id of ids) {
+				if (seleccionar) next.add(id);
+				else next.delete(id);
+			}
+			return next;
+		});
 	const filtros = {
 		busqueda: busqueda.trim() || undefined,
+		fijada: soloFijadas || undefined,
 		tagId: tagId ? Number(tagId) : undefined,
 		responsableId: responsableId ? Number(responsableId) : undefined,
 		...(asignadas
@@ -176,6 +207,7 @@ export function TareasPage({
 							setPagina(1);
 							setTagId("");
 							setResponsableId("");
+							limpiarSeleccion();
 							navigate({ to: "/tareas", search: { ...search, vista } });
 						}}
 					/>
@@ -187,6 +219,7 @@ export function TareasPage({
 						onChange={(e) => {
 							setEstado(e.target.value as EstadoTarea | "");
 							setPagina(1);
+							limpiarSeleccion();
 						}}
 					>
 						<option value="">Todos los estados</option>
@@ -205,6 +238,7 @@ export function TareasPage({
 							onChange={(e) => {
 								setTagId(e.target.value);
 								setPagina(1);
+								limpiarSeleccion();
 							}}
 						>
 							<option value="">Todos los tags</option>
@@ -225,6 +259,7 @@ export function TareasPage({
 						onChange={(valor) => {
 							setResponsableId(valor);
 							setPagina(1);
+							limpiarSeleccion();
 						}}
 					/>
 				)}
@@ -236,12 +271,33 @@ export function TareasPage({
 						onChange={(e) => {
 							setBusqueda(e.target.value);
 							setPagina(1);
+							limpiarSeleccion();
 						}}
 						className="pl-9"
 					/>
 					<Search className="pointer-events-none absolute top-2.5 left-3 h-4 w-4 text-tinta-tenue" />
 				</div>
+				<Button
+					variant={soloFijadas ? "secondary" : "outline"}
+					aria-pressed={soloFijadas}
+					onClick={() => {
+						setSoloFijadas((v) => !v);
+						setPagina(1);
+						limpiarSeleccion();
+					}}
+				>
+					<Pin className="h-4 w-4" />
+					Fijadas
+				</Button>
 			</div>
+
+			{!enTablero && (
+				<BarraAccionesLote
+					seleccionadas={[...seleccionadas]}
+					tags={tags}
+					onLimpiar={limpiarSeleccion}
+				/>
+			)}
 
 			{enTablero ? (
 				<TableroTareas filtros={filtros} />
@@ -250,10 +306,27 @@ export function TareasPage({
 					pagina={data}
 					isLoading={isLoading}
 					error={error}
-					onCambioPagina={setPagina}
+					onCambioPagina={(p) => {
+						setPagina(p);
+						limpiarSeleccion();
+					}}
 					onAbrir={abrir}
 					onEditar={editar}
 					onEliminar={setEliminando}
+					onDuplicar={
+						puede("tareas:crear")
+							? (tarea) => duplicar.mutate(tarea.id)
+							: undefined
+					}
+					onFijar={
+						puede("tareas:actualizar")
+							? (tarea) =>
+									fijar.mutate({ id: tarea.id, isFijada: !tarea.isFijada })
+							: undefined
+					}
+					seleccionadas={seleccionadas}
+					onToggleSeleccion={toggleSeleccion}
+					onToggleTodas={toggleTodas}
 					onAsignar={enContexto || cruzadas ? setAsignando : undefined}
 					mostrarDonde={cruzadas}
 				/>

@@ -1,5 +1,5 @@
 import { useCanGoBack, useNavigate, useRouter } from "@tanstack/react-router";
-import { FolderInput, Pencil, Trash2 } from "lucide-react";
+import { Copy, FolderInput, Pencil, Pin, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { usePermisos } from "@/core/auth/usePermisos";
 import { Button } from "@/core/components/ui/Button";
@@ -18,7 +18,11 @@ import { ActividadTarea } from "../components/ActividadTarea";
 import { ChecklistSubtareas } from "../components/ChecklistSubtareas";
 import { ComentariosTarea } from "../components/ComentariosTarea";
 import { MoverTareaDialog } from "../components/MoverTareaDialog";
-import { useEliminarTareaMutation } from "../hooks/useTareasMutation";
+import {
+	useDuplicarTareaMutation,
+	useEliminarTareaMutation,
+	useFijarTareaMutation,
+} from "../hooks/useTareasMutation";
 import { useTareaQuery } from "../hooks/useTareasQuery";
 import {
 	ETIQUETAS_ESTADO,
@@ -114,6 +118,8 @@ export function TareaLecturaPage({ id }: { id: number }) {
 	const { puede } = usePermisos();
 	const { data: tarea, error } = useTareaQuery(id);
 	const eliminar = useEliminarTareaMutation();
+	const duplicar = useDuplicarTareaMutation();
+	const fijar = useFijarTareaMutation();
 	const [moviendo, setMoviendo] = useState(false);
 	const [eliminando, setEliminando] = useState(false);
 	// Vuelve a donde se abrió (lista, portada o correo); si se entró por URL, a la lista.
@@ -144,6 +150,42 @@ export function TareaLecturaPage({ id }: { id: number }) {
 				}
 				acciones={
 					<>
+						{puede("tareas:actualizar") && (
+							<Button
+								variant="ghost"
+								size="sm"
+								isLoading={fijar.isPending}
+								onClick={() =>
+									fijar.mutate({ id: tarea.id, isFijada: !tarea.isFijada })
+								}
+							>
+								<Pin
+									className={
+										tarea.isFijada ? "h-4 w-4 text-indigo-400" : "h-4 w-4"
+									}
+								/>
+								{tarea.isFijada ? "Desfijar" : "Fijar"}
+							</Button>
+						)}
+						{puede("tareas:crear") && (
+							<Button
+								variant="outline"
+								size="sm"
+								isLoading={duplicar.isPending}
+								onClick={() =>
+									duplicar.mutate(tarea.id, {
+										onSuccess: (copia) =>
+											navigate({
+												to: "/tareas/$id",
+												params: { id: String(copia.id) },
+											}),
+									})
+								}
+							>
+								<Copy className="h-4 w-4" />
+								Duplicar
+							</Button>
+						)}
 						{puede("tareas:eliminar") && (
 							<Button
 								variant="dangerGhost"

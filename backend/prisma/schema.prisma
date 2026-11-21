@@ -340,6 +340,7 @@ model Tarea {
   fechaVencimiento DateTime?         @map("tar_fecha_vencimiento") @db.Date
   /// Color de acento opcional (#rrggbb) para destacarla
   color            String?           @map("tar_color") @db.VarChar(7)
+  fijada           Boolean           @default(false) @map("tar_fijada")
   /// Recurrencia (#57): al completarla se crea la siguiente con las fechas desplazadas
   recurrencia      RecurrenciaTarea? @map("tar_recurrencia")
   /// Tarea principal: esta no se empieza ni se completa hasta que aquella esté completada
@@ -463,6 +464,7 @@ model Nota {
   contenido String    @default("") @map("not_contenido")
   /// Color de acento opcional (#rrggbb) para destacarla
   color     String?   @map("not_color") @db.VarChar(7)
+  fijada    Boolean   @default(false) @map("not_fijada")
   createdAt DateTime  @default(now()) @map("created_at")
   updatedAt DateTime  @default(now()) @updatedAt @map("updated_at")
   /// Borrado lógico (RN-91)

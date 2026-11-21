@@ -43,4 +43,29 @@ export interface RefreshTokenRepository {
 	 * Elimina tokens expirados (revocados o no) de la base de datos (limpieza periódica).
 	 */
 	eliminarExpirados(): Promise<void>;
+
+	/**
+	 * Lista las sesiones activas (no revocadas y no expiradas) de un usuario.
+	 */
+	listarActivosPorUsuario(usuarioId: number): Promise<
+		{
+			id: number;
+			tokenHash: string;
+			createdAt: Date;
+			expiraEn: Date;
+		}[]
+	>;
+
+	/**
+	 * Busca un refresh token por su ID y dueño.
+	 */
+	buscarPorIdYUsuario(
+		id: number,
+		usuarioId: number,
+	): Promise<{
+		id: number;
+		tokenHash: string;
+		revocado: boolean;
+		expiraEn: Date;
+	} | null>;
 }

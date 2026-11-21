@@ -1085,6 +1085,129 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/auth/sesiones": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Listar sesiones activas del usuario autenticado
+         * @description Solo accesible con sesión JWT (no con un token personal). Marca `isActual` comparando con la cookie `refresh_token` o cabecera `X-Refresh-Token`.
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Sesiones activas */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["SesionDto"][];
+                    };
+                };
+                /** @description No autenticado */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Solo con sesión, no con un token personal */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/auth/sesiones/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Cerrar una sesión individual
+         * @description Revoca una sesión activa del usuario autenticado. Si revoca la sesión actual, limpia la cookie `refresh_token`.
+         */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Sesión cerrada */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description No autenticado */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Solo con sesión, no con un token personal */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Sesión no encontrada */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/auth/google": {
         parameters: {
             query?: never;
@@ -3290,6 +3413,7 @@ export interface paths {
                     limite?: string;
                     busqueda?: string;
                     estado?: "pendiente" | "en_progreso" | "completada" | "cancelada";
+                    fijada?: "true";
                     tagId?: string;
                     responsableId?: string;
                     organizacionId?: string;
@@ -3380,6 +3504,7 @@ export interface paths {
                         fechaVencimiento?: string | null;
                         /** @example #f59e0b */
                         color?: string | null;
+                        isFijada?: boolean;
                         tagIds?: number[];
                         responsableIds?: number[];
                         dependeDeId?: number | null;
@@ -3877,6 +4002,182 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/tareas/lote": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Aplicar una acción en lote sobre varias tareas */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        ids: number[];
+                        /** @enum {string} */
+                        accion: "estado";
+                        /** @enum {string} */
+                        estado: "pendiente" | "en_progreso" | "completada" | "cancelada";
+                    } | {
+                        ids: number[];
+                        /** @enum {string} */
+                        accion: "prioridad";
+                        /** @enum {string} */
+                        prioridad: "baja" | "media" | "alta";
+                    } | {
+                        ids: number[];
+                        /** @enum {string} */
+                        accion: "agregar_tag";
+                        tagId: number;
+                    } | {
+                        ids: number[];
+                        /** @enum {string} */
+                        accion: "quitar_tag";
+                        tagId: number;
+                    };
+                };
+            };
+            responses: {
+                /** @description Tareas actualizadas */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ResultadoLoteTareasDto"];
+                    };
+                };
+                /** @description Validación fallida, tags ajenos o dependencia bloqueante */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description No autenticado */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Permiso denegado (requiere tareas:actualizar) */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Alguna tarea no fue encontrada */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/tareas/lote/eliminar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Mover varias tareas a la papelera */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        ids: number[];
+                    };
+                };
+            };
+            responses: {
+                /** @description Tareas eliminadas */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ResultadoLoteTareasDto"];
+                    };
+                };
+                /** @description Validación fallida */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description No autenticado */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Sin permiso para eliminar tareas ahí (RN-22) */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Alguna tarea no fue encontrada */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/tareas/{id}": {
         parameters: {
             query?: never;
@@ -3965,6 +4266,7 @@ export interface paths {
                         fechaVencimiento?: string | null;
                         /** @example #f59e0b */
                         color?: string | null;
+                        isFijada?: boolean;
                         tagIds?: number[];
                         responsableIds?: number[];
                         dependeDeId?: number | null;
@@ -4163,6 +4465,71 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/tareas/{id}/duplicar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Duplicar una tarea en el mismo contexto */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Tarea duplicada */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["TareaDto"];
+                    };
+                };
+                /** @description No autenticado */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description En un equipo con líder, sin ser líder ni delegado (RN-22) */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Tarea no encontrada */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/notas": {
         parameters: {
             query?: never;
@@ -4178,6 +4545,7 @@ export interface paths {
                     limite?: string;
                     busqueda?: string;
                     tagId?: string;
+                    fijada?: "true";
                     carpetaId?: string;
                     titulo?: string;
                     creadaDesde?: string;
@@ -4263,6 +4631,7 @@ export interface paths {
                         contenido?: string;
                         /** @example #f59e0b */
                         color?: string | null;
+                        isFijada?: boolean;
                         tagIds?: number[];
                         carpetaId?: number | null;
                         proyectoId?: number;
@@ -4629,6 +4998,7 @@ export interface paths {
                 query?: {
                     busqueda?: string;
                     tagId?: string;
+                    fijada?: "true";
                     creadaDesde?: string;
                     creadaHasta?: string;
                     editadaDesde?: string;
@@ -4770,6 +5140,7 @@ export interface paths {
                         contenido?: string;
                         /** @example #f59e0b */
                         color?: string | null;
+                        isFijada?: boolean;
                         tagIds?: number[];
                         carpetaId?: number | null;
                     };
@@ -4872,6 +5243,71 @@ export interface paths {
                 };
             };
         };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/notas/{id}/duplicar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Duplicar una nota en la misma carpeta y ámbito */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Nota duplicada */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["NotaDto"];
+                    };
+                };
+                /** @description No autenticado */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Permiso denegado (requiere notas:crear) */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Nota no encontrada */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
         options?: never;
         head?: never;
         patch?: never;
@@ -9076,6 +9512,16 @@ export interface components {
             /** @description Sólo con `X-Client-Platform: mobile` (y sin cookie): el refresh token, que la app reenvía en `X-Refresh-Token`. */
             refreshToken?: string;
         };
+        SesionDto: {
+            /** @example 12 */
+            id: number;
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            expiraEn: string;
+            /** @example true */
+            isActual: boolean;
+        };
         TokenPersonalCreado: components["schemas"]["TokenPersonalDto"] & {
             /** @description Solo se devuelve aquí */
             token: string;
@@ -9227,6 +9673,7 @@ export interface components {
             fechaVencimiento: string | null;
             /** @example #f59e0b */
             color: string | null;
+            isFijada: boolean;
             tagIds: number[];
             organizacionId: number | null;
             equipoId: number | null;
@@ -9276,6 +9723,10 @@ export interface components {
                 completadas: number;
             }[];
         };
+        ResultadoLoteTareasDto: {
+            /** @example 3 */
+            afectadas: number;
+        };
         NotaDto: {
             /** @example 1 */
             id: number;
@@ -9288,6 +9739,7 @@ export interface components {
             contenido: string;
             /** @example #f59e0b */
             color: string | null;
+            isFijada: boolean;
             tagIds: number[];
             organizacionId: number | null;
             proyectoId: number | null;
@@ -9316,6 +9768,7 @@ export interface components {
             titulo: string;
             /** @example #f59e0b */
             color: string | null;
+            isFijada: boolean;
             carpetaId: number | null;
         };
         CarpetaDto: {
@@ -9575,6 +10028,7 @@ export interface components {
 export type UsuarioDto = components['schemas']['UsuarioDto'];
 export type ErrorResponse = components['schemas']['ErrorResponse'];
 export type AuthResponse = components['schemas']['AuthResponse'];
+export type SesionDto = components['schemas']['SesionDto'];
 export type TokenPersonalCreado = components['schemas']['TokenPersonalCreado'];
 export type TokenPersonalDto = components['schemas']['TokenPersonalDto'];
 export type PermisoDto = components['schemas']['PermisoDto'];
@@ -9586,6 +10040,7 @@ export type ActividadTarea = components['schemas']['ActividadTarea'];
 export type ComentarioTareaDto = components['schemas']['ComentarioTareaDto'];
 export type TareaDto = components['schemas']['TareaDto'];
 export type EstadisticasTareasDto = components['schemas']['EstadisticasTareasDto'];
+export type ResultadoLoteTareasDto = components['schemas']['ResultadoLoteTareasDto'];
 export type NotaDto = components['schemas']['NotaDto'];
 export type ResultadoImportacionDto = components['schemas']['ResultadoImportacionDto'];
 export type NotaIndiceDto = components['schemas']['NotaIndiceDto'];

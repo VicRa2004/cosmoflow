@@ -1,4 +1,5 @@
 import { Link } from "@tanstack/react-router";
+import { Pin } from "lucide-react";
 import { useState } from "react";
 import { getErrorMessage } from "@/core/api/client";
 import { usePermisos } from "@/core/auth/usePermisos";
@@ -107,18 +108,43 @@ export function TableroTareas({
 										puedeMover && "cursor-grab active:cursor-grabbing",
 									)}
 								>
-									<Link
-										to="/tareas/$id"
-										params={{ id: String(tarea.id) }}
-										// El enlace no debe arrastrarse en lugar de la tarjeta.
-										draggable={false}
-										className="flex items-center gap-2 font-medium text-tinta hover:text-indigo-400 hover:underline"
-									>
-										<PuntoColor color={tarea.color} />
-										<span className="min-w-0 break-words">{tarea.titulo}</span>
-										<BloqueadaIcono tarea={tarea} />
-										<RecurrenciaIcono tarea={tarea} />
-									</Link>
+									<div className="flex items-start justify-between gap-2">
+										<Link
+											to="/tareas/$id"
+											params={{ id: String(tarea.id) }}
+											// El enlace no debe arrastrarse en lugar de la tarjeta.
+											draggable={false}
+											className="flex min-w-0 items-center gap-2 font-medium text-tinta hover:text-indigo-400 hover:underline"
+										>
+											<PuntoColor color={tarea.color} />
+											<span className="min-w-0 break-words">
+												{tarea.titulo}
+											</span>
+											<BloqueadaIcono tarea={tarea} />
+											<RecurrenciaIcono tarea={tarea} />
+										</Link>
+										{puedeMover && (
+											<button
+												type="button"
+												onClick={() =>
+													actualizar.mutate({
+														id: tarea.id,
+														datos: { isFijada: !tarea.isFijada },
+													})
+												}
+												aria-label={
+													tarea.isFijada ? "Desfijar tarea" : "Fijar tarea"
+												}
+												title={tarea.isFijada ? "Desfijar" : "Fijar"}
+												className={cn(
+													"shrink-0 rounded p-1 text-tinta-tenue hover:bg-elevada hover:text-tinta",
+													tarea.isFijada && "text-indigo-400",
+												)}
+											>
+												<Pin className="h-3.5 w-3.5" />
+											</button>
+										)}
+									</div>
 									<div className="flex flex-wrap items-center gap-2 text-xs">
 										<PrioridadBadge prioridad={tarea.prioridad} />
 										<ProgresoSubtareas tarea={tarea} />

@@ -1,6 +1,9 @@
 import type { Context } from "hono";
+import type { AccionLoteTareasUseCase } from "../../../application/useCases/AccionLoteTareasUseCase";
 import type { ActualizarTareaUseCase } from "../../../application/useCases/ActualizarTareaUseCase";
 import type { CrearTareaUseCase } from "../../../application/useCases/CrearTareaUseCase";
+import type { DuplicarTareaUseCase } from "../../../application/useCases/DuplicarTareaUseCase";
+import type { EliminarLoteTareasUseCase } from "../../../application/useCases/EliminarLoteTareasUseCase";
 import type { EliminarTareaUseCase } from "../../../application/useCases/EliminarTareaUseCase";
 import type { ObtenerTareaUseCase } from "../../../application/useCases/ObtenerTareaUseCase";
 import type { ObtenerPendientesUseCase } from "../../../application/useCases/ObtenerPendientesUseCase";
@@ -9,9 +12,11 @@ import type { ObtenerEstadisticasTareasUseCase } from "../../../application/useC
 import type { ObtenerCalendarioUseCase } from "../../../application/useCases/ObtenerCalendarioUseCase";
 import type { MoverTareaUseCase } from "../../../application/useCases/MoverTareaUseCase";
 import {
+	accionLoteTareasSchema,
 	actualizarTareaSchema,
 	calendarioTareasSchema,
 	crearTareaSchema,
+	eliminarLoteTareasSchema,
 	estadisticasTareasSchema,
 	moverTareaSchema,
 	obtenerTareasSchema,
@@ -34,6 +39,9 @@ export class TareaController extends BaseController {
 			obtenerUno: ObtenerTareaUseCase;
 			actualizar: ActualizarTareaUseCase;
 			eliminar: EliminarTareaUseCase;
+			duplicar: DuplicarTareaUseCase;
+			accionLote: AccionLoteTareasUseCase;
+			eliminarLote: EliminarLoteTareasUseCase;
 			mover: MoverTareaUseCase;
 			estadisticas: ObtenerEstadisticasTareasUseCase;
 		},
@@ -126,6 +134,33 @@ export class TareaController extends BaseController {
 			return this.ok(
 				c,
 				await this.useCases.mover.ejecutar(c.get("usuario").id, id, destino),
+			);
+		});
+
+	duplicar = (c: Context<AuthEnv>): Promise<Response> =>
+		this.executeSafely(c, async () => {
+			const { id } = validate(tareaIdSchema, c.req.param());
+			return this.created(
+				c,
+				await this.useCases.duplicar.ejecutar(c.get("usuario").id, id),
+			);
+		});
+
+	accionLote = (c: Context<AuthEnv>): Promise<Response> =>
+		this.executeSafely(c, async () => {
+			const dto = validate(accionLoteTareasSchema, await c.req.json());
+			return this.ok(
+				c,
+				await this.useCases.accionLote.ejecutar(c.get("usuario").id, dto),
+			);
+		});
+
+	eliminarLote = (c: Context<AuthEnv>): Promise<Response> =>
+		this.executeSafely(c, async () => {
+			const { ids } = validate(eliminarLoteTareasSchema, await c.req.json());
+			return this.ok(
+				c,
+				await this.useCases.eliminarLote.ejecutar(c.get("usuario").id, ids),
 			);
 		});
 }

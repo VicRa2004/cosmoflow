@@ -58,3 +58,28 @@ export function useMoverNotaMutation() {
 		onError,
 	});
 }
+
+export function useDuplicarNotaMutation() {
+	const invalidar = useInvalidar();
+	return useMutation({
+		mutationFn: notasApi.duplicar,
+		onSuccess: () => {
+			toast.success("Nota duplicada");
+			return invalidar();
+		},
+		onError,
+	});
+}
+
+export function useFijarNotaMutation() {
+	const invalidar = useInvalidar();
+	return useMutation({
+		mutationFn: ({ id, isFijada }: { id: number; isFijada: boolean }) =>
+			notasApi.actualizar(id, { isFijada }),
+		onSuccess: (_data, { isFijada }) => {
+			toast.success(isFijada ? "Nota fijada" : "Nota desfijada");
+			return invalidar();
+		},
+		onError,
+	});
+}

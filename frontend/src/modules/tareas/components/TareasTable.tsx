@@ -1,5 +1,5 @@
 import { PuntoColor } from "@/core/components/ui/PuntoColor";
-import { Pencil, Trash2 } from "lucide-react";
+import { Copy, Pencil, Pin, Trash2 } from "lucide-react";
 import { Button } from "@/core/components/ui/Button";
 import {
 	AccionesFila,
@@ -33,6 +33,11 @@ interface TareasTableProps {
 	onAbrir: (fila: TareaDto) => void;
 	onEditar: (fila: TareaDto) => void;
 	onEliminar: (fila: TareaDto) => void;
+	onDuplicar?: (fila: TareaDto) => void;
+	onFijar?: (fila: TareaDto) => void;
+	seleccionadas?: Set<number>;
+	onToggleSeleccion?: (id: number) => void;
+	onToggleTodas?: (ids: number[], seleccionar: boolean) => void;
 	/** Columna «Responsables» y acción «Asignar» (tareas compartidas). */
 	onAsignar?: (fila: TareaDto & { organizacionId: number }) => void;
 	/** Columna «Dónde», para listas que mezclan contextos. */
@@ -47,10 +52,47 @@ export function TareasTable({
 	onAbrir,
 	onEditar,
 	onEliminar,
+	onDuplicar,
+	onFijar,
+	seleccionadas,
+	onToggleSeleccion,
+	onToggleTodas,
 	onAsignar,
 	mostrarDonde = false,
 }: TareasTableProps) {
+	const filasVisibles = pagina?.datos ?? [];
+	const idsVisibles = filasVisibles.map((f) => f.id);
+	const todasSeleccionadas =
+		!!seleccionadas &&
+		idsVisibles.length > 0 &&
+		idsVisibles.every((id) => seleccionadas.has(id));
+
 	const columnas: Columna<TareaDto>[] = [
+		...(seleccionadas && onToggleSeleccion && onToggleTodas
+			? [
+					{
+						cabecera: (
+							<input
+								type="checkbox"
+								aria-label="Seleccionar todas las tareas visibles"
+								checked={todasSeleccionadas}
+								onChange={(e) => onToggleTodas(idsVisibles, e.target.checked)}
+								className="h-4 w-4 cursor-pointer accent-indigo-500"
+							/>
+						),
+						className: "w-10 pr-0",
+						celda: (fila: TareaDto) => (
+							<input
+								type="checkbox"
+								aria-label={`Seleccionar «${fila.titulo}»`}
+								checked={seleccionadas.has(fila.id)}
+								onChange={() => onToggleSeleccion(fila.id)}
+								className="h-4 w-4 cursor-pointer accent-indigo-500"
+							/>
+						),
+					},
+				]
+			: []),
 		{
 			cabecera: "Título",
 			celda: (fila) => (
@@ -60,6 +102,12 @@ export function TareasTable({
 					className="flex items-center gap-2 text-left font-medium text-tinta hover:text-indigo-400 hover:underline"
 				>
 					<PuntoColor color={fila.color} />
+					{fila.isFijada && (
+						<Pin
+							aria-label="Fijada"
+							className="h-3.5 w-3.5 shrink-0 text-indigo-400"
+						/>
+					)}
 					{fila.titulo}
 					<BloqueadaIcono tarea={fila} />
 					<RecurrenciaIcono tarea={fila} />
@@ -112,6 +160,32 @@ export function TareasTable({
 			className: "text-right",
 			celda: (fila) => (
 				<AccionesFila>
+					{onFijar && (
+						<Button
+							variant="ghost"
+							size="sm"
+							onClick={() => onFijar(fila)}
+							aria-label={fila.isFijada ? "Desfijar" : "Fijar"}
+							title={fila.isFijada ? "Desfijar" : "Fijar"}
+						>
+							<Pin
+								className={
+									fila.isFijada ? "h-4 w-4 text-indigo-400" : "h-4 w-4"
+								}
+							/>
+						</Button>
+					)}
+					{onDuplicar && (
+						<Button
+							variant="ghost"
+							size="sm"
+							onClick={() => onDuplicar(fila)}
+							aria-label="Duplicar"
+							title="Duplicar"
+						>
+							<Copy className="h-4 w-4" />
+						</Button>
+					)}
 					{onAsignar && esCompartida(fila) && (
 						<AccionAsignar tarea={fila} onAsignar={onAsignar} />
 					)}

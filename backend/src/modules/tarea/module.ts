@@ -7,6 +7,9 @@ import { ORGANIZACION_TOKENS } from "@/modules/organizacion";
 import { PROYECTO_TOKENS } from "@/modules/proyecto";
 import { ReubicarTareas } from "./application/subscribers/ReubicarTareas";
 import { ContextosTarea } from "./application/services/ContextosTarea";
+import { AccionLoteTareasUseCase } from "./application/useCases/AccionLoteTareasUseCase";
+import { DuplicarTareaUseCase } from "./application/useCases/DuplicarTareaUseCase";
+import { EliminarLoteTareasUseCase } from "./application/useCases/EliminarLoteTareasUseCase";
 import { MoverTareaUseCase } from "./application/useCases/MoverTareaUseCase";
 import { ActualizarComentarioUseCase } from "./application/useCases/ActualizarComentarioUseCase";
 import { ActualizarTareaUseCase } from "./application/useCases/ActualizarTareaUseCase";
@@ -59,6 +62,14 @@ export const tareaModule: AppModule = {
 				obtenerUno: new ObtenerTareaUseCase(repo, contextos),
 				actualizar: new ActualizarTareaUseCase(repo, contextos, eventBus, uow),
 				eliminar: new EliminarTareaUseCase(repo, contextos, eventBus, uow),
+				duplicar: new DuplicarTareaUseCase(repo, contextos, eventBus, uow),
+				accionLote: new AccionLoteTareasUseCase(repo, contextos, eventBus, uow),
+				eliminarLote: new EliminarLoteTareasUseCase(
+					repo,
+					contextos,
+					eventBus,
+					uow,
+				),
 				estadisticas: new ObtenerEstadisticasTareasUseCase(repo, contextos),
 				mover: new MoverTareaUseCase(
 					repo,

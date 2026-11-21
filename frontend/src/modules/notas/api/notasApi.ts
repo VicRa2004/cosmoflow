@@ -23,6 +23,7 @@ export interface ObtenerNotasParams {
 	limite?: number;
 	busqueda?: string;
 	tagId?: number;
+	fijada?: boolean;
 	/** Solo las que están directamente en esa carpeta. */
 	carpetaId?: number;
 	/** Título exacto (wikilinks). */
@@ -81,6 +82,11 @@ export const notasApi = {
 
 	async eliminar(id: number): Promise<void> {
 		await apiClient.delete(`/notas/${id}`);
+	},
+
+	async duplicar(id: number): Promise<NotaDto> {
+		const response = await apiClient.post<NotaDto>(`/notas/${id}/duplicar`);
+		return response.data;
 	},
 
 	async importar(datos: ImportarNotasInput): Promise<ResultadoImportacion> {

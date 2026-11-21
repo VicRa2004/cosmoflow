@@ -11,6 +11,10 @@ type TareasPagina =
 
 export type EstadisticasTareasDto =
 	components["schemas"]["EstadisticasTareasDto"];
+export type AccionLoteTareasInput =
+	paths["/api/tareas/lote"]["post"]["requestBody"]["content"]["application/json"];
+export type ResultadoLoteTareasDto =
+	components["schemas"]["ResultadoLoteTareasDto"];
 export type EstadoTarea = TareaDto["estado"];
 export type PrioridadTarea = TareaDto["prioridad"];
 export type RecurrenciaTarea = NonNullable<TareaDto["recurrencia"]>;
@@ -21,6 +25,7 @@ export interface ObtenerTareasParams {
 	limite?: number;
 	busqueda?: string;
 	estado?: EstadoTarea;
+	fijada?: boolean;
 	tagId?: number;
 	/** Las que tienen a este usuario como responsable. */
 	responsableId?: number;
@@ -108,5 +113,28 @@ export const tareasApi = {
 
 	async eliminar(id: number): Promise<void> {
 		await apiClient.delete(`/tareas/${id}`);
+	},
+
+	async duplicar(id: number): Promise<TareaDto> {
+		const response = await apiClient.post<TareaDto>(`/tareas/${id}/duplicar`);
+		return response.data;
+	},
+
+	async accionLote(
+		datos: AccionLoteTareasInput,
+	): Promise<ResultadoLoteTareasDto> {
+		const response = await apiClient.post<ResultadoLoteTareasDto>(
+			"/tareas/lote",
+			datos,
+		);
+		return response.data;
+	},
+
+	async eliminarLote(ids: number[]): Promise<ResultadoLoteTareasDto> {
+		const response = await apiClient.post<ResultadoLoteTareasDto>(
+			"/tareas/lote/eliminar",
+			{ ids },
+		);
+		return response.data;
 	},
 };

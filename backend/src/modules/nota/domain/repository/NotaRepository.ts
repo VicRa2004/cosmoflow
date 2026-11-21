@@ -7,6 +7,7 @@ export interface NotaFiltros {
 	/** Texto en el título o el contenido, sin distinguir mayúsculas. */
 	busqueda?: string;
 	tagId?: number;
+	fijada?: boolean;
 	/** Solo las que están directamente en esa carpeta. */
 	carpetaId?: number;
 	/** Título exacto, sin distinguir mayúsculas (resuelve los wikilinks). */
@@ -28,6 +29,7 @@ export interface NotaIndice {
 	titulo: string;
 	color: string | null;
 	carpetaId: number | null;
+	isFijada: boolean;
 }
 
 /** Las personales de un usuario o las de un proyecto. */

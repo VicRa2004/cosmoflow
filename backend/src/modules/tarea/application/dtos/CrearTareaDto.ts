@@ -17,6 +17,7 @@ export interface CamposTareaDto {
 	fechaInicio?: string | null;
 	fechaVencimiento?: string | null;
 	color?: string | null;
+	isFijada?: boolean;
 	tagIds?: number[];
 	dependeDeId?: number | null;
 	recurrencia?: RecurrenciaTarea | null;

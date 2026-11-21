@@ -1,5 +1,5 @@
 import { useNavigate } from "@tanstack/react-router";
-import { FilePlus, Search, SlidersHorizontal, Upload } from "lucide-react";
+import { FilePlus, Pin, Search, SlidersHorizontal, Upload } from "lucide-react";
 import { useState } from "react";
 import { usePermisos } from "@/core/auth/usePermisos";
 import { Button } from "@/core/components/ui/Button";
@@ -17,6 +17,10 @@ import {
 import { ImportarObsidianDialog } from "../components/ImportarObsidianDialog";
 import { PanelCarpetas } from "../components/PanelCarpetas";
 import { useCarpetasQuery } from "../hooks/useCarpetas";
+import {
+	useDuplicarNotaMutation,
+	useFijarNotaMutation,
+} from "../hooks/useNotasMutation";
 import { useExploradorNotas } from "../hooks/useNotasQuery";
 import type { ContextoNotaSearch } from "../schemas/notaSchemas";
 import { rutaDe } from "../utils/arbolCarpetas";
@@ -50,19 +54,23 @@ export function BovedaNotas({ contexto }: { contexto: ContextoNotaSearch }) {
 		navigate({ to: "/notas", search: { ...ambito, carpetaId: id } });
 	const [busqueda, setBusqueda] = useState("");
 	const [tagId, setTagId] = useState("");
+	const [soloFijadas, setSoloFijadas] = useState(false);
 	const [verFiltros, setVerFiltros] = useState(false);
 	const [rangos, setRangos] = useState(sinRangos);
 	const [importando, setImportando] = useState(false);
+	const duplicarNota = useDuplicarNotaMutation();
+	const fijarNota = useFijarNotaMutation();
 	const { data: carpetas = [] } = useCarpetasQuery(
 		deProyecto ? proyectoId : undefined,
 	);
 	const { tags } = useTagsDisponibles(deProyecto ? organizacionId : undefined);
 	const filtrosFecha = Object.values(rangos).filter(Boolean).length;
 	const texto = busqueda.trim();
-	const filtrando = !!texto || !!tagId || filtrosFecha > 0;
+	const filtrando = !!texto || !!tagId || soloFijadas || filtrosFecha > 0;
 	const { data: notas = [], isLoading } = useExploradorNotas({
 		busqueda: texto || undefined,
 		tagId: tagId ? Number(tagId) : undefined,
+		fijada: soloFijadas || undefined,
 		...rangosAParams(rangos),
 		...(deProyecto && { proyectoId }),
 	});
@@ -92,6 +100,16 @@ export function BovedaNotas({ contexto }: { contexto: ContextoNotaSearch }) {
 					<Search className="pointer-events-none absolute top-2.5 left-3 h-4 w-4 text-tinta-tenue" />
 				</div>
 				<div className="flex items-center gap-1">
+					<Button
+						variant={soloFijadas ? "secondary" : "ghost"}
+						aria-label="Fijadas"
+						title="Solo fijadas"
+						aria-pressed={soloFijadas}
+						onClick={() => setSoloFijadas((v) => !v)}
+					>
+						<Pin className="h-4 w-4" />
+						Fijadas
+					</Button>
 					<Button
 						variant="ghost"
 						aria-label="Filtros"
@@ -163,6 +181,20 @@ export function BovedaNotas({ contexto }: { contexto: ContextoNotaSearch }) {
 							nota={n}
 							search={ambito}
 							ruta={rutaDe(n.carpetaId, carpetas).join(" › ")}
+							onDuplicar={
+								puede("notas:crear")
+									? (nota) => duplicarNota.mutate(nota.id)
+									: undefined
+							}
+							onFijar={
+								puede("notas:actualizar")
+									? (nota) =>
+											fijarNota.mutate({
+												id: nota.id,
+												isFijada: !nota.isFijada,
+											})
+									: undefined
+							}
 						/>
 					))}
 					{!isLoading && notas.length === 0 && (

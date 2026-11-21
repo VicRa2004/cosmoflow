@@ -24,6 +24,7 @@ const whereAmbito = (ambito: AmbitoNotas) =>
 		: ambito;
 
 const orden = [
+	{ fijada: "desc" },
 	{ updatedAt: "desc" },
 	{ id: "desc" },
 ] satisfies Prisma.NotaOrderByWithRelationInput[];
@@ -33,6 +34,7 @@ const whereDe = (
 	{
 		busqueda,
 		tagId,
+		fijada,
 		carpetaId,
 		titulo,
 		creadaDesde,
@@ -44,6 +46,7 @@ const whereDe = (
 	...whereAmbito(ambito),
 	deletedAt: null,
 	...(carpetaId && { carpetaId }),
+	...(fijada !== undefined && { fijada }),
 	...(titulo && { titulo: { equals: titulo, mode: "insensitive" } }),
 	createdAt: { gte: creadaDesde, lte: creadaHasta },
 	updatedAt: { gte: editadaDesde, lte: editadaHasta },
@@ -65,6 +68,7 @@ export class PrismaNotaRepository implements NotaRepository {
 				titulo: raw.titulo,
 				contenido: raw.contenido,
 				color: raw.color,
+				isFijada: raw.fijada,
 				tagIds: raw.tags.map((t) => t.tagId),
 				carpetaId: raw.carpetaId,
 			},
@@ -101,15 +105,25 @@ export class PrismaNotaRepository implements NotaRepository {
 		};
 	}
 
-	buscarIndice(
+	async buscarIndice(
 		ambito: AmbitoNotas,
 		filtros: NotaIndiceFiltros,
 	): Promise<NotaIndice[]> {
-		return prisma.nota.findMany({
+		const filas = await prisma.nota.findMany({
 			where: whereDe(ambito, filtros),
-			select: { id: true, titulo: true, color: true, carpetaId: true },
+			select: {
+				id: true,
+				titulo: true,
+				color: true,
+				carpetaId: true,
+				fijada: true,
+			},
 			orderBy: orden,
 		});
+		return filas.map(({ fijada, ...resto }) => ({
+			...resto,
+			isFijada: fijada,
+		}));
 	}
 
 	async buscarPorId(id: number): Promise<Nota | null> {
@@ -141,7 +155,8 @@ export class PrismaNotaRepository implements NotaRepository {
 	}
 
 	async crear(data: Nota): Promise<Nota> {
-		const { titulo, contenido, color, tagIds, carpetaId } = data.getDatos();
+		const { titulo, contenido, color, isFijada, tagIds, carpetaId } =
+			data.getDatos();
 		const registro = await prisma.nota.create({
 			data: {
 				usuarioId: data.getUsuarioId(),
@@ -149,6 +164,7 @@ export class PrismaNotaRepository implements NotaRepository {
 				titulo,
 				contenido,
 				color,
+				fijada: isFijada,
 				carpetaId,
 				tags: { create: tagIds.map((tagId) => ({ tagId })) },
 			},
@@ -158,13 +174,15 @@ export class PrismaNotaRepository implements NotaRepository {
 	}
 
 	async actualizar(data: Nota): Promise<Nota> {
-		const { titulo, contenido, color, tagIds, carpetaId } = data.getDatos();
+		const { titulo, contenido, color, isFijada, tagIds, carpetaId } =
+			data.getDatos();
 		const registro = await prisma.nota.update({
 			where: { id: data.getId() },
 			data: {
 				titulo,
 				contenido,
 				color,
+				fijada: isFijada,
 				carpetaId,
 				tags: { deleteMany: {}, create: tagIds.map((tagId) => ({ tagId })) },
 			},

@@ -1,6 +1,7 @@
 import type { Context } from "hono";
 import type { ActualizarNotaUseCase } from "../../../application/useCases/ActualizarNotaUseCase";
 import type { CrearNotaUseCase } from "../../../application/useCases/CrearNotaUseCase";
+import type { DuplicarNotaUseCase } from "../../../application/useCases/DuplicarNotaUseCase";
 import type { EliminarNotaUseCase } from "../../../application/useCases/EliminarNotaUseCase";
 import type { ImportarNotasUseCase } from "../../../application/useCases/ImportarNotasUseCase";
 import type { ObtenerIndiceNotasUseCase } from "../../../application/useCases/ObtenerIndiceNotasUseCase";
@@ -29,6 +30,7 @@ export class NotaController extends BaseController {
 			obtenerUno: ObtenerNotaUseCase;
 			actualizar: ActualizarNotaUseCase;
 			eliminar: EliminarNotaUseCase;
+			duplicar: DuplicarNotaUseCase;
 			importar: ImportarNotasUseCase;
 		},
 	) {
@@ -94,6 +96,15 @@ export class NotaController extends BaseController {
 			return this.created(
 				c,
 				await this.useCases.importar.ejecutar(c.get("usuario").id, dto),
+			);
+		});
+
+	duplicar = (c: Context<AuthEnv>): Promise<Response> =>
+		this.executeSafely(c, async () => {
+			const { id } = validate(notaIdSchema, c.req.param());
+			return this.created(
+				c,
+				await this.useCases.duplicar.ejecutar(c.get("usuario").id, id),
 			);
 		});
 }

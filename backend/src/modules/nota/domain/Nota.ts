@@ -7,6 +7,8 @@ export interface DatosNota {
 	contenido: string;
 	/** Color de acento (#rrggbb) o `null`. */
 	color: string | null;
+	/** Destacada al principio de los listados. */
+	isFijada: boolean;
 	/** Personal: tags del dueño; de proyecto: de la organización (RN-60). */
 	tagIds: number[];
 	/** Carpeta del mismo ámbito, o `null` en la raíz. */
@@ -50,6 +52,7 @@ export class Nota extends Entity {
 			titulo: string;
 			contenido?: string;
 			color?: string | null;
+			isFijada?: boolean;
 			tagIds?: number[];
 			carpetaId?: number | null;
 		},
@@ -62,6 +65,7 @@ export class Nota extends Entity {
 				titulo: datos.titulo,
 				contenido: datos.contenido ?? "",
 				color: datos.color ?? null,
+				isFijada: datos.isFijada ?? false,
 				tagIds: datos.tagIds ?? [],
 				carpetaId: datos.carpetaId ?? null,
 			},
@@ -74,7 +78,7 @@ export class Nota extends Entity {
 	public static reconstituir(
 		id: number,
 		usuarioId: number,
-		datos: DatosNota,
+		datos: Omit<DatosNota, "isFijada"> & { isFijada?: boolean },
 		updatedAt: Date,
 		proyecto: ProyectoNota | null = null,
 		createdAt: Date = updatedAt,
@@ -82,7 +86,7 @@ export class Nota extends Entity {
 		return new Nota(
 			new EntityId(id),
 			usuarioId,
-			datos,
+			{ ...datos, isFijada: datos.isFijada ?? false },
 			updatedAt,
 			proyecto,
 			createdAt,
@@ -116,6 +120,7 @@ export class Nota extends Entity {
 			titulo: cambios.titulo ?? this.datos.titulo,
 			contenido: cambios.contenido ?? this.datos.contenido,
 			color: cambios.color === undefined ? this.datos.color : cambios.color,
+			isFijada: cambios.isFijada ?? this.datos.isFijada,
 			tagIds: [...new Set(cambios.tagIds ?? this.datos.tagIds)],
 			carpetaId:
 				cambios.carpetaId === undefined

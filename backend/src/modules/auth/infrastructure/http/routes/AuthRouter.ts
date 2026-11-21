@@ -1,4 +1,4 @@
-import { OpenAPIHono } from "@hono/zod-openapi";
+import { OpenAPIHono, z } from "@hono/zod-openapi";
 
 import { LoginController } from "../controllers/LoginController";
 import { RegistroController } from "../controllers/RegistroController";
@@ -6,6 +6,7 @@ import { RefreshTokenController } from "../controllers/RefreshTokenController";
 import { LogoutController } from "../controllers/LogoutController";
 import type { CuentaController } from "../controllers/CuentaController";
 import type { GoogleController } from "../controllers/GoogleController";
+import type { SesionController } from "../controllers/SesionController";
 import type { AuthMiddleware } from "../middlewares/authMiddleware";
 import { rateLimit } from "@/core/shared/infrastructure/http/rateLimit";
 import {
@@ -21,6 +22,8 @@ import {
 	refreshResponseSchema,
 	registroSchema,
 	restablecerPasswordSchema,
+	sesionDtoSchema,
+	sesionIdSchema,
 	verificarEmailSchema,
 } from "../schemas/authSchemas";
 
@@ -46,6 +49,7 @@ export class AuthRouter {
 		private readonly logoutController: LogoutController,
 		private readonly cuentaController: CuentaController,
 		private readonly googleController: GoogleController,
+		private readonly sesionController: SesionController,
 		private readonly authMiddleware: AuthMiddleware,
 	) {
 		this.router = new OpenAPIHono();
@@ -313,5 +317,51 @@ export class AuthRouter {
 			},
 		});
 		this.router.post("/logout-todas", auth, cuenta.cerrarSesiones);
+
+		const soloSesion = this.authMiddleware.soloSesion;
+
+		docs.registerPath({
+			method: "get",
+			path: "/sesiones",
+			tags,
+			security: bearer,
+			summary: "Listar sesiones activas del usuario autenticado",
+			description:
+				"Solo accesible con sesión JWT (no con un token personal). Marca `isActual` comparando con la cookie `refresh_token` o cabecera `X-Refresh-Token`.",
+			responses: {
+				200: jsonResponse(z.array(sesionDtoSchema), "Sesiones activas"),
+				401: errorResponse("No autenticado"),
+				403: errorResponse("Solo con sesión, no con un token personal"),
+			},
+		});
+		this.router.get(
+			"/sesiones",
+			auth,
+			soloSesion,
+			this.sesionController.obtenerTodos,
+		);
+
+		docs.registerPath({
+			method: "delete",
+			path: "/sesiones/{id}",
+			tags,
+			security: bearer,
+			summary: "Cerrar una sesión individual",
+			description:
+				"Revoca una sesión activa del usuario autenticado. Si revoca la sesión actual, limpia la cookie `refresh_token`.",
+			request: { params: sesionIdSchema },
+			responses: {
+				204: { description: "Sesión cerrada" },
+				401: errorResponse("No autenticado"),
+				403: errorResponse("Solo con sesión, no con un token personal"),
+				404: errorResponse("Sesión no encontrada"),
+			},
+		});
+		this.router.delete(
+			"/sesiones/:id",
+			auth,
+			soloSesion,
+			this.sesionController.revocar,
+		);
 	}
 }

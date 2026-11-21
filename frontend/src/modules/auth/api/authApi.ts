@@ -10,6 +10,7 @@ interface Mensaje {
 
 export type TokenPersonal = components["schemas"]["TokenPersonalDto"];
 type TokenPersonalCreado = components["schemas"]["TokenPersonalCreado"];
+export type SesionDto = components["schemas"]["SesionDto"];
 
 export const authApi = {
 	async tokensPersonales(): Promise<TokenPersonal[]> {
@@ -100,5 +101,14 @@ export const authApi = {
 	async cerrarSesiones(): Promise<Mensaje> {
 		const response = await apiClient.post<Mensaje>("/auth/logout-todas");
 		return response.data;
+	},
+
+	async sesiones(): Promise<SesionDto[]> {
+		const response = await apiClient.get<SesionDto[]>("/auth/sesiones");
+		return response.data;
+	},
+
+	async revocarSesion(id: number): Promise<void> {
+		await apiClient.delete(`/auth/sesiones/${id}`);
 	},
 };

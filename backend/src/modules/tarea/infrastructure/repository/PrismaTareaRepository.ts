@@ -97,8 +97,9 @@ const dondeAmbito = (ambito: AmbitoTareas): Prisma.TareaWhereInput =>
 					? { ...ambito, equipoId: null, proyectoId: null }
 					: ambito;
 
-/** Vencimiento más próximo (sin fecha al final) y, a igual fecha, prioridad (RN-43). */
+/** Fijadas primero, luego vencimiento más próximo (sin fecha al final) y, a igual fecha, prioridad (RN-43). */
 const ORDEN_POR_VENCIMIENTO: Prisma.TareaOrderByWithRelationInput[] = [
+	{ fijada: "desc" },
 	{ fechaVencimiento: { sort: "asc", nulls: "last" } },
 	// El enum de Postgres ordena por declaración: baja < media < alta.
 	{ prioridad: "desc" },
@@ -118,6 +119,7 @@ export class PrismaTareaRepository implements TareaRepository {
 				fechaInicio: aDia(raw.fechaInicio),
 				fechaVencimiento: aDia(raw.fechaVencimiento),
 				color: raw.color,
+				isFijada: raw.fijada,
 				tagIds: raw.tags.map((t) => t.tagId),
 				dependeDeId: raw.dependeDeId,
 				recurrencia: raw.recurrencia,
@@ -155,6 +157,7 @@ export class PrismaTareaRepository implements TareaRepository {
 			fechaInicio: aFecha(datos.fechaInicio),
 			fechaVencimiento: aFecha(datos.fechaVencimiento),
 			color: datos.color,
+			fijada: datos.isFijada,
 			dependeDeId: datos.dependeDeId,
 			recurrencia: datos.recurrencia,
 		};
@@ -162,7 +165,15 @@ export class PrismaTareaRepository implements TareaRepository {
 
 	async buscar(
 		ambito: AmbitoTareas,
-		{ pagina, limite, busqueda, estado, tagId, responsableId }: TareaFiltros,
+		{
+			pagina,
+			limite,
+			busqueda,
+			estado,
+			tagId,
+			fijada,
+			responsableId,
+		}: TareaFiltros,
 	): Promise<Paginacion<Tarea>> {
 		return this.paginar(
 			{
@@ -178,6 +189,7 @@ export class PrismaTareaRepository implements TareaRepository {
 					titulo: { contains: busqueda, mode: "insensitive" },
 				}),
 				...(estado && { estado }),
+				...(fijada !== undefined && { fijada }),
 				...(tagId && { tags: { some: { tagId, tag: { deletedAt: null } } } }),
 			},
 			ORDEN_POR_VENCIMIENTO,

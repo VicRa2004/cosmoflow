@@ -1,11 +1,13 @@
 import { Link } from "@tanstack/react-router";
 import {
 	ChevronRight,
+	Copy,
 	Download,
 	FilePlus,
 	FileText,
 	FolderPlus,
 	Pencil,
+	Pin,
 	Trash2,
 } from "lucide-react";
 import {
@@ -50,6 +52,8 @@ interface ExploradorCarpetaProps {
 	onDescargar: (carpeta: CarpetaDto | null) => void;
 	/** Soltar en `destino` (`null`: la raíz). */
 	onMover: (arrastrado: Arrastrado, destino: number | null) => void;
+	onDuplicarNota?: (nota: NotaIndiceDto) => void;
+	onFijarNota?: (nota: NotaIndiceDto) => void;
 }
 
 const TIPO_ARRASTRE = "application/x-cosmoflow";
@@ -70,36 +74,87 @@ export function FilaNota({
 	search,
 	ruta,
 	arrastrable = false,
+	onDuplicar,
+	onFijar,
+	onContextMenu,
 }: {
 	nota: NotaIndiceDto;
 	search: ContextoNotaSearch;
 	/** Carpeta de la nota, en los resultados de búsqueda. */
 	ruta?: string;
 	arrastrable?: boolean;
+	onDuplicar?: (nota: NotaIndiceDto) => void;
+	onFijar?: (nota: NotaIndiceDto) => void;
+	onContextMenu?: (e: MouseEvent) => void;
 }) {
 	return (
-		<Link
-			to="/notas/$id"
-			params={{ id: String(nota.id) }}
-			search={search}
-			draggable={arrastrable}
-			onDragStart={
-				arrastrable ? arrastrar({ tipo: "nota", id: nota.id }) : undefined
-			}
-			className={fila}
-		>
-			{nota.color ? (
-				<PuntoColor color={nota.color} />
-			) : (
-				<FileText className="h-4 w-4 shrink-0 text-tinta-tenue" />
+		<div className="group/nota flex h-11 w-full items-center gap-2 px-4 text-sm text-tinta-suave hover:bg-elevada hover:text-tinta">
+			<Link
+				to="/notas/$id"
+				params={{ id: String(nota.id) }}
+				search={search}
+				draggable={arrastrable}
+				onDragStart={
+					arrastrable ? arrastrar({ tipo: "nota", id: nota.id }) : undefined
+				}
+				onContextMenu={onContextMenu}
+				className="flex min-w-0 flex-1 items-center gap-3 py-2 text-left"
+			>
+				{nota.color ? (
+					<PuntoColor color={nota.color} />
+				) : (
+					<FileText className="h-4 w-4 shrink-0 text-tinta-tenue" />
+				)}
+				{nota.isFijada && (
+					<Pin
+						aria-label="Fijada"
+						className="h-3.5 w-3.5 shrink-0 text-indigo-400"
+					/>
+				)}
+				<span className="truncate">{nota.titulo}</span>
+				{ruta && (
+					<span className="ml-auto shrink-0 truncate text-xs text-tinta-tenue">
+						{ruta}
+					</span>
+				)}
+			</Link>
+			{(onFijar || onDuplicar) && (
+				<div
+					className={cn(
+						"flex shrink-0 items-center gap-0.5 transition-opacity",
+						nota.isFijada
+							? "opacity-100"
+							: "opacity-0 group-focus-within/nota:opacity-100 group-hover/nota:opacity-100 [@media(hover:none)]:opacity-100",
+					)}
+				>
+					{onFijar && (
+						<button
+							type="button"
+							onClick={() => onFijar(nota)}
+							aria-label={nota.isFijada ? "Desfijar nota" : "Fijar nota"}
+							title={nota.isFijada ? "Desfijar" : "Fijar"}
+							className={cn(
+								"rounded p-1 text-tinta-tenue hover:bg-superficie hover:text-tinta",
+								nota.isFijada && "text-indigo-400",
+							)}
+						>
+							<Pin className="h-3.5 w-3.5" />
+						</button>
+					)}
+					{onDuplicar && (
+						<button
+							type="button"
+							onClick={() => onDuplicar(nota)}
+							aria-label="Duplicar nota"
+							title="Duplicar"
+							className="rounded p-1 text-tinta-tenue hover:bg-superficie hover:text-tinta"
+						>
+							<Copy className="h-3.5 w-3.5" />
+						</button>
+					)}
+				</div>
 			)}
-			<span className="truncate">{nota.titulo}</span>
-			{ruta && (
-				<span className="ml-auto shrink-0 truncate text-xs text-tinta-tenue">
-					{ruta}
-				</span>
-			)}
-		</Link>
+		</div>
 	);
 }
 
@@ -121,6 +176,8 @@ export function ExploradorCarpeta({
 	onEliminar,
 	onDescargar,
 	onMover,
+	onDuplicarNota,
+	onFijarNota,
 }: ExploradorCarpetaProps) {
 	const [menu, setMenu] = useState<MenuAbierto>();
 	const cerrarMenu = useCallback(() => setMenu(undefined), []);
@@ -129,6 +186,34 @@ export function ExploradorCarpeta({
 	const migas = cadenaDe(seleccionada ?? null, carpetas);
 	const actual = migas.at(-1) ?? null;
 	const contenido = contenidoDe(actual?.id ?? null, carpetas, notas);
+
+	const abrirMenuNota = (nota: NotaIndiceDto) => (e: MouseEvent) => {
+		if (!onFijarNota && !onDuplicarNota) return;
+		e.preventDefault();
+		e.stopPropagation();
+		const opciones: OpcionMenu[] = [];
+		if (onFijarNota) {
+			opciones.push({
+				texto: nota.isFijada ? "Desfijar" : "Fijar",
+				icono: Pin,
+				onClick: () => onFijarNota(nota),
+			});
+		}
+		if (onDuplicarNota) {
+			opciones.push({
+				texto: "Duplicar",
+				icono: Copy,
+				onClick: () => onDuplicarNota(nota),
+			});
+		}
+		if (opciones.length === 0) return;
+		const caja = e.currentTarget.getBoundingClientRect();
+		setMenu({
+			x: e.clientX || caja.left + 24,
+			y: e.clientY || caja.bottom,
+			opciones,
+		});
+	};
 
 	const abrirMenu = (carpeta: CarpetaDto | null) => (e: MouseEvent) => {
 		e.preventDefault();
@@ -262,6 +347,9 @@ export function ExploradorCarpeta({
 						nota={nota}
 						search={searchNota}
 						arrastrable={editable}
+						onDuplicar={onDuplicarNota}
+						onFijar={onFijarNota}
+						onContextMenu={abrirMenuNota(nota)}
 					/>
 				))}
 				{contenido.carpetas.length + contenido.notas.length === 0 && (

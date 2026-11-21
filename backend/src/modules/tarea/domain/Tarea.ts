@@ -43,6 +43,8 @@ export interface DatosTarea {
 	fechaVencimiento: string | null;
 	/** Color de acento (#rrggbb) o `null`. */
 	color: string | null;
+	/** Destacada al principio de los listados. */
+	isFijada: boolean;
 	/** Personal: tags del dueño; compartida: de la organización (RN-60). */
 	tagIds: number[];
 	/** Tarea principal (mismo sitio): hasta completarla, esta no empieza ni se completa. */
@@ -134,6 +136,7 @@ export class Tarea extends Entity {
 			fechaInicio: null,
 			fechaVencimiento: null,
 			color: null,
+			isFijada: false,
 			tagIds: [],
 			dependeDeId: null,
 			recurrencia: null,
@@ -157,7 +160,7 @@ export class Tarea extends Entity {
 	public static reconstituir(
 		id: number,
 		usuarioId: number,
-		datos: DatosTarea,
+		datos: Omit<DatosTarea, "isFijada"> & { isFijada?: boolean },
 		ubicacion: UbicacionTarea = PERSONAL,
 		responsableIds: number[] = [],
 		mencionIds: number[] = [],
@@ -167,7 +170,7 @@ export class Tarea extends Entity {
 		return new Tarea(
 			new EntityId(id),
 			usuarioId,
-			datos,
+			{ ...datos, isFijada: datos.isFijada ?? false },
 			ubicacion,
 			responsableIds,
 			mencionIds,
@@ -333,6 +336,7 @@ export class Tarea extends Entity {
 			{
 				...this.getDatos(),
 				estado: "pendiente",
+				isFijada: false,
 				fechaInicio,
 				fechaVencimiento,
 				dependeDeId: null,
