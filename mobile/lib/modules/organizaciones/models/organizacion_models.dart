@@ -82,6 +82,21 @@ class PaginaOrganizaciones {
   }
 }
 
+/// Resumen de un rol asignado a un miembro.
+class RolResumenDto {
+  const RolResumenDto({required this.id, required this.nombre});
+
+  final int id;
+  final String nombre;
+
+  factory RolResumenDto.fromJson(Map<String, dynamic> json) {
+    return RolResumenDto(
+      id: (json['id'] as num).toInt(),
+      nombre: json['nombre'] as String? ?? '',
+    );
+  }
+}
+
 /// Miembro de una organización (`GET /api/organizaciones/{id}/miembros`).
 class MiembroDto {
   const MiembroDto({
@@ -90,6 +105,7 @@ class MiembroDto {
     required this.email,
     this.avatarUrl,
     this.isAdmin = false,
+    this.roles = const <RolResumenDto>[],
   });
 
   final int usuarioId;
@@ -97,17 +113,131 @@ class MiembroDto {
   final String email;
   final String? avatarUrl;
   final bool isAdmin;
+  final List<RolResumenDto> roles;
 
   factory MiembroDto.fromJson(Map<String, dynamic> json) {
+    final rolesRaw = json['roles'];
+    final listaRoles = rolesRaw is List
+        ? rolesRaw
+              .whereType<Map<String, dynamic>>()
+              .map(RolResumenDto.fromJson)
+              .toList(growable: false)
+        : const <RolResumenDto>[];
+
     return MiembroDto(
       usuarioId: (json['usuarioId'] as num).toInt(),
       nombre: json['nombre'] as String? ?? '',
       email: json['email'] as String? ?? '',
       avatarUrl: json['avatarUrl'] as String?,
       isAdmin: json['isAdmin'] as bool? ?? false,
+      roles: listaRoles,
     );
   }
 }
+
+/// Invitación pendiente a una organización.
+class InvitacionDto {
+  const InvitacionDto({
+    required this.id,
+    required this.email,
+    required this.expiraEn,
+    this.isCaducada = false,
+  });
+
+  final int id;
+  final String email;
+  final String expiraEn;
+  final bool isCaducada;
+
+  factory InvitacionDto.fromJson(Map<String, dynamic> json) {
+    return InvitacionDto(
+      id: (json['id'] as num).toInt(),
+      email: json['email'] as String? ?? '',
+      expiraEn: json['expiraEn'] as String? ?? '',
+      isCaducada: json['isCaducada'] as bool? ?? false,
+    );
+  }
+}
+
+/// Rol personalizado de una organización (`GET /api/organizaciones/{id}/roles`).
+class RolOrganizacionDto {
+  const RolOrganizacionDto({
+    required this.id,
+    required this.nombre,
+    this.permisos = const <String>[],
+    this.totalMiembros = 0,
+  });
+
+  final int id;
+  final String nombre;
+  final List<String> permisos;
+  final int totalMiembros;
+
+  factory RolOrganizacionDto.fromJson(Map<String, dynamic> json) {
+    return RolOrganizacionDto(
+      id: (json['id'] as num).toInt(),
+      nombre: json['nombre'] as String? ?? '',
+      permisos: _parsearStrings(json['permisos']),
+      totalMiembros: (json['totalMiembros'] as num?)?.toInt() ?? 0,
+    );
+  }
+}
+
+/// Plantilla de rol sugerida por el catálogo del backend.
+class PlantillaRolDto {
+  const PlantillaRolDto({required this.nombre, required this.permisos});
+
+  final String nombre;
+  final List<String> permisos;
+
+  factory PlantillaRolDto.fromJson(Map<String, dynamic> json) {
+    return PlantillaRolDto(
+      nombre: json['nombre'] as String? ?? '',
+      permisos: _parsearStrings(json['permisos']),
+    );
+  }
+}
+
+/// Catálogo de permisos y plantillas de roles de una organización.
+class CatalogoPermisosOrganizacionDto {
+  const CatalogoPermisosOrganizacionDto({
+    this.permisos = const <String>[],
+    this.plantillas = const <PlantillaRolDto>[],
+  });
+
+  final List<String> permisos;
+  final List<PlantillaRolDto> plantillas;
+
+  factory CatalogoPermisosOrganizacionDto.fromJson(Map<String, dynamic> json) {
+    final plantillasRaw = json['plantillas'];
+    final listaPlantillas = plantillasRaw is List
+        ? plantillasRaw
+              .whereType<Map<String, dynamic>>()
+              .map(PlantillaRolDto.fromJson)
+              .toList(growable: false)
+        : const <PlantillaRolDto>[];
+
+    return CatalogoPermisosOrganizacionDto(
+      permisos: _parsearStrings(json['permisos']),
+      plantillas: listaPlantillas,
+    );
+  }
+}
+
+/// Texto humano de cada permiso de organización (RN-17).
+const Map<String, String> etiquetasPermisoOrganizacion = <String, String>{
+  'organizacion:editar': 'Editar nombre, descripción, color e imagen',
+  'miembros:invitar': 'Invitar y gestionar invitaciones',
+  'miembros:expulsar': 'Expulsar miembros',
+  'roles:gestionar': 'Crear roles y asignarlos',
+  'equipos:crear': 'Crear equipos',
+  'equipos:editar': 'Editar equipos',
+  'equipos:eliminar': 'Eliminar equipos',
+  'proyectos:crear': 'Crear proyectos',
+  'proyectos:editar': 'Editar proyectos',
+  'proyectos:eliminar': 'Eliminar proyectos',
+  'tags:gestionar': 'Gestionar los tags de la organización',
+};
 
 /// Integrante de un equipo con su flag de delegación (`puedeCrearTareas`).
 class MiembroEquipoDto {

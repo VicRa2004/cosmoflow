@@ -12,6 +12,7 @@ import 'package:cosmoflow_mobile/modules/organizaciones/pages/proyecto_detalle_p
 import 'package:cosmoflow_mobile/modules/organizaciones/widgets/equipo_form.dart';
 import 'package:cosmoflow_mobile/modules/organizaciones/widgets/organizacion_form.dart';
 import 'package:cosmoflow_mobile/modules/organizaciones/widgets/proyecto_form.dart';
+import 'package:cosmoflow_mobile/modules/organizaciones/widgets/rol_organizacion_form.dart';
 import 'package:cosmoflow_mobile/modules/tags/api/tags_api.dart';
 import 'package:cosmoflow_mobile/modules/tags/models/tag_model.dart';
 import 'package:cosmoflow_mobile/modules/tareas/api/tareas_api.dart';
@@ -140,17 +141,27 @@ void main() {
       expect(find.text('Saasil'), findsOneWidget);
       expect(find.text('Proyectos'), findsOneWidget);
       expect(find.text('Equipos'), findsOneWidget);
+      expect(find.text('Miembros'), findsOneWidget);
       expect(find.text('Tareas'), findsOneWidget);
       expect(find.text('Tags'), findsOneWidget);
+      expect(find.text('Roles'), findsOneWidget);
       expect(find.text('Sin proyectos'), findsOneWidget);
 
       await tester.tap(find.text('Equipos'));
       await tester.pumpAndSettle();
       expect(find.text('Sin equipos'), findsOneWidget);
 
+      await tester.tap(find.text('Miembros'));
+      await tester.pumpAndSettle();
+      expect(find.text('Sin miembros'), findsOneWidget);
+
       await tester.tap(find.text('Tags'));
       await tester.pumpAndSettle();
       expect(find.text('Sin etiquetas'), findsOneWidget);
+
+      await tester.tap(find.text('Roles'));
+      await tester.pumpAndSettle();
+      expect(find.text('Sin roles'), findsOneWidget);
     },
   );
 
@@ -386,5 +397,87 @@ void main() {
     expect(valores, isNotNull);
     expect(valores!.nombre, equals('Lanzamiento'));
     expect(valores.integranteIds, equals(<int>[5]));
+  });
+
+  test(
+    'Modelos de miembro con roles, invitación, rol y catálogo parsean JSON',
+    () {
+      final miembro = MiembroDto.fromJson(<String, dynamic>{
+        'usuarioId': 7,
+        'nombre': 'Beto',
+        'email': 'beto@test.com',
+        'isAdmin': false,
+        'roles': <Map<String, dynamic>>[
+          <String, dynamic>{'id': 2, 'nombre': 'Coordinación'},
+        ],
+      });
+      expect(miembro.roles.length, equals(1));
+      expect(miembro.roles.first.nombre, equals('Coordinación'));
+
+      final inv = InvitacionDto.fromJson(<String, dynamic>{
+        'id': 3,
+        'email': 'nuevo@test.com',
+        'expiraEn': '2026-12-01T00:00:00.000Z',
+        'isCaducada': false,
+      });
+      expect(inv.email, equals('nuevo@test.com'));
+      expect(inv.isCaducada, isFalse);
+
+      final rol = RolOrganizacionDto.fromJson(<String, dynamic>{
+        'id': 2,
+        'nombre': 'Coordinación',
+        'permisos': <String>['equipos:crear', 'proyectos:crear'],
+        'totalMiembros': 4,
+      });
+      expect(rol.permisos, contains('equipos:crear'));
+      expect(rol.totalMiembros, equals(4));
+
+      final catalogo = CatalogoPermisosOrganizacionDto.fromJson(
+        <String, dynamic>{
+          'permisos': <String>['equipos:crear', 'proyectos:crear'],
+          'plantillas': <Map<String, dynamic>>[
+            <String, dynamic>{
+              'nombre': 'Gestor',
+              'permisos': <String>['equipos:crear'],
+            },
+          ],
+        },
+      );
+      expect(catalogo.plantillas.first.nombre, equals('Gestor'));
+    },
+  );
+
+  testWidgets('RolOrganizacionForm valida nombre y permite elegir permisos', (
+    WidgetTester tester,
+  ) async {
+    final formKey = GlobalKey<RolOrganizacionFormState>();
+    const catalogo = CatalogoPermisosOrganizacionDto(
+      permisos: <String>['equipos:crear', 'proyectos:crear'],
+      plantillas: <PlantillaRolDto>[
+        PlantillaRolDto(nombre: 'Gestor', permisos: <String>['equipos:crear']),
+      ],
+    );
+
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: TemaApp.claro,
+        home: Scaffold(
+          body: RolOrganizacionForm(key: formKey, catalogo: catalogo),
+        ),
+      ),
+    );
+
+    expect(formKey.currentState!.validar(), isNull);
+    await tester.pump();
+    expect(find.text('El nombre es obligatorio'), findsOneWidget);
+
+    await tester.enterText(find.byType(TextFormField).first, 'Coordinador');
+    await tester.tap(find.text('Crear equipos'));
+    await tester.pump();
+
+    final valores = formKey.currentState!.validar();
+    expect(valores, isNotNull);
+    expect(valores!.nombre, equals('Coordinador'));
+    expect(valores.permisos, equals(<String>['equipos:crear']));
   });
 }

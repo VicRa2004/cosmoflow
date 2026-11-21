@@ -13,13 +13,16 @@ import '../../tareas/api/tareas_api.dart';
 import '../../tareas/pages/tareas_page.dart';
 import '../api/organizaciones_api.dart';
 import '../models/organizacion_models.dart';
+import '../widgets/lista_miembros_organizacion.dart';
+import '../widgets/lista_roles_organizacion.dart';
 import '../widgets/listas_organizacion.dart';
 import 'equipo_detalle_page.dart';
 import 'equipo_editor_page.dart';
 import 'proyecto_detalle_page.dart';
 import 'proyecto_editor_page.dart';
 
-/// Vista `/organizaciones/:id` con pestañas de Proyectos, Equipos, Tareas y Tags.
+/// Vista `/organizaciones/:id` con pestañas de Proyectos, Equipos, Miembros,
+/// Tareas, Tags y (según permisos) Roles.
 class OrganizacionDetallePage extends StatefulWidget {
   const OrganizacionDetallePage({
     super.key,
@@ -50,6 +53,8 @@ class _OrganizacionDetallePageState extends State<OrganizacionDetallePage> {
   List<ProyectoDto> _proyectos = const <ProyectoDto>[];
   List<EquipoDto> _equipos = const <EquipoDto>[];
   List<MiembroDto> _miembros = const <MiembroDto>[];
+  List<InvitacionDto> _invitaciones = const <InvitacionDto>[];
+  List<RolOrganizacionDto> _roles = const <RolOrganizacionDto>[];
   List<TagDto> _tags = const <TagDto>[];
   bool _isCargando = false;
   String? _mensajeError;
@@ -73,13 +78,26 @@ class _OrganizacionDetallePageState extends State<OrganizacionDetallePage> {
         widget.organizacionesApi.obtenerMiembros(widget.id),
         widget.tagsApi.obtenerTodos(organizacionId: widget.id),
       ]);
+      final org = res[0] as OrganizacionDto;
+      final extras = await Future.wait<dynamic>(<Future<dynamic>>[
+        if (org.puede('miembros:invitar'))
+          widget.organizacionesApi.obtenerInvitaciones(widget.id)
+        else
+          Future<List<InvitacionDto>>.value(const <InvitacionDto>[]),
+        if (org.puede('roles:gestionar'))
+          widget.organizacionesApi.obtenerRoles(widget.id)
+        else
+          Future<List<RolOrganizacionDto>>.value(const <RolOrganizacionDto>[]),
+      ]);
       if (!mounted) return;
       setState(() {
-        _organizacion = res[0] as OrganizacionDto;
+        _organizacion = org;
         _proyectos = res[1] as List<ProyectoDto>;
         _equipos = res[2] as List<EquipoDto>;
         _miembros = res[3] as List<MiembroDto>;
         _tags = (res[4] as PaginaTags).datos;
+        _invitaciones = extras[0] as List<InvitacionDto>;
+        _roles = extras[1] as List<RolOrganizacionDto>;
       });
     } catch (_) {
       if (mounted) {
@@ -158,6 +176,21 @@ class _OrganizacionDetallePageState extends State<OrganizacionDetallePage> {
     if (mounted) await _cargar();
   }
 
+  Future<void> _crearRol() async {
+    final creado = await context.push<bool>(
+      '/organizaciones/${widget.id}/roles/nuevo',
+    );
+    if (creado == true && mounted) await _cargar();
+  }
+
+  Future<void> _editarRol(RolOrganizacionDto rol) async {
+    final guardado = await context.push<bool>(
+      '/organizaciones/${widget.id}/roles/${rol.id}/editar',
+      extra: rol,
+    );
+    if (guardado == true && mounted) await _cargar();
+  }
+
   @override
   Widget build(BuildContext context) {
     final org = _organizacion;
@@ -176,10 +209,12 @@ class _OrganizacionDetallePageState extends State<OrganizacionDetallePage> {
     final colores = context.colores;
     final puedeEditarOrg = org.puede('organizacion:editar');
     final puedeEliminarOrg = org.isAdmin;
+    final mostrarRoles = org.puede('roles:gestionar');
     final responsablesOrg = filtrarMiembrosDestino(miembros: _miembros);
 
     return DefaultTabController(
-      length: 4,
+      key: ValueKey<bool>(mostrarRoles),
+      length: mostrarRoles ? 6 : 5,
       child: Scaffold(
         appBar: AppBar(
           title: Text(org.nombre),
@@ -207,12 +242,16 @@ class _OrganizacionDetallePageState extends State<OrganizacionDetallePage> {
                 ],
               ),
           ],
-          bottom: const TabBar(
+          bottom: TabBar(
+            isScrollable: true,
+            tabAlignment: TabAlignment.start,
             tabs: <Widget>[
-              Tab(text: 'Proyectos'),
-              Tab(text: 'Equipos'),
-              Tab(text: 'Tareas'),
-              Tab(text: 'Tags'),
+              const Tab(text: 'Proyectos'),
+              const Tab(text: 'Equipos'),
+              const Tab(text: 'Miembros'),
+              const Tab(text: 'Tareas'),
+              const Tab(text: 'Tags'),
+              if (mostrarRoles) const Tab(text: 'Roles'),
             ],
           ),
         ),
@@ -240,6 +279,18 @@ class _OrganizacionDetallePageState extends State<OrganizacionDetallePage> {
                         ? _crearEquipo
                         : null,
                   ),
+                  ListaMiembrosOrganizacion(
+                    organizacion: org,
+                    miembros: _miembros,
+                    invitaciones: _invitaciones,
+                    roles: _roles,
+                    usuarioActualId: widget.sesionStore.usuario?.id,
+                    organizacionesApi: widget.organizacionesApi,
+                    onRefresh: _cargar,
+                    onSalirOrganizacion: () {
+                      if (mounted) context.pop(true);
+                    },
+                  ),
                   TareasPage(
                     sesionStore: widget.sesionStore,
                     tareasApi: widget.tareasApi,
@@ -260,6 +311,15 @@ class _OrganizacionDetallePageState extends State<OrganizacionDetallePage> {
                     },
                     cargarAlIniciar: widget.cargarAlIniciar,
                   ),
+                  if (mostrarRoles)
+                    ListaRolesOrganizacion(
+                      organizacionId: org.id,
+                      roles: _roles,
+                      organizacionesApi: widget.organizacionesApi,
+                      onRefresh: _cargar,
+                      onCrearRol: _crearRol,
+                      onEditarRol: _editarRol,
+                    ),
                 ],
               ),
       ),

@@ -90,6 +90,128 @@ class OrganizacionesApi {
         .toList(growable: false);
   }
 
+  /// Quita a un miembro (con el propio id, sale; con otro, lo expulsa).
+  Future<void> quitarMiembro(int organizacionId, int usuarioId) async {
+    await apiClient.dio.delete<void>(
+      '/organizaciones/$organizacionId/miembros/$usuarioId',
+    );
+  }
+
+  /// Delega la administración de la organización en otro miembro.
+  Future<void> delegarAdmin(int organizacionId, int usuarioId) async {
+    await apiClient.dio.post<void>(
+      '/organizaciones/$organizacionId/delegar',
+      data: <String, dynamic>{'usuarioId': usuarioId},
+    );
+  }
+
+  /// Invitaciones pendientes (`GET /api/organizaciones/{id}/invitaciones`).
+  Future<List<InvitacionDto>> obtenerInvitaciones(int organizacionId) async {
+    final response = await apiClient.dio.get<List<dynamic>>(
+      '/organizaciones/$organizacionId/invitaciones',
+    );
+    return (response.data ?? const <dynamic>[])
+        .whereType<Map<String, dynamic>>()
+        .map(InvitacionDto.fromJson)
+        .toList(growable: false);
+  }
+
+  /// Envía una invitación por email (`POST /api/organizaciones/{id}/invitaciones`).
+  Future<InvitacionDto> invitar(int organizacionId, String email) async {
+    final response = await apiClient.dio.post<Map<String, dynamic>>(
+      '/organizaciones/$organizacionId/invitaciones',
+      data: <String, dynamic>{'email': email.trim()},
+    );
+    return InvitacionDto.fromJson(response.data!);
+  }
+
+  /// Reenvía una invitación (`POST /api/organizaciones/{id}/invitaciones/{invId}/reenviar`).
+  Future<InvitacionDto> reenviarInvitacion(
+    int organizacionId,
+    int invitacionId,
+  ) async {
+    final response = await apiClient.dio.post<Map<String, dynamic>>(
+      '/organizaciones/$organizacionId/invitaciones/$invitacionId/reenviar',
+    );
+    return InvitacionDto.fromJson(response.data!);
+  }
+
+  /// Cancela una invitación (`DELETE /api/organizaciones/{id}/invitaciones/{invId}`).
+  Future<void> cancelarInvitacion(int organizacionId, int invitacionId) async {
+    await apiClient.dio.delete<void>(
+      '/organizaciones/$organizacionId/invitaciones/$invitacionId',
+    );
+  }
+
+  /// Catálogo de permisos y plantillas (`GET /api/organizaciones/{id}/roles/catalogo`).
+  Future<CatalogoPermisosOrganizacionDto> obtenerCatalogoPermisos(
+    int organizacionId,
+  ) async {
+    final response = await apiClient.dio.get<Map<String, dynamic>>(
+      '/organizaciones/$organizacionId/roles/catalogo',
+    );
+    return CatalogoPermisosOrganizacionDto.fromJson(
+      response.data ?? const <String, dynamic>{},
+    );
+  }
+
+  /// Roles de una organización (`GET /api/organizaciones/{id}/roles`).
+  Future<List<RolOrganizacionDto>> obtenerRoles(int organizacionId) async {
+    final response = await apiClient.dio.get<List<dynamic>>(
+      '/organizaciones/$organizacionId/roles',
+    );
+    return (response.data ?? const <dynamic>[])
+        .whereType<Map<String, dynamic>>()
+        .map(RolOrganizacionDto.fromJson)
+        .toList(growable: false);
+  }
+
+  /// Crea un rol (`POST /api/organizaciones/{id}/roles`).
+  Future<RolOrganizacionDto> crearRol(
+    int organizacionId, {
+    required String nombre,
+    required List<String> permisos,
+  }) async {
+    final response = await apiClient.dio.post<Map<String, dynamic>>(
+      '/organizaciones/$organizacionId/roles',
+      data: <String, dynamic>{'nombre': nombre.trim(), 'permisos': permisos},
+    );
+    return RolOrganizacionDto.fromJson(response.data!);
+  }
+
+  /// Actualiza un rol (`PUT /api/organizaciones/{id}/roles/{rolId}`).
+  Future<RolOrganizacionDto> actualizarRol(
+    int organizacionId,
+    int rolId, {
+    required String nombre,
+    required List<String> permisos,
+  }) async {
+    final response = await apiClient.dio.put<Map<String, dynamic>>(
+      '/organizaciones/$organizacionId/roles/$rolId',
+      data: <String, dynamic>{'nombre': nombre.trim(), 'permisos': permisos},
+    );
+    return RolOrganizacionDto.fromJson(response.data!);
+  }
+
+  /// Elimina un rol (`DELETE /api/organizaciones/{id}/roles/{rolId}`).
+  Future<void> eliminarRol(int organizacionId, int rolId) async {
+    await apiClient.dio.delete<void>(
+      '/organizaciones/$organizacionId/roles/$rolId',
+    );
+  }
+
+  /// Asigna los roles de un miembro (`PUT /api/organizaciones/{id}/miembros/{usuarioId}/roles`).
+  Future<void> asignarRoles(
+    int organizacionId,
+    int usuarioId,
+    List<int> rolIds,
+  ) async {
+    await apiClient.dio.put<void>(
+      '/organizaciones/$organizacionId/miembros/$usuarioId/roles',
+      data: <String, dynamic>{'rolIds': rolIds},
+    );
+  }
+
   /// Equipos de una organización (`GET /api/organizaciones/{id}/equipos`).
   Future<List<EquipoDto>> obtenerEquipos(
     int organizacionId, {

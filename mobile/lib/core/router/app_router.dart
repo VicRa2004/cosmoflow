@@ -18,6 +18,7 @@ import '../../modules/organizaciones/pages/organizacion_editor_page.dart';
 import '../../modules/organizaciones/pages/organizaciones_page.dart';
 import '../../modules/organizaciones/pages/proyecto_detalle_page.dart';
 import '../../modules/organizaciones/pages/proyecto_editor_page.dart';
+import '../../modules/organizaciones/pages/rol_organizacion_editor_page.dart';
 import '../../modules/perfil/pages/perfil_page.dart';
 import '../../modules/tags/api/tags_api.dart';
 import '../../modules/tags/pages/tags_page.dart';
@@ -165,6 +166,23 @@ GoRouter crearAppRouter({
           organizacionId: int.parse(state.pathParameters['id']!),
           organizacionesApi: organizacionesApi,
           args: ProyectoEditorArgs.fromExtra(state.extra),
+        ),
+      ),
+      GoRoute(
+        path: '/organizaciones/:id/roles/nuevo',
+        builder: (context, state) => RolOrganizacionEditorPage(
+          organizacionId: int.parse(state.pathParameters['id']!),
+          organizacionesApi: organizacionesApi,
+        ),
+      ),
+      GoRoute(
+        path: '/organizaciones/:id/roles/:rolId/editar',
+        builder: (context, state) => RolOrganizacionEditorPage(
+          organizacionId: int.parse(state.pathParameters['id']!),
+          organizacionesApi: organizacionesApi,
+          rol: state.extra is RolOrganizacionDto
+              ? state.extra as RolOrganizacionDto
+              : null,
         ),
       ),
       GoRoute(
