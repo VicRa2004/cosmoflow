@@ -1,16 +1,22 @@
+import 'dart:async';
+
 import '../../../core/api/api_client.dart';
+import '../../../core/notificaciones/recordatorios_service.dart';
 import '../../../core/offline/cola_sin_conexion.dart';
 import '../models/estadisticas_tareas_model.dart';
 import '../models/tarea_model.dart';
 
 /// Cliente de API para `/api/tareas` y `/api/tareas/pendientes`.
 class TareasApi {
-  const TareasApi({required this.apiClient, this.cola});
+  const TareasApi({required this.apiClient, this.cola, this.recordatorios});
 
   final ApiClient apiClient;
 
   /// Con ella, crear sin red guarda la tarea para sincronizarla después.
   final ColaSinConexion? cola;
+
+  /// Reprograma o cancela recordatorios locales al crear, editar o eliminar tareas.
+  final RecordatoriosService? recordatorios;
 
   /// Obtiene las tareas pendientes ordenadas por vencimiento (`GET /api/tareas/pendientes`).
   Future<PaginaTareas> obtenerPendientes({
@@ -108,7 +114,12 @@ class TareasApi {
             data: datos,
           )).data
         : await cola!.crearOEncolar('/tareas', datos);
-    return respuesta == null ? null : TareaDto.fromJson(respuesta);
+    if (respuesta == null) return null;
+    final tarea = TareaDto.fromJson(respuesta);
+    if (recordatorios != null) {
+      unawaited(recordatorios!.actualizarTarea(tarea));
+    }
+    return tarea;
   }
 
   /// Tareas con vencimiento (o inicio) entre dos días AAAA-MM-DD (`GET /api/tareas/calendario`).
@@ -137,7 +148,11 @@ class TareasApi {
       '/tareas/$id',
       data: datos,
     );
-    return TareaDto.fromJson(response.data!);
+    final tarea = TareaDto.fromJson(response.data!);
+    if (recordatorios != null) {
+      unawaited(recordatorios!.actualizarTarea(tarea));
+    }
+    return tarea;
   }
 
   /// Alterna entre `completada` y `pendiente` (acción de `BotonCompletar`).
@@ -176,5 +191,8 @@ class TareasApi {
   /// Elimina una tarea (`DELETE /api/tareas/{id}`).
   Future<void> eliminar(int id) async {
     await apiClient.dio.delete<void>('/tareas/$id');
+    if (recordatorios != null) {
+      unawaited(recordatorios!.cancelarTarea(id));
+    }
   }
 }

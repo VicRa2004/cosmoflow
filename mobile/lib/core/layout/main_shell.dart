@@ -19,6 +19,7 @@ class MainShell extends StatefulWidget {
     this.notificacionesApi,
     this.push,
     this.ofrecerPromptPush = false,
+    this.onPreferenciasActualizadas,
   });
 
   final String ubicacionActual;
@@ -27,6 +28,7 @@ class MainShell extends StatefulWidget {
   final NotificacionesApi? notificacionesApi;
   final PushService? push;
   final bool ofrecerPromptPush;
+  final VoidCallback? onPreferenciasActualizadas;
 
   @override
   State<MainShell> createState() => _MainShellState();
@@ -65,6 +67,7 @@ class _MainShellState extends State<MainShell> {
         context: context,
         usuarioId: usuarioId,
         notificacionesApi: api,
+        onPreferenciasActualizadas: widget.onPreferenciasActualizadas,
       );
     } finally {
       _comprobandoPrompt = false;

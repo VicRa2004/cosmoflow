@@ -14,10 +14,12 @@ class NotificacionesPreferenciasPage extends StatefulWidget {
     super.key,
     required this.notificacionesApi,
     this.cargarAlIniciar = true,
+    this.onPreferenciasActualizadas,
   });
 
   final NotificacionesApi notificacionesApi;
   final bool cargarAlIniciar;
+  final VoidCallback? onPreferenciasActualizadas;
 
   @override
   State<NotificacionesPreferenciasPage> createState() =>
@@ -96,6 +98,7 @@ class _NotificacionesPreferenciasPageState
         <PreferenciaNotificacionDto>[actualizada],
       );
       if (mounted) setState(() => _preferencias = nuevas);
+      widget.onPreferenciasActualizadas?.call();
     } catch (_) {
       if (mounted) {
         setState(() => _preferencias = previas);
@@ -121,6 +124,7 @@ class _NotificacionesPreferenciasPageState
             lote,
           );
           if (mounted) setState(() => _preferencias = nuevas);
+          widget.onPreferenciasActualizadas?.call();
         },
         error: 'No se pudieron actualizar las preferencias.',
         exito: 'Avisos configurados solo por móvil',

@@ -6,6 +6,8 @@ import 'package:go_router/go_router.dart';
 
 import 'core/api/api_client.dart';
 import 'core/auth/sesion_store.dart';
+import 'core/notificaciones/notificaciones_locales.dart';
+import 'core/notificaciones/recordatorios_service.dart';
 import 'core/offline/cola_sin_conexion.dart';
 import 'core/push/push_service.dart';
 import 'core/router/app_router.dart';
@@ -22,10 +24,23 @@ Future<void> main() async {
 
   final sesionStore = SesionStore();
   final apiClient = ApiClient(sesionStore: sesionStore);
-  final push = await _iniciarPush(apiClient);
-  final authApi = AuthApi(apiClient: apiClient, push: push);
+  final notificacionesLocales = NotificacionesLocales(sesionStore: sesionStore);
+  final push = await _iniciarPush(apiClient, notificacionesLocales);
+  final recordatorios = RecordatoriosService(
+    apiClient: apiClient,
+    notificacionesLocales: notificacionesLocales,
+  )..iniciar();
+  final authApi = AuthApi(
+    apiClient: apiClient,
+    push: push,
+    recordatorios: recordatorios,
+  );
   final cola = ColaSinConexion(apiClient: apiClient);
-  final tareasApi = TareasApi(apiClient: apiClient, cola: cola);
+  final tareasApi = TareasApi(
+    apiClient: apiClient,
+    cola: cola,
+    recordatorios: recordatorios,
+  );
   final notasApi = NotasApi(apiClient: apiClient, cola: cola);
   final tagsApi = TagsApi(apiClient: apiClient);
   final organizacionesApi = OrganizacionesApi(apiClient: apiClient);
@@ -40,20 +55,28 @@ Future<void> main() async {
       organizacionesApi: organizacionesApi,
       cola: cola,
       push: push,
+      notificacionesLocales: notificacionesLocales,
+      recordatorios: recordatorios,
     ),
   );
 }
 
 /// Sin configuración de Firebase (p. ej. iOS sin GoogleService-Info.plist) la app
 /// funciona igual, solo sin notificaciones push.
-Future<PushService?> _iniciarPush(ApiClient apiClient) async {
+Future<PushService?> _iniciarPush(
+  ApiClient apiClient,
+  NotificacionesLocales notificacionesLocales,
+) async {
   try {
     await Firebase.initializeApp();
   } catch (e) {
     debugPrint('Firebase no configurado, push desactivado: $e');
     return null;
   }
-  return PushService(apiClient: apiClient)..iniciar();
+  return PushService(
+    apiClient: apiClient,
+    notificacionesLocales: notificacionesLocales,
+  )..iniciar();
 }
 
 /// Raíz de la aplicación móvil Cosmoflow.
@@ -68,6 +91,8 @@ class CosmoflowMobileApp extends StatefulWidget {
     this.organizacionesApi,
     this.cola,
     this.push,
+    this.notificacionesLocales,
+    this.recordatorios,
     this.oauthGoogleService,
     this.restaurarAlIniciar = true,
   });
@@ -83,6 +108,8 @@ class CosmoflowMobileApp extends StatefulWidget {
   /// Notas y tareas creadas sin conexión; sin ella no hay modo offline.
   final ColaSinConexion? cola;
   final PushService? push;
+  final NotificacionesLocales? notificacionesLocales;
+  final RecordatoriosService? recordatorios;
   final bool restaurarAlIniciar;
 
   @override
@@ -117,11 +144,17 @@ class _CosmoflowMobileAppState extends State<CosmoflowMobileApp>
       tagsApi: tagsApi,
       organizacionesApi: organizacionesApi,
       push: widget.push,
+      recordatorios: widget.recordatorios,
       cargarDatosIniciales: widget.restaurarAlIniciar,
     );
     widget.push?.vincularNavegador((ruta) => _router.push(ruta));
+    widget.notificacionesLocales?.vincularNavegador(
+      (ruta) => _router.push(ruta),
+    );
     if (widget.restaurarAlIniciar) {
-      widget.authApi.restaurarSesion().then((_) => _sincronizar());
+      widget.authApi.restaurarSesion().then(
+        (_) => _sincronizar(forzarRecordatorios: true),
+      );
     }
     final cola = widget.cola;
     if (cola != null) {
@@ -136,19 +169,25 @@ class _CosmoflowMobileAppState extends State<CosmoflowMobileApp>
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.resumed) _sincronizar();
+    if (state == AppLifecycleState.resumed) {
+      _sincronizar(forzarRecordatorios: true);
+    }
   }
 
-  /// Si se entró sin conexión, primero recupera la sesión real; luego envía la cola.
+  /// Si se entró sin conexión, primero recupera la sesión real; luego envía la cola
+  /// y sincroniza los recordatorios locales de inicio y vencimiento.
   /// De una en una: dos refresh en paralelo revocarían la sesión (el backend rota el token).
-  Future<void> _sincronizar() async {
+  Future<void> _sincronizar({bool forzarRecordatorios = false}) async {
     final cola = widget.cola;
     final sesion = widget.sesionStore;
     if (cola == null || !sesion.isAutenticado || _sincronizando) return;
     _sincronizando = true;
     try {
       if (sesion.sinConexion && !await widget.authApi.restaurarSesion()) return;
-      await cola.sincronizar();
+      final enviadas = await cola.sincronizar();
+      await widget.recordatorios?.sincronizar(
+        forzar: forzarRecordatorios || enviadas > 0,
+      );
     } finally {
       _sincronizando = false;
     }

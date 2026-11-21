@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:go_router/go_router.dart';
 
 import '../../modules/auth/api/auth_api.dart';
@@ -32,6 +34,7 @@ import '../../modules/tareas/pages/tarea_editor_page.dart';
 import '../../modules/tareas/pages/tareas_page.dart';
 import '../auth/sesion_store.dart';
 import '../layout/main_shell.dart';
+import '../notificaciones/recordatorios_service.dart';
 import '../push/push_service.dart';
 
 const Set<String> _rutasPublicas = <String>{
@@ -50,10 +53,17 @@ GoRouter crearAppRouter({
   required OrganizacionesApi organizacionesApi,
   NotificacionesApi? notificacionesApi,
   PushService? push,
+  RecordatoriosService? recordatorios,
   bool cargarDatosIniciales = true,
 }) {
   final notifApi =
       notificacionesApi ?? NotificacionesApi(apiClient: authApi.apiClient);
+  void resincronizarRecordatorios() {
+    if (recordatorios != null) {
+      unawaited(recordatorios.sincronizar(forzar: true));
+    }
+  }
+
   return GoRouter(
     initialLocation: '/dashboard',
     refreshListenable: sesionStore,
@@ -202,6 +212,7 @@ GoRouter crearAppRouter({
         builder: (context, state) => NotificacionesPreferenciasPage(
           notificacionesApi: notifApi,
           cargarAlIniciar: cargarDatosIniciales,
+          onPreferenciasActualizadas: resincronizarRecordatorios,
         ),
       ),
       GoRoute(
@@ -290,6 +301,7 @@ GoRouter crearAppRouter({
           notificacionesApi: notifApi,
           push: push,
           ofrecerPromptPush: cargarDatosIniciales,
+          onPreferenciasActualizadas: resincronizarRecordatorios,
           child: child,
         ),
         routes: <RouteBase>[

@@ -8,6 +8,7 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
 import '../../modules/notificaciones/api/notificaciones_api.dart';
 import '../api/api_client.dart';
+import '../notificaciones/notificaciones_locales.dart';
 
 typedef MostrarLocalCallback = Future<void> Function({
   required String titulo,
@@ -24,6 +25,7 @@ class PushService {
   PushService({
     required this.apiClient,
     NotificacionesApi? notificacionesApi,
+    this.notificacionesLocales,
     this._messaging,
     this._localNotifications,
     this._solicitarPermiso,
@@ -45,6 +47,7 @@ class PushService {
 
   final ApiClient apiClient;
   final NotificacionesApi _notificacionesApi;
+  final NotificacionesLocales? notificacionesLocales;
   final FirebaseMessaging? _messaging;
   final FlutterLocalNotificationsPlugin? _localNotifications;
   final Future<void> Function()? _solicitarPermiso;
@@ -96,7 +99,11 @@ class PushService {
     _onCambioSesion();
 
     if (_mostrarNotificacionLocal == null) {
-      unawaited(_inicializarLocales());
+      if (notificacionesLocales != null) {
+        unawaited(notificacionesLocales!.inicializar());
+      } else {
+        unawaited(_inicializarLocales());
+      }
     }
 
     final refrescos = _streamRefrescoToken ?? _fcm.onTokenRefresh;
@@ -239,6 +246,15 @@ class PushService {
     final payload = rutaDesdeDatos(mensaje.data);
     if (_mostrarNotificacionLocal != null) {
       await _mostrarNotificacionLocal(
+        titulo: titulo,
+        cuerpo: cuerpo,
+        payload: payload,
+      );
+      return;
+    }
+
+    if (notificacionesLocales != null) {
+      await notificacionesLocales!.mostrarAviso(
         titulo: titulo,
         cuerpo: cuerpo,
         payload: payload,

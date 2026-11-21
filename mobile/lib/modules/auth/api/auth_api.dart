@@ -6,6 +6,7 @@ import '../../../core/api/api_client.dart';
 import '../../../core/api/auth_interceptor.dart';
 import '../../../core/auth/permisos_service.dart';
 import '../../../core/auth/usuario_sesion.dart';
+import '../../../core/notificaciones/recordatorios_service.dart';
 import '../../../core/push/push_service.dart';
 
 /// Excepción controlada durante el flujo de OAuth con Google.
@@ -35,12 +36,14 @@ class AuthApi {
     required this.apiClient,
     PermisosService? permisosService,
     this.push,
+    this.recordatorios,
   }) : _permisosService =
            permisosService ?? PermisosService(apiClient: apiClient);
 
   final ApiClient apiClient;
   final PermisosService _permisosService;
   final PushService? push;
+  final RecordatoriosService? recordatorios;
 
   /// Inicia sesión con email y contraseña (`POST /api/auth/login`).
   Future<void> login({required String email, required String password}) async {
@@ -191,6 +194,7 @@ class AuthApi {
   /// Cierra todas las sesiones activas de la cuenta (`POST /api/auth/logout-todas`).
   Future<void> cerrarTodasLasSesiones() async {
     await push?.darDeBaja();
+    await recordatorios?.cancelarTodos();
     try {
       await apiClient.dio.post<Map<String, dynamic>>('/auth/logout-todas');
     } on DioException {
@@ -221,6 +225,7 @@ class AuthApi {
   /// Cierra la sesión actual (`POST /api/auth/logout`) y limpia el almacenamiento seguro.
   Future<void> logout() async {
     await push?.darDeBaja();
+    await recordatorios?.cancelarTodos();
     try {
       await apiClient.dio.post<Map<String, dynamic>>('/auth/logout');
     } on DioException {

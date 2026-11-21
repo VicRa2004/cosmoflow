@@ -43,6 +43,7 @@ Future<void> ofrecerSoloMovilSiCorresponde({
   required int usuarioId,
   required NotificacionesApi notificacionesApi,
   SharedPreferences? prefs,
+  VoidCallback? onPreferenciasActualizadas,
 }) async {
   try {
     final storage = prefs ?? await SharedPreferences.getInstance();
@@ -82,7 +83,7 @@ Future<void> ofrecerSoloMovilSiCorresponde({
     );
 
     if (aceptar != true || !context.mounted) return;
-    await ejecutarConAviso(
+    final ok = await ejecutarConAviso(
       context,
       () => notificacionesApi.actualizarPreferencias(
         construirPreferenciasSoloMovil(preferencias),
@@ -90,6 +91,7 @@ Future<void> ofrecerSoloMovilSiCorresponde({
       error: 'No se pudieron actualizar tus preferencias de notificación.',
       exito: 'Avisos configurados solo por móvil',
     );
+    if (ok) onPreferenciasActualizadas?.call();
   } catch (_) {
     // Si falla la red no bloqueamos el uso normal de la app.
   }
