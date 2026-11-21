@@ -2,6 +2,8 @@
 export const PREFIJO_TOKEN_PERSONAL = "cfp_";
 /** Refresh token de una conexión OAuth (MCP). */
 export const PREFIJO_REFRESH_CONEXION = "cfr_";
+/** Refresh token que no rota al renovar: Gemini exige recibir siempre el mismo. */
+export const PREFIJO_REFRESH_FIJO = "cfrf_";
 
 export interface TokenPersonal {
 	id: number;

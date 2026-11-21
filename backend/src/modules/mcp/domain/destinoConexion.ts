@@ -14,6 +14,8 @@ const CALLBACKS_WEB: Record<string, string> = {
 const CALLBACK_GEMINI =
 	/^https:\/\/oauth-redirect\.googleusercontent\.com\/[ra]\/[A-Za-z0-9._-]+$/;
 
+export const NOMBRE_GEMINI = "Gemini";
+
 export interface DestinoConexion {
 	nombre: string;
 	/** Dominio al que irá el código; se muestra en la pantalla de permiso. */
@@ -30,7 +32,7 @@ export function resolverDestino(redirectUri: string): DestinoConexion | null {
 	}
 	if (CALLBACK_GEMINI.test(redirectUri)) {
 		return {
-			nombre: "Gemini",
+			nombre: NOMBRE_GEMINI,
 			host: "oauth-redirect.googleusercontent.com",
 			esLocal: false,
 		};

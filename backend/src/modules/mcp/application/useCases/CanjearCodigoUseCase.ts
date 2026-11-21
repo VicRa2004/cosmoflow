@@ -1,7 +1,7 @@
 import { createHash } from "node:crypto";
 import type { CodigoOAuthRepository } from "../../domain/CodigoOAuthRepository";
 import { ErrorOAuth } from "../../domain/ErrorOAuth";
-import { resolverDestino } from "../../domain/destinoConexion";
+import { NOMBRE_GEMINI, resolverDestino } from "../../domain/destinoConexion";
 import { hashearCodigo } from "./AutorizarConexionUseCase";
 
 const CODIGO_INVALIDO = "Código inválido, caducado o ya usado";
@@ -25,6 +25,7 @@ export class CanjearCodigoUseCase {
 				usuarioId: number;
 				nombre: string;
 				clientId: string;
+				refreshFijo?: boolean;
 			}): Promise<TokensOAuth>;
 		},
 	) {}
@@ -57,6 +58,7 @@ export class CanjearCodigoUseCase {
 			usuarioId: codigo.usuarioId,
 			nombre,
 			clientId: codigo.clientId,
+			refreshFijo: destino?.nombre === NOMBRE_GEMINI,
 		});
 	}
 }

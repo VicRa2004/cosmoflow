@@ -7,6 +7,8 @@ import { PrismaTokenPersonalRepository } from "@/modules/auth/infrastructure/rep
 import { api, crearUsuario, login, vaciarUsuarios } from "@/test/e2e";
 
 const CALLBACK = "https://claude.ai/api/mcp/auth_callback";
+const CALLBACK_GEMINI =
+	"https://oauth-redirect.googleusercontent.com/r/cosmoflow";
 const VERIFIER = "v".repeat(43);
 const CHALLENGE = createHash("sha256").update(VERIFIER).digest("base64url");
 
@@ -55,22 +57,26 @@ const datos = async (token: string, name: string, args = {}) => {
 	return JSON.parse(texto);
 };
 
-const registrarCliente = async () => {
+const registrarCliente = async (callback = CALLBACK) => {
 	const res = await api("/api/oauth/registro", {
 		method: "POST",
-		body: { client_name: "Claude", redirect_uris: [CALLBACK] },
+		body: { client_name: "Claude", redirect_uris: [callback] },
 	});
 	expect(res.status).toBe(201);
 	return ((await res.json()) as { client_id: string }).client_id;
 };
 
-const autorizar = async (sesion: string, clientId: string) => {
+const autorizar = async (
+	sesion: string,
+	clientId: string,
+	callback = CALLBACK,
+) => {
 	const res = await api("/api/oauth/conexion", {
 		method: "POST",
 		token: sesion,
 		body: {
 			clientId,
-			redirectUri: CALLBACK,
+			redirectUri: callback,
 			codeChallenge: CHALLENGE,
 			state: "estado-1",
 		},
@@ -112,12 +118,16 @@ describe("Conector MCP (e2e)", () => {
 	let token: string;
 	let tareaAjena: number;
 
-	const conectar = async (deSesion = sesion) => {
-		const clientId = await registrarCliente();
-		const code = (await autorizar(deSesion, clientId)).searchParams.get(
-			"code",
-		) as string;
-		const res = await canjear({ code, client_id: clientId });
+	const conectar = async (deSesion = sesion, callback = CALLBACK) => {
+		const clientId = await registrarCliente(callback);
+		const code = (
+			await autorizar(deSesion, clientId, callback)
+		).searchParams.get("code") as string;
+		const res = await canjear({
+			code,
+			client_id: clientId,
+			redirect_uri: callback,
+		});
 		expect(res.status).toBe(200);
 		return { clientId, ...((await res.json()) as RespuestaToken) };
 	};
@@ -231,6 +241,28 @@ describe("Conector MCP (e2e)", () => {
 				await api("/api/tokens-personales", { token: sesion })
 			).json()) as { id: number }[];
 			expect(new Set(lista.map((t) => t.id)).size).toBe(lista.length);
+		});
+
+		it("con Gemini, renovar debería conservar el refresh y cambiar solo el acceso", async () => {
+			const conexion = await conectar(sesion, CALLBACK_GEMINI);
+			expect(conexion.refresh_token).toStartWith("cfrf_");
+
+			for (const _ of [1, 2]) {
+				const res = await renovar({
+					refresh_token: conexion.refresh_token,
+					client_id: conexion.clientId,
+				});
+				expect(res.status).toBe(200);
+				const nueva = (await res.json()) as RespuestaToken;
+				expect(nueva.refresh_token).toBe(conexion.refresh_token);
+				expect(nueva.access_token).not.toBe(conexion.access_token);
+				expect((await postMcp(nueva.access_token, "tools/list")).status).toBe(
+					200,
+				);
+			}
+			expect((await postMcp(conexion.access_token, "tools/list")).status).toBe(
+				401,
+			);
 		});
 
 		it("renovar debería exigir el mismo client_id y una conexión viva", async () => {

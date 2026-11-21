@@ -17,14 +17,16 @@ export interface TokensConexion {
 	expiraEnSegundos: number;
 }
 
-/** Tokens nuevos en claro (solo para la respuesta) y lo que se guarda de ellos. */
-export function generarCredenciales(tokenService: TokenService): {
+/** Tokens nuevos en claro (solo para la respuesta) y lo que se guarda de ellos; el refresh se puede conservar. */
+export function generarCredenciales(
+	tokenService: TokenService,
+	refreshToken = `${PREFIJO_REFRESH_CONEXION}${tokenService.generarRefreshToken()}`,
+): {
 	tokens: TokensConexion;
 	credenciales: CredencialesConexion;
 } {
 	const aleatorio = tokenService.generarRefreshToken();
 	const accessToken = `${PREFIJO_TOKEN_PERSONAL}${aleatorio}`;
-	const refreshToken = `${PREFIJO_REFRESH_CONEXION}${tokenService.generarRefreshToken()}`;
 	return {
 		tokens: {
 			accessToken,
