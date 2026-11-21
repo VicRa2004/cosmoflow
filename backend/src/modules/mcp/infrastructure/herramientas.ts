@@ -56,6 +56,21 @@ const camposTarea = {
 		.nullable()
 		.optional()
 		.describe("Tarea del mismo sitio de la que depende; null la quita"),
+	recurrencia: z
+		.enum(["diaria", "semanal", "mensual"])
+		.nullable()
+		.optional()
+		.describe("Al completarla se crea la siguiente; null la quita"),
+	subtareas: z
+		.array(
+			z.object({
+				titulo: z.string().min(1).max(255),
+				completada: z.boolean().optional(),
+			}),
+		)
+		.max(100)
+		.optional()
+		.describe("Reemplaza la checklist de subtareas en orden"),
 };
 
 /** Un fallo de la API se devuelve como resultado: así la IA lo lee y puede corregirlo. */

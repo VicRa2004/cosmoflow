@@ -49,6 +49,7 @@ model Usuario {
   preferenciaInterfaz      PreferenciaInterfaz?
   vinculoTelegram          VinculoTelegram?
   dispositivosPush         DispositivoPush[]
+  notificaciones           Notificacion[]
   mencionesTarea           TareaMencion[]
   comentariosTarea         ComentarioTarea[]
   asignacionesTarea        TareaResponsable[]
@@ -318,25 +319,35 @@ enum PrioridadTarea {
   @@map("prioridad_tarea")
 }
 
+enum RecurrenciaTarea {
+  diaria
+  semanal
+  mensual
+
+  @@map("recurrencia_tarea")
+}
+
 /// Tarea personal (RN-40): de su dueño, sin equipo ni proyecto (llegan en la Fase 2).
 model Tarea {
-  id               Int            @id @default(autoincrement()) @map("tar_id")
-  usuarioId        Int            @map("tar_fkusuario")
-  titulo           String         @map("tar_titulo") @db.VarChar(255)
+  id               Int               @id @default(autoincrement()) @map("tar_id")
+  usuarioId        Int               @map("tar_fkusuario")
+  titulo           String            @map("tar_titulo") @db.VarChar(255)
   /// Markdown (RN-41)
-  contenido        String         @default("") @map("tar_contenido")
-  estado           EstadoTarea    @default(pendiente) @map("tar_estado")
-  prioridad        PrioridadTarea @default(media) @map("tar_prioridad")
-  fechaInicio      DateTime?      @map("tar_fecha_inicio") @db.Date
-  fechaVencimiento DateTime?      @map("tar_fecha_vencimiento") @db.Date
+  contenido        String            @default("") @map("tar_contenido")
+  estado           EstadoTarea       @default(pendiente) @map("tar_estado")
+  prioridad        PrioridadTarea    @default(media) @map("tar_prioridad")
+  fechaInicio      DateTime?         @map("tar_fecha_inicio") @db.Date
+  fechaVencimiento DateTime?         @map("tar_fecha_vencimiento") @db.Date
   /// Color de acento opcional (#rrggbb) para destacarla
-  color            String?        @map("tar_color") @db.VarChar(7)
+  color            String?           @map("tar_color") @db.VarChar(7)
+  /// Recurrencia (#57): al completarla se crea la siguiente con las fechas desplazadas
+  recurrencia      RecurrenciaTarea? @map("tar_recurrencia")
   /// Tarea principal: esta no se empieza ni se completa hasta que aquella esté completada
-  dependeDeId      Int?           @map("tar_fkdepende_de")
-  createdAt        DateTime       @default(now()) @map("created_at")
-  updatedAt        DateTime?      @updatedAt @map("updated_at")
+  dependeDeId      Int?              @map("tar_fkdepende_de")
+  createdAt        DateTime          @default(now()) @map("created_at")
+  updatedAt        DateTime?         @updatedAt @map("updated_at")
   /// Borrado lógico (RN-91)
-  deletedAt        DateTime?      @map("deleted_at")
+  deletedAt        DateTime?         @map("deleted_at")
 
   /// Tarea compartida (RN-40): de la organización, de un equipo o de un proyecto
   /// (nunca de los dos). Sin organización es personal. CHECK en la migración.
@@ -353,6 +364,7 @@ model Tarea {
   responsables TareaResponsable[]
   menciones    TareaMencion[]
   comentarios  ComentarioTarea[]
+  subtareas    Subtarea[]
   dependeDe    Tarea?             @relation("DependenciaTarea", fields: [dependeDeId], references: [id], onDelete: SetNull)
   dependientes Tarea[]            @relation("DependenciaTarea")
 
@@ -363,6 +375,20 @@ model Tarea {
   @@index([equipoId])
   @@index([proyectoId])
   @@map("tarea")
+}
+
+/// Subtarea o elemento de checklist dentro de una tarea (#57).
+model Subtarea {
+  id         Int     @id @default(autoincrement()) @map("sub_id")
+  tareaId    Int     @map("sub_fktarea")
+  titulo     String  @map("sub_titulo") @db.VarChar(255)
+  completada Boolean @default(false) @map("sub_completada")
+  orden      Int     @default(0) @map("sub_orden")
+
+  tarea Tarea @relation(fields: [tareaId], references: [id], onDelete: Cascade)
+
+  @@index([tareaId, orden])
+  @@map("subtarea")
 }
 
 /// RN-44. FK a `MiembroOrganizacion`: salir de la organización lo quita como
@@ -849,4 +875,24 @@ model NotificacionEnviada {
 
   @@index([enviadaEn])
   @@map("notificacion_enviada")
+}
+
+/// Notificación dentro de la app (campana, #51). Se purgan las leídas antiguas.
+model Notificacion {
+  id        Int       @id @default(autoincrement()) @map("ntf_id")
+  usuarioId Int       @map("ntf_fkusuario")
+  asunto    String    @map("ntf_asunto") @db.VarChar(255)
+  texto     String    @map("ntf_texto") @db.Text
+  enlace    String    @map("ntf_enlace") @db.VarChar(512)
+  /// "tarea" | "nota" | null
+  tipo      String?   @map("ntf_tipo") @db.VarChar(20)
+  recursoId Int?      @map("ntf_recurso_id")
+  leidaEn   DateTime? @map("ntf_leida_en")
+  createdAt DateTime  @default(now()) @map("created_at")
+
+  usuario Usuario @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+
+  @@index([usuarioId, leidaEn, id])
+  @@index([usuarioId, id])
+  @@map("notificacion")
 }

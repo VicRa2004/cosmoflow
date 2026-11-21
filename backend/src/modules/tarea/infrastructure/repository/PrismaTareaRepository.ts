@@ -24,6 +24,10 @@ const include = {
 	},
 	menciones: { select: { usuarioId: true } },
 	dependeDe: { select: { estado: true, deletedAt: true } },
+	subtareas: {
+		select: { id: true, titulo: true, completada: true },
+		orderBy: [{ orden: "asc" }, { id: "asc" }],
+	},
 } satisfies Prisma.TareaInclude;
 
 type PrismaTareaRecord = Prisma.TareaGetPayload<{ include: typeof include }>;
@@ -116,6 +120,12 @@ export class PrismaTareaRepository implements TareaRepository {
 				color: raw.color,
 				tagIds: raw.tags.map((t) => t.tagId),
 				dependeDeId: raw.dependeDeId,
+				recurrencia: raw.recurrencia,
+				subtareas: raw.subtareas.map((s) => ({
+					id: s.id,
+					titulo: s.titulo,
+					completada: s.completada,
+				})),
 			},
 			{
 				organizacionId: raw.organizacionId,
@@ -146,6 +156,7 @@ export class PrismaTareaRepository implements TareaRepository {
 			fechaVencimiento: aFecha(datos.fechaVencimiento),
 			color: datos.color,
 			dependeDeId: datos.dependeDeId,
+			recurrencia: datos.recurrencia,
 		};
 	}
 
@@ -362,6 +373,15 @@ export class PrismaTareaRepository implements TareaRepository {
 						data: data.getMencionIds().map((usuarioId) => ({ usuarioId })),
 					},
 				},
+				subtareas: {
+					createMany: {
+						data: datos.subtareas.map((sub, orden) => ({
+							titulo: sub.titulo,
+							completada: sub.completada,
+							orden,
+						})),
+					},
+				},
 			},
 			include,
 		});
@@ -389,6 +409,16 @@ export class PrismaTareaRepository implements TareaRepository {
 					deleteMany: {},
 					createMany: {
 						data: data.getMencionIds().map((usuarioId) => ({ usuarioId })),
+					},
+				},
+				subtareas: {
+					deleteMany: {},
+					createMany: {
+						data: datos.subtareas.map((sub, orden) => ({
+							titulo: sub.titulo,
+							completada: sub.completada,
+							orden,
+						})),
 					},
 				},
 			},

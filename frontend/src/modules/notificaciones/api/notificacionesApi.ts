@@ -3,6 +3,9 @@ import type { components } from "@/core/api/schema.gen";
 
 export type EstadoMovil = components["schemas"]["EstadoMovil"];
 export type EstadoTelegram = components["schemas"]["EstadoTelegram"];
+export type NotificacionApp = components["schemas"]["NotificacionApp"];
+export type BandejaNotificaciones =
+	components["schemas"]["BandejaNotificaciones"];
 export type PreferenciaNotificacion =
 	components["schemas"]["PreferenciaNotificacion"];
 /** `personalizado` solo existe en las del usuario. */
@@ -58,5 +61,28 @@ export const notificacionesApi = {
 	async estadoMovil(): Promise<EstadoMovil> {
 		const response = await apiClient.get<EstadoMovil>("/notificaciones/movil");
 		return response.data;
+	},
+
+	async obtenerBandeja(
+		params: { pagina?: number; limite?: number; soloNoLeidas?: boolean } = {},
+	): Promise<BandejaNotificaciones> {
+		const response = await apiClient.get<BandejaNotificaciones>(
+			"/notificaciones",
+			{
+				params: {
+					...params,
+					soloNoLeidas: params.soloNoLeidas ? "true" : undefined,
+				},
+			},
+		);
+		return response.data;
+	},
+
+	async marcarLeida(id: number): Promise<void> {
+		await apiClient.put(`/notificaciones/${id}/leer`);
+	},
+
+	async marcarTodasLeidas(): Promise<void> {
+		await apiClient.post("/notificaciones/leer-todas");
 	},
 };

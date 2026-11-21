@@ -3383,6 +3383,12 @@ export interface paths {
                         tagIds?: number[];
                         responsableIds?: number[];
                         dependeDeId?: number | null;
+                        /** @enum {string|null} */
+                        recurrencia?: "diaria" | "semanal" | "mensual" | null;
+                        subtareas?: {
+                            titulo: string;
+                            completada?: boolean;
+                        }[];
                         organizacionId?: number;
                         equipoId?: number;
                         proyectoId?: number;
@@ -3962,6 +3968,12 @@ export interface paths {
                         tagIds?: number[];
                         responsableIds?: number[];
                         dependeDeId?: number | null;
+                        /** @enum {string|null} */
+                        recurrencia?: "diaria" | "semanal" | "mensual" | null;
+                        subtareas?: {
+                            titulo: string;
+                            completada?: boolean;
+                        }[];
                     };
                 };
             };
@@ -7952,6 +7964,152 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/notificaciones": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Listar mis notificaciones dentro de la app (campana) */
+        get: {
+            parameters: {
+                query?: {
+                    pagina?: string;
+                    limite?: string;
+                    soloNoLeidas?: "true";
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Notificaciones paginadas y contador de no leídas */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["BandejaNotificaciones"];
+                    };
+                };
+                /** @description No autenticado */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/notificaciones/leer-todas": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Marcar todas mis notificaciones como leídas */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Marcadas como leídas */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description No autenticado */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/notificaciones/{id}/leer": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Marcar una notificación como leída */
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Marcada como leída */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description No autenticado */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Notificación no encontrada */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/notificaciones/preferencias": {
         parameters: {
             query?: never;
@@ -9078,6 +9236,13 @@ export interface components {
                 [key: string]: number;
             };
             dependeDeId: number | null;
+            /** @enum {string|null} */
+            recurrencia: "diaria" | "semanal" | "mensual" | null;
+            subtareas: {
+                id: number;
+                titulo: string;
+                completada: boolean;
+            }[];
             bloqueada: boolean;
         };
         EstadisticasTareasDto: {
@@ -9308,6 +9473,33 @@ export interface components {
         };
         /** @enum {string} */
         EstadoProyecto: "activo" | "en_pausa" | "terminado";
+        BandejaNotificaciones: {
+            datos: components["schemas"]["NotificacionApp"][];
+            /** @example 1 */
+            pagina: number;
+            /** @example 3 */
+            totalElementos: number;
+            /** @example 1 */
+            totalPaginas: number;
+            /** @example 2 */
+            noLeidas: number;
+        };
+        NotificacionApp: {
+            /** @example 1 */
+            id: number;
+            /** @example Te asignaron una tarea: Preparar demo */
+            asunto: string;
+            /** @example Ana te asignó la tarea «Preparar demo». */
+            texto: string;
+            /** @example https://app.cosmoflow.dev/tareas/42 */
+            enlace: string;
+            /** @enum {string|null} */
+            tipo: "tarea" | "nota" | null;
+            recursoId: number | null;
+            leida: boolean;
+            /** @example 2026-11-20T18:00:00.000Z */
+            createdAt: string;
+        };
         PreferenciaNotificacionUsuario: components["schemas"]["PreferenciaNotificacion"] & {
             personalizado: boolean;
         };
@@ -9321,7 +9513,7 @@ export interface components {
              * @example correo
              * @enum {string}
              */
-            canal: "correo" | "telegram" | "movil";
+            canal: "app" | "correo" | "telegram" | "movil";
             activo: boolean;
         };
         EstadoTelegram: {
@@ -9410,6 +9602,8 @@ export type RespuestaInvitacionDto = components['schemas']['RespuestaInvitacionD
 export type EquipoDto = components['schemas']['EquipoDto'];
 export type ProyectoDto = components['schemas']['ProyectoDto'];
 export type EstadoProyecto = components['schemas']['EstadoProyecto'];
+export type BandejaNotificaciones = components['schemas']['BandejaNotificaciones'];
+export type NotificacionApp = components['schemas']['NotificacionApp'];
 export type PreferenciaNotificacionUsuario = components['schemas']['PreferenciaNotificacionUsuario'];
 export type PreferenciaNotificacion = components['schemas']['PreferenciaNotificacion'];
 export type EstadoTelegram = components['schemas']['EstadoTelegram'];

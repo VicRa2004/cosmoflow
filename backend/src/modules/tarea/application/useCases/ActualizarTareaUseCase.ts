@@ -30,17 +30,34 @@ export class ActualizarTareaUseCase {
 			id,
 		);
 		const antes = tarea.getDatos();
-		const { responsableIds, ...campos } = dto;
+		const { responsableIds, subtareas, ...campos } = dto;
 		if (responsableIds !== undefined) {
 			if (contexto && !contexto.puedeCrear) throw new SinPermisoTareasError();
 			tarea.asignar(responsableIds, usuarioId);
 		}
-		tarea.actualizar(campos);
+		tarea.actualizar({
+			...campos,
+			...(subtareas !== undefined && {
+				subtareas: subtareas.map((sub) => ({
+					titulo: sub.titulo,
+					completada: sub.completada ?? false,
+				})),
+			}),
+		});
 		tarea.mencionar(contexto?.miembroIds ?? []);
 		await validarTarea(this.tareaRepository, tarea, contexto, antes);
+		const recienCompletada =
+			antes.estado !== "completada" && tarea.getDatos().estado === "completada";
+		const hoy = new Date().toISOString().slice(0, 10);
+		const siguiente = recienCompletada ? tarea.siguienteOcurrencia(hoy) : null;
 		const actualizada = await this.uow.ejecutar(async () => {
 			const actualizada = await this.tareaRepository.actualizar(tarea);
 			await this.eventBus.publishAll(tarea.pullDomainEvents());
+			if (siguiente) {
+				const creada = await this.tareaRepository.crear(siguiente);
+				creada.agregarEventoCreada();
+				await this.eventBus.publishAll(creada.pullDomainEvents());
+			}
 			return actualizada;
 		});
 		return TareaMapper.toDto(actualizada);

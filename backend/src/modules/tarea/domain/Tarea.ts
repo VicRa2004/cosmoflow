@@ -23,6 +23,15 @@ export type EstadoTarea = (typeof ESTADOS_TAREA)[number];
 export const PRIORIDADES_TAREA = ["baja", "media", "alta"] as const;
 export type PrioridadTarea = (typeof PRIORIDADES_TAREA)[number];
 
+export const RECURRENCIAS_TAREA = ["diaria", "semanal", "mensual"] as const;
+export type RecurrenciaTarea = (typeof RECURRENCIAS_TAREA)[number];
+
+export interface SubtareaTarea {
+	id?: number;
+	titulo: string;
+	completada: boolean;
+}
+
 export interface DatosTarea {
 	titulo: string;
 	/** Markdown (RN-41). */
@@ -38,6 +47,10 @@ export interface DatosTarea {
 	tagIds: number[];
 	/** Tarea principal (mismo sitio): hasta completarla, esta no empieza ni se completa. */
 	dependeDeId: number | null;
+	/** Recurrencia (#57): al completarla se crea la siguiente con fechas desplazadas. */
+	recurrencia: RecurrenciaTarea | null;
+	/** Checklist de subtareas en orden (#57). */
+	subtareas: SubtareaTarea[];
 }
 
 /** Organización (sin equipo ni proyecto), equipo o proyecto de una tarea compartida. */
@@ -123,6 +136,8 @@ export class Tarea extends Entity {
 			color: null,
 			tagIds: [],
 			dependeDeId: null,
+			recurrencia: null,
+			subtareas: [],
 			...sinIndefinidos(datos),
 			titulo: datos.titulo,
 		};
@@ -287,7 +302,51 @@ export class Tarea extends Entity {
 	}
 
 	getDatos(): DatosTarea {
-		return { ...this.datos, tagIds: [...this.datos.tagIds] };
+		return {
+			...this.datos,
+			tagIds: [...this.datos.tagIds],
+			subtareas: this.datos.subtareas.map((sub) => ({ ...sub })),
+		};
+	}
+
+	/**
+	 * Crea la siguiente ocurrencia de una tarea recurrente (#57): pendiente, sin
+	 * dependencia, subtareas reiniciadas y fechas desplazadas según `recurrencia`.
+	 */
+	public siguienteOcurrencia(hoy: string): Tarea | null {
+		const { recurrencia } = this.datos;
+		if (!recurrencia) return null;
+		const sinFechas =
+			this.datos.fechaInicio === null && this.datos.fechaVencimiento === null;
+		const fechaInicio = this.datos.fechaInicio
+			? avanzarDia(this.datos.fechaInicio, recurrencia)
+			: null;
+		const fechaVencimiento = this.datos.fechaVencimiento
+			? avanzarDia(this.datos.fechaVencimiento, recurrencia)
+			: sinFechas
+				? avanzarDia(hoy, recurrencia)
+				: null;
+
+		return new Tarea(
+			new EntityId(),
+			this.usuarioId,
+			{
+				...this.getDatos(),
+				estado: "pendiente",
+				fechaInicio,
+				fechaVencimiento,
+				dependeDeId: null,
+				subtareas: this.datos.subtareas.map((sub) => ({
+					titulo: sub.titulo,
+					completada: false,
+				})),
+			},
+			{ ...this.ubicacion },
+			[...this.responsableIds],
+			[],
+			false,
+			{ ...this.asignadoPor },
+		);
 	}
 
 	/** `undefined` deja el campo como está; `null` vacía una fecha o el color. */
@@ -331,9 +390,39 @@ export class Tarea extends Entity {
 				"La fecha de inicio no puede ser posterior al vencimiento",
 			);
 		}
-		return { ...datos, tagIds: [...new Set(datos.tagIds)] };
+		const subtareas = datos.subtareas.map((sub) => {
+			const titulo = sub.titulo.trim();
+			if (titulo.length === 0) {
+				throw new TareaInvalidaError(
+					"El título de cada subtarea es obligatorio",
+				);
+			}
+			return {
+				...(sub.id !== undefined ? { id: sub.id } : {}),
+				titulo,
+				completada: sub.completada,
+			};
+		});
+		return { ...datos, tagIds: [...new Set(datos.tagIds)], subtareas };
 	}
 }
+
+/** Desplaza un día ISO (`AAAA-MM-DD`) según la recurrencia; en mensual acota al fin de mes. */
+export function avanzarDia(dia: string, recurrencia: RecurrenciaTarea): string {
+	const [anio = 1970, mes = 1, fecha = 1] = dia.split("-").map(Number);
+	if (recurrencia === "diaria") {
+		return aIsoUtc(Date.UTC(anio, mes - 1, fecha + 1));
+	}
+	if (recurrencia === "semanal") {
+		return aIsoUtc(Date.UTC(anio, mes - 1, fecha + 7));
+	}
+	const ultimoDiaMesSiguiente = new Date(
+		Date.UTC(anio, mes + 1, 0),
+	).getUTCDate();
+	return aIsoUtc(Date.UTC(anio, mes, Math.min(fecha, ultimoDiaMesSiguiente)));
+}
+
+const aIsoUtc = (ms: number) => new Date(ms).toISOString().slice(0, 10);
 
 const CAMPOS_HISTORIAL: CampoHistorial[] = [
 	"titulo",

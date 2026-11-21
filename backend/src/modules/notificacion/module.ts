@@ -13,25 +13,32 @@ import { ActualizarPreferenciasUseCase } from "./application/useCases/Actualizar
 import { DesvincularTelegramUseCase } from "./application/useCases/DesvincularTelegramUseCase";
 import { EliminarDispositivoPushUseCase } from "./application/useCases/EliminarDispositivoPushUseCase";
 import { IniciarVinculoTelegramUseCase } from "./application/useCases/IniciarVinculoTelegramUseCase";
+import { MarcarNotificacionLeidaUseCase } from "./application/useCases/MarcarNotificacionLeidaUseCase";
+import { MarcarTodasNotificacionesLeidasUseCase } from "./application/useCases/MarcarTodasNotificacionesLeidasUseCase";
 import { ObtenerEstadoMovilUseCase } from "./application/useCases/ObtenerEstadoMovilUseCase";
 import { ObtenerEstadoTelegramUseCase } from "./application/useCases/ObtenerEstadoTelegramUseCase";
+import { ObtenerNotificacionesUseCase } from "./application/useCases/ObtenerNotificacionesUseCase";
 import { ObtenerPreferenciasOrganizacionUseCase } from "./application/useCases/ObtenerPreferenciasOrganizacionUseCase";
 import { ObtenerPreferenciasUseCase } from "./application/useCases/ObtenerPreferenciasUseCase";
 import { RegistrarDispositivoPushUseCase } from "./application/useCases/RegistrarDispositivoPushUseCase";
+import { AppCanal } from "./infrastructure/canales/AppCanal";
 import { CorreoCanal } from "./infrastructure/canales/CorreoCanal";
 import { MovilCanal } from "./infrastructure/canales/MovilCanal";
 import { TelegramCanal } from "./infrastructure/canales/TelegramCanal";
+import { BandejaNotificacionController } from "./infrastructure/http/controllers/BandejaNotificacionController";
 import { DispositivoPushController } from "./infrastructure/http/controllers/DispositivoPushController";
 import { NotificacionController } from "./infrastructure/http/controllers/NotificacionController";
 import { NotificacionOrganizacionRouter } from "./infrastructure/http/routes/NotificacionOrganizacionRouter";
 import { NotificacionRouter } from "./infrastructure/http/routes/NotificacionRouter";
 import { FcmCliente } from "./infrastructure/push/FcmCliente";
+import { PrismaBandejaNotificacionRepository } from "./infrastructure/repository/PrismaBandejaNotificacionRepository";
 import { PrismaDispositivoPushRepository } from "./infrastructure/repository/PrismaDispositivoPushRepository";
 import { PrismaNotificacionRepository } from "./infrastructure/repository/PrismaNotificacionRepository";
 import { PrismaVinculoTelegramRepository } from "./infrastructure/repository/PrismaVinculoTelegramRepository";
 import { TelegramBotApi } from "./infrastructure/telegram/TelegramBotApi";
 
 const repo = new PrismaNotificacionRepository();
+const bandeja = new PrismaBandejaNotificacionRepository();
 const dispositivos = new PrismaDispositivoPushRepository();
 const vinculos = new PrismaVinculoTelegramRepository();
 // Sin TELEGRAM_BOT_TOKEN no hay canal Telegram ni polling.
@@ -50,6 +57,7 @@ const fcm =
 // Sin estado: `mount` y `onStart` crean el suyo con los canales activos.
 const crearNotificador = (container: DependencyContainer) =>
 	new Notificador(repo, [
+		new AppCanal(bandeja),
 		new CorreoCanal(container.get(TOKENS.Mailer)),
 		...(bot ? [new TelegramCanal(bot)] : []),
 		...(fcm ? [new MovilCanal(fcm, dispositivos)] : []),
@@ -90,10 +98,19 @@ export const notificacionModule: AppModule = {
 			registrarDispositivo: new RegistrarDispositivoPushUseCase(dispositivos),
 			eliminarDispositivo: new EliminarDispositivoPushUseCase(dispositivos),
 		});
+		const bandejaController = new BandejaNotificacionController({
+			obtener: new ObtenerNotificacionesUseCase(bandeja),
+			marcarLeida: new MarcarNotificacionLeidaUseCase(bandeja),
+			marcarTodasLeidas: new MarcarTodasNotificacionesLeidasUseCase(bandeja),
+		});
 		app.route(
 			"/api/notificaciones",
-			new NotificacionRouter(authMiddleware, controller, dispositivosController)
-				.router,
+			new NotificacionRouter(
+				authMiddleware,
+				controller,
+				dispositivosController,
+				bandejaController,
+			).router,
 		);
 		app.route(
 			"/api/organizaciones/:organizacionId/notificaciones",
@@ -124,8 +141,13 @@ export const notificacionModule: AppModule = {
 			vencimientos.ejecutar(),
 		);
 		// Las de eventos solo sirven mientras el outbox reintenta; las de vencimiento, ese día.
-		scheduler.programar("notificacion.purgar", 24 * 60 * 60 * 1000, () =>
-			repo.purgarEnvios(new Date(Date.now() - 30 * 86_400_000)),
+		scheduler.programar(
+			"notificacion.purgar",
+			24 * 60 * 60 * 1000,
+			async () => {
+				await repo.purgarEnvios(new Date(Date.now() - 30 * 86_400_000));
+				await bandeja.purgarLeidas(new Date(Date.now() - 90 * 86_400_000));
+			},
 		);
 		return undefined;
 	},

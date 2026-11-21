@@ -16,12 +16,14 @@ import {
 import {
 	ETIQUETAS_ESTADO,
 	ETIQUETAS_PRIORIDAD,
+	ETIQUETAS_RECURRENCIA,
 	tareaAFormValues,
 	tareaFormSchema,
 	tareaFormVacio,
 	type ContextoTareaSearch,
 } from "../schemas/tareaSchemas";
 import { SelectorTags } from "@/modules/tags/components/SelectorTags";
+import { SubtareasField } from "./SubtareasField";
 
 interface TareaFormProps {
 	/** Sin `inicial` crea; con él, edita. */
@@ -155,18 +157,40 @@ export function TareaForm({
 						{(campo) => <campo.CampoTexto label="Vencimiento" type="date" />}
 					</form.AppField>
 				</div>
-				<form.AppField name="dependeDeId">
+				<div className="grid gap-4 sm:grid-cols-2">
+					<form.AppField name="dependeDeId">
+						{(campo) => (
+							<campo.CampoSelect label="Depende de">
+								<option value="">Ninguna</option>
+								{principales.map((t) => (
+									<option key={t.id} value={t.id}>
+										{t.titulo}
+									</option>
+								))}
+							</campo.CampoSelect>
+						)}
+					</form.AppField>
+					<form.AppField name="recurrencia">
+						{(campo) => (
+							<campo.CampoSelect label="Repetición">
+								<option value="">No se repite</option>
+								{Object.entries(ETIQUETAS_RECURRENCIA).map(([valor, texto]) => (
+									<option key={valor} value={valor}>
+										{texto}
+									</option>
+								))}
+							</campo.CampoSelect>
+						)}
+					</form.AppField>
+				</div>
+				<form.Field name="subtareas">
 					{(campo) => (
-						<campo.CampoSelect label="Depende de">
-							<option value="">Ninguna</option>
-							{principales.map((t) => (
-								<option key={t.id} value={t.id}>
-									{t.titulo}
-								</option>
-							))}
-						</campo.CampoSelect>
+						<SubtareasField
+							valor={campo.state.value}
+							onChange={campo.handleChange}
+						/>
 					)}
-				</form.AppField>
+				</form.Field>
 				<form.AppField name="color">
 					{(campo) => <campo.CampoColorAcento />}
 				</form.AppField>

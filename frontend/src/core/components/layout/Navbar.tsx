@@ -1,6 +1,7 @@
 import { Menu, Search } from "lucide-react";
 import { Button } from "@/core/components/ui/Button";
 import { Kbd } from "@/core/components/ui/Kbd";
+import { CampanaNotificaciones } from "@/modules/notificaciones/components/CampanaNotificaciones";
 import { MenuUsuario } from "./MenuUsuario";
 import { SelectorTema } from "./SelectorTema";
 
@@ -34,6 +35,7 @@ export function Navbar({
 				<span className="hidden sm:inline">Ir a…</span>
 				<Kbd tecla="K" />
 			</Button>
+			<CampanaNotificaciones />
 			<SelectorTema />
 			<MenuUsuario />
 		</header>

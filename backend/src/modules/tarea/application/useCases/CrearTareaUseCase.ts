@@ -19,15 +19,29 @@ export class CrearTareaUseCase {
 	) {}
 
 	async ejecutar(usuarioId: number, dto: CrearTareaDto): Promise<TareaDto> {
-		const { organizacionId, equipoId, proyectoId, responsableIds, ...campos } =
-			dto;
+		const {
+			organizacionId,
+			equipoId,
+			proyectoId,
+			responsableIds,
+			subtareas,
+			...campos
+		} = dto;
 		const destino = destinoDe({ organizacionId, equipoId, proyectoId });
 		const contexto = destino
 			? await this.contextos.exigirCrear(usuarioId, destino)
 			: null;
 		const tarea = Tarea.crear(
 			usuarioId,
-			campos,
+			{
+				...campos,
+				...(subtareas !== undefined && {
+					subtareas: subtareas.map((sub) => ({
+						titulo: sub.titulo,
+						completada: sub.completada ?? false,
+					})),
+				}),
+			},
 			destino && contexto
 				? { organizacionId: contexto.organizacionId, ...destino }
 				: undefined,

@@ -1,11 +1,16 @@
-import { Lock, UserPlus } from "lucide-react";
+import { ListChecks, Lock, Repeat, UserPlus } from "lucide-react";
 import { Badge, type BadgeProps } from "@/core/components/ui/Badge";
 import { Button } from "@/core/components/ui/Button";
+import { cn } from "@/core/utils/cn";
 import { useMiembrosQuery } from "@/modules/organizaciones/hooks/useMiembros";
 import { useNombresContexto } from "@/modules/organizaciones/hooks/useNombresContexto";
 import type { EstadoTarea, PrioridadTarea, TareaDto } from "../api/tareasApi";
 import { useDestinosTareas } from "../hooks/useDestinosTareas";
-import { ETIQUETAS_ESTADO, ETIQUETAS_PRIORIDAD } from "../schemas/tareaSchemas";
+import {
+	ETIQUETAS_ESTADO,
+	ETIQUETAS_PRIORIDAD,
+	ETIQUETAS_RECURRENCIA,
+} from "../schemas/tareaSchemas";
 import { diaLocal } from "../utils/calendario";
 
 const VARIANTE_ESTADO: Record<EstadoTarea, BadgeProps["variant"]> = {
@@ -150,3 +155,38 @@ export const BloqueadaIcono = ({ tarea }: { tarea: TareaDto }) =>
 			<title>Bloqueada: depende de una tarea sin completar</title>
 		</Lock>
 	);
+
+/** Icono si la tarea es recurrente (#57). */
+export const RecurrenciaIcono = ({ tarea }: { tarea: TareaDto }) =>
+	tarea.recurrencia && (
+		<Repeat
+			className="h-3.5 w-3.5 shrink-0 text-indigo-400"
+			aria-label={`Se repite: ${ETIQUETAS_RECURRENCIA[tarea.recurrencia].toLowerCase()}`}
+		>
+			<title>
+				Se repite: {ETIQUETAS_RECURRENCIA[tarea.recurrencia].toLowerCase()}
+			</title>
+		</Repeat>
+	);
+
+/** Progreso de subtareas (`completadas/total`), solo si la tarea tiene subtareas (#57). */
+export function ProgresoSubtareas({ tarea }: { tarea: TareaDto }) {
+	const total = tarea.subtareas.length;
+	if (total === 0) return null;
+	const completadas = tarea.subtareas.filter((s) => s.completada).length;
+	const completas = completadas === total;
+	return (
+		<span
+			title={`${completadas} de ${total} subtareas completadas`}
+			className={cn(
+				"inline-flex shrink-0 items-center gap-1 rounded px-1.5 py-0.5 text-xs font-medium",
+				completas
+					? "bg-emerald-950/50 text-emerald-400"
+					: "bg-elevada text-tinta-tenue",
+			)}
+		>
+			<ListChecks className="h-3 w-3" />
+			{completadas}/{total}
+		</span>
+	);
+}

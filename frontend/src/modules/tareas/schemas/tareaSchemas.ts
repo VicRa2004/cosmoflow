@@ -1,5 +1,10 @@
 import { z } from "zod";
-import type { EstadoTarea, PrioridadTarea, TareaDto } from "../api/tareasApi";
+import type {
+	EstadoTarea,
+	PrioridadTarea,
+	RecurrenciaTarea,
+	TareaDto,
+} from "../api/tareasApi";
 
 export const ETIQUETAS_ESTADO: Record<EstadoTarea, string> = {
 	pendiente: "Pendiente",
@@ -14,6 +19,12 @@ export const ETIQUETAS_PRIORIDAD: Record<PrioridadTarea, string> = {
 	alta: "Alta",
 };
 
+export const ETIQUETAS_RECURRENCIA: Record<RecurrenciaTarea, string> = {
+	diaria: "Diaria",
+	semanal: "Semanal",
+	mensual: "Mensual",
+};
+
 const estados = Object.keys(ETIQUETAS_ESTADO) as [
 	EstadoTarea,
 	...EstadoTarea[],
@@ -21,6 +32,10 @@ const estados = Object.keys(ETIQUETAS_ESTADO) as [
 const prioridades = Object.keys(ETIQUETAS_PRIORIDAD) as [
 	PrioridadTarea,
 	...PrioridadTarea[],
+];
+const recurrencias = Object.keys(ETIQUETAS_RECURRENCIA) as [
+	RecurrenciaTarea,
+	...RecurrenciaTarea[],
 ];
 
 const idSearch = z.coerce.number().int().positive().optional().catch(undefined);
@@ -69,6 +84,22 @@ export const tareaFormSchema = z
 		responsableIds: z.array(z.number()),
 		// "" = no depende de ninguna: `null` la quita.
 		dependeDeId: z.string().transform((v) => (v ? Number(v) : null)),
+		// "" = no se repite: `null` la quita.
+		recurrencia: z
+			.union([z.literal(""), z.enum(recurrencias)])
+			.transform((v) => (v === "" ? null : v)),
+		subtareas: z
+			.array(
+				z.object({
+					titulo: z.string(),
+					completada: z.boolean(),
+				}),
+			)
+			.transform((lista) =>
+				lista
+					.map((s) => ({ titulo: s.titulo.trim(), completada: s.completada }))
+					.filter((s) => s.titulo.length > 0),
+			),
 	})
 	.refine(
 		(t) =>
@@ -102,6 +133,8 @@ export const tareaFormVacio = (): TareaFormValues => ({
 	tagIds: [],
 	responsableIds: [],
 	dependeDeId: "",
+	recurrencia: "",
+	subtareas: [],
 });
 
 export const tareaAFormValues = (dto: TareaDto): TareaFormValues => ({
@@ -115,4 +148,9 @@ export const tareaAFormValues = (dto: TareaDto): TareaFormValues => ({
 	tagIds: dto.tagIds,
 	responsableIds: dto.responsableIds,
 	dependeDeId: dto.dependeDeId ? String(dto.dependeDeId) : "",
+	recurrencia: dto.recurrencia ?? "",
+	subtareas: dto.subtareas.map((s) => ({
+		titulo: s.titulo,
+		completada: s.completada,
+	})),
 });

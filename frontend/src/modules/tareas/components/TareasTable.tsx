@@ -11,14 +11,16 @@ import type { TareaDto } from "../api/tareasApi";
 import { TagsBadges } from "@/modules/tags/components/TagsBadges";
 import {
 	AccionAsignar,
+	BloqueadaIcono,
 	DondeTarea,
 	EstadoBadge,
 	esCompartida,
 	InicioTarea,
 	PrioridadBadge,
+	ProgresoSubtareas,
+	RecurrenciaIcono,
 	ResponsablesTarea,
 	VencimientoTarea,
-	BloqueadaIcono,
 } from "./celdas";
 import { BotonCompletar } from "./BotonCompletar";
 
@@ -60,6 +62,8 @@ export function TareasTable({
 					<PuntoColor color={fila.color} />
 					{fila.titulo}
 					<BloqueadaIcono tarea={fila} />
+					<RecurrenciaIcono tarea={fila} />
+					<ProgresoSubtareas tarea={fila} />
 				</button>
 			),
 		},

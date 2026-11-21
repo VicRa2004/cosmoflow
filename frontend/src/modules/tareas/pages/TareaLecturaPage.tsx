@@ -15,11 +15,16 @@ import {
 	VencimientoTarea,
 } from "../components/celdas";
 import { ActividadTarea } from "../components/ActividadTarea";
+import { ChecklistSubtareas } from "../components/ChecklistSubtareas";
 import { ComentariosTarea } from "../components/ComentariosTarea";
 import { MoverTareaDialog } from "../components/MoverTareaDialog";
 import { useEliminarTareaMutation } from "../hooks/useTareasMutation";
 import { useTareaQuery } from "../hooks/useTareasQuery";
-import { ETIQUETAS_ESTADO, ETIQUETAS_PRIORIDAD } from "../schemas/tareaSchemas";
+import {
+	ETIQUETAS_ESTADO,
+	ETIQUETAS_PRIORIDAD,
+	ETIQUETAS_RECURRENCIA,
+} from "../schemas/tareaSchemas";
 
 /** Cada responsable con quien lo asignó, si se sabe. */
 function Responsables({
@@ -70,6 +75,12 @@ function Detalles({ tarea }: { tarea: TareaDto }) {
 			<dd>
 				<VencimientoTarea tarea={tarea} />
 			</dd>
+			{tarea.recurrencia && (
+				<>
+					<dt className="text-tinta-tenue">Repetición</dt>
+					<dd>{ETIQUETAS_RECURRENCIA[tarea.recurrencia]}</dd>
+				</>
+			)}
 			{tarea.organizacionId !== null && tarea.responsableIds.length > 0 && (
 				<>
 					<dt className="text-tinta-tenue">Responsables</dt>
@@ -126,6 +137,7 @@ export function TareaLecturaPage({ id }: { id: number }) {
 				detalles={<Detalles tarea={tarea} />}
 				pie={
 					<div className="space-y-8">
+						<ChecklistSubtareas tarea={tarea} />
 						<ComentariosTarea tarea={tarea} />
 						<ActividadTarea tareaId={tarea.id} />
 					</div>

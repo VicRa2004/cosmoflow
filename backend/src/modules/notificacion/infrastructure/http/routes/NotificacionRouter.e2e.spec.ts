@@ -117,6 +117,7 @@ describe("Notificaciones (e2e)", () => {
 				"vencimiento",
 				"comentario",
 			].flatMap((evento) => [
+				{ evento, canal: "app", activo: true, personalizado: false },
 				{ evento, canal: "correo", activo: true, personalizado: false },
 				{ evento, canal: "telegram", activo: false, personalizado: false },
 				{ evento, canal: "movil", activo: false, personalizado: false },
@@ -316,5 +317,55 @@ describe("Notificaciones (e2e)", () => {
 		const res = await api("/api/notificaciones/movil", { token: t.ana });
 		expect(res.status).toBe(200);
 		expect(await res.json()).toEqual({ disponible: false, dispositivos: 0 });
+	});
+
+	it("bandeja en la app: lista, cuenta no leídas y marca una o todas como leídas (#51)", async () => {
+		const res = await api("/api/notificaciones", { token: t.beto });
+		expect(res.status).toBe(200);
+		const bandeja = (await res.json()) as {
+			datos: {
+				id: number;
+				asunto: string;
+				leida: boolean;
+				tipo: string | null;
+				recursoId: number | null;
+			}[];
+			noLeidas: number;
+		};
+		expect(bandeja.noLeidas).toBeGreaterThan(0);
+		const primera = bandeja.datos[0];
+		expect(primera).toMatchObject({
+			leida: false,
+			tipo: "tarea",
+		});
+
+		// Otro usuario no puede marcar como leída una notificación ajena.
+		const ajena = await api(`/api/notificaciones/${primera.id}/leer`, {
+			method: "PUT",
+			token: t.zoe,
+		});
+		expect(ajena.status).toBe(404);
+
+		// Beto marca una como leída.
+		const una = await api(`/api/notificaciones/${primera.id}/leer`, {
+			method: "PUT",
+			token: t.beto,
+		});
+		expect(una.status).toBe(204);
+		const trasUna = (await (
+			await api("/api/notificaciones", { token: t.beto })
+		).json()) as { noLeidas: number };
+		expect(trasUna.noLeidas).toBe(bandeja.noLeidas - 1);
+
+		// Marcar todas como leídas deja el contador en 0.
+		const todas = await api("/api/notificaciones/leer-todas", {
+			method: "POST",
+			token: t.beto,
+		});
+		expect(todas.status).toBe(204);
+		const trasTodas = (await (
+			await api("/api/notificaciones", { token: t.beto })
+		).json()) as { noLeidas: number };
+		expect(trasTodas.noLeidas).toBe(0);
 	});
 });

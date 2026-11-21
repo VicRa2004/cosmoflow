@@ -4,13 +4,17 @@ import {
 	jsonResponse,
 } from "@/core/shared/infrastructure/http/openapi";
 import type { AuthMiddleware } from "@/modules/auth";
+import type { BandejaNotificacionController } from "../controllers/BandejaNotificacionController";
 import type { DispositivoPushController } from "../controllers/DispositivoPushController";
 import type { NotificacionController } from "../controllers/NotificacionController";
 import {
+	bandejaNotificacionesSchema,
 	eliminarDispositivoPushSchema,
 	enlaceTelegramSchema,
 	estadoMovilSchema,
 	estadoTelegramSchema,
+	notificacionIdParamSchema,
+	obtenerNotificacionesSchema,
 	preferenciasSchema,
 	preferenciasUsuarioSchema,
 	registrarDispositivoPushSchema,
@@ -27,9 +31,55 @@ export class NotificacionRouter {
 		authMiddleware: AuthMiddleware,
 		controller: NotificacionController,
 		dispositivosController: DispositivoPushController,
+		bandejaController: BandejaNotificacionController,
 	) {
 		const docs = this.router.openAPIRegistry;
 		this.router.use(authMiddleware.handle);
+
+		docs.registerPath({
+			method: "get",
+			path: "/",
+			tags,
+			security,
+			summary: "Listar mis notificaciones dentro de la app (campana)",
+			request: { query: obtenerNotificacionesSchema },
+			responses: {
+				200: jsonResponse(
+					bandejaNotificacionesSchema,
+					"Notificaciones paginadas y contador de no leídas",
+				),
+				401: errorResponse("No autenticado"),
+			},
+		});
+		this.router.get("/", bandejaController.obtenerTodos);
+
+		docs.registerPath({
+			method: "post",
+			path: "/leer-todas",
+			tags,
+			security,
+			summary: "Marcar todas mis notificaciones como leídas",
+			responses: {
+				204: { description: "Marcadas como leídas" },
+				401: errorResponse("No autenticado"),
+			},
+		});
+		this.router.post("/leer-todas", bandejaController.marcarTodasLeidas);
+
+		docs.registerPath({
+			method: "put",
+			path: "/{id}/leer",
+			tags,
+			security,
+			summary: "Marcar una notificación como leída",
+			request: { params: notificacionIdParamSchema },
+			responses: {
+				204: { description: "Marcada como leída" },
+				401: errorResponse("No autenticado"),
+				404: errorResponse("Notificación no encontrada"),
+			},
+		});
+		this.router.put("/:id/leer", bandejaController.marcarLeida);
 
 		docs.registerPath({
 			method: "get",

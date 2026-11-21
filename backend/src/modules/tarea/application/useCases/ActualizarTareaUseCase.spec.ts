@@ -30,6 +30,18 @@ const preparar = (
 	const repo = {
 		buscarPorId: mock(async () => tarea),
 		sonTagsDe: mock(async () => tagsValidos),
+		crear: mock(async (t: Tarea) =>
+			Tarea.reconstituir(
+				99,
+				t.getUsuarioId(),
+				t.getDatos(),
+				t.getUbicacion(),
+				[...t.getResponsableIds()],
+				[...t.getMencionIds()],
+				false,
+				{ ...t.getAsignadoPor() },
+			),
+		),
 		actualizar: mock(async (t: Tarea) => t),
 	};
 	const equipos = {
@@ -135,5 +147,49 @@ describe("ActualizarTareaUseCase", () => {
 		await expect(useCase.ejecutar(USUARIO, 1, { titulo: "x" })).rejects.toThrow(
 			TareaNoEncontradaError,
 		);
+	});
+
+	it("al completar una tarea recurrente crea la siguiente con fechas desplazadas y subtareas reiniciadas", async () => {
+		const recurrente = Tarea.reconstituir(
+			1,
+			USUARIO,
+			Tarea.crear(USUARIO, {
+				titulo: "Backup",
+				fechaVencimiento: "2026-11-20",
+				recurrencia: "semanal",
+				subtareas: [{ titulo: "Verificar logs", completada: true }],
+			}).getDatos(),
+		);
+		const { repo, useCase, eventBus } = preparar(recurrente);
+
+		await useCase.ejecutar(USUARIO, 1, { estado: "completada" });
+
+		expect(repo.crear).toHaveBeenCalledTimes(1);
+		const creada = (repo.crear.mock.calls[0] as unknown as [Tarea])[0];
+		expect(creada.getDatos()).toMatchObject({
+			titulo: "Backup",
+			estado: "pendiente",
+			fechaVencimiento: "2026-11-27",
+			recurrencia: "semanal",
+			subtareas: [{ titulo: "Verificar logs", completada: false }],
+		});
+		expect(eventBus.publishAll).toHaveBeenCalledTimes(2);
+	});
+
+	it("no crea otra ocurrencia si la tarea recurrente ya estaba completada", async () => {
+		const completada = Tarea.reconstituir(
+			1,
+			USUARIO,
+			Tarea.crear(USUARIO, {
+				titulo: "Backup",
+				estado: "completada",
+				recurrencia: "diaria",
+			}).getDatos(),
+		);
+		const { repo, useCase } = preparar(completada);
+
+		await useCase.ejecutar(USUARIO, 1, { titulo: "Backup editado" });
+
+		expect(repo.crear).not.toHaveBeenCalled();
 	});
 });

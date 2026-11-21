@@ -13,6 +13,8 @@ export type EstadisticasTareasDto =
 	components["schemas"]["EstadisticasTareasDto"];
 export type EstadoTarea = TareaDto["estado"];
 export type PrioridadTarea = TareaDto["prioridad"];
+export type RecurrenciaTarea = NonNullable<TareaDto["recurrencia"]>;
+export type SubtareaDto = TareaDto["subtareas"][number];
 
 export interface ObtenerTareasParams {
 	pagina?: number;

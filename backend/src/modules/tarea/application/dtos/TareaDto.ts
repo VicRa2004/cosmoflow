@@ -1,7 +1,16 @@
 import type { DatosTarea, UbicacionTarea } from "../../domain/Tarea";
 
-export interface TareaDto extends DatosTarea, UbicacionTarea {
+export interface SubtareaDto {
 	id: number;
+	titulo: string;
+	completada: boolean;
+}
+
+export interface TareaDto
+	extends Omit<DatosTarea, "subtareas">,
+		UbicacionTarea {
+	id: number;
+	subtareas: SubtareaDto[];
 	responsableIds: number[];
 	/** Responsable → quien lo asignó; sin entrada en las asignaciones antiguas. */
 	asignadoPor: Record<number, number>;

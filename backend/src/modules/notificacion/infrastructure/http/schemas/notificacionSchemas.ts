@@ -80,3 +80,54 @@ export const eliminarDispositivoPushSchema = z
 			.openapi({ example: "fcm_token_dispositivo_abc123" }),
 	})
 	.openapi("EliminarDispositivoPush");
+
+const numeroPositivo = z
+	.string()
+	.regex(/^\d+$/, "Debe ser un número válido")
+	.transform(Number)
+	.refine((n) => n >= 1, "Debe ser mayor que cero");
+
+export const notificacionIdParamSchema = z.object({
+	id: numeroPositivo,
+});
+
+export const obtenerNotificacionesSchema = z.object({
+	pagina: numeroPositivo.optional().default(1),
+	limite: numeroPositivo
+		.refine((n) => n <= 50, "Máximo 50 por página")
+		.optional()
+		.default(20),
+	soloNoLeidas: z
+		.literal("true")
+		.transform(() => true)
+		.optional(),
+});
+
+export const notificacionAppSchema = z
+	.object({
+		id: z.number().int().openapi({ example: 1 }),
+		asunto: z
+			.string()
+			.openapi({ example: "Te asignaron una tarea: Preparar demo" }),
+		texto: z
+			.string()
+			.openapi({ example: "Ana te asignó la tarea «Preparar demo»." }),
+		enlace: z
+			.string()
+			.openapi({ example: "https://app.cosmoflow.dev/tareas/42" }),
+		tipo: z.enum(["tarea", "nota"]).nullable(),
+		recursoId: z.number().int().nullable(),
+		leida: z.boolean(),
+		createdAt: z.string().openapi({ example: "2026-11-20T18:00:00.000Z" }),
+	})
+	.openapi("NotificacionApp");
+
+export const bandejaNotificacionesSchema = z
+	.object({
+		datos: z.array(notificacionAppSchema),
+		pagina: z.number().int().openapi({ example: 1 }),
+		totalElementos: z.number().int().openapi({ example: 3 }),
+		totalPaginas: z.number().int().openapi({ example: 1 }),
+		noLeidas: z.number().int().openapi({ example: 2 }),
+	})
+	.openapi("BandejaNotificaciones");

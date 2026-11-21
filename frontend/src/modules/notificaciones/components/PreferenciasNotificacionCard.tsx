@@ -23,6 +23,7 @@ const EVENTOS: Record<PreferenciaNotificacion["evento"], string> = {
 	comentario: "Comentan una tarea que creaste o de la que eres responsable",
 };
 const CANALES: Record<PreferenciaNotificacion["canal"], string> = {
+	app: "En la app",
 	correo: "Correo",
 	telegram: "Telegram",
 	movil: "Móvil",

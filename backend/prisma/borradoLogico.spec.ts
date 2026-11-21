@@ -27,6 +27,8 @@ const EXENTOS: Record<string, string> = {
 	EventoOutbox: "técnica",
 	CodigoOAuth: "técnica: de un solo uso y caduca en minutos",
 	NotificacionEnviada: "técnica: claves de idempotencia que se purgan",
+	Notificacion:
+		"avisos de la campana en la app: se marcan leídas y se purgan por antigüedad",
 	VinculoTelegram: "técnica: desvincular borra el vínculo",
 	DispositivoPush: "técnica: tokens FCM que se dan de baja o caducan",
 	PreferenciaNotificacion: "ajuste del usuario; se sobrescribe, no se borra",
@@ -38,6 +40,8 @@ const EXENTOS: Record<string, string> = {
 		"sin endpoint de borrado; la limpieza de huérfanos borra los que nada enlaza",
 	ComentarioTarea:
 		"se borra del todo a propósito: sin papelera, cae con su tarea",
+	Subtarea:
+		"checklist de la tarea: se reemplaza al editar y cae en cascada con ella",
 	Invitacion: "cancelarla cambia su estado; nunca se borra",
 	// Catálogo global de la plantilla; los roles por organización (RolOrganizacion) sí lo llevan.
 	Rol: "catálogo global de la plantilla",

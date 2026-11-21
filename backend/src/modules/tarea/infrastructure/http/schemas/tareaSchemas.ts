@@ -1,11 +1,24 @@
 import { z } from "@hono/zod-openapi";
 import { colorAcentoSchema } from "@/core/shared/infrastructure/http/openapi";
-import { ESTADOS_TAREA, PRIORIDADES_TAREA } from "../../../domain/Tarea";
+import {
+	ESTADOS_TAREA,
+	PRIORIDADES_TAREA,
+	RECURRENCIAS_TAREA,
+} from "../../../domain/Tarea";
 
 const dia = z.iso
 	.date("Fecha inválida (formato AAAA-MM-DD)")
 	.nullable()
 	.openapi({ example: "2026-11-15" });
+
+const subtareaEntradaSchema = z.object({
+	titulo: z
+		.string()
+		.trim()
+		.min(1, "El título de la subtarea es obligatorio")
+		.max(255, "Máximo 255 caracteres"),
+	completada: z.boolean().optional(),
+});
 
 const campos = {
 	titulo: z
@@ -24,6 +37,10 @@ const campos = {
 	responsableIds: z.array(z.number().int().positive()).max(50).optional(),
 	/** Tarea principal del mismo sitio; `null` quita la dependencia. */
 	dependeDeId: z.number().int().positive().nullable().optional(),
+	/** Recurrencia (#57); `null` la desactiva. */
+	recurrencia: z.enum(RECURRENCIAS_TAREA).nullable().optional(),
+	/** Checklist de subtareas en orden (#57). */
+	subtareas: z.array(subtareaEntradaSchema).max(100).optional(),
 };
 
 const id = z.number().int().positive();
@@ -157,6 +174,14 @@ export const tareaDtoSchema = z
 		/** Responsable → quien lo asignó; sin entrada en las asignaciones antiguas. */
 		asignadoPor: z.record(z.string(), z.number().int()),
 		dependeDeId: z.number().int().nullable(),
+		recurrencia: z.enum(RECURRENCIAS_TAREA).nullable(),
+		subtareas: z.array(
+			z.object({
+				id: z.number().int(),
+				titulo: z.string(),
+				completada: z.boolean(),
+			}),
+		),
 		bloqueada: z.boolean(),
 	})
 	.openapi("TareaDto");

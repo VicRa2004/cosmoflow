@@ -1,4 +1,13 @@
-import type { EstadoTarea, PrioridadTarea } from "../../domain/Tarea";
+import type {
+	EstadoTarea,
+	PrioridadTarea,
+	RecurrenciaTarea,
+} from "../../domain/Tarea";
+
+export interface SubtareaInputDto {
+	titulo: string;
+	completada?: boolean;
+}
 
 export interface CamposTareaDto {
 	titulo: string;
@@ -10,6 +19,8 @@ export interface CamposTareaDto {
 	color?: string | null;
 	tagIds?: number[];
 	dependeDeId?: number | null;
+	recurrencia?: RecurrenciaTarea | null;
+	subtareas?: SubtareaInputDto[];
 	/** Solo en las compartidas (RN-44). */
 	responsableIds?: number[];
 }

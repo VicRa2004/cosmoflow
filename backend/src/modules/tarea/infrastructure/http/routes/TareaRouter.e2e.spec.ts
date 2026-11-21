@@ -229,4 +229,53 @@ describe("Tareas personales (e2e)", () => {
 		});
 		expect(quedan.map((t) => t.id).sort()).toEqual([reciente, viva].sort());
 	});
+
+	it("recurrencia y subtareas: persiste checklist y al completar crea la siguiente ocurrencia (#57)", async () => {
+		const res = await post(ana, "/api/tareas", {
+			titulo: "Revisión semanal",
+			fechaVencimiento: "2026-11-20",
+			recurrencia: "semanal",
+			subtareas: [{ titulo: "Paso 1", completada: true }, { titulo: "Paso 2" }],
+		});
+		expect(res.status).toBe(201);
+		const creada = (await res.json()) as {
+			id: number;
+			recurrencia: string | null;
+			subtareas: { id: number; titulo: string; completada: boolean }[];
+		};
+		expect(creada.recurrencia).toBe("semanal");
+		expect(creada.subtareas).toEqual([
+			expect.objectContaining({ titulo: "Paso 1", completada: true }),
+			expect.objectContaining({ titulo: "Paso 2", completada: false }),
+		]);
+
+		const completar = await api(`/api/tareas/${creada.id}`, {
+			method: "PUT",
+			token: ana,
+			body: { estado: "completada" },
+		});
+		expect(completar.status).toBe(200);
+
+		const lista = (await (
+			await api("/api/tareas?busqueda=Revisi%C3%B3n%20semanal", { token: ana })
+		).json()) as {
+			datos: {
+				id: number;
+				estado: string;
+				fechaVencimiento: string | null;
+				recurrencia: string | null;
+				subtareas: { titulo: string; completada: boolean }[];
+			}[];
+		};
+		const siguiente = lista.datos.find((t) => t.id !== creada.id);
+		expect(siguiente).toMatchObject({
+			estado: "pendiente",
+			fechaVencimiento: "2026-11-27",
+			recurrencia: "semanal",
+			subtareas: [
+				expect.objectContaining({ titulo: "Paso 1", completada: false }),
+				expect.objectContaining({ titulo: "Paso 2", completada: false }),
+			],
+		});
+	});
 });

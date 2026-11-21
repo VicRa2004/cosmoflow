@@ -1,6 +1,6 @@
 import { describe, expect, it } from "bun:test";
 import { TareaInvalidaError } from "./error/TareaInvalidaError";
-import { Tarea } from "./Tarea";
+import { avanzarDia, Tarea } from "./Tarea";
 
 describe("Tarea", () => {
 	it("una tarea nueva es pendiente, de prioridad media y sin fechas ni tags", () => {
@@ -14,6 +14,8 @@ describe("Tarea", () => {
 			color: null,
 			tagIds: [],
 			dependeDeId: null,
+			recurrencia: null,
+			subtareas: [],
 		});
 	});
 
@@ -119,5 +121,62 @@ describe("Tarea", () => {
 				},
 			}),
 		]);
+	});
+
+	it("avanza días para recurrencia diaria, semanal y mensual (acotando fin de mes)", () => {
+		expect(avanzarDia("2026-11-30", "diaria")).toBe("2026-12-01");
+		expect(avanzarDia("2026-11-25", "semanal")).toBe("2026-12-02");
+		expect(avanzarDia("2026-01-31", "mensual")).toBe("2026-02-28");
+		expect(avanzarDia("2028-01-31", "mensual")).toBe("2028-02-29");
+	});
+
+	it("genera la siguiente ocurrencia pendiente con subtareas reiniciadas y sin dependencia", () => {
+		const tarea = Tarea.reconstituir(
+			10,
+			7,
+			Tarea.crear(7, {
+				titulo: "Reporte semanal",
+				prioridad: "alta",
+				fechaInicio: "2026-11-16",
+				fechaVencimiento: "2026-11-20",
+				dependeDeId: 3,
+				recurrencia: "semanal",
+				subtareas: [
+					{ titulo: "Reunir métricas", completada: true },
+					{ titulo: "Enviar resumen", completada: true },
+				],
+			}).getDatos(),
+			{ organizacionId: 1, equipoId: null, proyectoId: 2 },
+			[7, 8],
+			[],
+			false,
+			{ 8: 7 },
+		);
+
+		const siguiente = tarea.siguienteOcurrencia("2026-11-20");
+		expect(siguiente).not.toBeNull();
+		expect(siguiente?.getDatos()).toMatchObject({
+			titulo: "Reporte semanal",
+			estado: "pendiente",
+			prioridad: "alta",
+			fechaInicio: "2026-11-23",
+			fechaVencimiento: "2026-11-27",
+			dependeDeId: null,
+			recurrencia: "semanal",
+			subtareas: [
+				{ titulo: "Reunir métricas", completada: false },
+				{ titulo: "Enviar resumen", completada: false },
+			],
+		});
+		expect(siguiente?.getResponsableIds()).toEqual([7, 8]);
+	});
+
+	it("rechaza una subtarea con título vacío", () => {
+		expect(() =>
+			Tarea.crear(7, {
+				titulo: "Demo",
+				subtareas: [{ titulo: "   ", completada: false }],
+			}),
+		).toThrow(TareaInvalidaError);
 	});
 });
