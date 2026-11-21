@@ -12,6 +12,7 @@ import 'package:cosmoflow_mobile/modules/tags/models/tag_model.dart';
 import 'package:cosmoflow_mobile/modules/tareas/models/tarea_model.dart';
 import 'package:cosmoflow_mobile/modules/tareas/widgets/tarea_fila.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
@@ -172,6 +173,49 @@ void main() {
       await tester.tap(find.text('Oscuro'));
       await tester.pumpAndSettle();
       expect(sesionStore.modoTema, equals(ThemeMode.dark));
+    },
+  );
+
+  testWidgets(
+    'Deep link cosmoflow://login-callback redirige sin mostrar ErrorScreen',
+    (WidgetTester tester) async {
+      final almacenamiento = MemoriaAlmacenamientoSeguro();
+      final sesionStore = SesionStore(almacenamientoSeguro: almacenamiento);
+      final apiClient = ApiClient(sesionStore: sesionStore);
+      final authApi = AuthApi(apiClient: apiClient);
+
+      sesionStore.establecerSesion(
+        accessToken: 'jwt-test',
+        usuario: const UsuarioSesion(
+          id: 1,
+          nombre: 'Ana',
+          email: 'ana@cosmoflow.com',
+          emailVerificado: true,
+        ),
+      );
+
+      await tester.pumpWidget(
+        CosmoflowMobileApp(
+          sesionStore: sesionStore,
+          authApi: authApi,
+          restaurarAlIniciar: false,
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.binding.defaultBinaryMessenger.handlePlatformMessage(
+        'flutter/navigation',
+        const JSONMethodCodec().encodeMethodCall(
+          const MethodCall('pushRouteInformation', <String, dynamic>{
+            'location': 'cosmoflow://login-callback/?refreshToken=token-muy-largo-de-prueba',
+          }),
+        ),
+        (_) {},
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('Page Not Found'), findsNothing);
+      expect(find.text('Nada pendiente'), findsOneWidget);
     },
   );
 }

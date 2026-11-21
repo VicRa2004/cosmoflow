@@ -52,6 +52,11 @@ GoRouter crearAppRouter({
     refreshListenable: sesionStore,
     redirect: (context, state) {
       final isAutenticado = sesionStore.isAutenticado;
+      // Los deep links del esquema propio (`cosmoflow://login-callback?...`)
+      // los procesa `OAuthGoogleService`; el router solo redirige a una ruta válida.
+      if (state.uri.scheme == 'cosmoflow' || state.error != null) {
+        return isAutenticado ? '/dashboard' : '/login';
+      }
       final ubicacion = state.matchedLocation;
       final esRutaPublica = _rutasPublicas.contains(ubicacion);
 
