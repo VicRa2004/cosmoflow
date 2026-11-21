@@ -1,5 +1,6 @@
 import '../../../core/api/api_client.dart';
 import '../../../core/offline/cola_sin_conexion.dart';
+import '../models/estadisticas_tareas_model.dart';
 import '../models/tarea_model.dart';
 
 /// Cliente de API para `/api/tareas` y `/api/tareas/pendientes`.
@@ -147,6 +148,29 @@ class TareasApi {
     return actualizar(tarea.id, <String, dynamic>{
       'estado': nuevoEstado.valorApi,
     });
+  }
+
+  /// Recuento de tareas por destino (`GET /api/tareas/estadisticas`).
+  Future<EstadisticasTareasDto> obtenerEstadisticas({
+    int? organizacionId,
+    int? equipoId,
+    int? proyectoId,
+  }) async {
+    final query = <String, dynamic>{
+      if (proyectoId != null)
+        'proyectoId': proyectoId
+      else if (equipoId != null)
+        'equipoId': equipoId
+      else
+        'organizacionId': ?organizacionId,
+    };
+    final response = await apiClient.dio.get<Map<String, dynamic>>(
+      '/tareas/estadisticas',
+      queryParameters: query,
+    );
+    return EstadisticasTareasDto.fromJson(
+      response.data ?? const <String, dynamic>{},
+    );
   }
 
   /// Elimina una tarea (`DELETE /api/tareas/{id}`).

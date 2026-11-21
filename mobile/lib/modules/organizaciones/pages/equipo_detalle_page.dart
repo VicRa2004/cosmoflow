@@ -13,6 +13,7 @@ import '../../tareas/pages/tareas_page.dart';
 import '../api/organizaciones_api.dart';
 import '../models/organizacion_models.dart';
 import '../widgets/delegados_sheet.dart';
+import '../widgets/estadisticas_organizacion_tab.dart';
 import 'equipo_editor_page.dart';
 
 /// Argumentos para abrir `/organizaciones/:id/equipos/:equipoId`.
@@ -244,50 +245,71 @@ class _EquipoDetallePageState extends State<EquipoDetallePage> {
     );
     final puedeCrear = equipo.puedeCrearTareas(yo);
 
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(equipo.nombre),
-        actions: <Widget>[
-          if (hayMenu)
-            PopupMenuButton<String>(
-              onSelected: (accion) {
-                if (accion == 'delegados') _gestionarDelegados(equipo);
-                if (accion == 'editar') _editarEquipo(equipo);
-                if (accion == 'eliminar') _eliminarEquipo(equipo);
-              },
-              itemBuilder: (_) => <PopupMenuEntry<String>>[
-                if (puedeDelegados)
-                  const PopupMenuItem<String>(
-                    value: 'delegados',
-                    child: Text('Delegados'),
-                  ),
-                if (puedeEditar)
-                  const PopupMenuItem<String>(
-                    value: 'editar',
-                    child: Text('Editar equipo'),
-                  ),
-                if (puedeEliminar)
-                  PopupMenuItem<String>(
-                    value: 'eliminar',
-                    child: Text(
-                      'Eliminar equipo',
-                      style: TextStyle(color: colores.rosePeligro),
+    return DefaultTabController(
+      length: 2,
+      child: Scaffold(
+        appBar: AppBar(
+          title: Text(equipo.nombre),
+          actions: <Widget>[
+            if (hayMenu)
+              PopupMenuButton<String>(
+                onSelected: (accion) {
+                  if (accion == 'delegados') _gestionarDelegados(equipo);
+                  if (accion == 'editar') _editarEquipo(equipo);
+                  if (accion == 'eliminar') _eliminarEquipo(equipo);
+                },
+                itemBuilder: (_) => <PopupMenuEntry<String>>[
+                  if (puedeDelegados)
+                    const PopupMenuItem<String>(
+                      value: 'delegados',
+                      child: Text('Delegados'),
                     ),
-                  ),
-              ],
+                  if (puedeEditar)
+                    const PopupMenuItem<String>(
+                      value: 'editar',
+                      child: Text('Editar equipo'),
+                    ),
+                  if (puedeEliminar)
+                    PopupMenuItem<String>(
+                      value: 'eliminar',
+                      child: Text(
+                        'Eliminar equipo',
+                        style: TextStyle(color: colores.rosePeligro),
+                      ),
+                    ),
+                ],
+              ),
+          ],
+          bottom: const TabBar(
+            tabs: <Widget>[
+              Tab(text: 'Tareas'),
+              Tab(text: 'Estadísticas'),
+            ],
+          ),
+        ),
+        body: TabBarView(
+          children: <Widget>[
+            TareasPage(
+              sesionStore: widget.sesionStore,
+              tareasApi: widget.tareasApi,
+              equipoId: equipo.id,
+              tags: _tags,
+              responsables: responsables,
+              puedeCrear: puedeCrear,
+              mostrarAppBar: false,
+              encabezadoExtra: _encabezado(context, equipo),
+              cargarAlIniciar: widget.cargarAlIniciar,
             ),
-        ],
-      ),
-      body: TareasPage(
-        sesionStore: widget.sesionStore,
-        tareasApi: widget.tareasApi,
-        equipoId: equipo.id,
-        tags: _tags,
-        responsables: responsables,
-        puedeCrear: puedeCrear,
-        mostrarAppBar: false,
-        encabezadoExtra: _encabezado(context, equipo),
-        cargarAlIniciar: widget.cargarAlIniciar,
+            EstadisticasDestinoTab(
+              tareasApi: widget.tareasApi,
+              miembros: _miembros,
+              equipoId: equipo.id,
+              tituloTareas: 'Tareas del equipo',
+              onRefreshExtra: _cargarContexto,
+              cargarAlIniciar: widget.cargarAlIniciar,
+            ),
+          ],
+        ),
       ),
     );
   }

@@ -10,12 +10,14 @@ import 'package:cosmoflow_mobile/modules/organizaciones/pages/equipo_detalle_pag
 import 'package:cosmoflow_mobile/modules/organizaciones/pages/organizacion_detalle_page.dart';
 import 'package:cosmoflow_mobile/modules/organizaciones/pages/proyecto_detalle_page.dart';
 import 'package:cosmoflow_mobile/modules/organizaciones/widgets/equipo_form.dart';
+import 'package:cosmoflow_mobile/modules/organizaciones/widgets/estadisticas_tareas_card.dart';
 import 'package:cosmoflow_mobile/modules/organizaciones/widgets/organizacion_form.dart';
 import 'package:cosmoflow_mobile/modules/organizaciones/widgets/proyecto_form.dart';
 import 'package:cosmoflow_mobile/modules/organizaciones/widgets/rol_organizacion_form.dart';
 import 'package:cosmoflow_mobile/modules/tags/api/tags_api.dart';
 import 'package:cosmoflow_mobile/modules/tags/models/tag_model.dart';
 import 'package:cosmoflow_mobile/modules/tareas/api/tareas_api.dart';
+import 'package:cosmoflow_mobile/modules/tareas/models/estadisticas_tareas_model.dart';
 import 'package:cosmoflow_mobile/modules/tareas/widgets/tarea_form.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -143,8 +145,10 @@ void main() {
       expect(find.text('Equipos'), findsOneWidget);
       expect(find.text('Miembros'), findsOneWidget);
       expect(find.text('Tareas'), findsOneWidget);
+      expect(find.text('Estadísticas'), findsOneWidget);
       expect(find.text('Tags'), findsOneWidget);
       expect(find.text('Roles'), findsOneWidget);
+      expect(find.text('Ajustes'), findsOneWidget);
       expect(find.text('Sin proyectos'), findsOneWidget);
 
       await tester.tap(find.text('Equipos'));
@@ -155,13 +159,11 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.text('Sin miembros'), findsOneWidget);
 
-      await tester.tap(find.text('Tags'));
+      await tester.ensureVisible(find.text('Ajustes'));
       await tester.pumpAndSettle();
-      expect(find.text('Sin etiquetas'), findsOneWidget);
-
-      await tester.tap(find.text('Roles'));
+      await tester.tap(find.text('Ajustes'));
       await tester.pumpAndSettle();
-      expect(find.text('Sin roles'), findsOneWidget);
+      expect(find.text('Eliminar organización'), findsWidgets);
     },
   );
 
@@ -479,5 +481,53 @@ void main() {
     expect(valores, isNotNull);
     expect(valores!.nombre, equals('Coordinador'));
     expect(valores.permisos, equals(<String>['equipos:crear']));
+  });
+
+  testWidgets('EstadisticasTareasCard parsea y muestra cifras y responsables', (
+    WidgetTester tester,
+  ) async {
+    final dto = EstadisticasTareasDto.fromJson(<String, dynamic>{
+      'total': 10,
+      'porEstado': <String, dynamic>{
+        'pendiente': 3,
+        'en_progreso': 2,
+        'completada': 4,
+        'cancelada': 1,
+      },
+      'abiertasPorPrioridad': <String, dynamic>{
+        'alta': 2,
+        'media': 2,
+        'baja': 1,
+      },
+      'vencidas': 1,
+      'porResponsable': <Map<String, dynamic>>[
+        <String, dynamic>{'usuarioId': 5, 'abiertas': 3, 'completadas': 2},
+      ],
+    });
+
+    expect(dto.abiertas, equals(5));
+    expect(dto.cerradas, equals(5));
+    expect(dto.porcentajeAvance, equals(80));
+
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: TemaApp.claro,
+        home: Scaffold(
+          body: SingleChildScrollView(
+            child: EstadisticasTareasCard(
+              estadisticas: dto,
+              nombres: const <int, String>{5: 'Ana'},
+              titulo: 'Tareas del equipo',
+            ),
+          ),
+        ),
+      ),
+    );
+
+    expect(find.text('Tareas del equipo'), findsOneWidget);
+    expect(find.text('10 tareas en total.'), findsOneWidget);
+    expect(find.text('80%'), findsOneWidget);
+    expect(find.text('Ana'), findsOneWidget);
+    expect(find.text('3 / 2'), findsOneWidget);
   });
 }

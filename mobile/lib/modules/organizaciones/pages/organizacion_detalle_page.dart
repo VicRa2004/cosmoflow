@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/auth/sesion_store.dart';
-import '../../../core/theme/colores_noche_indigo.dart';
 import '../../../core/widgets/avisos.dart';
 import '../../../core/widgets/confirmar.dart';
 import '../../../core/widgets/estados.dart';
@@ -13,6 +12,8 @@ import '../../tareas/api/tareas_api.dart';
 import '../../tareas/pages/tareas_page.dart';
 import '../api/organizaciones_api.dart';
 import '../models/organizacion_models.dart';
+import '../widgets/ajustes_organizacion_tab.dart';
+import '../widgets/estadisticas_organizacion_tab.dart';
 import '../widgets/lista_miembros_organizacion.dart';
 import '../widgets/lista_roles_organizacion.dart';
 import '../widgets/listas_organizacion.dart';
@@ -22,7 +23,7 @@ import 'proyecto_detalle_page.dart';
 import 'proyecto_editor_page.dart';
 
 /// Vista `/organizaciones/:id` con pestañas de Proyectos, Equipos, Miembros,
-/// Tareas, Tags y (según permisos) Roles.
+/// Tareas, Estadísticas, Tags y (según permisos) Roles y Ajustes.
 class OrganizacionDetallePage extends StatefulWidget {
   const OrganizacionDetallePage({
     super.key,
@@ -206,42 +207,17 @@ class _OrganizacionDetallePageState extends State<OrganizacionDetallePage> {
       );
     }
 
-    final colores = context.colores;
-    final puedeEditarOrg = org.puede('organizacion:editar');
-    final puedeEliminarOrg = org.isAdmin;
     final mostrarRoles = org.puede('roles:gestionar');
+    final mostrarAjustes = org.puede('organizacion:editar') || org.isAdmin;
+    final totalPestanas = 6 + (mostrarRoles ? 1 : 0) + (mostrarAjustes ? 1 : 0);
     final responsablesOrg = filtrarMiembrosDestino(miembros: _miembros);
 
     return DefaultTabController(
-      key: ValueKey<bool>(mostrarRoles),
-      length: mostrarRoles ? 6 : 5,
+      key: ValueKey<String>('tabs-$mostrarRoles-$mostrarAjustes'),
+      length: totalPestanas,
       child: Scaffold(
         appBar: AppBar(
           title: Text(org.nombre),
-          actions: <Widget>[
-            if (puedeEditarOrg || puedeEliminarOrg)
-              PopupMenuButton<String>(
-                onSelected: (accion) {
-                  if (accion == 'editar') _editarOrganizacion(org);
-                  if (accion == 'eliminar') _eliminarOrganizacion(org);
-                },
-                itemBuilder: (_) => <PopupMenuEntry<String>>[
-                  if (puedeEditarOrg)
-                    const PopupMenuItem<String>(
-                      value: 'editar',
-                      child: Text('Editar organización'),
-                    ),
-                  if (puedeEliminarOrg)
-                    PopupMenuItem<String>(
-                      value: 'eliminar',
-                      child: Text(
-                        'Eliminar organización',
-                        style: TextStyle(color: colores.rosePeligro),
-                      ),
-                    ),
-                ],
-              ),
-          ],
           bottom: TabBar(
             isScrollable: true,
             tabAlignment: TabAlignment.start,
@@ -250,8 +226,10 @@ class _OrganizacionDetallePageState extends State<OrganizacionDetallePage> {
               const Tab(text: 'Equipos'),
               const Tab(text: 'Miembros'),
               const Tab(text: 'Tareas'),
+              const Tab(text: 'Estadísticas'),
               const Tab(text: 'Tags'),
               if (mostrarRoles) const Tab(text: 'Roles'),
+              if (mostrarAjustes) const Tab(text: 'Ajustes'),
             ],
           ),
         ),
@@ -300,6 +278,15 @@ class _OrganizacionDetallePageState extends State<OrganizacionDetallePage> {
                     mostrarAppBar: false,
                     cargarAlIniciar: widget.cargarAlIniciar,
                   ),
+                  EstadisticasDestinoTab(
+                    tareasApi: widget.tareasApi,
+                    miembros: _miembros,
+                    organizacionId: org.id,
+                    totalEquipos: _equipos.length,
+                    totalProyectos: _proyectos.length,
+                    onRefreshExtra: _cargar,
+                    cargarAlIniciar: widget.cargarAlIniciar,
+                  ),
                   TagsPage(
                     sesionStore: widget.sesionStore,
                     tagsApi: widget.tagsApi,
@@ -319,6 +306,12 @@ class _OrganizacionDetallePageState extends State<OrganizacionDetallePage> {
                       onRefresh: _cargar,
                       onCrearRol: _crearRol,
                       onEditarRol: _editarRol,
+                    ),
+                  if (mostrarAjustes)
+                    AjustesOrganizacionTab(
+                      organizacion: org,
+                      onEditar: () => _editarOrganizacion(org),
+                      onEliminar: () => _eliminarOrganizacion(org),
                     ),
                 ],
               ),

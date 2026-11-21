@@ -40,7 +40,7 @@ mobile/lib/
 │
 ├── modules/                        # Lógica de dominio modular (en español)
 │   ├── auth/                       # Login, Registro, Recuperar contraseña
-│   ├── organizaciones/             # Organizaciones, equipos y proyectos (tareas, notas y tags compartidos; sin administración)
+│   ├── organizaciones/             # Organizaciones, equipos, proyectos, miembros, invitaciones, roles, estadísticas y ajustes
 │   ├── tareas/                     # Pendientes y Tareas (personales y compartidas, con responsables y tags)
 │   ├── notas/                      # Notas personales y de proyecto: carpetas, lectura/edición markdown
 │   ├── tags/                       # Etiquetas personales y de organización

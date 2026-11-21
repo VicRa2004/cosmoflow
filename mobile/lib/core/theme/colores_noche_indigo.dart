@@ -8,6 +8,8 @@ class ColoresNocheIndigo extends ThemeExtension<ColoresNocheIndigo> {
     required this.indigoMarcaHover,
     required this.indigoFoco,
     required this.rosePeligro,
+    required this.amberAviso,
+    required this.emeraldExito,
     required this.fondo,
     required this.superficie,
     required this.elevada,
@@ -29,6 +31,8 @@ class ColoresNocheIndigo extends ThemeExtension<ColoresNocheIndigo> {
   final Color indigoMarcaHover;
   final Color indigoFoco;
   final Color rosePeligro;
+  final Color amberAviso;
+  final Color emeraldExito;
   final Color fondo;
   final Color superficie;
   final Color elevada;
@@ -51,6 +55,8 @@ class ColoresNocheIndigo extends ThemeExtension<ColoresNocheIndigo> {
     indigoMarcaHover: Color(0xFF4338CA),
     indigoFoco: Color(0xFF6366F1),
     rosePeligro: Color(0xFFE11D48),
+    amberAviso: Color(0xFFD97706),
+    emeraldExito: Color(0xFF059669),
     fondo: Color(0xFFFCFCFD),
     superficie: Color(0xFFFFFFFF),
     elevada: Color(0xFFF3F4F8),
@@ -74,6 +80,8 @@ class ColoresNocheIndigo extends ThemeExtension<ColoresNocheIndigo> {
     indigoMarcaHover: Color(0xFF4338CA),
     indigoFoco: Color(0xFF6366F1),
     rosePeligro: Color(0xFFE11D48),
+    amberAviso: Color(0xFFF59E0B),
+    emeraldExito: Color(0xFF10B981),
     fondo: Color(0xFF0E101A),
     superficie: Color(0xFF151824),
     elevada: Color(0xFF1E2233),
@@ -97,6 +105,8 @@ class ColoresNocheIndigo extends ThemeExtension<ColoresNocheIndigo> {
     Color? indigoMarcaHover,
     Color? indigoFoco,
     Color? rosePeligro,
+    Color? amberAviso,
+    Color? emeraldExito,
     Color? fondo,
     Color? superficie,
     Color? elevada,
@@ -118,6 +128,8 @@ class ColoresNocheIndigo extends ThemeExtension<ColoresNocheIndigo> {
       indigoMarcaHover: indigoMarcaHover ?? this.indigoMarcaHover,
       indigoFoco: indigoFoco ?? this.indigoFoco,
       rosePeligro: rosePeligro ?? this.rosePeligro,
+      amberAviso: amberAviso ?? this.amberAviso,
+      emeraldExito: emeraldExito ?? this.emeraldExito,
       fondo: fondo ?? this.fondo,
       superficie: superficie ?? this.superficie,
       elevada: elevada ?? this.elevada,
@@ -148,6 +160,8 @@ class ColoresNocheIndigo extends ThemeExtension<ColoresNocheIndigo> {
       )!,
       indigoFoco: Color.lerp(indigoFoco, other.indigoFoco, t)!,
       rosePeligro: Color.lerp(rosePeligro, other.rosePeligro, t)!,
+      amberAviso: Color.lerp(amberAviso, other.amberAviso, t)!,
+      emeraldExito: Color.lerp(emeraldExito, other.emeraldExito, t)!,
       fondo: Color.lerp(fondo, other.fondo, t)!,
       superficie: Color.lerp(superficie, other.superficie, t)!,
       elevada: Color.lerp(elevada, other.elevada, t)!,
