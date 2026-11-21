@@ -147,15 +147,20 @@ class _PerfilPageState extends State<PerfilPage> {
               onSelectionChanged: (s) => store.cambiarModoTema(s.first),
             ),
           ),
-          if (store.puede('tags:leer')) ...<Widget>[
-            _seccion('Etiquetas'),
+          _seccion('Preferencias'),
+          ListTile(
+            leading: const Icon(Icons.notifications_outlined),
+            title: const Text('Notificaciones'),
+            trailing: const Icon(Icons.chevron_right_rounded),
+            onTap: () => context.push('/perfil/notificaciones'),
+          ),
+          if (store.puede('tags:leer'))
             ListTile(
               leading: const Icon(Icons.sell_outlined),
               title: const Text('Tags'),
               trailing: const Icon(Icons.chevron_right_rounded),
               onTap: () => context.push('/tags'),
             ),
-          ],
           _seccion('Seguridad de la cuenta'),
           ListTile(
             leading: const Icon(Icons.lock_outline_rounded),

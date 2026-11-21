@@ -116,6 +116,7 @@ class _CosmoflowMobileAppState extends State<CosmoflowMobileApp>
       notasApi: notasApi,
       tagsApi: tagsApi,
       organizacionesApi: organizacionesApi,
+      push: widget.push,
       cargarDatosIniciales: widget.restaurarAlIniciar,
     );
     widget.push?.vincularNavegador((ruta) => _router.push(ruta));

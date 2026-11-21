@@ -9,6 +9,8 @@ import '../../modules/notas/api/notas_api.dart';
 import '../../modules/notas/pages/nota_detalle_page.dart';
 import '../../modules/notas/pages/nota_editor_page.dart';
 import '../../modules/notas/pages/notas_page.dart';
+import '../../modules/notificaciones/api/notificaciones_api.dart';
+import '../../modules/notificaciones/pages/notificaciones_preferencias_page.dart';
 import '../../modules/organizaciones/api/organizaciones_api.dart';
 import '../../modules/organizaciones/models/organizacion_models.dart';
 import '../../modules/organizaciones/pages/equipo_detalle_page.dart';
@@ -30,6 +32,7 @@ import '../../modules/tareas/pages/tarea_editor_page.dart';
 import '../../modules/tareas/pages/tareas_page.dart';
 import '../auth/sesion_store.dart';
 import '../layout/main_shell.dart';
+import '../push/push_service.dart';
 
 const Set<String> _rutasPublicas = <String>{
   '/login',
@@ -45,8 +48,12 @@ GoRouter crearAppRouter({
   required NotasApi notasApi,
   required TagsApi tagsApi,
   required OrganizacionesApi organizacionesApi,
+  NotificacionesApi? notificacionesApi,
+  PushService? push,
   bool cargarDatosIniciales = true,
 }) {
+  final notifApi =
+      notificacionesApi ?? NotificacionesApi(apiClient: authApi.apiClient);
   return GoRouter(
     initialLocation: '/dashboard',
     refreshListenable: sesionStore,
@@ -191,6 +198,13 @@ GoRouter crearAppRouter({
         ),
       ),
       GoRoute(
+        path: '/perfil/notificaciones',
+        builder: (context, state) => NotificacionesPreferenciasPage(
+          notificacionesApi: notifApi,
+          cargarAlIniciar: cargarDatosIniciales,
+        ),
+      ),
+      GoRoute(
         path: '/tags',
         builder: (context, state) => TagsPage(
           sesionStore: sesionStore,
@@ -273,6 +287,9 @@ GoRouter crearAppRouter({
         builder: (context, state, child) => MainShell(
           ubicacionActual: state.matchedLocation,
           sesionStore: sesionStore,
+          notificacionesApi: notifApi,
+          push: push,
+          ofrecerPromptPush: cargarDatosIniciales,
           child: child,
         ),
         routes: <RouteBase>[
