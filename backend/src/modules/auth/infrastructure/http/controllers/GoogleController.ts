@@ -71,7 +71,6 @@ export class GoogleController extends BaseController {
 				code,
 				codeVerifier,
 			});
-			setRefreshTokenCookie(c, refreshToken);
 			if (esMovil) {
 				return this.responderMovil(
 					c,
@@ -80,6 +79,7 @@ export class GoogleController extends BaseController {
 					"Volviendo a Cosmoflow...",
 				);
 			}
+			setRefreshTokenCookie(c, refreshToken);
 			// La SPA canjea la cookie por el access token con /api/auth/refresh.
 			return c.redirect(`${env.APP_URL}/login/google`);
 		} catch (error) {

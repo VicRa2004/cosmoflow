@@ -40,7 +40,7 @@ description: "Flujo de autenticación del backend: access token JWT + refresh to
   la sesión).
 
 El refresh token **nunca** viaja en el body: el servidor lo fija en la cookie
-`refresh_token` (`HttpOnly`, `SameSite=Strict`, `Path=/api/auth`, `Secure` en
+`refresh_token` (`HttpOnly`, `SameSite=Lax`, `Path=/api/auth`, `Secure` en
 producción). El navegador la envía sola a las rutas de auth y JavaScript no
 puede leerla.
 
@@ -72,7 +72,7 @@ accessToken   → JWT, vida corta (15 min), NO se guarda en BD
                 Se envía en cada petición protegida.
                 Si lo roban, expira solo en minutos.
 
-refreshToken  → String opaco, vida larga (7 días), SÍ se guarda en BD (como hash)
+refreshToken  → String opaco, vida larga (30 días), SÍ se guarda en BD (como hash)
                 Solo sirve para obtener un nuevo par de tokens.
                 Si lo roban, se puede revocar desde el servidor.
 ```
@@ -295,7 +295,7 @@ api.interceptors.response.use(
 | Token | Duración | Configurable en |
 |-------|----------|-----------------|
 | Access Token | 15 min | `JwtService.ts` → opción `expiresIn` |
-| Refresh Token | 7 días | `DIAS_EXPIRACION_REFRESH_TOKEN` en cada Use Case y `maxAge` en `refreshTokenCookie.ts` |
+| Refresh Token | 30 días | `DIAS_EXPIRACION_REFRESH_TOKEN` en `EmisorSesion.ts` y `maxAge` en `refreshTokenCookie.ts` |
 
 ---
 

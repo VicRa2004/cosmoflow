@@ -1,14 +1,15 @@
 import type { Context } from "hono";
 import { deleteCookie, getCookie, setCookie } from "hono/cookie";
 import { env } from "@/core/config/env";
+import { DIAS_EXPIRACION_REFRESH_TOKEN } from "../../application/services/EmisorSesion";
 
 const NOMBRE_COOKIE = "refresh_token";
 /** Cabecera con la que la app móvil envía su refresh token (no maneja cookies). */
 const CABECERA_REFRESH_TOKEN = "X-Refresh-Token";
 
 // Sólo viaja a las rutas de auth y nunca es legible desde JavaScript (XSS).
-// Lax (en vez de Strict) evita perder la cookie al entrar desde enlaces externos;
-// los POST siguen protegidos contra CSRF.
+// Lax (en vez de Strict) evita perder la cookie al entrar desde enlaces externos
+// y que WebKit/Safari la descarte tras redirecciones OAuth; los POST siguen protegidos contra CSRF.
 const opcionesCookie = {
 	httpOnly: true,
 	secure: env.NODE_ENV === "prod",
@@ -31,7 +32,7 @@ function esClienteMovil(c: Context): boolean {
 export function setRefreshTokenCookie(c: Context, refreshToken: string): void {
 	setCookie(c, NOMBRE_COOKIE, refreshToken, {
 		...opcionesCookie,
-		maxAge: 60 * 60 * 24 * 30,
+		maxAge: 60 * 60 * 24 * DIAS_EXPIRACION_REFRESH_TOKEN,
 	});
 }
 

@@ -12,6 +12,70 @@ interface CustomAxiosRequestConfig extends InternalAxiosRequestConfig {
 	_retry?: boolean;
 }
 
+type MensajeAuth = { tipo: "token"; accessToken: string } | { tipo: "logout" };
+
+const RUTAS_AUTH_SIN_REFRESH = new Set([
+	"/auth/refresh",
+	"/auth/login",
+	"/auth/registro",
+	"/auth/logout",
+]);
+
+function esRutaAuthSinRefresh(url?: string): boolean {
+	if (!url) return false;
+	const ruta = url.split("?")[0] ?? "";
+	const normalizada = ruta.startsWith("/") ? ruta : `/${ruta}`;
+	const sinPrefijoApi = normalizada.replace(/^\/api(?=\/)/, "");
+	return (
+		RUTAS_AUTH_SIN_REFRESH.has(normalizada) ||
+		RUTAS_AUTH_SIN_REFRESH.has(sinPrefijoApi)
+	);
+}
+
+function extraerTokenFallido(
+	headers: CustomAxiosRequestConfig["headers"],
+): string | null {
+	if (!headers) return null;
+	const raw =
+		typeof headers.get === "function"
+			? headers.get("Authorization")
+			: (headers as Record<string, unknown>).Authorization;
+	if (typeof raw !== "string") return null;
+	return raw.startsWith("Bearer ") ? raw.slice(7) : null;
+}
+
+const canalAuth =
+	typeof BroadcastChannel !== "undefined"
+		? new BroadcastChannel("cosmoflow-auth")
+		: null;
+
+if (canalAuth) {
+	canalAuth.onmessage = (evento: MessageEvent<MensajeAuth>) => {
+		const mensaje = evento.data;
+		if (!mensaje || typeof mensaje !== "object") return;
+		if (mensaje.tipo === "token" && typeof mensaje.accessToken === "string") {
+			useAuthStore.getState().setTokens({ accessToken: mensaje.accessToken });
+		} else if (mensaje.tipo === "logout") {
+			useAuthStore.getState().logout();
+		}
+	};
+}
+
+function emitirAuth(mensaje: MensajeAuth): void {
+	try {
+		canalAuth?.postMessage(mensaje);
+	} catch {
+		// Ignorar si el canal fue cerrado en entorno de pruebas o salida de página.
+	}
+}
+
+async function conBloqueoRefresh<T>(fn: () => Promise<T>): Promise<T> {
+	if (typeof navigator !== "undefined" && navigator.locks) {
+		return navigator.locks.request("cosmoflow-auth-refresh", fn);
+	}
+	return fn();
+}
+
 export const apiClient = axios.create({
 	baseURL: "/api",
 	headers: {
@@ -19,42 +83,34 @@ export const apiClient = axios.create({
 	},
 });
 
-// Una sola renovación en vuelo (en esta pestaña y entre pestañas): el backend
-// rota el refresh token, así que peticiones 401 simultáneas invalidarían la sesión.
+// Una sola renovación en vuelo por pestaña y coordinada entre pestañas:
+// el backend rota el refresh token, así que peticiones 401 simultáneas
+// que reenvíen el mismo token revocado invalidarían todas las sesiones.
 let refreshPromise: Promise<string> | null = null;
 
-async function ejecutarRefresh(tokenFallido: string | null): Promise<string> {
-	// Si otra pestaña ya renovó el accessToken mientras esperábamos el lock,
-	// reutilizamos el nuevo sin volver a rotar la cookie.
-	await useAuthStore.persist.rehydrate();
-	const tokenActual = useAuthStore.getState().accessToken;
-	if (tokenActual && tokenActual !== tokenFallido) {
-		return tokenActual;
-	}
-
-	// Llamada directa sin interceptores para evitar bucles. El refresh token
-	// viaja solo en la cookie httpOnly (mismo origen vía el proxy /api).
-	const { data } = await axios.post<AuthTokens>(
-		"/api/auth/refresh",
-		undefined,
-		{
-			withCredentials: true,
-		},
-	);
-
-	useAuthStore.getState().setTokens({ accessToken: data.accessToken });
-	return data.accessToken;
-}
-
 function refreshAccessToken(tokenFallido: string | null): Promise<string> {
-	refreshPromise ??= (async () => {
-		if (typeof navigator !== "undefined" && navigator.locks?.request) {
-			return navigator.locks.request("cosmoflow-auth-refresh", () =>
-				ejecutarRefresh(tokenFallido),
-			);
+	refreshPromise ??= conBloqueoRefresh(async () => {
+		// Rehidrata desde localStorage por si otra pestaña ya renovó mientras esperábamos el lock.
+		await useAuthStore.persist?.rehydrate();
+		const tokenActual = useAuthStore.getState().accessToken;
+		if (tokenActual && tokenActual !== tokenFallido) {
+			return tokenActual;
 		}
-		return ejecutarRefresh(tokenFallido);
-	})().finally(() => {
+
+		// Llamada directa sin interceptores para evitar bucles. El refresh token
+		// viaja solo en la cookie httpOnly (mismo origen vía el proxy /api).
+		const { data } = await axios.post<AuthTokens>(
+			"/api/auth/refresh",
+			undefined,
+			{
+				withCredentials: true,
+			},
+		);
+
+		useAuthStore.getState().setTokens({ accessToken: data.accessToken });
+		emitirAuth({ tipo: "token", accessToken: data.accessToken });
+		return data.accessToken;
+	}).finally(() => {
 		refreshPromise = null;
 	});
 	return refreshPromise;
@@ -91,7 +147,11 @@ apiClient.interceptors.response.use(
 
 		const originalRequest = error.config as CustomAxiosRequestConfig;
 
-		if (error.response?.status === 401 && !originalRequest._retry) {
+		if (
+			error.response?.status === 401 &&
+			!originalRequest._retry &&
+			!esRutaAuthSinRefresh(originalRequest.url)
+		) {
 			originalRequest._retry = true;
 			const { isAuthenticated, logout } = useAuthStore.getState();
 
@@ -101,13 +161,8 @@ apiClient.interceptors.response.use(
 				return Promise.reject(error);
 			}
 
-			const authHeader = originalRequest.headers?.Authorization;
-			const tokenFallido =
-				typeof authHeader === "string" && authHeader.startsWith("Bearer ")
-					? authHeader.slice(7)
-					: useAuthStore.getState().accessToken;
-
 			try {
+				const tokenFallido = extraerTokenFallido(originalRequest.headers);
 				const newAccessToken = await refreshAccessToken(tokenFallido);
 
 				if (originalRequest.headers) {
@@ -116,10 +171,11 @@ apiClient.interceptors.response.use(
 
 				return apiClient(originalRequest);
 			} catch (refreshError) {
-				// Solo cerrar sesión si el servidor rechazó el refresh token.
-				// Fallos de red o 5xx temporales (p.ej. un despliegue) no deben expulsar al usuario.
+				// Solo cerrar sesión si el servidor rechaza el refresh token;
+				// fallos de red o 5xx temporales conservan la sesión local.
 				if (esRechazoDeSesion(refreshError)) {
 					logout();
+					emitirAuth({ tipo: "logout" });
 				}
 				return Promise.reject(refreshError);
 			}

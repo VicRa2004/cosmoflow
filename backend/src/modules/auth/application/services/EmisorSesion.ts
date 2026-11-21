@@ -3,7 +3,7 @@ import type { TokenService } from "../../domain/service/TokenService";
 import type { RefreshTokenRepository } from "../../domain/repository/RefreshTokenRepository";
 
 /** Duración del refresh token: 30 días (se renueva con cada uso). */
-const DIAS_EXPIRACION_REFRESH_TOKEN = 30;
+export const DIAS_EXPIRACION_REFRESH_TOKEN = 30;
 
 /**
  * Emite una sesión nueva para un usuario: access token de 1 hora
