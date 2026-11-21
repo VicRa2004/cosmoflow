@@ -39,6 +39,7 @@ Future<void> main() async {
       tagsApi: tagsApi,
       organizacionesApi: organizacionesApi,
       cola: cola,
+      push: push,
     ),
   );
 }
@@ -66,6 +67,7 @@ class CosmoflowMobileApp extends StatefulWidget {
     this.tagsApi,
     this.organizacionesApi,
     this.cola,
+    this.push,
     this.oauthGoogleService,
     this.restaurarAlIniciar = true,
   });
@@ -80,6 +82,7 @@ class CosmoflowMobileApp extends StatefulWidget {
 
   /// Notas y tareas creadas sin conexión; sin ella no hay modo offline.
   final ColaSinConexion? cola;
+  final PushService? push;
   final bool restaurarAlIniciar;
 
   @override
@@ -115,6 +118,7 @@ class _CosmoflowMobileAppState extends State<CosmoflowMobileApp>
       organizacionesApi: organizacionesApi,
       cargarDatosIniciales: widget.restaurarAlIniciar,
     );
+    widget.push?.vincularNavegador((ruta) => _router.push(ruta));
     if (widget.restaurarAlIniciar) {
       widget.authApi.restaurarSesion().then((_) => _sincronizar());
     }
