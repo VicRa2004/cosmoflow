@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../core/auth/sesion_store.dart';
 import '../../../core/theme/colores_noche_indigo.dart';
+import '../../../core/widgets/avisos.dart';
+import '../../../core/widgets/confirmar.dart';
 import '../../../core/widgets/estados.dart';
 import '../../tags/api/tags_api.dart';
 import '../../tags/models/tag_model.dart';
@@ -9,15 +12,19 @@ import '../../tareas/api/tareas_api.dart';
 import '../../tareas/pages/tareas_page.dart';
 import '../api/organizaciones_api.dart';
 import '../models/organizacion_models.dart';
+import '../widgets/delegados_sheet.dart';
+import 'equipo_editor_page.dart';
 
 /// Argumentos para abrir `/organizaciones/:id/equipos/:equipoId`.
 class EquipoDetalleArgs {
   const EquipoDetalleArgs({
+    this.organizacion,
     this.equipo,
     this.miembros = const <MiembroDto>[],
     this.tags = const <TagDto>[],
   });
 
+  final OrganizacionDto? organizacion;
   final EquipoDto? equipo;
   final List<MiembroDto> miembros;
   final List<TagDto> tags;
@@ -57,6 +64,7 @@ class EquipoDetallePage extends StatefulWidget {
 }
 
 class _EquipoDetallePageState extends State<EquipoDetallePage> {
+  late OrganizacionDto? _organizacion = widget.args.organizacion;
   late EquipoDto? _equipo = widget.args.equipo;
   late List<MiembroDto> _miembros = widget.args.miembros;
   late List<TagDto> _tags = widget.args.tags;
@@ -65,7 +73,8 @@ class _EquipoDetallePageState extends State<EquipoDetallePage> {
   @override
   void initState() {
     super.initState();
-    if (widget.cargarAlIniciar && (_equipo == null || _miembros.isEmpty)) {
+    if (widget.cargarAlIniciar &&
+        (_organizacion == null || _equipo == null || _miembros.isEmpty)) {
       _cargarContexto();
     }
   }
@@ -73,18 +82,20 @@ class _EquipoDetallePageState extends State<EquipoDetallePage> {
   Future<void> _cargarContexto() async {
     try {
       final res = await Future.wait<dynamic>(<Future<dynamic>>[
+        widget.organizacionesApi.obtenerUna(widget.organizacionId),
         widget.organizacionesApi.obtenerEquipos(widget.organizacionId),
         widget.organizacionesApi.obtenerMiembros(widget.organizacionId),
         widget.tagsApi.obtenerTodos(organizacionId: widget.organizacionId),
       ]);
       if (!mounted) return;
-      final equipos = res[0] as List<EquipoDto>;
+      final equipos = res[1] as List<EquipoDto>;
       setState(() {
+        _organizacion = res[0] as OrganizacionDto;
         _equipo =
             equipos.where((e) => e.id == widget.equipoId).firstOrNull ??
             _equipo;
-        _miembros = res[1] as List<MiembroDto>;
-        _tags = (res[2] as PaginaTags).datos;
+        _miembros = res[2] as List<MiembroDto>;
+        _tags = (res[3] as PaginaTags).datos;
         _mensajeError = _equipo == null ? 'No se encontró el equipo.' : null;
       });
     } catch (_) {
@@ -92,6 +103,58 @@ class _EquipoDetallePageState extends State<EquipoDetallePage> {
         setState(() => _mensajeError = 'No se pudo cargar el equipo.');
       }
     }
+  }
+
+  Future<void> _editarEquipo(EquipoDto equipo) async {
+    final guardado = await context.push<bool>(
+      '/organizaciones/${widget.organizacionId}/equipos/${equipo.id}/editar',
+      extra: EquipoEditorArgs(equipo: equipo, miembros: _miembros, tags: _tags),
+    );
+    if (guardado == true && mounted) await _cargarContexto();
+  }
+
+  Future<void> _gestionarDelegados(EquipoDto equipo) async {
+    final ids = await showModalBottomSheet<List<int>>(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      builder: (_) => DelegadosSheet(equipo: equipo, miembros: _miembros),
+    );
+    if (ids == null || !mounted) return;
+    final ok = await ejecutarConAviso(
+      context,
+      () async {
+        final actualizado = await widget.organizacionesApi.actualizarDelegados(
+          widget.organizacionId,
+          equipo.id,
+          ids,
+        );
+        if (mounted) setState(() => _equipo = actualizado);
+      },
+      error: 'No se pudieron actualizar los delegados.',
+      exito: 'Delegados actualizados',
+    );
+    if (ok && mounted) await _cargarContexto();
+  }
+
+  Future<void> _eliminarEquipo(EquipoDto equipo) async {
+    final ok = await confirmar(
+      context,
+      titulo: '¿Eliminar el equipo «${equipo.nombre}»?',
+      mensaje: 'Sus tareas pasan a la organización, con sus responsables. Sus miembros siguen en la organización.',
+      accion: 'Eliminar',
+    );
+    if (!ok || !mounted) return;
+    final eliminado = await ejecutarConAviso(
+      context,
+      () => widget.organizacionesApi.eliminarEquipo(
+        widget.organizacionId,
+        equipo.id,
+      ),
+      error: 'No se pudo eliminar el equipo.',
+      exito: 'Equipo eliminado',
+    );
+    if (eliminado && mounted) context.pop(true);
   }
 
   Widget _encabezado(BuildContext context, EquipoDto equipo) {
@@ -104,7 +167,9 @@ class _EquipoDetallePageState extends State<EquipoDetallePage> {
               .firstOrNull;
           final nombre = m?.nombre ?? 'Usuario #${me.usuarioId}';
           final esLider = equipo.liderId == me.usuarioId;
-          return (nombre: nombre, esLider: esLider);
+          final esDelegado =
+              !esLider && equipo.liderId != null && me.puedeCrearTareas;
+          return (nombre: nombre, esLider: esLider, esDelegado: esDelegado);
         })
         .toList(growable: false);
 
@@ -134,7 +199,13 @@ class _EquipoDetallePageState extends State<EquipoDetallePage> {
                           : Icons.person_outline_rounded,
                       size: 16,
                     ),
-                    label: Text(i.esLider ? '${i.nombre} · Líder' : i.nombre),
+                    label: Text(
+                      i.esLider
+                          ? '${i.nombre} · Líder'
+                          : i.esDelegado
+                          ? '${i.nombre} · Delegado'
+                          : i.nombre,
+                    ),
                   ),
               ],
             ),
@@ -158,15 +229,55 @@ class _EquipoDetallePageState extends State<EquipoDetallePage> {
       );
     }
 
+    final colores = context.colores;
+    final yo = widget.sesionStore.usuario?.id;
+    final puedeEditar = _organizacion?.puede('equipos:editar') ?? false;
+    final puedeEliminar = _organizacion?.puede('equipos:eliminar') ?? false;
+    final puedeDelegados =
+        equipo.liderId != null && (equipo.liderId == yo || puedeEditar);
+    final hayMenu = puedeDelegados || puedeEditar || puedeEliminar;
+
     final responsables = filtrarMiembrosDestino(
       miembros: _miembros,
       equipos: <EquipoDto>[equipo],
       equipoId: equipo.id,
     );
-    final puedeCrear = equipo.puedeCrearTareas(widget.sesionStore.usuario?.id);
+    final puedeCrear = equipo.puedeCrearTareas(yo);
 
     return Scaffold(
-      appBar: AppBar(title: Text(equipo.nombre)),
+      appBar: AppBar(
+        title: Text(equipo.nombre),
+        actions: <Widget>[
+          if (hayMenu)
+            PopupMenuButton<String>(
+              onSelected: (accion) {
+                if (accion == 'delegados') _gestionarDelegados(equipo);
+                if (accion == 'editar') _editarEquipo(equipo);
+                if (accion == 'eliminar') _eliminarEquipo(equipo);
+              },
+              itemBuilder: (_) => <PopupMenuEntry<String>>[
+                if (puedeDelegados)
+                  const PopupMenuItem<String>(
+                    value: 'delegados',
+                    child: Text('Delegados'),
+                  ),
+                if (puedeEditar)
+                  const PopupMenuItem<String>(
+                    value: 'editar',
+                    child: Text('Editar equipo'),
+                  ),
+                if (puedeEliminar)
+                  PopupMenuItem<String>(
+                    value: 'eliminar',
+                    child: Text(
+                      'Eliminar equipo',
+                      style: TextStyle(color: colores.rosePeligro),
+                    ),
+                  ),
+              ],
+            ),
+        ],
+      ),
       body: TareasPage(
         sesionStore: widget.sesionStore,
         tareasApi: widget.tareasApi,

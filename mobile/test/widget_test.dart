@@ -154,16 +154,14 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.text('Sin notas'), findsOneWidget);
 
+      await tester.tap(find.text('Orgs'));
+      await tester.pumpAndSettle();
+      expect(find.text('Sin organizaciones'), findsOneWidget);
+
       await tester.tap(find.text('Perfil'));
       await tester.pumpAndSettle();
       expect(find.text('Email verificado'), findsOneWidget);
       expect(find.text('Seguridad de la cuenta'), findsOneWidget);
-
-      await tester.tap(find.text('Organizaciones'));
-      await tester.pumpAndSettle();
-      expect(find.text('Sin organizaciones'), findsOneWidget);
-      await tester.pageBack();
-      await tester.pumpAndSettle();
 
       await tester.tap(find.text('Tags'));
       await tester.pumpAndSettle();

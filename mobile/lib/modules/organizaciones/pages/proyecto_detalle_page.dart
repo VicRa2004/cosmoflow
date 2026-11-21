@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../core/auth/sesion_store.dart';
 import '../../../core/theme/colores_noche_indigo.dart';
+import '../../../core/widgets/avisos.dart';
+import '../../../core/widgets/confirmar.dart';
 import '../../../core/widgets/estados.dart';
 import '../../notas/api/notas_api.dart';
 import '../../notas/pages/notas_page.dart';
@@ -11,16 +14,19 @@ import '../../tareas/api/tareas_api.dart';
 import '../../tareas/pages/tareas_page.dart';
 import '../api/organizaciones_api.dart';
 import '../models/organizacion_models.dart';
+import 'proyecto_editor_page.dart';
 
 /// Argumentos para abrir `/organizaciones/:id/proyectos/:proyectoId`.
 class ProyectoDetalleArgs {
   const ProyectoDetalleArgs({
+    this.organizacion,
     this.proyecto,
     this.miembros = const <MiembroDto>[],
     this.equipos = const <EquipoDto>[],
     this.tags = const <TagDto>[],
   });
 
+  final OrganizacionDto? organizacion;
   final ProyectoDto? proyecto;
   final List<MiembroDto> miembros;
   final List<EquipoDto> equipos;
@@ -63,6 +69,7 @@ class ProyectoDetallePage extends StatefulWidget {
 }
 
 class _ProyectoDetallePageState extends State<ProyectoDetallePage> {
+  late OrganizacionDto? _organizacion = widget.args.organizacion;
   late ProyectoDto? _proyecto = widget.args.proyecto;
   late List<MiembroDto> _miembros = widget.args.miembros;
   late List<EquipoDto> _equipos = widget.args.equipos;
@@ -72,7 +79,8 @@ class _ProyectoDetallePageState extends State<ProyectoDetallePage> {
   @override
   void initState() {
     super.initState();
-    if (widget.cargarAlIniciar && (_proyecto == null || _miembros.isEmpty)) {
+    if (widget.cargarAlIniciar &&
+        (_organizacion == null || _proyecto == null || _miembros.isEmpty)) {
       _cargarContexto();
     }
   }
@@ -80,20 +88,22 @@ class _ProyectoDetallePageState extends State<ProyectoDetallePage> {
   Future<void> _cargarContexto() async {
     try {
       final res = await Future.wait<dynamic>(<Future<dynamic>>[
+        widget.organizacionesApi.obtenerUna(widget.organizacionId),
         widget.organizacionesApi.obtenerProyectos(widget.organizacionId),
         widget.organizacionesApi.obtenerMiembros(widget.organizacionId),
         widget.organizacionesApi.obtenerEquipos(widget.organizacionId),
         widget.tagsApi.obtenerTodos(organizacionId: widget.organizacionId),
       ]);
       if (!mounted) return;
-      final proyectos = res[0] as List<ProyectoDto>;
+      final proyectos = res[1] as List<ProyectoDto>;
       setState(() {
+        _organizacion = res[0] as OrganizacionDto;
         _proyecto =
             proyectos.where((p) => p.id == widget.proyectoId).firstOrNull ??
             _proyecto;
-        _miembros = res[1] as List<MiembroDto>;
-        _equipos = res[2] as List<EquipoDto>;
-        _tags = (res[3] as PaginaTags).datos;
+        _miembros = res[2] as List<MiembroDto>;
+        _equipos = res[3] as List<EquipoDto>;
+        _tags = (res[4] as PaginaTags).datos;
         _mensajeError = _proyecto == null
             ? 'No se encontró el proyecto.'
             : null;
@@ -103,6 +113,38 @@ class _ProyectoDetallePageState extends State<ProyectoDetallePage> {
         setState(() => _mensajeError = 'No se pudo cargar el proyecto.');
       }
     }
+  }
+
+  Future<void> _editarProyecto(ProyectoDto proyecto) async {
+    final guardado = await context.push<bool>(
+      '/organizaciones/${widget.organizacionId}/proyectos/${proyecto.id}/editar',
+      extra: ProyectoEditorArgs(
+        proyecto: proyecto,
+        equipos: _equipos,
+        miembros: _miembros,
+      ),
+    );
+    if (guardado == true && mounted) await _cargarContexto();
+  }
+
+  Future<void> _eliminarProyecto(ProyectoDto proyecto) async {
+    final ok = await confirmar(
+      context,
+      titulo: '¿Eliminar el proyecto «${proyecto.nombre}»?',
+      mensaje: 'Sus tareas pasan a la organización y sus notas, a quien las creó. Sus equipos e integrantes siguen en la organización.',
+      accion: 'Eliminar',
+    );
+    if (!ok || !mounted) return;
+    final eliminado = await ejecutarConAviso(
+      context,
+      () => widget.organizacionesApi.eliminarProyecto(
+        widget.organizacionId,
+        proyecto.id,
+      ),
+      error: 'No se pudo eliminar el proyecto.',
+      exito: 'Proyecto eliminado',
+    );
+    if (eliminado && mounted) context.pop(true);
   }
 
   Widget _encabezado(BuildContext context, ProyectoDto proyecto) {
@@ -152,6 +194,9 @@ class _ProyectoDetallePageState extends State<ProyectoDetallePage> {
       );
     }
 
+    final colores = context.colores;
+    final puedeEditar = _organizacion?.puede('proyectos:editar') ?? false;
+    final puedeEliminar = _organizacion?.puede('proyectos:eliminar') ?? false;
     final responsables = filtrarMiembrosDestino(
       miembros: _miembros,
       equipos: _equipos,
@@ -164,6 +209,30 @@ class _ProyectoDetallePageState extends State<ProyectoDetallePage> {
       child: Scaffold(
         appBar: AppBar(
           title: Text(proyecto.nombre),
+          actions: <Widget>[
+            if (puedeEditar || puedeEliminar)
+              PopupMenuButton<String>(
+                onSelected: (accion) {
+                  if (accion == 'editar') _editarProyecto(proyecto);
+                  if (accion == 'eliminar') _eliminarProyecto(proyecto);
+                },
+                itemBuilder: (_) => <PopupMenuEntry<String>>[
+                  if (puedeEditar)
+                    const PopupMenuItem<String>(
+                      value: 'editar',
+                      child: Text('Editar proyecto'),
+                    ),
+                  if (puedeEliminar)
+                    PopupMenuItem<String>(
+                      value: 'eliminar',
+                      child: Text(
+                        'Eliminar proyecto',
+                        style: TextStyle(color: colores.rosePeligro),
+                      ),
+                    ),
+                ],
+              ),
+          ],
           bottom: const TabBar(
             tabs: <Widget>[
               Tab(text: 'Tareas'),

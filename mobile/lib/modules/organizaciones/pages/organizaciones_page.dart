@@ -5,6 +5,7 @@ import '../../../core/theme/colores_noche_indigo.dart';
 import '../../../core/widgets/estados.dart';
 import '../api/organizaciones_api.dart';
 import '../models/organizacion_models.dart';
+import '../widgets/selector_color.dart';
 
 /// Vista `/organizaciones`: lista de organizaciones del usuario para entrar a una.
 class OrganizacionesPage extends StatefulWidget {
@@ -39,12 +40,14 @@ class _OrganizacionesPageState extends State<OrganizacionesPage> {
     super.dispose();
   }
 
-  static Color? _parsearColorHex(String? hex) {
-    if (hex == null || hex.isEmpty) return null;
-    final limpio = hex.replaceFirst('#', '');
-    if (limpio.length != 6) return null;
-    final valor = int.tryParse('FF$limpio', radix: 16);
-    return valor != null ? Color(valor) : null;
+  Future<void> _crear() async {
+    final creado = await context.push<bool>('/organizaciones/nueva');
+    if (creado == true && mounted) await _cargar();
+  }
+
+  Future<void> _abrir(OrganizacionDto org) async {
+    await context.push<bool>('/organizaciones/${org.id}', extra: org);
+    if (mounted) await _cargar();
   }
 
   Future<void> _cargar() async {
@@ -75,10 +78,15 @@ class _OrganizacionesPageState extends State<OrganizacionesPage> {
     final colores = context.colores;
     return Scaffold(
       appBar: AppBar(title: const Text('Organizaciones')),
+      floatingActionButton: FloatingActionButton(
+        tooltip: 'Nueva organización',
+        onPressed: _crear,
+        child: const Icon(Icons.add_rounded),
+      ),
       body: RefreshIndicator(
         onRefresh: _cargar,
         child: ListView(
-          padding: const EdgeInsets.only(bottom: 48),
+          padding: const EdgeInsets.only(bottom: 88),
           children: <Widget>[
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 4, 16, 12),
@@ -99,17 +107,15 @@ class _OrganizacionesPageState extends State<OrganizacionesPage> {
               const EstadoVacio(
                 icono: Icons.workspaces_outlined,
                 titulo: 'Sin organizaciones',
-                mensaje:
-                    'Aquí aparecerán las organizaciones a las que pertenezcas.',
+                mensaje: 'Crea una organización o espera una invitación para colaborar.',
               )
             else
               for (final org in _organizaciones) ...<Widget>[
                 _OrganizacionFila(
                   organizacion: org,
-                  colorAvatar: _parsearColorHex(org.color),
+                  colorAvatar: parsearColorHex(org.color),
                   colores: colores,
-                  onTap: () =>
-                      context.push('/organizaciones/${org.id}', extra: org),
+                  onTap: () => _abrir(org),
                 ),
                 const Divider(indent: 72),
               ],

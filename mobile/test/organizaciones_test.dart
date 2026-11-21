@@ -9,6 +9,9 @@ import 'package:cosmoflow_mobile/modules/organizaciones/models/organizacion_mode
 import 'package:cosmoflow_mobile/modules/organizaciones/pages/equipo_detalle_page.dart';
 import 'package:cosmoflow_mobile/modules/organizaciones/pages/organizacion_detalle_page.dart';
 import 'package:cosmoflow_mobile/modules/organizaciones/pages/proyecto_detalle_page.dart';
+import 'package:cosmoflow_mobile/modules/organizaciones/widgets/equipo_form.dart';
+import 'package:cosmoflow_mobile/modules/organizaciones/widgets/organizacion_form.dart';
+import 'package:cosmoflow_mobile/modules/organizaciones/widgets/proyecto_form.dart';
 import 'package:cosmoflow_mobile/modules/tags/api/tags_api.dart';
 import 'package:cosmoflow_mobile/modules/tags/models/tag_model.dart';
 import 'package:cosmoflow_mobile/modules/tareas/api/tareas_api.dart';
@@ -285,4 +288,103 @@ void main() {
       expect(valores.tagIds, equals(<int>[11]));
     },
   );
+
+  testWidgets('OrganizacionForm valida nombre obligatorio y devuelve valores', (
+    WidgetTester tester,
+  ) async {
+    final formKey = GlobalKey<OrganizacionFormState>();
+
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: TemaApp.claro,
+        home: Scaffold(body: OrganizacionForm(key: formKey)),
+      ),
+    );
+
+    expect(formKey.currentState!.validar(), isNull);
+    await tester.pump();
+    expect(find.text('El nombre es obligatorio'), findsOneWidget);
+
+    await tester.enterText(find.byType(TextFormField).first, 'Acme');
+    final valores = formKey.currentState!.validar();
+    expect(valores, isNotNull);
+    expect(valores!.nombre, equals('Acme'));
+    expect(valores.color, startsWith('#'));
+  });
+
+  testWidgets('EquipoForm exige al menos 2 miembros (RN-20)', (
+    WidgetTester tester,
+  ) async {
+    final formKey = GlobalKey<EquipoFormState>();
+    const miembros = <MiembroDto>[
+      MiembroDto(usuarioId: 5, nombre: 'Ana', email: 'ana@test.com'),
+      MiembroDto(usuarioId: 6, nombre: 'Luis', email: 'luis@test.com'),
+    ];
+
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: TemaApp.claro,
+        home: Scaffold(
+          body: EquipoForm(key: formKey, miembros: miembros),
+        ),
+      ),
+    );
+
+    await tester.enterText(find.byType(TextFormField).first, 'Backend');
+    expect(formKey.currentState!.validar(), isNull);
+    await tester.pump();
+    expect(
+      find.text('Elige al menos 2 miembros para el equipo'),
+      findsOneWidget,
+    );
+
+    await tester.tap(find.text('Ana'));
+    await tester.tap(find.text('Luis'));
+    await tester.pump();
+
+    final valores = formKey.currentState!.validar();
+    expect(valores, isNotNull);
+    expect(valores!.nombre, equals('Backend'));
+    expect(valores.miembroIds, containsAll(<int>[5, 6]));
+  });
+
+  testWidgets('ProyectoForm exige al menos un equipo o persona (RN-31)', (
+    WidgetTester tester,
+  ) async {
+    final formKey = GlobalKey<ProyectoFormState>();
+    const miembros = <MiembroDto>[
+      MiembroDto(usuarioId: 5, nombre: 'Ana', email: 'ana@test.com'),
+    ];
+
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: TemaApp.claro,
+        home: Scaffold(
+          body: ProyectoForm(
+            key: formKey,
+            equipos: const <EquipoDto>[],
+            miembros: miembros,
+          ),
+        ),
+      ),
+    );
+
+    await tester.enterText(find.byType(TextFormField).first, 'Lanzamiento');
+    expect(formKey.currentState!.validar(), isNull);
+    await tester.pump();
+
+    final listaScroll = find.byType(Scrollable).first;
+    await tester.scrollUntilVisible(
+      find.text('Ana'),
+      200,
+      scrollable: listaScroll,
+    );
+    await tester.tap(find.text('Ana'));
+    await tester.pump();
+
+    final valores = formKey.currentState!.validar();
+    expect(valores, isNotNull);
+    expect(valores!.nombre, equals('Lanzamiento'));
+    expect(valores.integranteIds, equals(<int>[5]));
+  });
 }

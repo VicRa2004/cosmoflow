@@ -12,9 +12,12 @@ import '../../modules/notas/pages/notas_page.dart';
 import '../../modules/organizaciones/api/organizaciones_api.dart';
 import '../../modules/organizaciones/models/organizacion_models.dart';
 import '../../modules/organizaciones/pages/equipo_detalle_page.dart';
+import '../../modules/organizaciones/pages/equipo_editor_page.dart';
 import '../../modules/organizaciones/pages/organizacion_detalle_page.dart';
+import '../../modules/organizaciones/pages/organizacion_editor_page.dart';
 import '../../modules/organizaciones/pages/organizaciones_page.dart';
 import '../../modules/organizaciones/pages/proyecto_detalle_page.dart';
+import '../../modules/organizaciones/pages/proyecto_editor_page.dart';
 import '../../modules/perfil/pages/perfil_page.dart';
 import '../../modules/tags/api/tags_api.dart';
 import '../../modules/tags/pages/tags_page.dart';
@@ -76,11 +79,9 @@ GoRouter crearAppRouter({
       // shortcut: los editores reciben la entidad por `extra`; sin él (deep link) editar
       // abriría un alta vacía. Cargarla por `:id` si algún día hay enlaces profundos.
       GoRoute(
-        path: '/organizaciones',
-        builder: (context, state) => OrganizacionesPage(
-          organizacionesApi: organizacionesApi,
-          cargarAlIniciar: cargarDatosIniciales,
-        ),
+        path: '/organizaciones/nueva',
+        builder: (context, state) =>
+            OrganizacionEditorPage(organizacionesApi: organizacionesApi),
       ),
       GoRoute(
         path: '/organizaciones/:id',
@@ -97,6 +98,24 @@ GoRouter crearAppRouter({
         ),
       ),
       GoRoute(
+        path: '/organizaciones/:id/editar',
+        builder: (context, state) => OrganizacionEditorPage(
+          organizacionesApi: organizacionesApi,
+          organizacion: state.extra is OrganizacionDto
+              ? state.extra as OrganizacionDto
+              : null,
+        ),
+      ),
+      GoRoute(
+        path: '/organizaciones/:id/equipos/nuevo',
+        builder: (context, state) => EquipoEditorPage(
+          organizacionId: int.parse(state.pathParameters['id']!),
+          organizacionesApi: organizacionesApi,
+          tagsApi: tagsApi,
+          args: EquipoEditorArgs.fromExtra(state.extra),
+        ),
+      ),
+      GoRoute(
         path: '/organizaciones/:id/equipos/:equipoId',
         builder: (context, state) => EquipoDetallePage(
           organizacionId: int.parse(state.pathParameters['id']!),
@@ -107,6 +126,23 @@ GoRouter crearAppRouter({
           tagsApi: tagsApi,
           args: EquipoDetalleArgs.fromExtra(state.extra),
           cargarAlIniciar: cargarDatosIniciales,
+        ),
+      ),
+      GoRoute(
+        path: '/organizaciones/:id/equipos/:equipoId/editar',
+        builder: (context, state) => EquipoEditorPage(
+          organizacionId: int.parse(state.pathParameters['id']!),
+          organizacionesApi: organizacionesApi,
+          tagsApi: tagsApi,
+          args: EquipoEditorArgs.fromExtra(state.extra),
+        ),
+      ),
+      GoRoute(
+        path: '/organizaciones/:id/proyectos/nuevo',
+        builder: (context, state) => ProyectoEditorPage(
+          organizacionId: int.parse(state.pathParameters['id']!),
+          organizacionesApi: organizacionesApi,
+          args: ProyectoEditorArgs.fromExtra(state.extra),
         ),
       ),
       GoRoute(
@@ -121,6 +157,14 @@ GoRouter crearAppRouter({
           tagsApi: tagsApi,
           args: ProyectoDetalleArgs.fromExtra(state.extra),
           cargarAlIniciar: cargarDatosIniciales,
+        ),
+      ),
+      GoRoute(
+        path: '/organizaciones/:id/proyectos/:proyectoId/editar',
+        builder: (context, state) => ProyectoEditorPage(
+          organizacionId: int.parse(state.pathParameters['id']!),
+          organizacionesApi: organizacionesApi,
+          args: ProyectoEditorArgs.fromExtra(state.extra),
         ),
       ),
       GoRoute(
@@ -231,6 +275,13 @@ GoRouter crearAppRouter({
               sesionStore: sesionStore,
               notasApi: notasApi,
               tagsApi: tagsApi,
+              cargarAlIniciar: cargarDatosIniciales,
+            ),
+          ),
+          GoRoute(
+            path: '/organizaciones',
+            builder: (context, state) => OrganizacionesPage(
+              organizacionesApi: organizacionesApi,
               cargarAlIniciar: cargarDatosIniciales,
             ),
           ),

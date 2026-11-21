@@ -60,16 +60,17 @@ const List<GrupoNavegacion> gruposNavegacion = <GrupoNavegacion>[
       ),
       ItemNavegacion(
         ruta: '/organizaciones',
-        etiqueta: 'Organizaciones',
+        etiqueta: 'Orgs',
         icono: Icons.workspaces_outlined,
-        // Secundaria: se llega desde Perfil (máx. 4 destinos en la barra).
+        iconoActivo: Icons.workspaces_rounded,
+        enBarraInferior: true,
       ),
       ItemNavegacion(
         ruta: '/tags',
         etiqueta: 'Tags',
         icono: Icons.sell_outlined,
         permiso: 'tags:leer',
-        // Secundaria: se llega desde Perfil (máx. 4 destinos en la barra).
+        // Secundaria: se llega desde Perfil.
       ),
       ItemNavegacion(
         ruta: '/perfil',
