@@ -6,14 +6,21 @@ describe("textoListaRecortada", () => {
 		const texto = (total?: number) =>
 			textoListaRecortada({ limite: 100, total, nombre: "tags" });
 		expect(texto(100)).toBeNull();
-		expect(texto(130)).toBe("Se muestran 100 de 130 tags.");
+		expect(texto(130)).toBe("Mostrando los primeros 100 de 130 tags.");
 		expect(texto(undefined)).toBeNull();
 	});
 
 	it("sin total, avisa al llegar al tope porque puede haber más", () => {
 		const texto = (cargados: number) =>
-			textoListaRecortada({ limite: 500, cargados, nombre: "tareas" });
+			textoListaRecortada({
+				limite: 500,
+				cargados,
+				nombre: "tareas",
+				femenino: true,
+			});
 		expect(texto(499)).toBeNull();
-		expect(texto(500)).toBe("Se muestran solo 500 tareas; puede haber más.");
+		expect(texto(500)).toBe(
+			"Mostrando las primeras 500 tareas; puede haber más.",
+		);
 	});
 });

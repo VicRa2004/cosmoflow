@@ -165,6 +165,7 @@ export function CalendarioPage() {
 					limite: TOPE_CALENDARIO,
 					cargados: data.length,
 					nombre: "tareas",
+					femenino: true,
 				})}
 			/>
 		</div>

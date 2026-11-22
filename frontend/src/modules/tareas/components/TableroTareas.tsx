@@ -184,6 +184,7 @@ export function TableroTareas({
 					limite: LIMITE,
 					total: data.totalElementos,
 					nombre: "tareas",
+					femenino: true,
 				})}
 			>
 				Usa la búsqueda o la lista para ver el resto.

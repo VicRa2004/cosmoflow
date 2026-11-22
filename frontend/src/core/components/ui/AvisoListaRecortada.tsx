@@ -11,20 +11,24 @@ export function textoListaRecortada({
 	total,
 	cargados,
 	nombre,
+	femenino = false,
 }: {
 	limite: number;
 	total?: number;
 	cargados?: number;
 	/** En plural: «tags», «tareas», «organizaciones». */
 	nombre: string;
+	/** Concordancia: «las primeras» (tareas) en lugar de «los primeros» (tags). */
+	femenino?: boolean;
 }): string | null {
+	const primeros = femenino ? "las primeras" : "los primeros";
 	if (total !== undefined) {
 		return total > limite
-			? `Se muestran ${limite} de ${total} ${nombre}.`
+			? `Mostrando ${primeros} ${limite} de ${total} ${nombre}.`
 			: null;
 	}
 	return cargados !== undefined && cargados >= limite
-		? `Se muestran solo ${limite} ${nombre}; puede haber más.`
+		? `Mostrando ${primeros} ${limite} ${nombre}; puede haber más.`
 		: null;
 }
 

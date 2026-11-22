@@ -82,6 +82,7 @@ export function SelectorContextoTareas({
 		limite: LIMITE,
 		total: organizaciones?.totalElementos,
 		nombre: "organizaciones (las más recientes)",
+		femenino: true,
 	});
 	return (
 		<Select
