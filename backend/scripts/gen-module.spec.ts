@@ -19,6 +19,16 @@ const sh = (cmd: string[], cwd = tmp) => {
 	}
 };
 
+// Ruta al ejecutable de node_modules/.bin. En Windows pnpm crea además un
+// shim .cmd, el único que Bun puede lanzar.
+const bin = (dir: string, nombre: string) =>
+	join(
+		dir,
+		"node_modules",
+		".bin",
+		process.platform === "win32" ? `${nombre}.cmd` : nombre,
+	);
+
 afterAll(() => rmSync(tmp, { recursive: true, force: true }));
 
 describe("gen-module", () => {
@@ -44,14 +54,9 @@ describe("gen-module", () => {
 				"--root",
 				tmp,
 			]);
-			sh(["node_modules/.bin/tsc", "--noEmit"]);
+			sh([bin(tmp, "tsc"), "--noEmit"]);
 			sh(["bun", "test", "src/modules/ordenCompra"]);
-			sh([
-				"node_modules/.bin/depcruise",
-				"src",
-				"--config",
-				".dependency-cruiser.cjs",
-			]);
+			sh([bin(tmp, "depcruise"), "src", "--config", ".dependency-cruiser.cjs"]);
 		},
 		{ timeout: 120_000 },
 	);
@@ -84,7 +89,7 @@ describe("gen-module", () => {
 				join(web, "node_modules"),
 			);
 			sh([
-				join(repo, "node_modules/.bin/openapi-typescript"),
+				bin(repo, "openapi-typescript"),
 				spec,
 				"--root-types",
 				"--root-types-no-schema-prefix",
@@ -101,8 +106,8 @@ describe("gen-module", () => {
 				spec,
 			]);
 			// vite build regenera routeTree.gen.ts con la ruta nueva.
-			sh(["node_modules/.bin/vite", "build"], web);
-			sh(["node_modules/.bin/tsc", "--noEmit"], web);
+			sh([bin(web, "vite"), "build"], web);
+			sh([bin(web, "tsc"), "--noEmit"], web);
 		},
 		{ timeout: 120_000 },
 	);
