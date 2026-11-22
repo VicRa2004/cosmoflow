@@ -1,7 +1,10 @@
+import { textoListaRecortada } from "@/core/components/ui/AvisoListaRecortada";
 import { Select } from "@/core/components/ui/Select";
 import { useOrganizacionesQuery } from "@/modules/organizaciones/hooks/useOrganizacionesQuery";
 import { useDestinosTareas } from "../hooks/useDestinosTareas";
 import type { ListaTareasSearch } from "../schemas/tareaSchemas";
+
+const LIMITE = 10;
 
 /** `""` personal · `"asignadas"` · `"asignadasPorMi"` · `"o:1"` · `"e:1:5"` · `"p:1:2"` ↔ búsqueda de `/tareas`. */
 export const aValor = ({
@@ -69,11 +72,17 @@ export function SelectorContextoTareas({
 	valor: ListaTareasSearch;
 	onChange: (valor: ListaTareasSearch) => void;
 }) {
-	// shortcut: las 10 organizaciones más recientes, como `MenuNuevo`; paginar si se queda corto.
+	// shortcut: las 10 organizaciones más recientes, como `MenuNuevo`, con aviso si hay más; paginar si se queda corto.
 	const { data: organizaciones } = useOrganizacionesQuery({
 		pagina: 1,
-		limite: 10,
+		limite: LIMITE,
 		orden: "recientes",
+	});
+	const aviso = textoListaRecortada({
+		limite: LIMITE,
+		total: organizaciones?.totalElementos,
+		nombre: "organizaciones (las más recientes)",
+		femenino: true,
 	});
 	return (
 		<Select
@@ -87,6 +96,7 @@ export function SelectorContextoTareas({
 			{organizaciones?.datos.map((o) => (
 				<Opciones key={o.id} organizacionId={o.id} nombre={o.nombre} />
 			))}
+			{aviso && <option disabled>{aviso}</option>}
 		</Select>
 	);
 }

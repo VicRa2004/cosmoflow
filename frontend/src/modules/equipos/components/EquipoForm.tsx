@@ -1,4 +1,5 @@
 import { useAppForm } from "@/core/components/form/useAppForm";
+import { AvisoListaRecortada } from "@/core/components/ui/AvisoListaRecortada";
 import { Select } from "@/core/components/ui/Select";
 import type { MiembroDto } from "@/modules/organizaciones/api/miembrosApi";
 import type { TagDto } from "@/modules/tags/api/tagsApi";
@@ -13,6 +14,8 @@ interface EquipoFormProps {
 	inicial?: EquipoDto;
 	miembros: MiembroDto[];
 	tags: TagDto[];
+	/** Si `tags` está recortada (ver `useTagsDisponibles`). */
+	avisoTags?: string | null;
 	onGuardado: () => void;
 }
 
@@ -22,6 +25,7 @@ export function EquipoForm({
 	inicial,
 	miembros,
 	tags,
+	avisoTags = null,
 	onGuardado,
 }: EquipoFormProps) {
 	const { guardar } = useGestionEquipos(organizacionId);
@@ -116,6 +120,8 @@ export function EquipoForm({
 						/>
 					)}
 				</form.Field>
+				<AvisoListaRecortada aviso={avisoTags} />
+
 				<div className="flex justify-end">
 					<form.BotonEnviar>
 						{inicial ? "Guardar" : "Crear equipo"}

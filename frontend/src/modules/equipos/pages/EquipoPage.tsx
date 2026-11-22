@@ -22,7 +22,7 @@ import { AvatarOrganizacion } from "@/modules/organizaciones/components/AvatarOr
 import { AvatarOrganizacionControles } from "@/modules/organizaciones/components/AvatarOrganizacionControles";
 import { useMiembrosQuery } from "@/modules/organizaciones/hooks/useMiembros";
 import { puedeEn } from "@/modules/organizaciones/utils/permisos";
-import { useTagsQuery } from "@/modules/tags/hooks/useTagsQuery";
+import { useTagsDisponibles } from "@/modules/tags/hooks/useTagsDisponibles";
 import { EstadisticasTareas } from "@/modules/tareas/components/EstadisticasTareas";
 import { DelegadosForm } from "../components/DelegadosForm";
 import { EquipoForm } from "../components/EquipoForm";
@@ -45,11 +45,7 @@ export function EquipoPage({
 	const yo = useAuthStore((state) => state.usuario?.id);
 	const { data: equipos } = useEquiposQuery(organizacionId);
 	const { data: miembros = [] } = useMiembrosQuery(organizacionId);
-	// shortcut: los 100 primeros tags; paginar si una organización tiene más.
-	const { data: paginaTags } = useTagsQuery(
-		{ pagina: 1, limite: 100 },
-		organizacionId,
-	);
+	const { tags, aviso: avisoTags } = useTagsDisponibles(organizacionId);
 	const { eliminar } = useGestionEquipos(organizacionId);
 	const avatar = useAvatarEquipoMutation(organizacionId, equipoId);
 	const [dialogo, setDialogo] = useState<
@@ -86,7 +82,6 @@ export function EquipoPage({
 		);
 	}
 
-	const tags = paginaTags?.datos ?? [];
 	const nombreTag = new Map(tags.map((t) => [t.id, t.nombre]));
 	const miembroOrganizacion = new Map(miembros.map((m) => [m.usuarioId, m]));
 	const nombreMiembro = new Map(miembros.map((m) => [m.usuarioId, m.nombre]));
@@ -211,6 +206,7 @@ export function EquipoPage({
 					inicial={equipo}
 					miembros={miembros}
 					tags={tags}
+					avisoTags={avisoTags}
 					onGuardado={cerrar}
 				/>
 			</Dialog>

@@ -1,4 +1,5 @@
 import { Link } from "@tanstack/react-router";
+import { AvisoListaRecortada } from "@/core/components/ui/AvisoListaRecortada";
 import { Checkbox } from "@/core/components/ui/Checkbox";
 import { PuntoColor } from "@/core/components/ui/PuntoColor";
 import { useTagsDisponibles } from "../hooks/useTagsDisponibles";
@@ -15,7 +16,7 @@ export function SelectorTags({
 	onChange,
 	organizacionId,
 }: SelectorTagsProps) {
-	const { tags } = useTagsDisponibles(organizacionId);
+	const { tags, aviso } = useTagsDisponibles(organizacionId);
 	const marcados = new Set(valor);
 
 	return (
@@ -55,6 +56,7 @@ export function SelectorTags({
 					))}
 				</div>
 			)}
+			<AvisoListaRecortada aviso={aviso} />
 		</fieldset>
 	);
 }

@@ -3,6 +3,10 @@ import { Pin } from "lucide-react";
 import { useState } from "react";
 import { getErrorMessage } from "@/core/api/client";
 import { usePermisos } from "@/core/auth/usePermisos";
+import {
+	AvisoListaRecortada,
+	textoListaRecortada,
+} from "@/core/components/ui/AvisoListaRecortada";
 import { PuntoColor } from "@/core/components/ui/PuntoColor";
 import { Spinner } from "@/core/components/ui/Spinner";
 import { cn } from "@/core/utils/cn";
@@ -23,7 +27,7 @@ import {
 } from "./celdas";
 
 const ESTADOS = Object.keys(ETIQUETAS_ESTADO) as EstadoTarea[];
-// shortcut: el tablero carga las 200 primeras tareas, paginar por columna si un contexto pasa de ahí
+// shortcut: el tablero carga las 200 primeras tareas y avisa si hay más; paginar por columna si un contexto pasa de ahí
 const LIMITE = 200;
 
 /**
@@ -175,12 +179,16 @@ export function TableroTareas({
 					);
 				})}
 			</div>
-			{data.totalElementos > LIMITE && (
-				<p className="text-xs text-tinta-tenue">
-					Se muestran las {LIMITE} primeras de {data.totalElementos} tareas. Usa
-					la búsqueda o la lista para ver el resto.
-				</p>
-			)}
+			<AvisoListaRecortada
+				aviso={textoListaRecortada({
+					limite: LIMITE,
+					total: data.totalElementos,
+					nombre: "tareas",
+					femenino: true,
+				})}
+			>
+				Usa la búsqueda o la lista para ver el resto.
+			</AvisoListaRecortada>
 		</div>
 	);
 }

@@ -17,7 +17,7 @@ import type { OrganizacionDto } from "@/modules/organizaciones/api/organizacione
 import { AvatarOrganizacion } from "@/modules/organizaciones/components/AvatarOrganizacion";
 import { useMiembrosQuery } from "@/modules/organizaciones/hooks/useMiembros";
 import { puedeEn } from "@/modules/organizaciones/utils/permisos";
-import { useTagsQuery } from "@/modules/tags/hooks/useTagsQuery";
+import { useTagsDisponibles } from "@/modules/tags/hooks/useTagsDisponibles";
 import { useEquiposQuery } from "../hooks/useEquipos";
 import { EquipoForm } from "./EquipoForm";
 
@@ -33,12 +33,7 @@ export function EquiposCard({
 	const [pagina, setPagina] = useState(1);
 	const paginaEquipos = paginarLista(equipos ?? [], pagina);
 	const { data: miembros = [] } = useMiembrosQuery(organizacionId);
-	// shortcut: los 100 primeros tags; paginar si una organización tiene más.
-	const { data: paginaTags } = useTagsQuery(
-		{ pagina: 1, limite: 100 },
-		organizacionId,
-	);
-	const tags = paginaTags?.datos ?? [];
+	const { tags, aviso: avisoTags } = useTagsDisponibles(organizacionId);
 	const nombreMiembro = new Map(miembros.map((m) => [m.usuarioId, m.nombre]));
 	const nombreTag = new Map(tags.map((t) => [t.id, t.nombre]));
 	const [creando, setCreando] = useState(false);
@@ -81,6 +76,7 @@ export function EquiposCard({
 								{t.nombre}
 							</option>
 						))}
+						{avisoTags && <option disabled>{avisoTags}</option>}
 					</Select>
 				)}
 				{equipos && equipos.length === 0 ? (
@@ -141,6 +137,7 @@ export function EquiposCard({
 						organizacionId={organizacionId}
 						miembros={miembros}
 						tags={tags}
+						avisoTags={avisoTags}
 						onGuardado={() => setCreando(false)}
 					/>
 				)}
