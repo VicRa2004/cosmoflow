@@ -63,7 +63,9 @@ export function BovedaNotas({ contexto }: { contexto: ContextoNotaSearch }) {
 	const { data: carpetas = [] } = useCarpetasQuery(
 		deProyecto ? proyectoId : undefined,
 	);
-	const { tags } = useTagsDisponibles(deProyecto ? organizacionId : undefined);
+	const { tags, aviso: avisoTags } = useTagsDisponibles(
+		deProyecto ? organizacionId : undefined,
+	);
 	const filtrosFecha = Object.values(rangos).filter(Boolean).length;
 	const texto = busqueda.trim();
 	const filtrando = !!texto || !!tagId || soloFijadas || filtrosFecha > 0;
@@ -160,6 +162,7 @@ export function BovedaNotas({ contexto }: { contexto: ContextoNotaSearch }) {
 									{tag.nombre}
 								</option>
 							))}
+							{avisoTags && <option disabled>{avisoTags}</option>}
 						</Select>
 					)}
 					<FiltrosFecha valor={rangos} onChange={setRangos} />

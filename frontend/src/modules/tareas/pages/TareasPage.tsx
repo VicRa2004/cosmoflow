@@ -105,7 +105,7 @@ export function TareasPage({
 		() => new Set(),
 	);
 	const { puede } = usePermisos();
-	const { tags: tagsDisponibles } = useTagsDisponibles(
+	const { tags: tagsDisponibles, aviso: avisoTags } = useTagsDisponibles(
 		enContexto ? organizacionId : undefined,
 	);
 	// Sin filtro de tag: cada organización tiene los suyos.
@@ -247,6 +247,7 @@ export function TareasPage({
 									{tag.nombre}
 								</option>
 							))}
+							{avisoTags && <option disabled>{avisoTags}</option>}
 						</Select>
 					</div>
 				)}

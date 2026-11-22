@@ -11,13 +11,17 @@ import {
 	CardTitle,
 } from "@/core/components/ui/Card";
 import { ConfirmDialog } from "@/core/components/ui/ConfirmDialog";
+import {
+	AvisoListaRecortada,
+	textoListaRecortada,
+} from "@/core/components/ui/AvisoListaRecortada";
 import { Dialog } from "@/core/components/ui/Dialog";
 import type { TagDto } from "@/modules/tags/api/tagsApi";
 import { TagForm } from "@/modules/tags/components/TagForm";
 import { useEliminarTagMutation } from "@/modules/tags/hooks/useTagsMutation";
 import { useTagsQuery } from "@/modules/tags/hooks/useTagsQuery";
 
-// shortcut: solo los 100 primeros tags (por nombre); paginar si una organización tiene más.
+// shortcut: solo los 100 primeros tags (por nombre), con aviso si hay más; paginar si una organización llega al tope.
 const LIMITE = 100;
 
 /** Tags de la organización (RN-60): los ven todos; con `tags:gestionar` se editan. */
@@ -34,6 +38,11 @@ export function TagsOrganizacionCard({
 	const [editando, setEditando] = useState<TagDto | "nuevo" | null>(null);
 	const [borrando, setBorrando] = useState<TagDto | null>(null);
 	const tags = data?.datos;
+	const aviso = textoListaRecortada({
+		limite: LIMITE,
+		total: data?.totalElementos,
+		nombre: "tags",
+	});
 
 	return (
 		<Card>
@@ -88,6 +97,7 @@ export function TagsOrganizacionCard({
 						))}
 					</ul>
 				)}
+				<AvisoListaRecortada aviso={aviso} className="mt-3" />
 			</CardContent>
 
 			<Dialog

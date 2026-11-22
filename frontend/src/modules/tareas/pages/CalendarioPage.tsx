@@ -1,6 +1,10 @@
 import { Link } from "@tanstack/react-router";
 import { ChevronLeft, ChevronRight, Users } from "lucide-react";
 import { useState } from "react";
+import {
+	AvisoListaRecortada,
+	textoListaRecortada,
+} from "@/core/components/ui/AvisoListaRecortada";
 import { Button } from "@/core/components/ui/Button";
 import { EncabezadoPagina } from "@/core/components/ui/EncabezadoPagina";
 import { PuntoColor } from "@/core/components/ui/PuntoColor";
@@ -14,6 +18,9 @@ import { useCalendarioQuery } from "../hooks/useTareasQuery";
 import { diaLocal, diasDelMes } from "../utils/calendario";
 
 const DIAS_SEMANA = ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"];
+// Tope de `GET /api/tareas/calendario` (PrismaTareaRepository.buscarCalendario). La API
+// no da el total: si llegan tantas como el tope, puede haber más.
+const TOPE_CALENDARIO = 500;
 
 /** Cada tarea va en su vencimiento o, sin él, en su inicio (como en la API). */
 const diaDe = (tarea: TareaDto) => tarea.fechaVencimiento ?? tarea.fechaInicio;
@@ -153,6 +160,13 @@ export function CalendarioPage() {
 					</div>
 				</div>
 			)}
+			<AvisoListaRecortada
+				aviso={textoListaRecortada({
+					limite: TOPE_CALENDARIO,
+					cargados: data.length,
+					nombre: "tareas",
+				})}
+			/>
 		</div>
 	);
 }
