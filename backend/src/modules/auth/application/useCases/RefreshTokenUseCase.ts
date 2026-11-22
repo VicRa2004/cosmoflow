@@ -8,7 +8,16 @@ import type { TokenService } from "../../domain/service/TokenService";
 import type { RefreshTokenRepository } from "../../domain/repository/RefreshTokenRepository";
 import { EmisorSesion } from "../services/EmisorSesion";
 
+type ResultadoRefresh = {
+	accessToken: string;
+	refreshToken: string;
+	usuario: UsuarioDto;
+};
+
 export class RefreshTokenUseCase {
+	/** Deduplica peticiones concurrentes con el mismo hash mientras la rotación está en curso. */
+	private readonly enVuelo = new Map<string, Promise<ResultadoRefresh>>();
+
 	constructor(
 		private readonly tokenService: TokenService,
 		private readonly refreshTokenRepo: RefreshTokenRepository,
@@ -22,14 +31,22 @@ export class RefreshTokenUseCase {
 	 *
 	 * Implementa "Refresh Token Rotation" — si alguien reutiliza un token
 	 * ya revocado, se asume robo y se revocan TODOS los tokens del usuario.
+	 * Si dos peticiones llegan en paralelo con el mismo token antes de que termine
+	 * la rotación, comparten la misma operación en vuelo para no cerrar la sesión.
 	 */
-	async ejecutar(refreshTokenActual: string): Promise<{
-		accessToken: string;
-		refreshToken: string;
-		usuario: UsuarioDto;
-	}> {
+	async ejecutar(refreshTokenActual: string): Promise<ResultadoRefresh> {
 		const tokenHash = this.tokenService.hashearRefreshToken(refreshTokenActual);
+		const pendiente = this.enVuelo.get(tokenHash);
+		if (pendiente) return pendiente;
 
+		const operacion = this.rotar(tokenHash).finally(() => {
+			this.enVuelo.delete(tokenHash);
+		});
+		this.enVuelo.set(tokenHash, operacion);
+		return operacion;
+	}
+
+	private async rotar(tokenHash: string): Promise<ResultadoRefresh> {
 		const tokenGuardado =
 			await this.refreshTokenRepo.buscarValidoPorHash(tokenHash);
 

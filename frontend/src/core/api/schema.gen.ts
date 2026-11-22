@@ -670,7 +670,7 @@ export interface paths {
         put?: never;
         /**
          * Cerrar sesión (revocar refresh token)
-         * @description Revoca el refresh token de la cookie httpOnly `refresh_token` (o de la cabecera `X-Refresh-Token`) y la borra. El access token seguirá siendo válido hasta que expire (máx 15 min).
+         * @description Revoca el refresh token de la cookie httpOnly `refresh_token` (o de la cabecera `X-Refresh-Token`) y la borra. El access token seguirá siendo válido hasta que expire (máx. 1 h).
          */
         post: {
             parameters: {
@@ -1045,7 +1045,7 @@ export interface paths {
         put?: never;
         /**
          * Cerrar todas las sesiones (todos los dispositivos)
-         * @description Revoca todos los refresh tokens del usuario. Los access tokens emitidos siguen valiendo hasta que caducan (máx. 15 min).
+         * @description Revoca todos los refresh tokens del usuario. Los access tokens emitidos siguen valiendo hasta que caducan (máx. 1 h).
          */
         post: {
             parameters: {

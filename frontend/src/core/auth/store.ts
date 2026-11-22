@@ -3,6 +3,8 @@ import { persist } from "zustand/middleware";
 import { queryClient } from "@/core/router";
 import type { AuthResponse, AuthState, AuthTokens, Usuario } from "./types";
 
+const CLAVE_AUTH_STORAGE = "cosmoflow-auth-storage";
+
 export const useAuthStore = create<AuthState>()(
 	persist(
 		(set) => ({
@@ -42,7 +44,7 @@ export const useAuthStore = create<AuthState>()(
 			},
 		}),
 		{
-			name: "cosmoflow-auth-storage",
+			name: CLAVE_AUTH_STORAGE,
 			// v2: `user` pasó a `usuario` (v1: `role` a `roles`); las sesiones anteriores se descartan.
 			version: 2,
 			migrate: () => ({
@@ -59,3 +61,12 @@ export const useAuthStore = create<AuthState>()(
 		},
 	),
 );
+
+// Sincronizar renovaciones de token y cierre de sesión entre pestañas abiertas.
+if (typeof window !== "undefined") {
+	window.addEventListener("storage", (event) => {
+		if (event.key === CLAVE_AUTH_STORAGE) {
+			void useAuthStore.persist.rehydrate();
+		}
+	});
+}

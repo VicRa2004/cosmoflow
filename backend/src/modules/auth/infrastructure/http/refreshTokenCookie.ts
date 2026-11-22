@@ -7,10 +7,12 @@ const NOMBRE_COOKIE = "refresh_token";
 const CABECERA_REFRESH_TOKEN = "X-Refresh-Token";
 
 // Sólo viaja a las rutas de auth y nunca es legible desde JavaScript (XSS).
+// Lax (en vez de Strict) evita perder la cookie al entrar desde enlaces externos;
+// los POST siguen protegidos contra CSRF.
 const opcionesCookie = {
 	httpOnly: true,
 	secure: env.NODE_ENV === "prod",
-	sameSite: "Strict",
+	sameSite: "Lax",
 	path: "/api/auth",
 } as const;
 
@@ -25,11 +27,11 @@ function esClienteMovil(c: Context): boolean {
 	);
 }
 
-/** Guarda el refresh token en una cookie httpOnly (misma vida que en BD: 7 días). */
+/** Guarda el refresh token en una cookie httpOnly (misma vida que en BD: 30 días). */
 export function setRefreshTokenCookie(c: Context, refreshToken: string): void {
 	setCookie(c, NOMBRE_COOKIE, refreshToken, {
 		...opcionesCookie,
-		maxAge: 60 * 60 * 24 * 7,
+		maxAge: 60 * 60 * 24 * 30,
 	});
 }
 

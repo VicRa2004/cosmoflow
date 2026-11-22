@@ -34,7 +34,7 @@ class AuthInterceptor extends Interceptor {
   final Dio dioPrincipal;
   final Dio _dioRefresh;
 
-  Completer<bool>? _refreshEnCurso;
+  Completer<bool?>? _refreshEnCurso;
 
   /// Extrae `refreshToken` del cuerpo JSON de una respuesta de `/auth/*`.
   static String? extraerRefreshToken(Object? data) {
@@ -113,9 +113,13 @@ class AuthInterceptor extends Interceptor {
       return handler.next(err);
     }
 
-    final renovado = await _renovarSesionSerializada();
-    if (!renovado) {
-      await sesionStore.limpiarSesion();
+    final renovado = await intentarRefresh();
+    if (renovado != true) {
+      // Solo borramos el refresh token si el servidor lo rechazó (400/401/403).
+      // Si fue un fallo de red o 5xx (`null`), conservamos la sesión intacta.
+      if (renovado == false) {
+        await sesionStore.limpiarSesion();
+      }
       return handler.next(err);
     }
 
@@ -139,30 +143,31 @@ class AuthInterceptor extends Interceptor {
     }
   }
 
-  /// Ejecuta una única llamada a `/auth/refresh` aunque lleguen múltiples 401 simultáneos.
-  Future<bool> _renovarSesionSerializada() async {
+  /// Ejecuta una única llamada a `/auth/refresh` aunque lleguen múltiples 401
+  /// simultáneos o coincida con `restaurarSesion()`.
+  /// Devuelve `true` si se renovó, `false` si el servidor rechazó el token
+  /// (400/401/403) y `null` ante fallos transitorios (sin red o 5xx).
+  Future<bool?> intentarRefresh() async {
     if (_refreshEnCurso != null) {
       return _refreshEnCurso!.future;
     }
 
-    final completer = Completer<bool>();
+    final completer = Completer<bool?>();
     _refreshEnCurso = completer;
 
     try {
-      final exito = await intentarRefresh() ?? false;
-      completer.complete(exito);
-      return exito;
+      final resultado = await _ejecutarRefresh();
+      completer.complete(resultado);
+      return resultado;
     } catch (_) {
-      completer.complete(false);
-      return false;
+      completer.complete(null);
+      return null;
     } finally {
       _refreshEnCurso = null;
     }
   }
 
-  /// Llama a `POST /auth/refresh` con el refresh token guardado y actualiza `SesionStore`.
-  /// `null` si no hubo respuesta del servidor (sin red): la sesión puede seguir siendo válida.
-  Future<bool?> intentarRefresh() async {
+  Future<bool?> _ejecutarRefresh() async {
     final refreshToken = await sesionStore.almacenamiento.leerRefreshToken();
     if (refreshToken == null || refreshToken.isEmpty) {
       return false;
@@ -178,12 +183,12 @@ class AuthInterceptor extends Interceptor {
 
       await _guardarRefreshToken(response.data);
       final data = response.data;
-      if (data == null) return false;
+      if (data == null) return null;
 
       final nuevoAccessToken = data['accessToken'] as String?;
       final usuarioJson = data['usuario'] as Map<String, dynamic>?;
       if (nuevoAccessToken == null || usuarioJson == null) {
-        return false;
+        return null;
       }
 
       sesionStore.establecerSesion(
@@ -192,7 +197,10 @@ class AuthInterceptor extends Interceptor {
       );
       return true;
     } on DioException catch (e) {
-      return e.response == null ? null : false;
+      final status = e.response?.statusCode;
+      if (status == null || status >= 500) return null;
+      if (status == 400 || status == 401 || status == 403) return false;
+      return null;
     }
   }
 }

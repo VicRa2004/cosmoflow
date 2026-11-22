@@ -149,7 +149,7 @@ export class AuthRouter {
 			security,
 			summary: "Cerrar sesión (revocar refresh token)",
 			description:
-				"Revoca el refresh token de la cookie httpOnly `refresh_token` (o de la cabecera `X-Refresh-Token`) y la borra. El access token seguirá siendo válido hasta que expire (máx 15 min).",
+				"Revoca el refresh token de la cookie httpOnly `refresh_token` (o de la cabecera `X-Refresh-Token`) y la borra. El access token seguirá siendo válido hasta que expire (máx. 1 h).",
 			responses: {
 				200: jsonResponse(
 					mensajeResponseSchema,
@@ -310,7 +310,7 @@ export class AuthRouter {
 			security: bearer,
 			summary: "Cerrar todas las sesiones (todos los dispositivos)",
 			description:
-				"Revoca todos los refresh tokens del usuario. Los access tokens emitidos siguen valiendo hasta que caducan (máx. 15 min).",
+				"Revoca todos los refresh tokens del usuario. Los access tokens emitidos siguen valiendo hasta que caducan (máx. 1 h).",
 			responses: {
 				200: jsonResponse(mensajeResponseSchema, "Sesiones cerradas"),
 				401: errorResponse("No autenticado"),

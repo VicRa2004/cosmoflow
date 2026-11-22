@@ -73,4 +73,23 @@ describe("RefreshTokenUseCase", () => {
 		expect(useCase.ejecutar("refresh")).rejects.toThrow("inactivo");
 		expect(mockRefreshTokenRepo.crear).not.toHaveBeenCalled();
 	});
+
+	it("debería compartir la rotación si llegan dos peticiones concurrentes con el mismo token", async () => {
+		mockRefreshTokenRepo.revocarPorId.mockResolvedValue(true);
+		mockUsuarioRepository.buscarPorId.mockResolvedValue(
+			Usuario.reconstituir("Ana", "a@x.com", "hash", true, 5, ["USUARIO"]),
+		);
+
+		const [primera, segunda] = await Promise.all([
+			useCase.ejecutar("refresh"),
+			useCase.ejecutar("refresh"),
+		]);
+
+		expect(primera).toEqual(segunda);
+		expect(mockRefreshTokenRepo.revocarPorId).toHaveBeenCalledTimes(1);
+		expect(mockRefreshTokenRepo.crear).toHaveBeenCalledTimes(1);
+		expect(
+			mockRefreshTokenRepo.revocarTodosPorUsuarioId,
+		).not.toHaveBeenCalled();
+	});
 });

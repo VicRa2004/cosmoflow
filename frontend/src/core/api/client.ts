@@ -19,22 +19,51 @@ export const apiClient = axios.create({
 	},
 });
 
-// Una sola renovación en vuelo: el backend rota el refresh token, así que
-// peticiones 401 simultáneas que lo reenvíen invalidarían la sesión.
+// Una sola renovación en vuelo (en esta pestaña y entre pestañas): el backend
+// rota el refresh token, así que peticiones 401 simultáneas invalidarían la sesión.
 let refreshPromise: Promise<string> | null = null;
 
-function refreshAccessToken(): Promise<string> {
-	refreshPromise ??= (async () => {
-		// Llamada directa sin interceptores para evitar bucles. El refresh token
-		// viaja solo en la cookie httpOnly (mismo origen vía el proxy /api).
-		const { data } = await axios.post<AuthTokens>("/api/auth/refresh");
+async function ejecutarRefresh(tokenFallido: string | null): Promise<string> {
+	// Si otra pestaña ya renovó el accessToken mientras esperábamos el lock,
+	// reutilizamos el nuevo sin volver a rotar la cookie.
+	await useAuthStore.persist.rehydrate();
+	const tokenActual = useAuthStore.getState().accessToken;
+	if (tokenActual && tokenActual !== tokenFallido) {
+		return tokenActual;
+	}
 
-		useAuthStore.getState().setTokens({ accessToken: data.accessToken });
-		return data.accessToken;
+	// Llamada directa sin interceptores para evitar bucles. El refresh token
+	// viaja solo en la cookie httpOnly (mismo origen vía el proxy /api).
+	const { data } = await axios.post<AuthTokens>(
+		"/api/auth/refresh",
+		undefined,
+		{
+			withCredentials: true,
+		},
+	);
+
+	useAuthStore.getState().setTokens({ accessToken: data.accessToken });
+	return data.accessToken;
+}
+
+function refreshAccessToken(tokenFallido: string | null): Promise<string> {
+	refreshPromise ??= (async () => {
+		if (typeof navigator !== "undefined" && navigator.locks?.request) {
+			return navigator.locks.request("cosmoflow-auth-refresh", () =>
+				ejecutarRefresh(tokenFallido),
+			);
+		}
+		return ejecutarRefresh(tokenFallido);
 	})().finally(() => {
 		refreshPromise = null;
 	});
 	return refreshPromise;
+}
+
+function esRechazoDeSesion(error: unknown): boolean {
+	if (!isAxiosError(error) || !error.response) return false;
+	const { status } = error.response;
+	return status === 400 || status === 401 || status === 403;
 }
 
 // Request Interceptor: Inyectar token de autenticación
@@ -72,8 +101,14 @@ apiClient.interceptors.response.use(
 				return Promise.reject(error);
 			}
 
+			const authHeader = originalRequest.headers?.Authorization;
+			const tokenFallido =
+				typeof authHeader === "string" && authHeader.startsWith("Bearer ")
+					? authHeader.slice(7)
+					: useAuthStore.getState().accessToken;
+
 			try {
-				const newAccessToken = await refreshAccessToken();
+				const newAccessToken = await refreshAccessToken(tokenFallido);
 
 				if (originalRequest.headers) {
 					originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
@@ -81,7 +116,11 @@ apiClient.interceptors.response.use(
 
 				return apiClient(originalRequest);
 			} catch (refreshError) {
-				logout();
+				// Solo cerrar sesión si el servidor rechazó el refresh token.
+				// Fallos de red o 5xx temporales (p.ej. un despliegue) no deben expulsar al usuario.
+				if (esRechazoDeSesion(refreshError)) {
+					logout();
+				}
 				return Promise.reject(refreshError);
 			}
 		}

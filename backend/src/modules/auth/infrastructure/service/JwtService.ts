@@ -12,7 +12,7 @@ export class JwtService implements TokenService {
 	generarToken(payload: AccessTokenPayload): string {
 		return jwt.sign(payload, this.secreto, {
 			algorithm: "HS256",
-			expiresIn: "15m",
+			expiresIn: "1h",
 		});
 	}
 
