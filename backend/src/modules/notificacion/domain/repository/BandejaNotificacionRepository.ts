@@ -1,5 +1,11 @@
 import type { Paginacion } from "@/core/shared/domain/Paginacion";
 import type { DestinoAviso } from "../CanalNotificacion";
+import type { EventoNotificacion } from "../catalogo";
+
+interface PersonaAviso {
+	id: number;
+	nombre: string;
+}
 
 export interface NotificacionApp {
 	id: number;
@@ -8,6 +14,13 @@ export interface NotificacionApp {
 	enlace: string;
 	tipo: DestinoAviso["tipo"] | null;
 	recursoId: number | null;
+	evento: EventoNotificacion | null;
+	actor: PersonaAviso | null;
+	/** Datos actuales de la tarea avisada; `null` si no es de tarea o ya no existe. */
+	tarea: {
+		titulo: string;
+		responsables: (PersonaAviso & { asignadoPor: PersonaAviso | null })[];
+	} | null;
 	leida: boolean;
 	createdAt: string;
 }
@@ -24,6 +37,8 @@ export interface CrearNotificacionApp {
 	enlace: string;
 	tipo: DestinoAviso["tipo"] | null;
 	recursoId: number | null;
+	evento: EventoNotificacion | null;
+	actorId: number | null;
 }
 
 export interface FiltrosBandeja {

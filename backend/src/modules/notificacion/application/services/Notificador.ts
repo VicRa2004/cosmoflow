@@ -54,7 +54,7 @@ export class Notificador {
 				const claveEnvio = `${clave}:${destinatario.usuarioId}:${canal.canal}`;
 				if (!(await this.repo.registrarEnvio(claveEnvio))) continue;
 				try {
-					await canal.enviar(destinatario, aviso);
+					await canal.enviar(destinatario, { ...aviso, evento, actorId });
 				} catch (error) {
 					await this.repo.anularEnvio(claveEnvio);
 					throw error;

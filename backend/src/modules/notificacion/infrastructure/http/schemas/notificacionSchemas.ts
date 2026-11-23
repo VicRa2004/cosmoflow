@@ -103,6 +103,11 @@ export const obtenerNotificacionesSchema = z.object({
 		.optional(),
 });
 
+const personaAvisoSchema = z.object({
+	id: z.number().int(),
+	nombre: z.string().openapi({ example: "Ana" }),
+});
+
 export const notificacionAppSchema = z
 	.object({
 		id: z.number().int().openapi({ example: 1 }),
@@ -117,6 +122,21 @@ export const notificacionAppSchema = z
 			.openapi({ example: "https://app.cosmoflow.dev/tareas/42" }),
 		tipo: z.enum(["tarea", "nota"]).nullable(),
 		recursoId: z.number().int().nullable(),
+		/** Qué se avisa; `null` en las anteriores a guardarlo. */
+		evento: z.enum(EVENTOS_NOTIFICACION).nullable(),
+		/** Quien lo provocó; `null` si fue el sistema (vencimientos). */
+		actor: personaAvisoSchema.nullable(),
+		/** Datos actuales de la tarea; `null` si no es de tarea o ya no existe. */
+		tarea: z
+			.object({
+				titulo: z.string().openapi({ example: "Preparar demo" }),
+				responsables: z.array(
+					personaAvisoSchema.extend({
+						asignadoPor: personaAvisoSchema.nullable(),
+					}),
+				),
+			})
+			.nullable(),
 		leida: z.boolean(),
 		createdAt: z.string().openapi({ example: "2026-11-20T18:00:00.000Z" }),
 	})

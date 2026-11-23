@@ -3,28 +3,15 @@ import { Bell, CheckCheck } from "lucide-react";
 import { useRef } from "react";
 import { Button } from "@/core/components/ui/Button";
 import { Spinner } from "@/core/components/ui/Spinner";
-import { cn } from "@/core/utils/cn";
 import type { NotificacionApp } from "../api/notificacionesApi";
 import {
 	useBandejaNotificacionesQuery,
 	useMarcarNotificacionLeidaMutation,
 	useMarcarTodasLeidasMutation,
 } from "../hooks/useBandejaNotificaciones";
+import { ItemNotificacion } from "./ItemNotificacion";
 
 const ID = "campana-notificaciones";
-
-const formatoRelativo = new Intl.RelativeTimeFormat("es", { numeric: "auto" });
-
-function tiempoRelativo(iso: string): string {
-	const segundos = Math.round((new Date(iso).getTime() - Date.now()) / 1000);
-	const abs = Math.abs(segundos);
-	if (abs < 60) return "ahora";
-	if (abs < 3600)
-		return formatoRelativo.format(Math.round(segundos / 60), "minute");
-	if (abs < 86_400)
-		return formatoRelativo.format(Math.round(segundos / 3600), "hour");
-	return formatoRelativo.format(Math.round(segundos / 86_400), "day");
-}
 
 function rutaDe(notificacion: NotificacionApp): string | null {
 	if (notificacion.tipo === "tarea" && notificacion.recursoId) {
@@ -117,40 +104,10 @@ export function CampanaNotificaciones() {
 						<ul className="divide-y divide-borde">
 							{data.datos.map((notificacion) => (
 								<li key={notificacion.id}>
-									<button
-										type="button"
-										onClick={() => abrirNotificacion(notificacion)}
-										className={cn(
-											"flex w-full items-start gap-2.5 px-3 py-2.5 text-left transition-colors hover:bg-elevada",
-											!notificacion.leida && "bg-indigo-950/20",
-										)}
-									>
-										<span
-											aria-hidden
-											className={cn(
-												"mt-1.5 h-2 w-2 shrink-0 rounded-full",
-												notificacion.leida ? "bg-transparent" : "bg-indigo-500",
-											)}
-										/>
-										<div className="min-w-0 flex-1 space-y-0.5">
-											<p
-												className={cn(
-													"truncate text-sm",
-													notificacion.leida
-														? "font-normal text-tinta-suave"
-														: "font-medium text-tinta",
-												)}
-											>
-												{notificacion.asunto}
-											</p>
-											<p className="line-clamp-2 text-xs text-tinta-tenue">
-												{notificacion.texto}
-											</p>
-											<p className="text-[11px] text-tinta-tenue">
-												{tiempoRelativo(notificacion.createdAt)}
-											</p>
-										</div>
-									</button>
+									<ItemNotificacion
+										notificacion={notificacion}
+										onAbrir={() => abrirNotificacion(notificacion)}
+									/>
 								</li>
 							))}
 						</ul>

@@ -4,7 +4,7 @@ import { AppCanal } from "../../infrastructure/canales/AppCanal";
 import { MarcarNotificacionLeidaUseCase } from "./MarcarNotificacionLeidaUseCase";
 
 describe("AppCanal y bandeja de notificaciones (#51)", () => {
-	it("AppCanal guarda el aviso con su destino en la bandeja del usuario", async () => {
+	it("AppCanal guarda el aviso con su destino, evento y actor en la bandeja del usuario", async () => {
 		const crear = mock(async () => {});
 		const canal = new AppCanal({ crear } as never);
 
@@ -21,6 +21,8 @@ describe("AppCanal y bandeja de notificaciones (#51)", () => {
 				texto: "Revisa el despliegue",
 				enlace: "https://app.test/tareas/42",
 				destino: { tipo: "tarea", id: 42 },
+				evento: "tareaAsignada",
+				actorId: 3,
 			},
 		);
 
@@ -31,6 +33,8 @@ describe("AppCanal y bandeja de notificaciones (#51)", () => {
 			enlace: "https://app.test/tareas/42",
 			tipo: "tarea",
 			recursoId: 42,
+			evento: "tareaAsignada",
+			actorId: 3,
 		});
 	});
 

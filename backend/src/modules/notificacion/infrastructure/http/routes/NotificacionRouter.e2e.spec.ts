@@ -329,10 +329,26 @@ describe("Notificaciones (e2e)", () => {
 				leida: boolean;
 				tipo: string | null;
 				recursoId: number | null;
+				evento: string | null;
 			}[];
 			noLeidas: number;
 		};
 		expect(bandeja.noLeidas).toBeGreaterThan(0);
+		// Lleva qué es, quién lo hizo y la tarea con su encargado y quién lo asignó.
+		const { id: anaId } = await prisma.usuario.findUniqueOrThrow({
+			where: { email: "ana@avisos.dev" },
+		});
+		expect(
+			bandeja.datos.find(
+				(n) => n.evento === "tareaAsignada" && n.recursoId === tareaId,
+			),
+		).toMatchObject({
+			actor: { id: anaId },
+			tarea: {
+				titulo: "Preparar demo",
+				responsables: [{ id: betoId, asignadoPor: { id: anaId } }],
+			},
+		});
 		const primera = bandeja.datos[0];
 		expect(primera).toMatchObject({
 			leida: false,

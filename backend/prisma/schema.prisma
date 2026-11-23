@@ -50,6 +50,7 @@ model Usuario {
   vinculoTelegram          VinculoTelegram?
   dispositivosPush         DispositivoPush[]
   notificaciones           Notificacion[]
+  notificacionesProvocadas Notificacion[]           @relation("NotificacionActor")
   mencionesTarea           TareaMencion[]
   comentariosTarea         ComentarioTarea[]
   asignacionesTarea        TareaResponsable[]
@@ -894,10 +895,15 @@ model Notificacion {
   /// "tarea" | "nota" | null
   tipo      String?   @map("ntf_tipo") @db.VarChar(20)
   recursoId Int?      @map("ntf_recurso_id")
+  /// Evento del catálogo (`tareaAsignada`, `comentario`…); nulo en las anteriores a guardarlo
+  evento    String?   @map("ntf_evento") @db.VarChar(30)
+  /// Quien provocó el aviso; nulo si fue el sistema (vencimientos)
+  actorId   Int?      @map("ntf_fkactor")
   leidaEn   DateTime? @map("ntf_leida_en")
   createdAt DateTime  @default(now()) @map("created_at")
 
-  usuario Usuario @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  usuario Usuario  @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  actor   Usuario? @relation("NotificacionActor", fields: [actorId], references: [id], onDelete: SetNull)
 
   @@index([usuarioId, leidaEn, id])
   @@index([usuarioId, id])

@@ -9958,6 +9958,27 @@ export interface components {
             /** @enum {string|null} */
             tipo: "tarea" | "nota" | null;
             recursoId: number | null;
+            /** @enum {string|null} */
+            evento: "tareaAsignada" | "mencion" | "estadoCambiado" | "vencimiento" | "comentario" | null;
+            actor: {
+                id: number;
+                /** @example Ana */
+                nombre: string;
+            } | null;
+            tarea: {
+                /** @example Preparar demo */
+                titulo: string;
+                responsables: {
+                    id: number;
+                    /** @example Ana */
+                    nombre: string;
+                    asignadoPor: {
+                        id: number;
+                        /** @example Ana */
+                        nombre: string;
+                    } | null;
+                }[];
+            } | null;
             leida: boolean;
             /** @example 2026-11-20T18:00:00.000Z */
             createdAt: string;

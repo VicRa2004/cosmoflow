@@ -19,6 +19,8 @@ export class AppCanal implements CanalNotificacion {
 			enlace: aviso.enlace,
 			tipo: aviso.destino?.tipo ?? null,
 			recursoId: aviso.destino?.id ?? null,
+			evento: aviso.evento ?? null,
+			actorId: aviso.actorId ?? null,
 		});
 	}
 }
