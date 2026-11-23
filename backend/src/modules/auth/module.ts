@@ -7,6 +7,7 @@ import { EmisorSesion } from "./application/services/EmisorSesion";
 import { CambiarPasswordUseCase } from "./application/useCases/CambiarPasswordUseCase";
 import { AutenticarTokenPersonalUseCase } from "./application/useCases/AutenticarTokenPersonalUseCase";
 import { CerrarSesionesUseCase } from "./application/useCases/CerrarSesionesUseCase";
+import { CambiarAlcancesTokenPersonalUseCase } from "./application/useCases/CambiarAlcancesTokenPersonalUseCase";
 import { CrearTokenPersonalUseCase } from "./application/useCases/CrearTokenPersonalUseCase";
 import { EmitirTokensConexionUseCase } from "./application/useCases/EmitirTokensConexionUseCase";
 import { LoginGoogleUseCase } from "./application/useCases/LoginGoogleUseCase";
@@ -167,6 +168,9 @@ export const authModule: AppModule = {
 					crear: new CrearTokenPersonalUseCase(tokenService, tokenPersonalRepo),
 					obtenerTodos: new ObtenerTokensPersonalesUseCase(tokenPersonalRepo),
 					revocar: new RevocarTokenPersonalUseCase(tokenPersonalRepo),
+					cambiarAlcances: new CambiarAlcancesTokenPersonalUseCase(
+						tokenPersonalRepo,
+					),
 				}),
 			).router,
 		);

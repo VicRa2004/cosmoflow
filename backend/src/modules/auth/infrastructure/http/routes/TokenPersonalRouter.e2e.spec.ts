@@ -41,6 +41,8 @@ describe("Tokens personales (e2e)", () => {
 				pista,
 				createdAt: expect.any(String),
 				ultimoUsoEn: null,
+				esConexion: false,
+				alcances: null,
 			},
 		]);
 

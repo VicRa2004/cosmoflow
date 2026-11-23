@@ -26,8 +26,8 @@ export function ConectarClaudeCard() {
 			<CardHeader className="pb-0">
 				<CardTitle className="text-lg">Conectar con Claude</CardTitle>
 				<CardDescription>
-					Consulta tus pendientes, crea y completa tareas, y busca o crea notas
-					desde una conversación. No hay que instalar nada.
+					Gestiona tareas, notas, notificaciones y proyectos desde una
+					conversación. No hay que instalar nada.
 				</CardDescription>
 			</CardHeader>
 
@@ -70,7 +70,8 @@ export function ConectarClaudeCard() {
 				En un plan Team o Enterprise, solo los propietarios pueden añadir el
 				conector; luego cada miembro pulsa <strong>Connect</strong> en esa misma
 				pantalla y entra con su cuenta de Cosmoflow. La conexión aparece abajo,
-				en «Tokens personales», y puedes revocarla cuando quieras.
+				en «Tokens personales»: ahí puedes limitar sus permisos (p. ej. solo
+				leer) o revocarla cuando quieras.
 			</p>
 
 			<details className="text-sm text-tinta-suave">

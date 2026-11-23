@@ -1,11 +1,13 @@
 import type { Context } from "hono";
 import { BaseController } from "@/core/shared/infrastructure/http/base.controller";
 import { validate } from "@/core/shared/infrastructure/libs/validate";
+import type { CambiarAlcancesTokenPersonalUseCase } from "../../../application/useCases/CambiarAlcancesTokenPersonalUseCase";
 import type { CrearTokenPersonalUseCase } from "../../../application/useCases/CrearTokenPersonalUseCase";
 import type { ObtenerTokensPersonalesUseCase } from "../../../application/useCases/ObtenerTokensPersonalesUseCase";
 import type { RevocarTokenPersonalUseCase } from "../../../application/useCases/RevocarTokenPersonalUseCase";
 import type { AuthEnv } from "../middlewares/authMiddleware";
 import {
+	cambiarAlcancesSchema,
 	crearTokenPersonalSchema,
 	tokenPersonalIdSchema,
 } from "../schemas/tokenPersonalSchemas";
@@ -16,6 +18,7 @@ export class TokenPersonalController extends BaseController {
 			crear: CrearTokenPersonalUseCase;
 			obtenerTodos: ObtenerTokensPersonalesUseCase;
 			revocar: RevocarTokenPersonalUseCase;
+			cambiarAlcances: CambiarAlcancesTokenPersonalUseCase;
 		},
 	) {
 		super();
@@ -23,10 +26,17 @@ export class TokenPersonalController extends BaseController {
 
 	crear = (c: Context<AuthEnv>): Promise<Response> =>
 		this.executeSafely(c, async () => {
-			const { nombre } = validate(crearTokenPersonalSchema, await c.req.json());
+			const { nombre, alcances } = validate(
+				crearTokenPersonalSchema,
+				await c.req.json(),
+			);
 			return this.created(
 				c,
-				await this.useCases.crear.ejecutar(c.get("usuario").id, nombre),
+				await this.useCases.crear.ejecutar(
+					c.get("usuario").id,
+					nombre,
+					alcances,
+				),
 			);
 		});
 
@@ -37,6 +47,18 @@ export class TokenPersonalController extends BaseController {
 				await this.useCases.obtenerTodos.ejecutar(c.get("usuario").id),
 			),
 		);
+
+	cambiarAlcances = (c: Context<AuthEnv>): Promise<Response> =>
+		this.executeSafely(c, async () => {
+			const { id } = validate(tokenPersonalIdSchema, c.req.param());
+			const { alcances } = validate(cambiarAlcancesSchema, await c.req.json());
+			await this.useCases.cambiarAlcances.ejecutar(
+				c.get("usuario").id,
+				id,
+				alcances,
+			);
+			return c.body(null, 204);
+		});
 
 	revocar = (c: Context<AuthEnv>): Promise<Response> =>
 		this.executeSafely(c, async () => {

@@ -1,4 +1,5 @@
 import type { UsuarioRepository } from "@/core/usuario";
+import type { Alcance } from "../../domain/alcances";
 import type { TokenPersonalRepository } from "../../domain/repository/TokenPersonalRepository";
 import type {
 	AccessTokenPayload,
@@ -19,7 +20,9 @@ export class AutenticarTokenPersonalUseCase {
 		private readonly usuarios: UsuarioRepository,
 	) {}
 
-	async ejecutar(token: string): Promise<AccessTokenPayload | null> {
+	async ejecutar(
+		token: string,
+	): Promise<(AccessTokenPayload & { alcances: Alcance[] | null }) | null> {
 		const registro = await this.repo.buscarPorHash(
 			this.tokenService.hashearRefreshToken(token),
 		);
@@ -40,6 +43,7 @@ export class AutenticarTokenPersonalUseCase {
 			id: usuario.getId(),
 			email: usuario.getEmail(),
 			roles: usuario.getRoles(),
+			alcances: registro.alcances,
 		};
 	}
 }

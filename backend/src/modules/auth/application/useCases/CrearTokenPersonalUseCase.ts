@@ -1,3 +1,4 @@
+import type { Alcance } from "../../domain/alcances";
 import {
 	PREFIJO_TOKEN_PERSONAL,
 	type TokenPersonal,
@@ -15,6 +16,7 @@ export class CrearTokenPersonalUseCase {
 	async ejecutar(
 		usuarioId: number,
 		nombre: string,
+		alcances: Alcance[] | null,
 	): Promise<TokenPersonal & { token: string }> {
 		const aleatorio = this.tokenService.generarRefreshToken();
 		const token = `${PREFIJO_TOKEN_PERSONAL}${aleatorio}`;
@@ -23,6 +25,7 @@ export class CrearTokenPersonalUseCase {
 			tokenHash: this.tokenService.hashearRefreshToken(token),
 			pista: aleatorio.slice(-4),
 			usuarioId,
+			alcances,
 		});
 		return { ...creado, token };
 	}

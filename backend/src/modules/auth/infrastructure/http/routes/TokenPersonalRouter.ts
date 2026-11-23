@@ -6,6 +6,7 @@ import {
 import type { TokenPersonalController } from "../controllers/TokenPersonalController";
 import type { AuthMiddleware } from "../middlewares/authMiddleware";
 import {
+	cambiarAlcancesSchema,
 	crearTokenPersonalSchema,
 	tokenPersonalCreadoSchema,
 	tokenPersonalDtoSchema,
@@ -62,6 +63,28 @@ export class TokenPersonalRouter {
 			},
 		});
 		this.router.get("/", controller.obtenerTodos);
+
+		docs.registerPath({
+			method: "put",
+			path: "/{id}/alcances",
+			tags,
+			security,
+			summary: "Limitar lo que puede hacer un token o conexión (null = todo)",
+			request: {
+				params: tokenPersonalIdSchema,
+				body: {
+					required: true,
+					content: { "application/json": { schema: cambiarAlcancesSchema } },
+				},
+			},
+			responses: {
+				204: { description: "Permisos cambiados" },
+				400: errorResponse("Validación fallida"),
+				...errores,
+				404: errorResponse("Token no encontrado"),
+			},
+		});
+		this.router.put("/:id/alcances", controller.cambiarAlcances);
 
 		docs.registerPath({
 			method: "delete",

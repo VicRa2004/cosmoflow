@@ -12,6 +12,7 @@ import {
 import { ConfirmDialog } from "@/core/components/ui/ConfirmDialog";
 import { Spinner } from "@/core/components/ui/Spinner";
 import type { TokenPersonal } from "../api/authApi";
+import { PermisosToken } from "./PermisosToken";
 import {
 	useCrearTokenPersonalMutation,
 	useRevocarTokenPersonalMutation,
@@ -51,6 +52,7 @@ export function TokensPersonalesCard() {
 	const crear = useCrearTokenPersonalMutation();
 	const revocar = useRevocarTokenPersonalMutation();
 	const [aRevocar, setARevocar] = useState<TokenPersonal | null>(null);
+	const [editando, setEditando] = useState<number | null>(null);
 
 	const form = useAppForm({
 		defaultValues: { nombre: "" },
@@ -66,7 +68,8 @@ export function TokensPersonalesCard() {
 			<CardHeader className="pb-0">
 				<CardTitle className="text-lg">Tokens personales</CardTitle>
 				<CardDescription>
-					Dan acceso a tu cuenta con tus mismos permisos y no caducan. Aquí
+					Dan acceso a tu cuenta con tus mismos permisos y no caducan; en
+					«Permisos» puedes limitarlos, por ejemplo a solo leer tareas. Aquí
 					también aparecen las conexiones con Claude: se renuevan solas y se
 					revocan tras 90 días sin uso; revoca antes las que ya no uses.
 				</CardDescription>
@@ -109,29 +112,48 @@ export function TokensPersonalesCard() {
 			) : (
 				<ul className="divide-y divide-borde">
 					{tokens.map((token) => (
-						<li
-							key={token.id}
-							className="flex items-center justify-between gap-3 py-3"
-						>
-							<div className="min-w-0">
-								<p className="truncate text-sm text-tinta-suave">
-									{token.nombre}
-								</p>
-								<p className="text-xs text-tinta-tenue">
-									<span className="font-mono">…{token.pista}</span> · creado el{" "}
-									{new Date(token.createdAt).toLocaleDateString()} ·{" "}
-									{token.ultimoUsoEn
-										? `último uso el ${new Date(token.ultimoUsoEn).toLocaleString()}`
-										: "sin usar"}
-								</p>
+						<li key={token.id} className="py-3">
+							<div className="flex items-center justify-between gap-3">
+								<div className="min-w-0">
+									<p className="truncate text-sm text-tinta-suave">
+										{token.nombre}
+									</p>
+									<p className="text-xs text-tinta-tenue">
+										<span className="font-mono">…{token.pista}</span> · creado
+										el {new Date(token.createdAt).toLocaleDateString()} ·{" "}
+										{token.ultimoUsoEn
+											? `último uso el ${new Date(token.ultimoUsoEn).toLocaleString()}`
+											: "sin usar"}{" "}
+										·{" "}
+										{token.alcances ? "permisos limitados" : "acceso completo"}
+									</p>
+								</div>
+								<div className="flex shrink-0 gap-1">
+									<Button
+										variant="ghost"
+										size="sm"
+										aria-expanded={editando === token.id}
+										onClick={() =>
+											setEditando(editando === token.id ? null : token.id)
+										}
+									>
+										Permisos
+									</Button>
+									<Button
+										variant="dangerGhost"
+										size="sm"
+										onClick={() => setARevocar(token)}
+									>
+										Revocar
+									</Button>
+								</div>
 							</div>
-							<Button
-								variant="dangerGhost"
-								size="sm"
-								onClick={() => setARevocar(token)}
-							>
-								Revocar
-							</Button>
+							{editando === token.id && (
+								<PermisosToken
+									token={token}
+									onCerrar={() => setEditando(null)}
+								/>
+							)}
 						</li>
 					))}
 				</ul>

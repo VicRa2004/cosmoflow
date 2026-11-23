@@ -3,7 +3,7 @@ import type { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
 import { z } from "zod";
 
 export type Api = (
-	metodo: "GET" | "POST" | "PUT",
+	metodo: "GET" | "POST" | "PUT" | "DELETE",
 	ruta: string,
 	cuerpo?: unknown,
 ) => Promise<unknown>;
@@ -33,6 +33,24 @@ const destino = {
 	proyectoId: id.optional(),
 };
 
+const color = z
+	.string()
+	.regex(/^#[0-9a-fA-F]{6}$/)
+	.nullable()
+	.describe("#rrggbb; null lo quita");
+
+/** Lo que la API admite al crear y al actualizar una nota, salvo el título. */
+const camposNota = {
+	contenido: z.string().max(100_000).optional().describe("Markdown"),
+	color: color.optional(),
+	isFijada: z.boolean().optional(),
+	tagIds: z.array(id).max(50).optional().describe("Reemplaza los tags"),
+	carpetaId: id
+		.nullable()
+		.optional()
+		.describe("Carpeta de listar_carpetas; null la saca a la raíz"),
+};
+
 /** Lo que la API admite al crear y al actualizar, salvo el título. */
 const camposTarea = {
 	contenido: z.string().optional().describe("Descripción en Markdown"),
@@ -40,12 +58,7 @@ const camposTarea = {
 	prioridad: z.enum(["baja", "media", "alta"]).optional(),
 	fechaInicio: dia,
 	fechaVencimiento: dia,
-	color: z
-		.string()
-		.regex(/^#[0-9a-fA-F]{6}$/)
-		.nullable()
-		.optional()
-		.describe("#rrggbb; null lo quita"),
+	color: color.optional(),
 	tagIds: z.array(id).max(50).optional().describe("Reemplaza los tags"),
 	responsableIds: z
 		.array(id)
@@ -329,12 +342,197 @@ export function registrarHerramientas(servidor: McpServer, api: Api): void {
 	servidor.registerTool(
 		"crear_nota",
 		{
-			description: "Crea una nota personal del usuario.",
+			description: "Crea una nota personal o, con proyectoId, de un proyecto.",
 			inputSchema: {
 				titulo: z.string().min(1).max(255),
-				contenido: z.string().optional().describe("Markdown"),
+				...camposNota,
+				proyectoId: id.optional(),
 			},
 		},
 		(args) => resultado(() => api("POST", "/api/notas", args)),
+	);
+
+	servidor.registerTool(
+		"obtener_nota",
+		{
+			description: "Una nota por id, con su contenido completo.",
+			inputSchema: { id },
+			annotations: { readOnlyHint: true },
+		},
+		({ id }) => resultado(() => api("GET", `/api/notas/${id}`)),
+	);
+
+	servidor.registerTool(
+		"actualizar_nota",
+		{
+			description:
+				"Cambia las propiedades indicadas de una nota; las omitidas no se tocan. El contenido se reemplaza entero.",
+			inputSchema: {
+				id,
+				titulo: z.string().min(1).max(255).optional(),
+				...camposNota,
+			},
+			annotations: { idempotentHint: true },
+		},
+		({ id, ...cambios }) =>
+			resultado(() => api("PUT", `/api/notas/${id}`, cambios)),
+	);
+
+	servidor.registerTool(
+		"listar_carpetas",
+		{
+			description:
+				"Carpetas de notas personales o, con proyectoId, las de un proyecto (sus ids sirven de carpetaId).",
+			inputSchema: { proyectoId: id.optional() },
+			annotations: { readOnlyHint: true },
+		},
+		(args) => resultado(() => api("GET", `/api/carpetas?${consulta(args)}`)),
+	);
+
+	servidor.registerTool(
+		"crear_carpeta",
+		{
+			description:
+				"Crea una carpeta de notas personal o, con proyectoId, de un proyecto.",
+			inputSchema: {
+				nombre: z.string().min(1).max(120),
+				padreId: id.optional().describe("Carpeta dentro de la que va"),
+				proyectoId: id.optional(),
+			},
+		},
+		(args) => resultado(() => api("POST", "/api/carpetas", args)),
+	);
+
+	for (const [recurso, que] of [
+		["tareas", "tarea"],
+		["notas", "nota"],
+	] as const) {
+		servidor.registerTool(
+			`eliminar_${que}`,
+			{
+				description: `Mueve una ${que} a la papelera; se puede restaurar con restaurar_${que}.`,
+				inputSchema: { id },
+				annotations: { destructiveHint: true },
+			},
+			({ id }) => resultado(() => api("DELETE", `/api/${recurso}/${id}`)),
+		);
+
+		servidor.registerTool(
+			`restaurar_${que}`,
+			{
+				description: `Saca una ${que} de la papelera.`,
+				inputSchema: { id },
+				annotations: { idempotentHint: true },
+			},
+			({ id }) =>
+				resultado(() =>
+					api("POST", `/api/${recurso}/papelera/${id}/restaurar`),
+				),
+		);
+	}
+
+	servidor.registerTool(
+		"listar_notificaciones",
+		{
+			description:
+				"Notificaciones del usuario dentro de la app, las más recientes primero.",
+			inputSchema: {
+				soloNoLeidas: z.boolean().optional(),
+				pagina: paginacion.pagina,
+				limite: z.number().int().min(1).max(50).default(20),
+			},
+			annotations: { readOnlyHint: true },
+		},
+		({ soloNoLeidas, ...args }) =>
+			resultado(() =>
+				api(
+					"GET",
+					`/api/notificaciones?${consulta({
+						...args,
+						soloNoLeidas: soloNoLeidas ? "true" : undefined,
+					})}`,
+				),
+			),
+	);
+
+	servidor.registerTool(
+		"marcar_notificaciones_leidas",
+		{
+			description: "Marca como leída una notificación o, sin id, todas.",
+			inputSchema: { id: id.optional() },
+			annotations: { idempotentHint: true },
+		},
+		({ id }) =>
+			resultado(() =>
+				id
+					? api("PUT", `/api/notificaciones/${id}/leer`)
+					: api("POST", "/api/notificaciones/leer-todas"),
+			),
+	);
+
+	servidor.registerTool(
+		"crear_proyecto",
+		{
+			description:
+				"Crea un proyecto en una organización. Necesita al menos un equipo o un integrante (ids de listar_equipos / listar_miembros).",
+			inputSchema: {
+				organizacionId: id,
+				nombre: z.string().min(1).max(100),
+				descripcion: z.string().max(500).optional(),
+				color: color.optional(),
+				fechaInicio: dia,
+				fechaFin: dia,
+				equipoIds: z.array(id).max(500).optional(),
+				integranteIds: z.array(id).max(500).optional(),
+			},
+		},
+		({ organizacionId, ...datos }) =>
+			resultado(() =>
+				api("POST", `/api/organizaciones/${organizacionId}/proyectos`, datos),
+			),
+	);
+
+	servidor.registerTool(
+		"crear_equipo",
+		{
+			description:
+				"Crea un equipo en una organización con al menos 2 miembros (ids de listar_miembros).",
+			inputSchema: {
+				organizacionId: id,
+				nombre: z.string().min(1).max(100),
+				descripcion: z.string().max(500).optional(),
+				color: z
+					.string()
+					.regex(/^#[0-9a-fA-F]{6}$/)
+					.describe("#rrggbb"),
+				miembroIds: z.array(id).min(2).max(500),
+				liderId: id.optional(),
+			},
+		},
+		({ organizacionId, ...datos }) =>
+			resultado(() =>
+				api("POST", `/api/organizaciones/${organizacionId}/equipos`, datos),
+			),
+	);
+
+	servidor.registerTool(
+		"crear_tag",
+		{
+			description:
+				"Crea un tag personal o, con organizacionId, de la organización.",
+			inputSchema: {
+				organizacionId: id.optional(),
+				nombre: z.string().min(1).max(64),
+				color: color.optional(),
+			},
+		},
+		({ organizacionId, ...datos }) =>
+			resultado(() =>
+				api(
+					"POST",
+					`${organizacionId ? `/api/organizaciones/${organizacionId}` : "/api"}/tags`,
+					datos,
+				),
+			),
 	);
 }

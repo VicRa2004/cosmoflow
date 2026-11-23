@@ -1,4 +1,6 @@
 import { prisma } from "@/core/config/prisma";
+import { Prisma } from "@/generated/prisma/client";
+import type { Alcance } from "../../domain/alcances";
 import type {
 	CredencialesConexion,
 	TokenPersonal,
@@ -11,16 +13,46 @@ const campos = {
 	pista: true,
 	createdAt: true,
 	ultimoUsoEn: true,
+	clientId: true,
+	alcances: true,
 };
 
+// Lo escribió este repositorio con valores ya validados por el schema HTTP.
+const leerAlcances = (valor: Prisma.JsonValue): Alcance[] | null =>
+	(valor ?? null) as Alcance[] | null;
+
+const aToken = ({
+	clientId,
+	alcances,
+	...fila
+}: Prisma.TokenPersonalGetPayload<{
+	select: typeof campos;
+}>): TokenPersonal => ({
+	...fila,
+	esConexion: clientId !== null,
+	alcances: leerAlcances(alcances),
+});
+
+const guardarAlcances = (alcances: Alcance[] | null) =>
+	alcances ?? Prisma.DbNull;
+
 export class PrismaTokenPersonalRepository implements TokenPersonalRepository {
-	crear(data: {
+	async crear({
+		alcances,
+		...data
+	}: {
 		nombre: string;
 		tokenHash: string;
 		pista: string;
 		usuarioId: number;
+		alcances: Alcance[] | null;
 	}): Promise<TokenPersonal> {
-		return prisma.tokenPersonal.create({ data, select: campos });
+		return aToken(
+			await prisma.tokenPersonal.create({
+				data: { ...data, alcances: guardarAlcances(alcances) },
+				select: campos,
+			}),
+		);
 	}
 
 	async crearConexion(
@@ -35,27 +67,30 @@ export class PrismaTokenPersonalRepository implements TokenPersonalRepository {
 		});
 	}
 
-	listar(usuarioId: number): Promise<TokenPersonal[]> {
-		return prisma.tokenPersonal.findMany({
+	async listar(usuarioId: number): Promise<TokenPersonal[]> {
+		const filas = await prisma.tokenPersonal.findMany({
 			where: { usuarioId, revocadoEn: null },
 			select: campos,
 			orderBy: { id: "desc" },
 		});
+		return filas.map(aToken);
 	}
 
-	buscarPorHash(tokenHash: string): Promise<{
+	async buscarPorHash(tokenHash: string): Promise<{
 		id: number;
 		usuarioId: number;
 		ultimoUsoEn: Date | null;
+		alcances: Alcance[] | null;
 	} | null> {
-		return prisma.tokenPersonal.findUnique({
+		const fila = await prisma.tokenPersonal.findUnique({
 			where: {
 				tokenHash,
 				revocadoEn: null,
 				OR: [{ expiraEn: null }, { expiraEn: { gt: new Date() } }],
 			},
-			select: { id: true, usuarioId: true, ultimoUsoEn: true },
+			select: { id: true, usuarioId: true, ultimoUsoEn: true, alcances: true },
 		});
+		return fila && { ...fila, alcances: leerAlcances(fila.alcances) };
 	}
 
 	async marcarUso(id: number, en: Date): Promise<void> {
@@ -81,6 +116,18 @@ export class PrismaTokenPersonalRepository implements TokenPersonalRepository {
 			data: { ...nuevas, ultimoUsoEn: new Date() },
 		});
 		return count === 1 ? conexion.usuarioId : null;
+	}
+
+	async cambiarAlcances(
+		id: number,
+		usuarioId: number,
+		alcances: Alcance[] | null,
+	): Promise<boolean> {
+		const { count } = await prisma.tokenPersonal.updateMany({
+			where: { id, usuarioId, revocadoEn: null },
+			data: { alcances: guardarAlcances(alcances) },
+		});
+		return count === 1;
 	}
 
 	async revocar(id: number, usuarioId: number): Promise<boolean> {

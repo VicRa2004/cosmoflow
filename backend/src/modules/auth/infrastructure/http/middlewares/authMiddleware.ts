@@ -1,5 +1,6 @@
 import type { Context, Next } from "hono";
 import { contexto } from "@/core/shared/infrastructure/contexto";
+import { type Alcance, permiteAlcance } from "../../../domain/alcances";
 import { PREFIJO_TOKEN_PERSONAL } from "../../../domain/repository/TokenPersonalRepository";
 import type {
 	AccessTokenPayload,
@@ -22,7 +23,9 @@ export class AuthMiddleware {
 	constructor(
 		private readonly tokenService: TokenService,
 		private readonly tokensPersonales: {
-			ejecutar(token: string): Promise<AccessTokenPayload | null>;
+			ejecutar(
+				token: string,
+			): Promise<(AccessTokenPayload & { alcances: Alcance[] | null }) | null>;
 		},
 	) {}
 
@@ -60,11 +63,22 @@ export class AuthMiddleware {
 		// next() queda fuera del try: un error del controlador no es un token inválido.
 		// En lugar de mutar req (ej. req.usuario), en Hono guardamos datos en el contexto
 		// usando c.set() para que otros middlewares/controladores puedan leerlo con c.get()
-		const usuario = await this.resolverUsuario(token);
-		if (!usuario) {
+		const resuelto = await this.resolverUsuario(token);
+		if (!resuelto) {
 			return c.json(
 				{ success: false, error: "Token inválido o expirado" },
 				401,
+			);
+		}
+		const { alcances, ...usuario } = resuelto;
+		if (alcances && !permiteAlcance(alcances, c.req.method, c.req.path)) {
+			return c.json(
+				{
+					success: false,
+					error:
+						"Este token o conexión no tiene permiso para esta acción; cámbialo en Perfil → Tokens personales",
+				},
+				403,
 			);
 		}
 		c.set("usuario", usuario);
@@ -88,7 +102,7 @@ export class AuthMiddleware {
 	/** Un fallo de la BD no es un token inválido: sube como 500. */
 	private async resolverUsuario(
 		token: string,
-	): Promise<AccessTokenPayload | null> {
+	): Promise<(AccessTokenPayload & { alcances?: Alcance[] | null }) | null> {
 		if (token.startsWith(PREFIJO_TOKEN_PERSONAL)) {
 			return this.tokensPersonales.ejecutar(token);
 		}

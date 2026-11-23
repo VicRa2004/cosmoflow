@@ -20,6 +20,18 @@ export function useCrearTokenPersonalMutation() {
 	});
 }
 
+export function useCambiarAlcancesTokenMutation() {
+	const queryClient = useQueryClient();
+	return useMutation({
+		mutationFn: authApi.cambiarAlcancesToken,
+		onSuccess: () => {
+			toast.success("Permisos guardados");
+			return queryClient.invalidateQueries({ queryKey: tokensKey });
+		},
+		onError,
+	});
+}
+
 export function useRevocarTokenPersonalMutation() {
 	const queryClient = useQueryClient();
 	return useMutation({

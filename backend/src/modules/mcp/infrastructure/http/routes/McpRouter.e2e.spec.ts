@@ -433,23 +433,36 @@ describe("Conector MCP (e2e)", () => {
 
 			expect(serverInfo.name).toBe("cosmoflow");
 			expect(tools.map((t) => t.name).sort()).toEqual([
+				"actualizar_nota",
 				"actualizar_tarea",
 				"buscar_notas",
 				"comentar_tarea",
 				"completar_tarea",
+				"crear_carpeta",
+				"crear_equipo",
 				"crear_nota",
+				"crear_proyecto",
+				"crear_tag",
 				"crear_tarea",
+				"eliminar_nota",
+				"eliminar_tarea",
+				"listar_carpetas",
 				"listar_comentarios",
 				"listar_equipos",
 				"listar_miembros",
+				"listar_notificaciones",
 				"listar_organizaciones",
 				"listar_pendientes",
 				"listar_plantillas",
 				"listar_proyectos",
 				"listar_tags",
 				"listar_tareas",
+				"marcar_notificaciones_leidas",
 				"mover_tarea",
+				"obtener_nota",
 				"obtener_tarea",
+				"restaurar_nota",
+				"restaurar_tarea",
 			]);
 		});
 
@@ -581,6 +594,122 @@ describe("Conector MCP (e2e)", () => {
 			expect(halladas.map((n: { titulo: string }) => n.titulo)).toEqual([
 				"Viaje a Lisboa",
 			]);
+		});
+
+		it("debería organizar, editar, borrar y restaurar notas", async () => {
+			const carpeta = await datos(token, "crear_carpeta", { nombre: "Viajes" });
+			const nota = await datos(token, "crear_nota", {
+				titulo: "Oporto",
+				carpetaId: carpeta.id,
+			});
+
+			const editada = await datos(token, "actualizar_nota", {
+				id: nota.id,
+				contenido: "Puente de hierro",
+				isFijada: true,
+			});
+			await datos(token, "eliminar_nota", { id: nota.id });
+			const borrada = await herramienta(token, "obtener_nota", { id: nota.id });
+			await datos(token, "restaurar_nota", { id: nota.id });
+
+			expect(await datos(token, "listar_carpetas")).toMatchObject([
+				{ id: carpeta.id, nombre: "Viajes" },
+			]);
+			expect(editada).toMatchObject({
+				titulo: "Oporto",
+				contenido: "Puente de hierro",
+				isFijada: true,
+				carpetaId: carpeta.id,
+			});
+			expect(borrada.isError).toBe(true);
+			expect(await datos(token, "obtener_nota", { id: nota.id })).toMatchObject(
+				{ id: nota.id },
+			);
+		});
+
+		it("debería mandar una tarea a la papelera y restaurarla", async () => {
+			const tarea = await datos(token, "crear_tarea", { titulo: "Borrable" });
+
+			await datos(token, "eliminar_tarea", { id: tarea.id });
+			const borrada = await herramienta(token, "obtener_tarea", {
+				id: tarea.id,
+			});
+			await datos(token, "restaurar_tarea", { id: tarea.id });
+
+			expect(borrada.isError).toBe(true);
+			expect(
+				await datos(token, "obtener_tarea", { id: tarea.id }),
+			).toMatchObject({ titulo: "Borrable" });
+		});
+
+		it("debería listar y marcar como leídas las notificaciones", async () => {
+			const { datos: avisos } = await datos(token, "listar_notificaciones", {
+				soloNoLeidas: true,
+			});
+			await datos(token, "marcar_notificaciones_leidas");
+
+			expect(Array.isArray(avisos)).toBe(true);
+		});
+
+		it("debería crear proyectos y tags en una organización", async () => {
+			const org = (await (
+				await api("/api/organizaciones", {
+					method: "POST",
+					token: sesion,
+					body: { nombre: "Taller", color: "#6366f1" },
+				})
+			).json()) as { id: number };
+			const [yo] = await datos(token, "listar_miembros", {
+				organizacionId: org.id,
+			});
+
+			const proyecto = await datos(token, "crear_proyecto", {
+				organizacionId: org.id,
+				nombre: "Motores",
+				integranteIds: [yo.usuarioId],
+			});
+			const tag = await datos(token, "crear_tag", {
+				organizacionId: org.id,
+				nombre: "urgente",
+			});
+			const personal = await datos(token, "crear_tag", { nombre: "casa" });
+
+			expect(proyecto).toMatchObject({ nombre: "Motores" });
+			expect(tag).toMatchObject({ nombre: "urgente" });
+			expect(personal).toMatchObject({ nombre: "casa" });
+		});
+
+		it("una conexión limitada solo debería hacer lo que permiten sus alcances", async () => {
+			const limitado = (await conectar()).access_token;
+			const [conexion] = (await (
+				await api("/api/tokens-personales", { token: sesion })
+			).json()) as { id: number; esConexion: boolean }[];
+			const cambio = await api(
+				`/api/tokens-personales/${conexion?.id}/alcances`,
+				{
+					method: "PUT",
+					token: sesion,
+					body: { alcances: ["tareas:leer"] },
+				},
+			);
+			const autoampliar = await api(
+				`/api/tokens-personales/${conexion?.id}/alcances`,
+				{ method: "PUT", token: limitado, body: { alcances: null } },
+			);
+
+			const leer = await herramienta(limitado, "listar_pendientes");
+			const crear = await herramienta(limitado, "crear_tarea", {
+				titulo: "No debería",
+			});
+			const notas = await herramienta(limitado, "buscar_notas");
+
+			expect(cambio.status).toBe(204);
+			expect(conexion?.esConexion).toBe(true);
+			expect(autoampliar.status).toBe(403);
+			expect(leer.isError).toBe(false);
+			expect(crear.isError).toBe(true);
+			expect(crear.texto).toContain("no tiene permiso");
+			expect(notas.isError).toBe(true);
 		});
 
 		it("debería devolver como error lo que la API rechaza", async () => {

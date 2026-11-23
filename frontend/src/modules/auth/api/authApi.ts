@@ -9,6 +9,7 @@ interface Mensaje {
 }
 
 export type TokenPersonal = components["schemas"]["TokenPersonalDto"];
+export type AlcanceToken = components["schemas"]["AlcanceToken"];
 type TokenPersonalCreado = components["schemas"]["TokenPersonalCreado"];
 export type SesionDto = components["schemas"]["SesionDto"];
 
@@ -26,6 +27,16 @@ export const authApi = {
 			data,
 		);
 		return response.data;
+	},
+
+	async cambiarAlcancesToken({
+		id,
+		alcances,
+	}: {
+		id: number;
+		alcances: AlcanceToken[] | null;
+	}): Promise<void> {
+		await apiClient.put(`/tokens-personales/${id}/alcances`, { alcances });
 	},
 
 	async revocarTokenPersonal(id: number): Promise<void> {

@@ -1,3 +1,5 @@
+import type { Alcance } from "../alcances";
+
 /** Distingue un token personal de un JWT sin tocar la BD. */
 export const PREFIJO_TOKEN_PERSONAL = "cfp_";
 /** Refresh token de una conexión OAuth (MCP). */
@@ -10,6 +12,10 @@ export interface TokenPersonal {
 	createdAt: Date;
 	/** null si no se ha usado desde que existe el campo. */
 	ultimoUsoEn: Date | null;
+	/** Conexión OAuth (MCP) en vez de un token creado a mano. */
+	esConexion: boolean;
+	/** null = acceso completo. */
+	alcances: Alcance[] | null;
 }
 
 /** Hashes y caducidad que identifican el acceso vigente de una conexión OAuth. */
@@ -26,6 +32,7 @@ export interface TokenPersonalRepository {
 		tokenHash: string;
 		pista: string;
 		usuarioId: number;
+		alcances: Alcance[] | null;
 	}): Promise<TokenPersonal>;
 	crearConexion(
 		data: CredencialesConexion & {
@@ -41,6 +48,7 @@ export interface TokenPersonalRepository {
 		id: number;
 		usuarioId: number;
 		ultimoUsoEn: Date | null;
+		alcances: Alcance[] | null;
 	} | null>;
 	marcarUso(id: number, en: Date): Promise<void>;
 	/**
@@ -53,6 +61,12 @@ export interface TokenPersonalRepository {
 		clientId: string,
 		nuevas: CredencialesConexion,
 	): Promise<number | null>;
+	/** `false` si no existe, está revocado o es de otro usuario. */
+	cambiarAlcances(
+		id: number,
+		usuarioId: number,
+		alcances: Alcance[] | null,
+	): Promise<boolean>;
 	/** `false` si no existe, ya estaba revocado o es de otro usuario. */
 	revocar(id: number, usuarioId: number): Promise<boolean>;
 	/** Revoca las conexiones OAuth sin uso (ni creación) desde `antesDe`. */

@@ -212,6 +212,8 @@ model TokenPersonal {
   /// Se actualiza como mucho cada pocos minutos, no en cada petición
   ultimoUsoEn DateTime? @map("tkp_ultimo_uso_en")
   revocadoEn  DateTime? @map("tkp_revocado_en")
+  /// Lista de alcances (`tareas:leer`, …) que limitan el token; null = acceso completo
+  alcances    Json?     @map("tkp_alcances")
   createdAt   DateTime  @default(now()) @map("tkp_created_at")
 
   usuario Usuario @relation(fields: [usuarioId], references: [id], onDelete: Cascade)

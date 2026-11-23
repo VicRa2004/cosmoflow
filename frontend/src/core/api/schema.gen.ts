@@ -1349,6 +1349,15 @@ export interface paths {
                     "application/json": {
                         /** @example Claude Code */
                         nombre: string;
+                        /**
+                         * @description Escribir incluye leer; null = acceso completo
+                         * @default null
+                         * @example [
+                         *       "tareas:leer",
+                         *       "notas:leer"
+                         *     ]
+                         */
+                        alcances?: components["schemas"]["AlcanceToken"][] | null;
                     };
                 };
             };
@@ -1391,6 +1400,91 @@ export interface paths {
                 };
             };
         };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/tokens-personales/{id}/alcances": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Limitar lo que puede hacer un token o conexión (null = todo) */
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        /**
+                         * @description Escribir incluye leer; null = acceso completo
+                         * @example [
+                         *       "tareas:leer",
+                         *       "notas:leer"
+                         *     ]
+                         */
+                        alcances: components["schemas"]["AlcanceToken"][] | null;
+                    };
+                };
+            };
+            responses: {
+                /** @description Permisos cambiados */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Validación fallida */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description No autenticado */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Solo con sesión, no con un token personal */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Token no encontrado */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -10257,7 +10351,13 @@ export interface components {
              * @description Con precisión de minutos; null si no se ha usado
              */
             ultimoUsoEn: string | null;
+            /** @description Conexión OAuth (p. ej. Claude) en vez de un token a mano */
+            esConexion: boolean;
+            /** @description null = acceso completo */
+            alcances: ("tareas:leer" | "tareas:escribir" | "notas:leer" | "notas:escribir" | "notificaciones:leer" | "notificaciones:escribir" | "organizaciones:leer" | "organizaciones:escribir")[] | null;
         };
+        /** @enum {string} */
+        AlcanceToken: "tareas:leer" | "tareas:escribir" | "notas:leer" | "notas:escribir" | "notificaciones:leer" | "notificaciones:escribir" | "organizaciones:leer" | "organizaciones:escribir";
         PermisoDto: {
             /** @example 1 */
             id: number;
@@ -10791,6 +10891,7 @@ export type AuthResponse = components['schemas']['AuthResponse'];
 export type SesionDto = components['schemas']['SesionDto'];
 export type TokenPersonalCreado = components['schemas']['TokenPersonalCreado'];
 export type TokenPersonalDto = components['schemas']['TokenPersonalDto'];
+export type AlcanceToken = components['schemas']['AlcanceToken'];
 export type PermisoDto = components['schemas']['PermisoDto'];
 export type RolDto = components['schemas']['RolDto'];
 export type AsignacionUsuario = components['schemas']['AsignacionUsuario'];
