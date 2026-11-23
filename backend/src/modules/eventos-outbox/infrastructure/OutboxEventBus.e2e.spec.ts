@@ -1,3 +1,4 @@
+import "@/test/soloBdTest";
 import { beforeEach, describe, expect, it, mock, spyOn } from "bun:test";
 import { enTransaccion, prisma } from "@/core/config/prisma";
 import { contexto } from "@/core/shared/infrastructure/contexto";

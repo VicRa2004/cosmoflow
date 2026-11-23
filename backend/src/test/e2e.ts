@@ -1,3 +1,4 @@
+import "./soloBdTest";
 import bcrypt from "bcrypt";
 import { prisma } from "@/core/config/prisma";
 import { container } from "@/core/shared/infrastructure/di/container";
