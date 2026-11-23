@@ -20,7 +20,8 @@ export class CorreoCanal implements CanalNotificacion {
 				categoria: "Aviso",
 				titulo: aviso.asunto,
 				saludo: `Hola, ${destinatario.nombre}:`,
-				parrafos: [aviso.texto],
+				// Un párrafo por línea: el HTML no respeta los saltos (p. ej. el resumen diario).
+				parrafos: aviso.texto.split("\n").filter((p) => p.trim() !== ""),
 				accion: {
 					texto: "Abrir en Cosmoflow",
 					url: aviso.enlace,

@@ -8,6 +8,7 @@ export const ETIQUETAS_EVENTO: Record<Evento, string> = {
 	comentario: "Nuevo comentario",
 	estadoCambiado: "Cambio de estado",
 	vencimiento: "Vence pronto",
+	resumenDiario: "Resumen del día",
 };
 
 interface Persona {

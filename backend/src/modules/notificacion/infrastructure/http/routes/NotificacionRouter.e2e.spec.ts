@@ -116,12 +116,22 @@ describe("Notificaciones (e2e)", () => {
 				"estadoCambiado",
 				"vencimiento",
 				"comentario",
-			].flatMap((evento) => [
-				{ evento, canal: "app", activo: true, personalizado: false },
-				{ evento, canal: "correo", activo: true, personalizado: false },
-				{ evento, canal: "telegram", activo: false, personalizado: false },
-				{ evento, canal: "movil", activo: false, personalizado: false },
-			]),
+			]
+				.flatMap((evento) => [
+					{ evento, canal: "app", activo: true, personalizado: false },
+					{ evento, canal: "correo", activo: true, personalizado: false },
+					{ evento, canal: "telegram", activo: false, personalizado: false },
+					{ evento, canal: "movil", activo: false, personalizado: false },
+				])
+				.concat(
+					// El resumen diario solo llega si se activa.
+					["app", "correo", "telegram", "movil"].map((canal) => ({
+						evento: "resumenDiario",
+						canal,
+						activo: false,
+						personalizado: false,
+					})),
+				),
 		);
 	});
 

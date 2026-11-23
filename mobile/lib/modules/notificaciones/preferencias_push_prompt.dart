@@ -5,18 +5,24 @@ import '../../core/widgets/avisos.dart';
 import 'api/notificaciones_api.dart';
 import 'models/notificacion_models.dart';
 
+/// Aviso que solo se activa a mano: «solo móvil» ni lo cuenta ni lo enciende.
+const _soloManual = 'resumenDiario';
+
 String _clavePromptVisto(int usuarioId) => 'push_prompt_visto_$usuarioId';
 
 /// Comprueba si conviene ofrecer al usuario pasar sus avisos a solo móvil:
 /// basta con que algún evento tenga `movil` desactivado.
 bool debeOfrecerSoloMovil(List<PreferenciaNotificacionDto> preferencias) {
-  final deMovil = preferencias.where((p) => p.canal == 'movil');
+  final deMovil = preferencias.where(
+    (p) => p.canal == 'movil' && p.evento != _soloManual,
+  );
   if (deMovil.isEmpty) return false;
   return deMovil.any((p) => !p.activo);
 }
 
 /// Construye el lote para `PUT /api/notificaciones/preferencias`:
-/// activa `canal: "movil"` y desactiva `canal: "correo"` en todos los eventos.
+/// activa `canal: "movil"` y desactiva `canal: "correo"` en todos los eventos
+/// salvo el resumen diario, que solo se activa a mano.
 List<PreferenciaNotificacionDto> construirPreferenciasSoloMovil(
   List<PreferenciaNotificacionDto> actuales,
 ) {
@@ -24,6 +30,8 @@ List<PreferenciaNotificacionDto> construirPreferenciasSoloMovil(
   if (eventos.isEmpty) {
     eventos.addAll(etiquetasEventoNotificacion.keys);
   }
+  // Pasar a solo móvil no debe activar avisos que el usuario nunca pidió.
+  eventos.remove(_soloManual);
   return <PreferenciaNotificacionDto>[
     for (final evento in eventos) ...<PreferenciaNotificacionDto>[
       PreferenciaNotificacionDto(evento: evento, canal: 'movil', activo: true),

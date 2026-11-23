@@ -74,6 +74,8 @@ const Map<String, String> etiquetasEventoNotificacion = <String, String>{
   'estadoCambiado': 'Cambia el estado de una tarea que creaste',
   'vencimiento': 'Una tarea tuya vence mañana o hoy',
   'comentario': 'Comentan una tarea que creaste o de la que eres responsable',
+  'resumenDiario':
+      'Resumen cada mañana: lo que vence hoy, lo atrasado y lo que empieza hoy',
 };
 
 /// Etiquetas humanas por canal de notificación (espejo de la web).

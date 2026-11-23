@@ -2,6 +2,7 @@ import {
 	AtSign,
 	Bell,
 	CalendarClock,
+	CalendarDays,
 	type LucideIcon,
 	MessageSquare,
 	RefreshCw,
@@ -21,6 +22,7 @@ const ICONOS: Record<NonNullable<NotificacionApp["evento"]>, LucideIcon> = {
 	comentario: MessageSquare,
 	estadoCambiado: RefreshCw,
 	vencimiento: CalendarClock,
+	resumenDiario: CalendarDays,
 };
 
 const formatoRelativo = new Intl.RelativeTimeFormat("es", { numeric: "auto" });

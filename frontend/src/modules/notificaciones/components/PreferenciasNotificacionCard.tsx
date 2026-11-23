@@ -21,7 +21,11 @@ const EVENTOS: Record<PreferenciaNotificacion["evento"], string> = {
 	estadoCambiado: "Cambia el estado de una tarea que creaste",
 	vencimiento: "Una tarea tuya vence mañana o hoy",
 	comentario: "Comentan una tarea que creaste o de la que eres responsable",
+	resumenDiario:
+		"Resumen cada mañana: lo que vence hoy, lo atrasado y lo que empieza hoy",
 };
+/** Es de cada persona (junta todas sus organizaciones): la organización no lo decide. */
+const SOLO_PERSONAL = "resumenDiario";
 const CANALES: Record<PreferenciaNotificacion["canal"], string> = {
 	app: "En la app",
 	correo: "Correo",
@@ -92,40 +96,44 @@ export function PreferenciasNotificacionCard({
 						</div>
 					)}
 					<ul className="divide-y divide-borde">
-						{Object.entries(EVENTOS).map(([evento, descripcion]) => (
-							<li
-								key={evento}
-								className="flex flex-col gap-2 py-3 sm:flex-row sm:items-center sm:justify-between"
-							>
-								<span className="text-sm text-tinta-suave">
-									{descripcion}
-									{visibles.some(
-										(p) => p.evento === evento && p.personalizado === false,
-									) && (
-										<span className="block text-xs text-tinta-tenue">
-											Sin elegir: en cada organización vale lo que ella decida.
-										</span>
-									)}
-								</span>
-								<div className="flex gap-4">
-									{visibles
-										.filter((p) => p.evento === evento)
-										.map((p) => (
-											<Checkbox
-												key={p.canal}
-												label={CANALES[p.canal]}
-												checked={p.activo}
-												disabled={actualizar.isPending || bloqueado(p)}
-												onChange={(e) =>
-													actualizar.mutate([
-														{ ...p, activo: e.target.checked },
-													])
-												}
-											/>
-										))}
-								</div>
-							</li>
-						))}
+						{Object.entries(EVENTOS)
+							.filter(([evento]) => !deOrganizacion || evento !== SOLO_PERSONAL)
+							.map(([evento, descripcion]) => (
+								<li
+									key={evento}
+									className="flex flex-col gap-2 py-3 sm:flex-row sm:items-center sm:justify-between"
+								>
+									<span className="text-sm text-tinta-suave">
+										{descripcion}
+										{evento !== SOLO_PERSONAL &&
+											visibles.some(
+												(p) => p.evento === evento && p.personalizado === false,
+											) && (
+												<span className="block text-xs text-tinta-tenue">
+													Sin elegir: en cada organización vale lo que ella
+													decida.
+												</span>
+											)}
+									</span>
+									<div className="flex gap-4">
+										{visibles
+											.filter((p) => p.evento === evento)
+											.map((p) => (
+												<Checkbox
+													key={p.canal}
+													label={CANALES[p.canal]}
+													checked={p.activo}
+													disabled={actualizar.isPending || bloqueado(p)}
+													onChange={(e) =>
+														actualizar.mutate([
+															{ ...p, activo: e.target.checked },
+														])
+													}
+												/>
+											))}
+									</div>
+								</li>
+							))}
 					</ul>
 				</>
 			)}

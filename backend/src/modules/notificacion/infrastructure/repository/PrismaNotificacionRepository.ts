@@ -4,6 +4,7 @@ import type { Preferencia } from "../../domain/catalogo";
 import type {
 	NotificacionRepository,
 	TareaPorVencer,
+	TareaDelDia,
 } from "../../domain/repository/NotificacionRepository";
 
 export class PrismaNotificacionRepository implements NotificacionRepository {
@@ -122,6 +123,49 @@ export class PrismaNotificacionRepository implements NotificacionRepository {
 			// `@db.Date` llega como medianoche UTC: el día ISO es su parte de fecha.
 			fechaVencimiento: (fechaVencimiento as Date).toISOString().slice(0, 10),
 			responsableIds: responsables.map((r) => r.usuarioId),
+		}));
+	}
+
+	async usuariosConResumenDiario(): Promise<number[]> {
+		const filas = await prisma.preferenciaNotificacion.findMany({
+			where: { evento: "resumenDiario", activo: true },
+			select: { usuarioId: true },
+			distinct: ["usuarioId"],
+		});
+		return filas.map((f) => f.usuarioId);
+	}
+
+	async tareasDelDia(usuarioId: number, hoy: string): Promise<TareaDelDia[]> {
+		const dia = new Date(hoy);
+		const tareas = await prisma.tarea.findMany({
+			where: {
+				deletedAt: null,
+				estado: { in: ["pendiente", "en_progreso"] },
+				AND: [
+					{
+						OR: [
+							{ usuarioId, organizacionId: null },
+							{ responsables: { some: { usuarioId } } },
+						],
+					},
+					{ OR: [{ fechaVencimiento: { lte: dia } }, { fechaInicio: dia }] },
+				],
+			},
+			select: {
+				id: true,
+				titulo: true,
+				fechaInicio: true,
+				fechaVencimiento: true,
+			},
+			orderBy: [{ fechaVencimiento: "asc" }, { id: "asc" }],
+		});
+		// `@db.Date` llega como medianoche UTC: el día ISO es su parte de fecha.
+		const aDia = (fecha: Date | null) =>
+			fecha?.toISOString().slice(0, 10) ?? null;
+		return tareas.map((t) => ({
+			...t,
+			fechaInicio: aDia(t.fechaInicio),
+			fechaVencimiento: aDia(t.fechaVencimiento),
 		}));
 	}
 

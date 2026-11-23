@@ -72,7 +72,7 @@ List<Map<String, dynamic>> _preferenciasIniciales() => <Map<String, dynamic>>[
 ];
 
 void main() {
-  test('construirPreferenciasSoloMovil activa móvil y desactiva correo en todos los eventos', () {
+  test('construirPreferenciasSoloMovil activa móvil y desactiva correo en todos los eventos salvo el resumen diario', () {
     final actuales = _preferenciasIniciales()
         .map(PreferenciaNotificacionDto.fromJson)
         .toList(growable: false);
@@ -80,8 +80,12 @@ void main() {
     expect(debeOfrecerSoloMovil(actuales), isTrue);
 
     final lote = construirPreferenciasSoloMovil(actuales);
-    expect(lote.length, equals(etiquetasEventoNotificacion.length * 2));
-    for (final evento in etiquetasEventoNotificacion.keys) {
+    final eventos = etiquetasEventoNotificacion.keys.where(
+      (e) => e != 'resumenDiario',
+    );
+    expect(lote.length, equals(eventos.length * 2));
+    expect(lote.any((p) => p.evento == 'resumenDiario'), isFalse);
+    for (final evento in eventos) {
       expect(
         lote.any((p) => p.evento == evento && p.canal == 'movil' && p.activo),
         isTrue,

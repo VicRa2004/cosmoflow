@@ -1,33 +1,6 @@
 import type { NotificacionRepository } from "../../domain/repository/NotificacionRepository";
+import { diaSiguiente, enZona, HORA_AVISO } from "./diaLocal";
 import type { Notificador } from "./Notificador";
-
-/** Antes de esta hora local no se avisa: nadie quiere el recordatorio de madrugada. */
-const HORA_AVISO = 8;
-
-/** Día `AAAA-MM-DD` y hora (0-23) de `ahora` en la zona dada. */
-function enZona(ahora: Date, zona: string) {
-	const partes = Object.fromEntries(
-		new Intl.DateTimeFormat("en-CA", {
-			timeZone: zona,
-			year: "numeric",
-			month: "2-digit",
-			day: "2-digit",
-			hour: "2-digit",
-			hourCycle: "h23",
-		})
-			.formatToParts(ahora)
-			.map((p) => [p.type, p.value]),
-	);
-	return {
-		dia: `${partes.year}-${partes.month}-${partes.day}`,
-		hora: Number(partes.hour),
-	};
-}
-
-const diaSiguiente = (dia: string) =>
-	new Date(Date.parse(`${dia}T00:00:00Z`) + 86_400_000)
-		.toISOString()
-		.slice(0, 10);
 
 /**
  * La llama el `Scheduler` cada hora: desde las 8:00 locales avisa de las tareas que

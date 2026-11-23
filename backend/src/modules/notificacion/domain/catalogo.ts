@@ -5,8 +5,12 @@ export const EVENTOS_NOTIFICACION = [
 	"estadoCambiado",
 	"vencimiento",
 	"comentario",
+	"resumenDiario",
 ] as const;
 export type EventoNotificacion = (typeof EVENTOS_NOTIFICACION)[number];
+
+/** Eventos que nadie recibe hasta activarlos en su perfil, en ningún canal. */
+const SOLO_SI_SE_ACTIVA: readonly EventoNotificacion[] = ["resumenDiario"];
 
 /** Canales con adaptador (`CanalNotificacion`). */
 export const CANALES_NOTIFICACION = [
@@ -44,7 +48,9 @@ export function resolverPreferencias(...capas: Preferencia[][]): Preferencia[] {
 			return {
 				evento,
 				canal,
-				activo: elegida?.activo ?? ACTIVO_POR_DEFECTO[canal],
+				activo:
+					elegida?.activo ??
+					(!SOLO_SI_SE_ACTIVA.includes(evento) && ACTIVO_POR_DEFECTO[canal]),
 			};
 		}),
 	);

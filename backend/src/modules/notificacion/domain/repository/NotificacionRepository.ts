@@ -12,6 +12,14 @@ export interface TareaPorVencer {
 	responsableIds: number[];
 }
 
+export interface TareaDelDia {
+	id: number;
+	titulo: string;
+	/** Días `AAAA-MM-DD` o `null`. */
+	fechaInicio: string | null;
+	fechaVencimiento: string | null;
+}
+
 export interface NotificacionRepository {
 	/** Solo las guardadas; el resto vale lo de `ACTIVO_POR_DEFECTO`. */
 	preferencias(usuarioId: number): Promise<Preferencia[]>;
@@ -36,6 +44,13 @@ export interface NotificacionRepository {
 	} | null>;
 	/** Sin completar ni cancelar ni borrar, que vencen alguno de esos días (`AAAA-MM-DD`). */
 	tareasPorVencer(dias: string[]): Promise<TareaPorVencer[]>;
+	/** Quienes activaron el resumen diario en algún canal (no está activo por defecto). */
+	usuariosConResumenDiario(): Promise<number[]>;
+	/**
+	 * Pendientes y en progreso del usuario (personales y en las que es responsable,
+	 * como la vista Pendientes) que vencen hasta `hoy` incluido o empiezan `hoy`.
+	 */
+	tareasDelDia(usuarioId: number, hoy: string): Promise<TareaDelDia[]>;
 	/** `false` si ya estaba registrado: otro intento ya lo envió. */
 	registrarEnvio(clave: string): Promise<boolean>;
 	anularEnvio(clave: string): Promise<void>;

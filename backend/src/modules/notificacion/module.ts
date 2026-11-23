@@ -5,6 +5,7 @@ import { TOKENS } from "@/core/shared/infrastructure/di/tokens";
 import { AUTH_TOKENS } from "@/modules/auth";
 import { ORGANIZACION_TOKENS } from "@/modules/organizacion";
 import { AvisarVencimientos } from "./application/services/AvisarVencimientos";
+import { EnviarResumenDiario } from "./application/services/EnviarResumenDiario";
 import { Notificador } from "./application/services/Notificador";
 import { AtenderBotTelegram } from "./application/telegram/AtenderBotTelegram";
 import { NotificarTareas } from "./application/subscribers/NotificarTareas";
@@ -139,6 +140,16 @@ export const notificacionModule: AppModule = {
 		// Cada hora; avisa una vez por tarea y día gracias a las claves de envío.
 		scheduler.programar("notificacion.vencimientos", 60 * 60 * 1000, () =>
 			vencimientos.ejecutar(),
+		);
+		const resumen = new EnviarResumenDiario(
+			repo,
+			crearNotificador(container),
+			env.APP_URL,
+			env.ZONA_HORARIA,
+		);
+		// Cada hora; manda uno al día por usuario gracias a las claves de envío.
+		scheduler.programar("notificacion.resumen-diario", 60 * 60 * 1000, () =>
+			resumen.ejecutar(),
 		);
 		// Las de eventos solo sirven mientras el outbox reintenta; las de vencimiento, ese día.
 		scheduler.programar(

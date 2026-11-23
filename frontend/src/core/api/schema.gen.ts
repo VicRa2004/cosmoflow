@@ -10159,7 +10159,7 @@ export interface components {
             tipo: "tarea" | "nota" | null;
             recursoId: number | null;
             /** @enum {string|null} */
-            evento: "tareaAsignada" | "mencion" | "estadoCambiado" | "vencimiento" | "comentario" | null;
+            evento: "tareaAsignada" | "mencion" | "estadoCambiado" | "vencimiento" | "comentario" | "resumenDiario" | null;
             actor: {
                 id: number;
                 /** @example Ana */
@@ -10191,7 +10191,7 @@ export interface components {
              * @example tareaAsignada
              * @enum {string}
              */
-            evento: "tareaAsignada" | "mencion" | "estadoCambiado" | "vencimiento" | "comentario";
+            evento: "tareaAsignada" | "mencion" | "estadoCambiado" | "vencimiento" | "comentario" | "resumenDiario";
             /**
              * @example correo
              * @enum {string}
