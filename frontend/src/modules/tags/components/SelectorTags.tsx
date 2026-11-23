@@ -1,10 +1,25 @@
 import { Link } from "@tanstack/react-router";
 import { Plus } from "lucide-react";
+import { usePermisos } from "@/core/auth/usePermisos";
 import { AvisoListaRecortada } from "@/core/components/ui/AvisoListaRecortada";
 import { Badge } from "@/core/components/ui/Badge";
 import { Combobox } from "@/core/components/ui/Combobox";
 import { PuntoColor } from "@/core/components/ui/PuntoColor";
+import { useOrganizacionQuery } from "@/modules/organizaciones/hooks/useOrganizacionesQuery";
+import { puedeEn } from "@/modules/organizaciones/utils/permisos";
 import { useTagsDisponibles } from "../hooks/useTagsDisponibles";
+import { useCrearTagMutation } from "../hooks/useTagsMutation";
+
+/** Los personales con `tags:crear`; los de una organización, con su `tags:gestionar`. */
+function usePuedeCrearTag(organizacionId?: number | null) {
+	const { puede } = usePermisos();
+	const { data: organizacion } = useOrganizacionQuery(
+		organizacionId ?? 0,
+		!!organizacionId,
+	);
+	if (!organizacionId) return puede("tags:crear");
+	return !!organizacion && puedeEn(organizacion, "tags:gestionar");
+}
 
 interface SelectorTagsProps {
 	valor: number[];
@@ -20,8 +35,10 @@ export function SelectorTags({
 }: SelectorTagsProps) {
 	const { tags, aviso } = useTagsDisponibles(organizacionId);
 	const elegidos = tags.filter((t) => valor.includes(t.id));
+	const puedeCrear = usePuedeCrearTag(organizacionId);
+	const crearTag = useCrearTagMutation(organizacionId ?? undefined);
 
-	if (tags.length === 0) {
+	if (tags.length === 0 && !puedeCrear) {
 		return (
 			<div className="space-y-1.5">
 				<p className="text-[13px] font-medium text-tinta-suave">Tags</p>
@@ -53,6 +70,16 @@ export function SelectorTags({
 				}))}
 				valor={valor}
 				onChange={onChange}
+				vacio={puedeCrear ? "Escribe para crear un tag" : undefined}
+				onCrear={
+					puedeCrear
+						? (nombre) =>
+								crearTag.mutate(
+									{ nombre },
+									{ onSuccess: (tag) => onChange([...valor, tag.id]) },
+								)
+						: undefined
+				}
 			>
 				{elegidos.length === 0 ? (
 					<span className="flex items-center gap-1.5 text-tinta-tenue">

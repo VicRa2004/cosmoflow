@@ -8,6 +8,7 @@ import type { PlantillaTareaDto } from "@/modules/plantillas/api/plantillasApi";
 import { destinoDe, type TareaDto } from "../api/tareasApi";
 import { CampoResponsables } from "./CampoResponsables";
 import {
+	AtajosFecha,
 	CampoDependeDe,
 	CampoEstado,
 	CampoPrioridad,
@@ -157,10 +158,26 @@ export function TareaForm({
 						)}
 					</form.AppField>
 					<form.AppField name="fechaInicio">
-						{(campo) => <campo.CampoTexto label="Inicio" type="date" />}
+						{(campo) => (
+							<div className="space-y-1.5">
+								<campo.CampoTexto label="Inicio" type="date" />
+								<AtajosFecha
+									valor={campo.state.value}
+									onChange={campo.handleChange}
+								/>
+							</div>
+						)}
 					</form.AppField>
 					<form.AppField name="fechaVencimiento">
-						{(campo) => <campo.CampoTexto label="Vencimiento" type="date" />}
+						{(campo) => (
+							<div className="space-y-1.5">
+								<campo.CampoTexto label="Vencimiento" type="date" />
+								<AtajosFecha
+									valor={campo.state.value}
+									onChange={campo.handleChange}
+								/>
+							</div>
+						)}
 					</form.AppField>
 				</div>
 				<div className="grid gap-4 sm:grid-cols-2">

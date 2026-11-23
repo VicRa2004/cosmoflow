@@ -23,9 +23,10 @@ export function useOrganizacionesQuery(
 	});
 }
 
-export function useOrganizacionQuery(id: number) {
+export function useOrganizacionQuery(id: number, enabled = true) {
 	return useQuery({
 		queryKey: organizacionesKeys.detalle(id),
 		queryFn: () => organizacionesApi.obtenerUno(id),
+		enabled,
 	});
 }

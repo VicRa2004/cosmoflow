@@ -1,4 +1,4 @@
-import { Check, ChevronsUpDown } from "lucide-react";
+import { Check, ChevronsUpDown, Plus } from "lucide-react";
 import {
 	type ReactNode,
 	type ToggleEvent,
@@ -24,6 +24,8 @@ interface ComboboxBaseProps<T extends string | number> {
 	/** Contenido del botón que abre la lista (el valor actual). */
 	children: ReactNode;
 	vacio?: string;
+	/** Con él, si lo buscado no existe, ofrece «Crear «texto»» al final. */
+	onCrear?: (texto: string) => void;
 	className?: string;
 }
 
@@ -41,6 +43,17 @@ export const filtrarOpciones = <T extends string | number>(
 	return opciones.filter((o) => normalizar(o.etiqueta).includes(filtro));
 };
 
+/** Hay texto y ninguna opción se llama exactamente así (sin mirar mayúsculas ni acentos). */
+export const sePuedeCrear = <T extends string | number>(
+	opciones: OpcionCombobox<T>[],
+	texto: string,
+) => {
+	const buscado = normalizar(texto.trim());
+	return (
+		buscado !== "" && !opciones.some((o) => normalizar(o.etiqueta) === buscado)
+	);
+};
+
 export const alternar = <T,>(valor: T[], id: T) =>
 	valor.includes(id) ? valor.filter((v) => v !== id) : [...valor, id];
 
@@ -51,6 +64,7 @@ export function Combobox<T extends string | number>(props: ComboboxProps<T>) {
 		label,
 		children,
 		vacio = "Sin resultados",
+		onCrear,
 		className,
 	} = props;
 	const [texto, setTexto] = useState("");
@@ -66,8 +80,23 @@ export function Combobox<T extends string | number>(props: ComboboxProps<T>) {
 			? []
 			: [props.valor];
 	const visibles = filtrarOpciones(opciones, texto);
-	const indice = Math.min(activo, visibles.length - 1);
+	const conCrear = onCrear !== undefined && sePuedeCrear(opciones, texto);
+	// «Crear…» va detrás de las opciones y se recorre con las flechas como una más.
+	const total = visibles.length + (conCrear ? 1 : 0);
+	const indice = Math.min(activo, total - 1);
 	const idOpcion = (o: OpcionCombobox<T>) => `${id}-op-${o.id}`;
+	const idCrear = `${id}-crear`;
+
+	// Sin opción en `indice`, la activa es «Crear…» (si la hay).
+	let idActivo: string | undefined;
+	if (visibles[indice]) idActivo = idOpcion(visibles[indice]);
+	else if (conCrear) idActivo = idCrear;
+
+	const crear = () => {
+		onCrear?.(texto.trim());
+		setTexto("");
+		setActivo(0);
+	};
 
 	const elegir = (opcion: OpcionCombobox<T> | undefined) => {
 		if (!opcion) return;
@@ -130,9 +159,7 @@ export function Combobox<T extends string | number>(props: ComboboxProps<T>) {
 					aria-label={`Buscar ${label.toLowerCase()}`}
 					aria-expanded
 					aria-controls={`${id}-opciones`}
-					aria-activedescendant={
-						visibles[indice] ? idOpcion(visibles[indice]) : undefined
-					}
+					aria-activedescendant={idActivo}
 					placeholder="Buscar…"
 					value={texto}
 					onChange={(e) => {
@@ -140,16 +167,14 @@ export function Combobox<T extends string | number>(props: ComboboxProps<T>) {
 						setActivo(0);
 					}}
 					onKeyDown={(e) => {
-						if (
-							(e.key === "ArrowDown" || e.key === "ArrowUp") &&
-							visibles.length > 0
-						) {
+						if ((e.key === "ArrowDown" || e.key === "ArrowUp") && total > 0) {
 							e.preventDefault();
 							const paso = e.key === "ArrowDown" ? 1 : -1;
-							setActivo((indice + paso + visibles.length) % visibles.length);
+							setActivo((indice + paso + total) % total);
 						} else if (e.key === "Enter") {
 							e.preventDefault();
-							elegir(visibles[indice]);
+							if (visibles[indice]) elegir(visibles[indice]);
+							else if (conCrear) crear();
 						}
 					}}
 					className="mb-1 h-8 w-full rounded-md bg-transparent px-2 text-sm text-tinta outline-none placeholder:text-tinta-tenue"
@@ -188,7 +213,26 @@ export function Combobox<T extends string | number>(props: ComboboxProps<T>) {
 							</div>
 						);
 					})}
-					{visibles.length === 0 && (
+					{conCrear && (
+						// biome-ignore lint/a11y/useKeyWithClickEvents: el teclado se maneja desde el buscador (combobox)
+						<div
+							id={idCrear}
+							tabIndex={-1}
+							role="option"
+							aria-selected={false}
+							onMouseDown={(e) => e.preventDefault()}
+							onClick={crear}
+							onMouseMove={() => setActivo(visibles.length)}
+							className={cn(
+								"flex h-9 cursor-pointer items-center gap-2 rounded-md px-2 text-sm text-tinta-suave",
+								indice === visibles.length && "bg-elevada text-tinta",
+							)}
+						>
+							<Plus aria-hidden className="size-4 shrink-0 text-indigo-400" />
+							<span className="truncate">Crear «{texto.trim()}»</span>
+						</div>
+					)}
+					{total === 0 && (
 						<p className="px-2 py-4 text-center text-sm text-tinta-tenue">
 							{vacio}
 						</p>

@@ -1,5 +1,6 @@
 import { Link2, Repeat } from "lucide-react";
 import { Combobox } from "@/core/components/ui/Combobox";
+import { cn } from "@/core/utils/cn";
 import type {
 	EstadoTarea,
 	PrioridadTarea,
@@ -14,6 +15,7 @@ import {
 	prioridades,
 	recurrencias,
 } from "../schemas/tareaSchemas";
+import { diaLocal } from "../utils/calendario";
 import { IconoEstado, IconoPrioridad } from "./celdas";
 
 interface CampoProps<T> {
@@ -102,3 +104,41 @@ export const CampoRecurrencia = ({
 		{valor ? ETIQUETAS_RECURRENCIA[valor] : "No se repite"}
 	</Combobox>
 );
+
+/** Días de los atajos de fecha; «próxima semana» es el lunes que viene. */
+export function diasAtajo(hoy: Date) {
+	const en = (dias: number) =>
+		diaLocal(new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate() + dias));
+	return {
+		Hoy: en(0),
+		Mañana: en(1),
+		"Próx. semana": en((8 - hoy.getDay()) % 7 || 7),
+	};
+}
+
+/** Botones bajo un campo de fecha; `""` = sin fecha. */
+export function AtajosFecha({ valor, onChange }: CampoProps<string>) {
+	const atajos = Object.entries(diasAtajo(new Date()));
+	const boton =
+		"cursor-pointer rounded px-1.5 py-0.5 text-xs text-tinta-tenue hover:bg-elevada hover:text-tinta";
+	return (
+		<div className="flex flex-wrap gap-1">
+			{atajos.map(([etiqueta, dia]) => (
+				<button
+					key={etiqueta}
+					type="button"
+					aria-pressed={valor === dia}
+					onClick={() => onChange(dia)}
+					className={cn(boton, valor === dia && "bg-elevada text-tinta")}
+				>
+					{etiqueta}
+				</button>
+			))}
+			{valor && (
+				<button type="button" onClick={() => onChange("")} className={boton}>
+					Sin fecha
+				</button>
+			)}
+		</div>
+	);
+}
