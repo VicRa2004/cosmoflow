@@ -18,6 +18,7 @@ import { usePermisos } from "@/core/auth/usePermisos";
 import { Dialog } from "@/core/components/ui/Dialog";
 import { Input } from "@/core/components/ui/Input";
 import { cn } from "@/core/utils/cn";
+import { normalizar } from "@/core/utils/normalizar";
 import { useOrganizacionesQuery } from "@/modules/organizaciones/hooks/useOrganizacionesQuery";
 
 interface Comando {
@@ -26,9 +27,6 @@ interface Comando {
 	icono: LucideIcon;
 	ejecutar: () => void;
 }
-
-const normalizar = (texto: string) =>
-	texto.normalize("NFD").replace(/\p{M}/gu, "").toLowerCase();
 
 /** Ctrl+K (⌘K): salta a tareas, notas, tags u organizaciones, o crea tareas, notas y tags. */
 export function PaletaComandos({

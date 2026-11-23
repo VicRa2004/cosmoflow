@@ -11,7 +11,7 @@ export function useMiembrosDestino(
 	organizacionId: number,
 	equipoId?: number | null,
 	proyectoId?: number | null,
-): { id: number; nombre: string; email: string }[] {
+): { id: number; nombre: string; email: string; avatarUrl: string | null }[] {
 	const { data: miembros = [] } = useMiembrosQuery(organizacionId);
 	const { data: equipos = [] } = useEquiposQuery(organizacionId);
 	const { data: proyectos = [] } = useProyectosQuery(organizacionId);
@@ -26,5 +26,10 @@ export function useMiembrosDestino(
 	]);
 	return miembros
 		.filter((m) => deOrganizacion || posibles.has(m.usuarioId))
-		.map((m) => ({ id: m.usuarioId, nombre: m.nombre, email: m.email }));
+		.map((m) => ({
+			id: m.usuarioId,
+			nombre: m.nombre,
+			email: m.email,
+			avatarUrl: m.avatarUrl,
+		}));
 }
