@@ -16,7 +16,8 @@ val keyProperties = Properties().apply {
 
 android {
     namespace = "com.cosmoflow.cosmoflow_mobile"
-    compileSdk = flutter.compileSdkVersion
+    // Requerido por flutter_local_notifications y androidx.core 1.19.0.
+    compileSdk = 37
     ndkVersion = flutter.ndkVersion
 
     compileOptions {
