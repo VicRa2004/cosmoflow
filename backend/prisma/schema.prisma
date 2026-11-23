@@ -48,6 +48,7 @@ model Usuario {
   preferenciasNotificacion PreferenciaNotificacion[]
   preferenciaInterfaz      PreferenciaInterfaz?
   vinculoTelegram          VinculoTelegram?
+  suscripcionCalendario    SuscripcionCalendario?
   dispositivosPush         DispositivoPush[]
   notificaciones           Notificacion[]
   notificacionesProvocadas Notificacion[]           @relation("NotificacionActor")
@@ -908,4 +909,16 @@ model Notificacion {
   @@index([usuarioId, leidaEn, id])
   @@index([usuarioId, id])
   @@map("notificacion")
+}
+
+/// Feed iCalendar de las tareas del usuario (#173): un token secreto por usuario,
+/// guardado como hash; regenerarlo invalida la URL anterior.
+model SuscripcionCalendario {
+  usuarioId Int      @id @map("sca_fkusuario")
+  tokenHash String   @unique @map("sca_token_hash") @db.VarChar(64)
+  createdAt DateTime @default(now()) @map("sca_created_at")
+
+  usuario Usuario @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+
+  @@map("suscripcion_calendario")
 }

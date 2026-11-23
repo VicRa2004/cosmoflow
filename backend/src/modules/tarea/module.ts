@@ -1,6 +1,7 @@
 import type { AppModule } from "@/core/shared/infrastructure/di/AppModule";
 import { TOKENS } from "@/core/shared/infrastructure/di/tokens";
 import { ADJUNTO_TOKENS } from "@/modules/adjunto";
+import { env } from "@/core/config/env";
 import { AUTH_TOKENS } from "@/modules/auth";
 import { EQUIPO_TOKENS } from "@/modules/equipo";
 import { ORGANIZACION_TOKENS } from "@/modules/organizacion";
@@ -25,6 +26,13 @@ import {
 	ObtenerPapeleraTareasUseCase,
 } from "./application/useCases/ObtenerPapeleraTareasUseCase";
 import { RestaurarTareaUseCase } from "./application/useCases/RestaurarTareaUseCase";
+import { GenerarSuscripcionCalendarioUseCase } from "./application/useCases/GenerarSuscripcionCalendarioUseCase";
+import { ObtenerFeedCalendarioUseCase } from "./application/useCases/ObtenerFeedCalendarioUseCase";
+import { ObtenerSuscripcionCalendarioUseCase } from "./application/useCases/ObtenerSuscripcionCalendarioUseCase";
+import { RevocarSuscripcionCalendarioUseCase } from "./application/useCases/RevocarSuscripcionCalendarioUseCase";
+import { CalendarioController } from "./infrastructure/http/controllers/CalendarioController";
+import { CalendarioRouter } from "./infrastructure/http/routes/CalendarioRouter";
+import { PrismaSuscripcionCalendarioRepository } from "./infrastructure/repository/PrismaSuscripcionCalendarioRepository";
 import { ObtenerCalendarioUseCase } from "./application/useCases/ObtenerCalendarioUseCase";
 import { ObtenerEstadisticasTareasUseCase } from "./application/useCases/ObtenerEstadisticasTareasUseCase";
 import { ObtenerTareaUseCase } from "./application/useCases/ObtenerTareaUseCase";
@@ -121,6 +129,23 @@ export const tareaModule: AppModule = {
 			).router,
 		);
 		app.route("/api/tareas", router.router);
+		const suscripciones = new PrismaSuscripcionCalendarioRepository();
+		app.route(
+			"/api/calendario",
+			new CalendarioRouter(
+				container.get(AUTH_TOKENS.AuthMiddleware),
+				container.get(TOKENS.PermisoGuard),
+				new CalendarioController({
+					feed: new ObtenerFeedCalendarioUseCase(suscripciones, repo),
+					obtener: new ObtenerSuscripcionCalendarioUseCase(suscripciones),
+					generar: new GenerarSuscripcionCalendarioUseCase(
+						suscripciones,
+						env.APP_URL,
+					),
+					revocar: new RevocarSuscripcionCalendarioUseCase(suscripciones),
+				}),
+			).router,
+		);
 	},
 	onStart(container) {
 		container

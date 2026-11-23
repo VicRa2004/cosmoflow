@@ -4535,6 +4535,197 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/calendario/tareas.ics": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Feed iCalendar de las tareas
+         * @description Público: lo autentica el token de la URL, porque los clientes de calendario no envían cabeceras. Pendientes y en progreso del dueño con fecha, una por día de vencimiento (o de inicio).
+         */
+        get: {
+            parameters: {
+                query: {
+                    /** @description Token secreto de la suscripción */
+                    token: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Calendario */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/calendar": string;
+                    };
+                };
+                /** @description Token con formato inválido */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Token desconocido o revocado */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/calendario/suscripcion": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Estado de la suscripción al calendario */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Estado */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["SuscripcionCalendario"];
+                    };
+                };
+                /** @description No autenticado */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Permiso denegado (requiere tareas:leer) */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        /**
+         * Generar (o regenerar) la URL del calendario
+         * @description La URL solo se muestra en esta respuesta; generar otra invalida la anterior.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description URL nueva */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["UrlCalendario"];
+                    };
+                };
+                /** @description No autenticado */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Permiso denegado (requiere tareas:leer) */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        /** Desactivar la URL del calendario */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Desactivada */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description No autenticado */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Permiso denegado (requiere tareas:leer) */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/notas": {
         parameters: {
             query?: never;
@@ -9736,6 +9927,15 @@ export interface components {
             /** @example 3 */
             afectadas: number;
         };
+        SuscripcionCalendario: {
+            activa: boolean;
+            /** Format: date-time */
+            creadaEn: string | null;
+        };
+        UrlCalendario: {
+            /** Format: uri */
+            url: string;
+        };
         NotaDto: {
             /** @example 1 */
             id: number;
@@ -10071,6 +10271,8 @@ export type ComentarioTareaDto = components['schemas']['ComentarioTareaDto'];
 export type TareaDto = components['schemas']['TareaDto'];
 export type EstadisticasTareasDto = components['schemas']['EstadisticasTareasDto'];
 export type ResultadoLoteTareasDto = components['schemas']['ResultadoLoteTareasDto'];
+export type SuscripcionCalendario = components['schemas']['SuscripcionCalendario'];
+export type UrlCalendario = components['schemas']['UrlCalendario'];
 export type NotaDto = components['schemas']['NotaDto'];
 export type ResultadoImportacionDto = components['schemas']['ResultadoImportacionDto'];
 export type NotaIndiceDto = components['schemas']['NotaIndiceDto'];
