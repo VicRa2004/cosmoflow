@@ -1,6 +1,8 @@
 import { Link } from "@tanstack/react-router";
+import { Plus } from "lucide-react";
 import { AvisoListaRecortada } from "@/core/components/ui/AvisoListaRecortada";
-import { Checkbox } from "@/core/components/ui/Checkbox";
+import { Badge } from "@/core/components/ui/Badge";
+import { Combobox } from "@/core/components/ui/Combobox";
 import { PuntoColor } from "@/core/components/ui/PuntoColor";
 import { useTagsDisponibles } from "../hooks/useTagsDisponibles";
 
@@ -17,46 +19,58 @@ export function SelectorTags({
 	organizacionId,
 }: SelectorTagsProps) {
 	const { tags, aviso } = useTagsDisponibles(organizacionId);
-	const marcados = new Set(valor);
+	const elegidos = tags.filter((t) => valor.includes(t.id));
+
+	if (tags.length === 0) {
+		return (
+			<div className="space-y-1.5">
+				<p className="text-[13px] font-medium text-tinta-suave">Tags</p>
+				{organizacionId ? (
+					<p className="text-xs text-tinta-tenue">
+						La organización aún no tiene tags.
+					</p>
+				) : (
+					<p className="text-xs text-tinta-tenue">
+						Aún no tienes tags.{" "}
+						<Link to="/tags" className="text-indigo-400 hover:underline">
+							Crear tags
+						</Link>
+					</p>
+				)}
+			</div>
+		);
+	}
 
 	return (
-		<fieldset className="space-y-2">
-			<legend className="text-[13px] font-medium text-tinta-suave">Tags</legend>
-			{tags.length === 0 && organizacionId ? (
-				<p className="text-xs text-tinta-tenue">
-					La organización aún no tiene tags.
-				</p>
-			) : tags.length === 0 ? (
-				<p className="text-xs text-tinta-tenue">
-					Aún no tienes tags.{" "}
-					<Link to="/tags" className="text-indigo-400 hover:underline">
-						Crear tags
-					</Link>
-				</p>
-			) : (
-				<div className="flex flex-wrap gap-x-4 gap-y-2">
-					{tags.map((tag) => (
-						<Checkbox
-							key={tag.id}
-							label={
-								<span className="flex items-center gap-1.5">
-									<PuntoColor color={tag.color} className="h-2 w-2" />
-									{tag.nombre}
-								</span>
-							}
-							checked={marcados.has(tag.id)}
-							onChange={(e) =>
-								onChange(
-									e.target.checked
-										? [...valor, tag.id]
-										: valor.filter((id) => id !== tag.id),
-								)
-							}
-						/>
-					))}
-				</div>
-			)}
+		<div className="space-y-2">
+			<Combobox
+				multiple
+				label="Tags"
+				opciones={tags.map((tag) => ({
+					id: tag.id,
+					etiqueta: tag.nombre,
+					icono: <PuntoColor color={tag.color} className="h-2 w-2" />,
+				}))}
+				valor={valor}
+				onChange={onChange}
+			>
+				{elegidos.length === 0 ? (
+					<span className="flex items-center gap-1.5 text-tinta-tenue">
+						<Plus aria-hidden className="size-4" />
+						Sin tags
+					</span>
+				) : (
+					<span className="flex flex-wrap gap-1 py-1.5">
+						{elegidos.map((tag) => (
+							<Badge key={tag.id} className="gap-1.5">
+								<PuntoColor color={tag.color} className="h-2 w-2" />
+								{tag.nombre}
+							</Badge>
+						))}
+					</span>
+				)}
+			</Combobox>
 			<AvisoListaRecortada aviso={aviso} />
-		</fieldset>
+		</div>
 	);
 }

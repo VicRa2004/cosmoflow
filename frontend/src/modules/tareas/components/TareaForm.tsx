@@ -7,6 +7,12 @@ import { useAtajoGuardar } from "@/core/components/form/useAtajoGuardar";
 import type { PlantillaTareaDto } from "@/modules/plantillas/api/plantillasApi";
 import { destinoDe, type TareaDto } from "../api/tareasApi";
 import { CampoResponsables } from "./CampoResponsables";
+import {
+	CampoDependeDe,
+	CampoEstado,
+	CampoPrioridad,
+	CampoRecurrencia,
+} from "./CamposPropiedades";
 import { useTareasQuery } from "../hooks/useTareasQuery";
 import { EditorTarea } from "./EditorTarea";
 import { MoverTareaDialog } from "./MoverTareaDialog";
@@ -15,9 +21,6 @@ import {
 	useCrearTareaMutation,
 } from "../hooks/useTareasMutation";
 import {
-	ETIQUETAS_ESTADO,
-	ETIQUETAS_PRIORIDAD,
-	ETIQUETAS_RECURRENCIA,
 	plantillaAFormValues,
 	tareaAFormValues,
 	tareaFormSchema,
@@ -139,24 +142,18 @@ export function TareaForm({
 				<div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
 					<form.AppField name="estado">
 						{(campo) => (
-							<campo.CampoSelect label="Estado">
-								{Object.entries(ETIQUETAS_ESTADO).map(([valor, texto]) => (
-									<option key={valor} value={valor}>
-										{texto}
-									</option>
-								))}
-							</campo.CampoSelect>
+							<CampoEstado
+								valor={campo.state.value}
+								onChange={campo.handleChange}
+							/>
 						)}
 					</form.AppField>
 					<form.AppField name="prioridad">
 						{(campo) => (
-							<campo.CampoSelect label="Prioridad">
-								{Object.entries(ETIQUETAS_PRIORIDAD).map(([valor, texto]) => (
-									<option key={valor} value={valor}>
-										{texto}
-									</option>
-								))}
-							</campo.CampoSelect>
+							<CampoPrioridad
+								valor={campo.state.value}
+								onChange={campo.handleChange}
+							/>
 						)}
 					</form.AppField>
 					<form.AppField name="fechaInicio">
@@ -169,28 +166,45 @@ export function TareaForm({
 				<div className="grid gap-4 sm:grid-cols-2">
 					<form.AppField name="dependeDeId">
 						{(campo) => (
-							<campo.CampoSelect label="Depende de">
-								<option value="">Ninguna</option>
-								{principales.map((t) => (
-									<option key={t.id} value={t.id}>
-										{t.titulo}
-									</option>
-								))}
-							</campo.CampoSelect>
+							<CampoDependeDe
+								valor={campo.state.value}
+								onChange={campo.handleChange}
+								candidatas={principales}
+							/>
 						)}
 					</form.AppField>
 					<form.AppField name="recurrencia">
 						{(campo) => (
-							<campo.CampoSelect label="Repetición">
-								<option value="">No se repite</option>
-								{Object.entries(ETIQUETAS_RECURRENCIA).map(([valor, texto]) => (
-									<option key={valor} value={valor}>
-										{texto}
-									</option>
-								))}
-							</campo.CampoSelect>
+							<CampoRecurrencia
+								valor={campo.state.value}
+								onChange={campo.handleChange}
+							/>
 						)}
 					</form.AppField>
+				</div>
+				<div className="grid gap-4 sm:grid-cols-2">
+					<form.AppField name="tagIds">
+						{(campo) => (
+							<SelectorTags
+								valor={campo.state.value}
+								onChange={campo.handleChange}
+								organizacionId={organizacionId}
+							/>
+						)}
+					</form.AppField>
+					{organizacionId !== null && (
+						<form.Field name="responsableIds">
+							{(campo) => (
+								<CampoResponsables
+									organizacionId={organizacionId}
+									equipoId={equipoId}
+									proyectoId={proyectoId}
+									valor={campo.state.value}
+									onChange={campo.handleChange}
+								/>
+							)}
+						</form.Field>
+					)}
 				</div>
 				<form.Field name="subtareas">
 					{(campo) => (
@@ -203,28 +217,6 @@ export function TareaForm({
 				<form.AppField name="color">
 					{(campo) => <campo.CampoColorAcento />}
 				</form.AppField>
-				<form.AppField name="tagIds">
-					{(campo) => (
-						<SelectorTags
-							valor={campo.state.value}
-							onChange={campo.handleChange}
-							organizacionId={organizacionId}
-						/>
-					)}
-				</form.AppField>
-				{organizacionId !== null && (
-					<form.Field name="responsableIds">
-						{(campo) => (
-							<CampoResponsables
-								organizacionId={organizacionId}
-								equipoId={equipoId}
-								proyectoId={proyectoId}
-								valor={campo.state.value}
-								onChange={campo.handleChange}
-							/>
-						)}
-					</form.Field>
-				)}
 				<hr className="border-borde" />
 				<form.AppField name="contenido">
 					{() => (

@@ -5,26 +5,22 @@ import {
 	LayoutTemplate,
 	Pencil,
 	Pin,
+	PinOff,
 	Trash2,
 } from "lucide-react";
 import { useState } from "react";
 import { usePermisos } from "@/core/auth/usePermisos";
 import { Button } from "@/core/components/ui/Button";
 import { ConfirmDialog } from "@/core/components/ui/ConfirmDialog";
+import { MenuAcciones } from "@/core/components/ui/MenuAcciones";
 import { Spinner } from "@/core/components/ui/Spinner";
 import { PaginaLectura } from "@/modules/adjuntos/components/PaginaLectura";
 import { GuardarPlantillaDialog } from "@/modules/plantillas/components/GuardarPlantillaDialog";
-import { useMiembrosQuery } from "@/modules/organizaciones/hooks/useMiembros";
-import { TagsBadges } from "@/modules/tags/components/TagsBadges";
-import type { TareaDto } from "../api/tareasApi";
-import {
-	BloqueadaIcono,
-	formatearDia,
-	VencimientoTarea,
-} from "../components/celdas";
 import { ActividadTarea } from "../components/ActividadTarea";
+import { BotonCompletar } from "../components/BotonCompletar";
 import { ChecklistSubtareas } from "../components/ChecklistSubtareas";
 import { ComentariosTarea } from "../components/ComentariosTarea";
+import { DetallesTarea } from "../components/DetallesTarea";
 import { MoverTareaDialog } from "../components/MoverTareaDialog";
 import {
 	useDuplicarTareaMutation,
@@ -32,91 +28,6 @@ import {
 	useFijarTareaMutation,
 } from "../hooks/useTareasMutation";
 import { useTareaQuery } from "../hooks/useTareasQuery";
-import {
-	ETIQUETAS_ESTADO,
-	ETIQUETAS_PRIORIDAD,
-	ETIQUETAS_RECURRENCIA,
-} from "../schemas/tareaSchemas";
-
-/** Cada responsable con quien lo asignó, si se sabe. */
-function Responsables({
-	tarea,
-}: {
-	tarea: TareaDto & { organizacionId: number };
-}) {
-	const { data: miembros = [] } = useMiembrosQuery(tarea.organizacionId);
-	const nombre = (id: number) =>
-		miembros.find((m) => m.usuarioId === id)?.nombre;
-	return (
-		<ul className="space-y-0.5">
-			{tarea.responsableIds.map((id) => {
-				const por = tarea.asignadoPor[id];
-				return (
-					<li key={id}>
-						{nombre(id) ?? "…"}
-						{por !== undefined && (
-							<span className="text-tinta-tenue">
-								{" "}
-								· asignado por {por === id ? "sí mismo" : (nombre(por) ?? "…")}
-							</span>
-						)}
-					</li>
-				);
-			})}
-		</ul>
-	);
-}
-
-function Detalles({ tarea }: { tarea: TareaDto }) {
-	return (
-		<dl className="grid grid-cols-[auto_1fr] gap-x-6 gap-y-2 text-sm">
-			<dt className="text-tinta-tenue">Estado</dt>
-			<dd className="flex items-center gap-2">
-				{ETIQUETAS_ESTADO[tarea.estado]}
-				<BloqueadaIcono tarea={tarea} />
-			</dd>
-			<dt className="text-tinta-tenue">Prioridad</dt>
-			<dd>{ETIQUETAS_PRIORIDAD[tarea.prioridad]}</dd>
-			{tarea.fechaInicio && (
-				<>
-					<dt className="text-tinta-tenue">Inicio</dt>
-					<dd>{formatearDia(tarea.fechaInicio)}</dd>
-				</>
-			)}
-			<dt className="text-tinta-tenue">Vence</dt>
-			<dd>
-				<VencimientoTarea tarea={tarea} />
-			</dd>
-			{tarea.recurrencia && (
-				<>
-					<dt className="text-tinta-tenue">Repetición</dt>
-					<dd>{ETIQUETAS_RECURRENCIA[tarea.recurrencia]}</dd>
-				</>
-			)}
-			{tarea.organizacionId !== null && tarea.responsableIds.length > 0 && (
-				<>
-					<dt className="text-tinta-tenue">Responsables</dt>
-					<dd>
-						<Responsables
-							tarea={{ ...tarea, organizacionId: tarea.organizacionId }}
-						/>
-					</dd>
-				</>
-			)}
-			{tarea.tagIds.length > 0 && (
-				<>
-					<dt className="text-tinta-tenue">Tags</dt>
-					<dd>
-						<TagsBadges
-							tagIds={tarea.tagIds}
-							organizacionId={tarea.organizacionId}
-						/>
-					</dd>
-				</>
-			)}
-		</dl>
-	);
-}
 
 /** Lectura de una tarea: propiedades, contenido y las acciones que permita el usuario. */
 export function TareaLecturaPage({ id }: { id: number }) {
@@ -149,7 +60,7 @@ export function TareaLecturaPage({ id }: { id: number }) {
 				onVolver={volver}
 				titulo={tarea.titulo}
 				contenido={tarea.contenido}
-				detalles={<Detalles tarea={tarea} />}
+				detalles={<DetallesTarea tarea={tarea} />}
 				pie={
 					<div className="space-y-8">
 						<ChecklistSubtareas tarea={tarea} />
@@ -159,74 +70,10 @@ export function TareaLecturaPage({ id }: { id: number }) {
 				}
 				acciones={
 					<>
+						<BotonCompletar tarea={tarea} />
 						{puede("tareas:actualizar") && (
 							<Button
-								variant="ghost"
-								size="sm"
-								isLoading={fijar.isPending}
-								onClick={() =>
-									fijar.mutate({ id: tarea.id, isFijada: !tarea.isFijada })
-								}
-							>
-								<Pin
-									className={
-										tarea.isFijada ? "h-4 w-4 text-indigo-400" : "h-4 w-4"
-									}
-								/>
-								{tarea.isFijada ? "Desfijar" : "Fijar"}
-							</Button>
-						)}
-						{puede("tareas:crear") && (
-							<Button
 								variant="outline"
-								size="sm"
-								isLoading={duplicar.isPending}
-								onClick={() =>
-									duplicar.mutate(tarea.id, {
-										onSuccess: (copia) =>
-											navigate({
-												to: "/tareas/$id",
-												params: { id: String(copia.id) },
-											}),
-									})
-								}
-							>
-								<Copy className="h-4 w-4" />
-								Duplicar
-							</Button>
-						)}
-						{puede("tareas:crear") && (
-							<Button
-								variant="outline"
-								size="sm"
-								onClick={() => setGuardandoPlantilla(true)}
-							>
-								<LayoutTemplate className="h-4 w-4" />
-								Guardar como plantilla
-							</Button>
-						)}
-						{puede("tareas:eliminar") && (
-							<Button
-								variant="dangerGhost"
-								size="sm"
-								onClick={() => setEliminando(true)}
-							>
-								<Trash2 className="h-4 w-4" />
-								Eliminar
-							</Button>
-						)}
-						{tarea.organizacionId === null && puede("tareas:actualizar") && (
-							<Button
-								variant="secondary"
-								size="sm"
-								onClick={() => setMoviendo(true)}
-							>
-								<FolderInput className="h-4 w-4" />
-								Mover a una organización
-							</Button>
-						)}
-						{puede("tareas:actualizar") && (
-							<Button
 								size="sm"
 								onClick={() =>
 									navigate({
@@ -239,6 +86,58 @@ export function TareaLecturaPage({ id }: { id: number }) {
 								Editar
 							</Button>
 						)}
+						{puede("tareas:actualizar") && (
+							<Button
+								variant="ghost"
+								size="sm"
+								isLoading={fijar.isPending}
+								aria-pressed={tarea.isFijada}
+								aria-label={tarea.isFijada ? "Desfijar" : "Fijar"}
+								title={tarea.isFijada ? "Desfijar" : "Fijar"}
+								onClick={() =>
+									fijar.mutate({ id: tarea.id, isFijada: !tarea.isFijada })
+								}
+							>
+								{tarea.isFijada ? (
+									<PinOff className="h-4 w-4 text-indigo-400" />
+								) : (
+									<Pin className="h-4 w-4" />
+								)}
+							</Button>
+						)}
+						<MenuAcciones
+							acciones={[
+								puede("tareas:crear") && {
+									etiqueta: "Duplicar",
+									icono: Copy,
+									onClick: () =>
+										duplicar.mutate(tarea.id, {
+											onSuccess: (copia) =>
+												navigate({
+													to: "/tareas/$id",
+													params: { id: String(copia.id) },
+												}),
+										}),
+								},
+								puede("tareas:crear") && {
+									etiqueta: "Guardar como plantilla",
+									icono: LayoutTemplate,
+									onClick: () => setGuardandoPlantilla(true),
+								},
+								tarea.organizacionId === null &&
+									puede("tareas:actualizar") && {
+										etiqueta: "Mover a una organización",
+										icono: FolderInput,
+										onClick: () => setMoviendo(true),
+									},
+								puede("tareas:eliminar") && {
+									etiqueta: "Eliminar",
+									icono: Trash2,
+									peligrosa: true,
+									onClick: () => setEliminando(true),
+								},
+							]}
+						/>
 					</>
 				}
 			/>

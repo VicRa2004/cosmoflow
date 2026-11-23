@@ -26,15 +26,15 @@ export const ETIQUETAS_RECURRENCIA: Record<RecurrenciaTarea, string> = {
 	mensual: "Mensual",
 };
 
-const estados = Object.keys(ETIQUETAS_ESTADO) as [
+export const estados = Object.keys(ETIQUETAS_ESTADO) as [
 	EstadoTarea,
 	...EstadoTarea[],
 ];
-const prioridades = Object.keys(ETIQUETAS_PRIORIDAD) as [
+export const prioridades = Object.keys(ETIQUETAS_PRIORIDAD) as [
 	PrioridadTarea,
 	...PrioridadTarea[],
 ];
-const recurrencias = Object.keys(ETIQUETAS_RECURRENCIA) as [
+export const recurrencias = Object.keys(ETIQUETAS_RECURRENCIA) as [
 	RecurrenciaTarea,
 	...RecurrenciaTarea[],
 ];

@@ -1,4 +1,4 @@
-import { Check } from "lucide-react";
+import { Check, ChevronsUpDown } from "lucide-react";
 import {
 	type ReactNode,
 	type ToggleEvent,
@@ -8,6 +8,7 @@ import {
 } from "react";
 import { cn } from "@/core/utils/cn";
 import { normalizar } from "@/core/utils/normalizar";
+import { ajustarAPantalla, colocarBajo } from "./popoverAnclado";
 
 export interface OpcionCombobox<T extends string | number> {
 	id: T;
@@ -43,8 +44,6 @@ export const filtrarOpciones = <T extends string | number>(
 export const alternar = <T,>(valor: T[], id: T) =>
 	valor.includes(id) ? valor.filter((v) => v !== id) : [...valor, id];
 
-const ANCHO_LISTA = 256; // w-64
-
 /** Botón que abre una lista con buscador (popover nativo: Esc y clic fuera la cierran). */
 export function Combobox<T extends string | number>(props: ComboboxProps<T>) {
 	const {
@@ -79,23 +78,16 @@ export function Combobox<T extends string | number>(props: ComboboxProps<T>) {
 		}
 	};
 
-	// Posición fija bajo el botón: anchor positioning aún no está en todos los navegadores.
 	const alPrepararApertura = (e: ToggleEvent<HTMLDivElement>) => {
 		if (e.newState !== "open" || !boton.current) return;
-		const r = boton.current.getBoundingClientRect();
-		e.currentTarget.style.top = `${r.bottom + 4}px`;
-		e.currentTarget.style.left = `${Math.max(8, Math.min(r.left, innerWidth - ANCHO_LISTA - 8))}px`;
+		colocarBajo(e.currentTarget, boton.current);
 		setTexto("");
 		setActivo(0);
 	};
 
 	const alAbrir = (e: ToggleEvent<HTMLDivElement>) => {
-		if (e.newState !== "open") return;
-		const caja = e.currentTarget.getBoundingClientRect();
-		const r = boton.current?.getBoundingClientRect();
-		// Sin sitio debajo: se abre encima del botón.
-		if (r && caja.bottom > innerHeight - 8 && r.top > caja.height + 8)
-			e.currentTarget.style.top = `${r.top - caja.height - 4}px`;
+		if (e.newState !== "open" || !boton.current) return;
+		ajustarAPantalla(e.currentTarget, boton.current);
 		buscador.current?.focus();
 	};
 
@@ -114,9 +106,15 @@ export function Combobox<T extends string | number>(props: ComboboxProps<T>) {
 				popoverTarget={`${id}-lista`}
 				aria-haspopup="listbox"
 				aria-labelledby={`${id}-label ${id}-boton`}
-				className="inline-flex min-h-9 max-w-full cursor-pointer items-center gap-2 rounded-md border border-borde bg-superficie px-2.5 text-sm text-tinta transition-colors hover:bg-elevada"
+				className="flex min-h-9 w-full cursor-pointer items-center gap-2 rounded-md border border-borde bg-superficie px-2.5 text-left text-sm text-tinta transition-colors hover:bg-elevada"
 			>
-				{children}
+				<span className="flex min-w-0 flex-1 items-center gap-2">
+					{children}
+				</span>
+				<ChevronsUpDown
+					aria-hidden
+					className="size-4 shrink-0 text-tinta-tenue"
+				/>
 			</button>
 			<div
 				ref={lista}

@@ -1,4 +1,17 @@
-import { ListChecks, Lock, Repeat, UserPlus } from "lucide-react";
+import {
+	Circle,
+	CircleCheck,
+	CircleDot,
+	CircleX,
+	ListChecks,
+	Lock,
+	type LucideIcon,
+	Repeat,
+	SignalHigh,
+	SignalLow,
+	SignalMedium,
+	UserPlus,
+} from "lucide-react";
 import { Badge, type BadgeProps } from "@/core/components/ui/Badge";
 import { Button } from "@/core/components/ui/Button";
 import { cn } from "@/core/utils/cn";
@@ -25,6 +38,29 @@ const VARIANTE_PRIORIDAD: Record<PrioridadTarea, BadgeProps["variant"]> = {
 	media: "warning",
 	alta: "danger",
 };
+
+const ICONO_ESTADO: Record<EstadoTarea, [LucideIcon, string]> = {
+	pendiente: [Circle, "text-tinta-tenue"],
+	en_progreso: [CircleDot, "text-indigo-400"],
+	completada: [CircleCheck, "text-emerald-400"],
+	cancelada: [CircleX, "text-amber-400"],
+};
+
+const ICONO_PRIORIDAD: Record<PrioridadTarea, [LucideIcon, string]> = {
+	baja: [SignalLow, "text-tinta-tenue"],
+	media: [SignalMedium, "text-amber-400"],
+	alta: [SignalHigh, "text-rose-400"],
+};
+
+export function IconoEstado({ estado }: { estado: EstadoTarea }) {
+	const [Icono, color] = ICONO_ESTADO[estado];
+	return <Icono aria-hidden className={cn("size-4 shrink-0", color)} />;
+}
+
+export function IconoPrioridad({ prioridad }: { prioridad: PrioridadTarea }) {
+	const [Icono, color] = ICONO_PRIORIDAD[prioridad];
+	return <Icono aria-hidden className={cn("size-4 shrink-0", color)} />;
+}
 
 export const EstadoBadge = ({ estado }: { estado: EstadoTarea }) => (
 	<Badge variant={VARIANTE_ESTADO[estado]}>{ETIQUETAS_ESTADO[estado]}</Badge>
