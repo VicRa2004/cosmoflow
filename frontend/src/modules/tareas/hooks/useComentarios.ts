@@ -39,8 +39,13 @@ export function useComentariosMutation(tareaId: number) {
 
 	return {
 		crear: useMutation({
-			mutationFn: (contenido: string) =>
-				comentariosApi.crear(tareaId, contenido),
+			mutationFn: ({
+				contenido,
+				padreId,
+			}: {
+				contenido: string;
+				padreId?: number | null;
+			}) => comentariosApi.crear(tareaId, contenido, padreId),
 			onSuccess: invalidar,
 			onError,
 		}),

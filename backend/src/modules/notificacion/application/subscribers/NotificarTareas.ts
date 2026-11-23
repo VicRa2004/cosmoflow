@@ -16,6 +16,7 @@ interface Comentada {
 	tareaId: number;
 	autorId: number;
 	mencionIds: number[];
+	respondeAAutorId?: number | null;
 }
 interface EstadoCambiado {
 	tareaId: number;
@@ -122,15 +123,25 @@ export class NotificarTareas {
 	}
 
 	private async onComentada(event: DomainEvent): Promise<void> {
-		const { tareaId, autorId, mencionIds } = event.data as Comentada;
+		const { tareaId, autorId, mencionIds, respondeAAutorId } =
+			event.data as Comentada;
 		const tarea = await this.repo.tarea(tareaId);
 		if (tarea === null) return;
 		const { titulo, organizacionId } = tarea;
 		const enlace = this.enlace(tareaId);
 		const destino = { tipo: "tarea" as const, id: tareaId };
+		const autorRespondido =
+			respondeAAutorId != null &&
+			respondeAAutorId !== autorId &&
+			!mencionIds.includes(respondeAAutorId)
+				? respondeAAutorId
+				: null;
 		const interesados = [
 			...new Set([tarea.usuarioId, ...tarea.responsableIds]),
-		].filter((id) => id !== autorId && !mencionIds.includes(id));
+		].filter(
+			(id) =>
+				id !== autorId && !mencionIds.includes(id) && id !== autorRespondido,
+		);
 		// Clave por grupo: cada envío se registra aparte y no se pisan.
 		await this.notificador.notificar({
 			evento: "mencion",
@@ -145,6 +156,21 @@ export class NotificarTareas {
 				destino,
 			},
 		});
+		if (autorRespondido !== null) {
+			await this.notificador.notificar({
+				evento: "comentario",
+				usuarioIds: [autorRespondido],
+				organizacionId,
+				actorId: event.meta?.usuarioId,
+				clave: `${this.clave(event, tareaId)}:respuesta`,
+				aviso: {
+					asunto: `Respondieron a tu comentario en «${titulo}»`,
+					texto: `Alguien respondió a tu comentario en la tarea «${titulo}».`,
+					enlace,
+					destino,
+				},
+			});
+		}
 		await this.notificador.notificar({
 			evento: "comentario",
 			usuarioIds: interesados,

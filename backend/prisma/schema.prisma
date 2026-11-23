@@ -430,15 +430,20 @@ model ComentarioTarea {
   id        Int       @id @default(autoincrement()) @map("cot_id")
   tareaId   Int       @map("cot_fktarea")
   autorId   Int       @map("cot_fkautor")
+  /// Comentario raíz al que responde (hilos de 1 nivel)
+  padreId   Int?      @map("cot_fkpadre")
   contenido String    @map("cot_contenido")
   createdAt DateTime  @default(now()) @map("created_at")
   /// Solo si se editó después de publicarlo
   editadoEn DateTime? @map("cot_editado_en")
 
-  tarea Tarea   @relation(fields: [tareaId], references: [id], onDelete: Cascade)
-  autor Usuario @relation(fields: [autorId], references: [id], onDelete: Cascade)
+  tarea      Tarea             @relation(fields: [tareaId], references: [id], onDelete: Cascade)
+  autor      Usuario           @relation(fields: [autorId], references: [id], onDelete: Cascade)
+  padre      ComentarioTarea?  @relation("ComentarioRespuestas", fields: [padreId], references: [id], onDelete: Cascade)
+  respuestas ComentarioTarea[] @relation("ComentarioRespuestas")
 
   @@index([tareaId, id])
+  @@index([padreId])
   @@map("comentario_tarea")
 }
 

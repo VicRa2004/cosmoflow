@@ -1,5 +1,9 @@
+import { extraerMenciones } from "@/core/shared/domain/menciones";
+import type { EventBus } from "@/core/shared/domain/events/EventBus";
+import type { UnitOfWork } from "@/core/shared/domain/UnitOfWork";
 import { ComentarioNoEncontradoError } from "../../domain/error/ComentarioNoEncontradoError";
 import { SinPermisoComentarioError } from "../../domain/error/SinPermisoComentarioError";
+import { TareaMencionadosEvent } from "../../domain/event/TareaMencionadosEvent";
 import type { ComentarioTareaRepository } from "../../domain/repository/ComentarioTareaRepository";
 import type { TareaRepository } from "../../domain/repository/TareaRepository";
 import type { ComentarioTareaDto } from "../dtos/ComentarioTareaDto";
@@ -8,14 +12,16 @@ import type { ContextosTarea } from "../services/ContextosTarea";
 import { buscarTareaVisible } from "./buscarTareaVisible";
 
 /**
- * Solo su autor, mientras vea la tarea.
- * shortcut: editar no avisa a quien se menciona de nuevo; publicar `tarea.comentada` con los nuevos si se echa en falta.
+ * Solo su autor, mientras vea la tarea. Si al editar agrega menciones nuevas,
+ * notifica únicamente a los nuevos mencionados con acceso.
  */
 export class ActualizarComentarioUseCase {
 	constructor(
 		private readonly tareaRepository: TareaRepository,
 		private readonly contextos: ContextosTarea,
 		private readonly comentarios: ComentarioTareaRepository,
+		private readonly eventBus: EventBus,
+		private readonly uow: UnitOfWork,
 	) {}
 
 	async ejecutar(
@@ -23,7 +29,7 @@ export class ActualizarComentarioUseCase {
 		ids: { tareaId: number; id: number },
 		contenido: string,
 	): Promise<ComentarioTareaDto> {
-		await buscarTareaVisible(
+		const { contexto } = await buscarTareaVisible(
 			this.tareaRepository,
 			this.contextos,
 			usuarioId,
@@ -34,8 +40,24 @@ export class ActualizarComentarioUseCase {
 		if (comentario.autorId !== usuarioId) {
 			throw new SinPermisoComentarioError("editar");
 		}
-		return ComentarioTareaMapper.toDto(
-			await this.comentarios.actualizar(ids.id, contenido),
+		const anteriores = new Set(extraerMenciones(comentario.contenido));
+		const conAcceso = contexto?.miembroIds ?? [];
+		const nuevasMenciones = extraerMenciones(contenido).filter(
+			(id) => id !== usuarioId && !anteriores.has(id) && conAcceso.includes(id),
 		);
+
+		const actualizado = await this.uow.ejecutar(async () => {
+			const res = await this.comentarios.actualizar(ids.id, contenido);
+			if (nuevasMenciones.length > 0) {
+				await this.eventBus.publish(
+					new TareaMencionadosEvent({
+						tareaId: ids.tareaId,
+						usuarioIds: nuevasMenciones,
+					}),
+				);
+			}
+			return res;
+		});
+		return ComentarioTareaMapper.toDto(actualizado);
 	}
 }

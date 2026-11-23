@@ -12,6 +12,7 @@ import {
 	comentarioIdSchema,
 	comentarioPaginaSchema,
 	comentarioSchema,
+	crearComentarioSchema,
 	listarComentariosSchema,
 	tareaComentariosSchema,
 } from "../schemas/comentarioSchemas";
@@ -23,6 +24,10 @@ import {
 const tags = ["Comentarios e historial de tareas"];
 const security = [{ bearerAuth: [] }];
 const recurso = "tareas";
+const cuerpoCrear = {
+	required: true,
+	content: { "application/json": { schema: crearComentarioSchema } },
+};
 const cuerpo = {
 	required: true,
 	content: { "application/json": { schema: comentarioSchema } },
@@ -90,15 +95,15 @@ export class ComentarioTareaRouter {
 			path: "/{id}/comentarios",
 			tags,
 			security,
-			summary: "Comentar una tarea",
+			summary: "Comentar una tarea o responder a un comentario",
 			description:
-				"Cualquiera que vea la tarea. Avisa a los mencionados y a sus responsables y creador.",
-			request: { params: tareaComentariosSchema, body: cuerpo },
+				"Cualquiera que vea la tarea. Avisa a los mencionados, al autor del comentario respondido y a sus responsables y creador.",
+			request: { params: tareaComentariosSchema, body: cuerpoCrear },
 			responses: {
 				201: jsonResponse(comentarioDtoSchema, "Comentario creado"),
 				400: errorResponse("Datos inválidos"),
 				...protectedErrorResponses(`${recurso}:leer`),
-				404: errorResponse("Tarea no encontrada"),
+				404: errorResponse("Tarea o comentario padre no encontrado"),
 			},
 		});
 		this.router.post(

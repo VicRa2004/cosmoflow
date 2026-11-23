@@ -108,6 +108,8 @@ export const tareaModule: AppModule = {
 						repo,
 						contextos,
 						comentarios,
+						eventBus,
+						uow,
 					),
 					eliminar: new EliminarComentarioUseCase(repo, contextos, comentarios),
 					actividad: new ObtenerActividadTareaUseCase(

@@ -10,6 +10,7 @@ import type { ObtenerComentariosUseCase } from "../../../application/useCases/Ob
 import {
 	comentarioIdSchema,
 	comentarioSchema,
+	crearComentarioSchema,
 	listarComentariosSchema,
 	tareaComentariosSchema,
 } from "../schemas/comentarioSchemas";
@@ -60,10 +61,10 @@ export class ComentarioTareaController extends BaseController {
 	crear = (c: Context<AuthEnv>): Promise<Response> =>
 		this.executeSafely(c, async () => {
 			const { id } = validate(tareaComentariosSchema, c.req.param());
-			const { contenido } = validate(comentarioSchema, await c.req.json());
+			const datos = validate(crearComentarioSchema, await c.req.json());
 			return this.created(
 				c,
-				await this.useCases.crear.ejecutar(c.get("usuario").id, id, contenido),
+				await this.useCases.crear.ejecutar(c.get("usuario").id, id, datos),
 			);
 		});
 
