@@ -1,7 +1,4 @@
-import {
-	PREFIJO_REFRESH_FIJO,
-	type TokenPersonalRepository,
-} from "../../domain/repository/TokenPersonalRepository";
+import type { TokenPersonalRepository } from "../../domain/repository/TokenPersonalRepository";
 import type { TokenService } from "../../domain/service/TokenService";
 import { generarCredenciales, type TokensConexion } from "./tokensConexion";
 
@@ -19,17 +16,9 @@ export class EmitirTokensConexionUseCase {
 		usuarioId: number;
 		nombre: string;
 		clientId: string;
-		/** El refresh no rotará al renovar (lo exige Gemini). */
-		refreshFijo?: boolean;
 	}): Promise<TokensConexion> {
-		const { refreshFijo, ...conexion } = dto;
-		const { tokens, credenciales } = generarCredenciales(
-			this.tokenService,
-			refreshFijo
-				? `${PREFIJO_REFRESH_FIJO}${this.tokenService.generarRefreshToken()}`
-				: undefined,
-		);
-		await this.repo.crearConexion({ ...conexion, ...credenciales });
+		const { tokens, credenciales } = generarCredenciales(this.tokenService);
+		await this.repo.crearConexion({ ...dto, ...credenciales });
 		return tokens;
 	}
 }
