@@ -36,8 +36,7 @@ description: "Flujo de autenticación del backend: access token JWT + refresh to
   (pudo crearla otra persona con ese email: pre-secuestro). Sin cuenta, la crea
   con una contraseña aleatoria (se puede fijar una con «¿Olvidaste tu contraseña?»).
 - El frontend (`routes/login_.google.tsx`) canjea la cookie con `/api/auth/refresh`
-  en `beforeLoad`, una sola vez (un segundo refresh con la misma cookie revocaría
-  la sesión).
+  en `beforeLoad`, una sola vez.
 
 El refresh token **nunca** viaja en el body: el servidor lo fija en la cookie
 `refresh_token` (`HttpOnly`, `SameSite=Lax`, `Path=/api/auth`, `Secure` en
@@ -82,7 +81,13 @@ El access token es **stateless** (el servidor no lo almacena). No se puede
 riesgo es mínima.
 
 El refresh token es **stateful** (su hash vive en la tabla `refresh_token`).
-Se puede revocar en cualquier momento haciendo `revoked = true` en la BD.
+Se puede revocar en cualquier momento haciendo `revocado = true` en la BD.
+
+**Rotación con margen:** cada `/refresh` emite un token nuevo y adelanta la
+caducidad del usado a 2 minutos (`SEGUNDOS_GRACIA_ROTACION`). Reutilizar uno ya
+rotado fuera de ese margen solo da 401 a ese cliente; **no** revoca las demás
+sesiones (una respuesta perdida por recarga, app suspendida o red móvil lo hacía
+a menudo y cerraba la sesión en web y móvil a la vez).
 
 ---
 

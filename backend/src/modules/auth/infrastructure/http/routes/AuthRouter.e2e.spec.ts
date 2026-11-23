@@ -26,7 +26,7 @@ describe("Auth (e2e)", () => {
 		expect((await refresh(cookie)).status).toBe(401);
 	});
 
-	it("login → refresh rota el token y reutilizar el viejo revoca la sesión", async () => {
+	it("login → refresh rota el token; reutilizar el viejo en el margen no cierra la sesión", async () => {
 		const login = await api("/api/auth/login", {
 			method: "POST",
 			body: { email: "ana@e2e.dev", password: PASSWORD },
@@ -41,8 +41,10 @@ describe("Auth (e2e)", () => {
 		expect(sesion.usuario.email).toBe("ana@e2e.dev");
 		const cookieNueva = refreshCookie(rotado);
 
-		expect((await refresh(cookieVieja)).status).toBe(401);
-		expect((await refresh(cookieNueva)).status).toBe(401);
+		// Respuesta perdida (recarga, app suspendida): el viejo aún vale unos segundos
+		// y reutilizarlo ya no revoca las demás sesiones.
+		expect((await refresh(cookieVieja)).status).toBe(200);
+		expect((await refresh(cookieNueva)).status).toBe(200);
 	});
 
 	it("móvil: el refresh token viaja en cuerpo y cabecera, nunca en cookie", async () => {

@@ -8,6 +8,9 @@ import type { TokenService } from "../../domain/service/TokenService";
 import type { RefreshTokenRepository } from "../../domain/repository/RefreshTokenRepository";
 import { EmisorSesion } from "../services/EmisorSesion";
 
+/** Margen en que el refresh token ya rotado sigue valiendo (respuestas perdidas, carreras entre pestañas). */
+const SEGUNDOS_GRACIA_ROTACION = 120;
+
 type ResultadoRefresh = {
 	accessToken: string;
 	refreshToken: string;
@@ -26,13 +29,13 @@ export class RefreshTokenUseCase {
 	) {}
 
 	/**
-	 * Rota el refresh token: revoca el anterior y genera uno nuevo.
-	 * También emite un nuevo access token.
+	 * Rota el refresh token: emite un par nuevo y deja el usado vivo solo
+	 * `SEGUNDOS_GRACIA_ROTACION` más.
 	 *
-	 * Implementa "Refresh Token Rotation" — si alguien reutiliza un token
-	 * ya revocado, se asume robo y se revocan TODOS los tokens del usuario.
-	 * Si dos peticiones llegan en paralelo con el mismo token antes de que termine
-	 * la rotación, comparten la misma operación en vuelo para no cerrar la sesión.
+	 * No se revocan las demás sesiones al reutilizar un token ya rotado: una
+	 * respuesta perdida (recarga, app suspendida, red móvil) lo hace a menudo y
+	 * cerraba la sesión en todos los dispositivos. Las peticiones concurrentes en
+	 * este proceso comparten la misma rotación para no crear sesiones de más.
 	 */
 	async ejecutar(refreshTokenActual: string): Promise<ResultadoRefresh> {
 		const tokenHash = this.tokenService.hashearRefreshToken(refreshTokenActual);
@@ -51,26 +54,9 @@ export class RefreshTokenUseCase {
 			await this.refreshTokenRepo.buscarValidoPorHash(tokenHash);
 
 		if (!tokenGuardado) {
-			// Si el token existe pero ya estaba revocado, fue reutilizado → posible
-			// robo: se revocan todas las sesiones del usuario.
-			const reutilizado = await this.refreshTokenRepo.buscarPorHash(tokenHash);
-			if (reutilizado?.revocado) {
-				await this.refreshTokenRepo.revocarTodosPorUsuarioId(
-					reutilizado.usuarioId,
-				);
-			}
 			throw new BaseError("Refresh token inválido o expirado", 401);
 		}
 
-		// Revocar el token usado (rotación). Si otra petición concurrente ya lo
-		// revocó, ésta pierde la carrera y no emite una segunda sesión.
-		const revocado = await this.refreshTokenRepo.revocarPorId(tokenGuardado.id);
-
-		if (!revocado) {
-			throw new BaseError("Refresh token inválido o expirado", 401);
-		}
-
-		// Verificar que el usuario exista y esté activo
 		const usuario = await this.usuarioRepository.buscarPorId(
 			tokenGuardado.usuarioId,
 		);
@@ -78,6 +64,11 @@ export class RefreshTokenUseCase {
 		if (!usuario?.getIsActivo()) {
 			throw new BaseError("Usuario no encontrado o inactivo", 401);
 		}
+
+		await this.refreshTokenRepo.caducarEn(
+			tokenGuardado.id,
+			new Date(Date.now() + SEGUNDOS_GRACIA_ROTACION * 1000),
+		);
 
 		// El usuario va en la respuesta: la SPA lo necesita al volver del login con Google.
 		return {
