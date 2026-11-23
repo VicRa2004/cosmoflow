@@ -1,5 +1,10 @@
-import { MessageSquare, Pencil, Trash2 } from "lucide-react";
-import { useState } from "react";
+import {
+	MessageSquare,
+	MessageSquareReply,
+	Pencil,
+	Trash2,
+} from "lucide-react";
+import { useMemo, useState } from "react";
 import { useAuthStore } from "@/core/auth/store";
 import { Avatar } from "@/core/components/ui/Avatar";
 import { Button } from "@/core/components/ui/Button";
@@ -19,6 +24,27 @@ const fecha = (iso: string) =>
 		dateStyle: "medium",
 		timeStyle: "short",
 	});
+
+/** Agrupa la conversación plana en comentarios raíz y sus respuestas (hilos de 1 nivel). */
+export function agruparHilos(comentarios: ComentarioTareaDto[]): {
+	raices: ComentarioTareaDto[];
+	respuestasPorPadre: Map<number, ComentarioTareaDto[]>;
+} {
+	const ids = new Set(comentarios.map((c) => c.id));
+	const raices: ComentarioTareaDto[] = [];
+	const respuestasPorPadre = new Map<number, ComentarioTareaDto[]>();
+
+	for (const comentario of comentarios) {
+		if (comentario.padreId !== null && ids.has(comentario.padreId)) {
+			const lista = respuestasPorPadre.get(comentario.padreId) ?? [];
+			lista.push(comentario);
+			respuestasPorPadre.set(comentario.padreId, lista);
+		} else {
+			raices.push(comentario);
+		}
+	}
+	return { raices, respuestasPorPadre };
+}
 
 /** Texto plano con saltos de línea y menciones `[@Nombre](mencion:ID)` resaltadas. */
 function TextoComentario({ contenido }: { contenido: string }) {
@@ -44,10 +70,14 @@ function TextoComentario({ contenido }: { contenido: string }) {
 function Comentario({
 	tarea,
 	comentario,
+	esRespuesta = false,
+	onResponder,
 	onEliminar,
 }: {
 	tarea: TareaDto;
 	comentario: ComentarioTareaDto;
+	esRespuesta?: boolean;
+	onResponder: (c: ComentarioTareaDto) => void;
 	onEliminar: (c: ComentarioTareaDto) => void;
 }) {
 	const yo = useAuthStore((state) => state.usuario?.id);
@@ -56,10 +86,13 @@ function Comentario({
 	const propio = comentario.autorId === yo;
 
 	return (
-		<li className="group/comentario flex gap-3 py-4 first:pt-1 last:pb-1">
+		<div className="group/comentario flex gap-3">
 			<Avatar
 				nombre={comentario.autorNombre}
-				className="mt-0.5 size-8 shrink-0"
+				url={comentario.autorAvatarUrl}
+				className={
+					esRespuesta ? "mt-0.5 size-6 shrink-0" : "mt-0.5 size-8 shrink-0"
+				}
 			/>
 			<div className="min-w-0 flex-1 space-y-1.5">
 				<div className="flex items-center justify-between gap-2">
@@ -72,26 +105,39 @@ function Comentario({
 							{comentario.editadoEn && " (editado)"}
 						</span>
 					</p>
-					{propio && !editando && (
+					{!editando && (
 						<div className="flex shrink-0 gap-1 opacity-0 transition-opacity group-focus-within/comentario:opacity-100 group-hover/comentario:opacity-100 [@media(hover:none)]:opacity-100">
 							<Button
 								variant="ghost"
 								size="sm"
-								onClick={() => setEditando(true)}
-								aria-label="Editar comentario"
+								onClick={() => onResponder(comentario)}
+								aria-label={`Responder a ${comentario.autorNombre}`}
 								className="h-7 px-2"
 							>
-								<Pencil className="h-3.5 w-3.5" />
+								<MessageSquareReply className="h-3.5 w-3.5" />
 							</Button>
-							<Button
-								variant="dangerGhost"
-								size="sm"
-								onClick={() => onEliminar(comentario)}
-								aria-label="Eliminar comentario"
-								className="h-7 px-2"
-							>
-								<Trash2 className="h-3.5 w-3.5" />
-							</Button>
+							{propio && (
+								<>
+									<Button
+										variant="ghost"
+										size="sm"
+										onClick={() => setEditando(true)}
+										aria-label="Editar comentario"
+										className="h-7 px-2"
+									>
+										<Pencil className="h-3.5 w-3.5" />
+									</Button>
+									<Button
+										variant="dangerGhost"
+										size="sm"
+										onClick={() => onEliminar(comentario)}
+										aria-label="Eliminar comentario"
+										className="h-7 px-2"
+									>
+										<Trash2 className="h-3.5 w-3.5" />
+									</Button>
+								</>
+							)}
 						</div>
 					)}
 				</div>
@@ -113,17 +159,41 @@ function Comentario({
 					<TextoComentario contenido={comentario.contenido} />
 				)}
 			</div>
-		</li>
+		</div>
 	);
 }
 
-/** Conversación clásica de una tarea, con menciones `@` en las compartidas. */
+/** Conversación clásica de una tarea en hilos de 1 nivel, con menciones `@` en las compartidas. */
 export function ComentariosTarea({ tarea }: { tarea: TareaDto }) {
 	const usuario = useAuthStore((state) => state.usuario);
 	const { data, isLoading } = useComentariosQuery(tarea.id);
 	const { crear, eliminar } = useComentariosMutation(tarea.id);
 	const [aEliminar, setAEliminar] = useState<ComentarioTareaDto | null>(null);
+	const [respondiendoA, setRespondiendoA] = useState<{
+		hiloId: number;
+		inicial: string;
+	} | null>(null);
 	const comentarios = data?.datos ?? [];
+	const { raices, respuestasPorPadre } = useMemo(
+		() => agruparHilos(comentarios),
+		[comentarios],
+	);
+
+	const abrirRespuesta = (hiloId: number, objetivo: ComentarioTareaDto) => {
+		// En compartidas, responder a otra persona dentro del hilo la deja etiquetada.
+		const etiquetar =
+			tarea.organizacionId !== null &&
+			objetivo.padreId !== null &&
+			objetivo.autorId !== usuario?.id;
+		const inicial = etiquetar
+			? `[@${objetivo.autorNombre}](mencion:${objetivo.autorId}) `
+			: "";
+		setRespondiendoA({ hiloId, inicial });
+	};
+
+	const respuestasAEliminar = aEliminar
+		? (respuestasPorPadre.get(aEliminar.id)?.length ?? 0)
+		: 0;
 
 	return (
 		<section aria-labelledby="comentarios" className="space-y-4">
@@ -147,14 +217,55 @@ export function ComentariosTarea({ tarea }: { tarea: TareaDto }) {
 				</p>
 			) : (
 				<ul className="divide-y divide-borde">
-					{comentarios.map((c) => (
-						<Comentario
-							key={c.id}
-							tarea={tarea}
-							comentario={c}
-							onEliminar={setAEliminar}
-						/>
-					))}
+					{raices.map((raiz) => {
+						const respuestas = respuestasPorPadre.get(raiz.id) ?? [];
+						const hiloActivo = respondiendoA?.hiloId === raiz.id;
+						return (
+							<li key={raiz.id} className="py-4 first:pt-1 last:pb-1">
+								<Comentario
+									tarea={tarea}
+									comentario={raiz}
+									onResponder={(c) => abrirRespuesta(raiz.id, c)}
+									onEliminar={setAEliminar}
+								/>
+								{(respuestas.length > 0 || hiloActivo) && (
+									<div className="ml-4 mt-3 space-y-3 border-l border-borde pl-5">
+										{respuestas.length > 0 && (
+											<ul className="space-y-3">
+												{respuestas.map((resp) => (
+													<li key={resp.id}>
+														<Comentario
+															tarea={tarea}
+															comentario={resp}
+															esRespuesta
+															onResponder={(c) => abrirRespuesta(raiz.id, c)}
+															onEliminar={setAEliminar}
+														/>
+													</li>
+												))}
+											</ul>
+										)}
+										{hiloActivo && (
+											<EditorComentario
+												key={respondiendoA.inicial}
+												tarea={tarea}
+												inicial={respondiendoA.inicial}
+												textoEnviar="Responder"
+												autoFocus
+												onCancelar={() => setRespondiendoA(null)}
+												onEnviar={(contenido) =>
+													crear.mutateAsync(
+														{ contenido, padreId: raiz.id },
+														{ onSuccess: () => setRespondiendoA(null) },
+													)
+												}
+											/>
+										)}
+									</div>
+								)}
+							</li>
+						);
+					})}
 				</ul>
 			)}
 
@@ -170,7 +281,7 @@ export function ComentariosTarea({ tarea }: { tarea: TareaDto }) {
 					<EditorComentario
 						tarea={tarea}
 						textoEnviar="Comentar"
-						onEnviar={(contenido) => crear.mutateAsync(contenido)}
+						onEnviar={(contenido) => crear.mutateAsync({ contenido })}
 					/>
 				</div>
 			</div>
@@ -178,7 +289,11 @@ export function ComentariosTarea({ tarea }: { tarea: TareaDto }) {
 			<ConfirmDialog
 				abierto={aEliminar !== null}
 				titulo="¿Eliminar el comentario?"
-				mensaje="Se borrará para siempre."
+				mensaje={
+					respuestasAEliminar > 0
+						? `Se borrará para siempre junto con ${respuestasAEliminar} ${respuestasAEliminar === 1 ? "respuesta" : "respuestas"}.`
+						: "Se borrará para siempre."
+				}
 				textoConfirmar="Eliminar"
 				peligroso
 				isLoading={eliminar.isPending}

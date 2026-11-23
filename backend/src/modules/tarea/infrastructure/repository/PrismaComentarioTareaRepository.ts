@@ -7,7 +7,7 @@ import type {
 } from "../../domain/repository/ComentarioTareaRepository";
 
 const include = {
-	autor: { select: { nombre: true } },
+	autor: { select: { nombre: true, avatar: true } },
 } satisfies Prisma.ComentarioTareaInclude;
 
 type Registro = Prisma.ComentarioTareaGetPayload<{ include: typeof include }>;
@@ -15,6 +15,7 @@ type Registro = Prisma.ComentarioTareaGetPayload<{ include: typeof include }>;
 const aDominio = ({ autor, ...resto }: Registro): ComentarioTarea => ({
 	...resto,
 	autorNombre: autor.nombre,
+	autorAvatar: autor.avatar,
 });
 
 export class PrismaComentarioTareaRepository
@@ -58,6 +59,7 @@ export class PrismaComentarioTareaRepository
 		tareaId: number;
 		autorId: number;
 		contenido: string;
+		padreId?: number | null;
 	}): Promise<ComentarioTarea> {
 		return aDominio(
 			await prisma.comentarioTarea.create({ data: datos, include }),

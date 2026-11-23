@@ -6,6 +6,10 @@ export interface ComentarioTarea {
 	autorId: number;
 	/** Para mostrarlo sin otra consulta: el autor puede no ser ya del contexto. */
 	autorNombre: string;
+	/** Clave del avatar del autor en el almacenamiento, si tiene. */
+	autorAvatar: string | null;
+	/** Comentario raíz al que responde (hilos de 1 nivel). */
+	padreId: number | null;
 	contenido: string;
 	createdAt: Date;
 	editadoEn: Date | null;
@@ -23,6 +27,7 @@ export interface ComentarioTareaRepository {
 		tareaId: number;
 		autorId: number;
 		contenido: string;
+		padreId?: number | null;
 	}) => Promise<ComentarioTarea>;
 	actualizar: (id: number, contenido: string) => Promise<ComentarioTarea>;
 	eliminar: (id: number) => Promise<void>;

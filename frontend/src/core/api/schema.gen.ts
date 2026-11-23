@@ -3188,8 +3188,8 @@ export interface paths {
         };
         put?: never;
         /**
-         * Comentar una tarea
-         * @description Cualquiera que vea la tarea. Avisa a los mencionados y a sus responsables y creador.
+         * Comentar una tarea o responder a un comentario
+         * @description Cualquiera que vea la tarea. Avisa a los mencionados, al autor del comentario respondido y a sus responsables y creador.
          */
         post: {
             parameters: {
@@ -3205,6 +3205,11 @@ export interface paths {
                     "application/json": {
                         /** @example Listo, [@Ana](mencion:12) ¿lo revisas? */
                         contenido: string;
+                        /**
+                         * @description ID del comentario al que responde (hilo de 1 nivel)
+                         * @example 1
+                         */
+                        padreId?: number | null;
                     };
                 };
             };
@@ -3245,7 +3250,7 @@ export interface paths {
                         "application/json": components["schemas"]["ErrorResponse"];
                     };
                 };
-                /** @description Tarea no encontrada */
+                /** @description Tarea o comentario padre no encontrado */
                 404: {
                     headers: {
                         [name: string]: unknown;
@@ -9644,6 +9649,10 @@ export interface components {
             autorId: number;
             /** @example Ana */
             autorNombre: string;
+            /** @example /api/avatares/3?v=abc */
+            autorAvatarUrl: string | null;
+            /** @example null */
+            padreId: number | null;
             contenido: string;
             /** Format: date-time */
             createdAt: string;

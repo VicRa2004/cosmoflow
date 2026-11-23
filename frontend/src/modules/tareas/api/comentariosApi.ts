@@ -17,10 +17,14 @@ export const comentariosApi = {
 		return response.data;
 	},
 
-	async crear(tareaId: number, contenido: string): Promise<ComentarioTareaDto> {
+	async crear(
+		tareaId: number,
+		contenido: string,
+		padreId?: number | null,
+	): Promise<ComentarioTareaDto> {
 		const response = await apiClient.post<ComentarioTareaDto>(
 			`/tareas/${tareaId}/comentarios`,
-			{ contenido },
+			padreId != null ? { contenido, padreId } : { contenido },
 		);
 		return response.data;
 	},

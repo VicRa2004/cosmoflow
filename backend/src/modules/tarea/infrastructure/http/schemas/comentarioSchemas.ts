@@ -27,6 +27,19 @@ export const comentarioSchema = z.object({
 		.openapi({ example: "Listo, [@Ana](mencion:12) ¿lo revisas?" }),
 });
 
+export const crearComentarioSchema = comentarioSchema.extend({
+	padreId: z
+		.number()
+		.int()
+		.positive("El comentario padre no es válido")
+		.nullable()
+		.optional()
+		.openapi({
+			example: 1,
+			description: "ID del comentario al que responde (hilo de 1 nivel)",
+		}),
+});
+
 // ── Respuestas (sólo documentación OpenAPI) ──────────────────────────────────
 
 export const comentarioDtoSchema = z
@@ -35,6 +48,11 @@ export const comentarioDtoSchema = z
 		tareaId: z.number().int().openapi({ example: 42 }),
 		autorId: z.number().int().openapi({ example: 3 }),
 		autorNombre: z.string().openapi({ example: "Ana" }),
+		autorAvatarUrl: z
+			.string()
+			.nullable()
+			.openapi({ example: "/api/avatares/3?v=abc" }),
+		padreId: z.number().int().nullable().openapi({ example: null }),
 		contenido: z.string(),
 		createdAt: z.iso.datetime(),
 		editadoEn: z.iso.datetime().nullable(),
