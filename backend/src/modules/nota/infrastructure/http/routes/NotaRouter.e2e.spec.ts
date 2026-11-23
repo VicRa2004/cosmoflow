@@ -66,6 +66,7 @@ describe("Notas personales (e2e)", () => {
 			"carpetaId",
 			"color",
 			"id",
+			"isFijada",
 			"titulo",
 		]);
 
