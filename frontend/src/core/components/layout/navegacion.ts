@@ -3,6 +3,7 @@ import { cn } from "@/core/utils/cn";
 import {
 	CalendarDays,
 	CircleDot,
+	LayoutTemplate,
 	ListTodo,
 	type LucideIcon,
 	ScrollText,
@@ -58,6 +59,12 @@ export const NAVEGACION: GrupoNavegacion[] = [
 				permiso: "notas:leer",
 			},
 			{ to: "/tags", etiqueta: "Tags", icono: Tag, permiso: "tags:leer" },
+			{
+				to: "/plantillas",
+				etiqueta: "Plantillas",
+				icono: LayoutTemplate,
+				permiso: "tareas:leer",
+			},
 			{
 				to: "/papelera",
 				etiqueta: "Papelera",

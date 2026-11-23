@@ -1,4 +1,5 @@
 import { z } from "zod";
+import type { PlantillaTareaDto } from "@/modules/plantillas/api/plantillasApi";
 import type {
 	EstadoTarea,
 	PrioridadTarea,
@@ -52,6 +53,13 @@ export const contextoTareaSearch = z.object({
 });
 
 export type ContextoTareaSearch = z.infer<typeof contextoTareaSearch>;
+
+/** Alta: el contexto y, si viene, la plantilla con la que se rellena (#175). */
+export const nuevaTareaSearch = contextoTareaSearch.extend({
+	plantillaId: idSearch,
+});
+
+export type NuevaTareaSearch = z.infer<typeof nuevaTareaSearch>;
 
 /**
  * Lista de `/tareas`: un contexto, `?asignadas=true` (en las que se es responsable)
@@ -152,5 +160,20 @@ export const tareaAFormValues = (dto: TareaDto): TareaFormValues => ({
 	subtareas: dto.subtareas.map((s) => ({
 		titulo: s.titulo,
 		completada: s.completada,
+	})),
+});
+
+/** Una tarea nueva con lo que trae la plantilla; las fechas, las de siempre. */
+export const plantillaAFormValues = (
+	plantilla: PlantillaTareaDto,
+): TareaFormValues => ({
+	...tareaFormVacio(),
+	titulo: plantilla.titulo,
+	contenido: plantilla.contenido,
+	prioridad: plantilla.prioridad,
+	color: plantilla.color ?? "",
+	subtareas: plantilla.subtareas.map((titulo) => ({
+		titulo,
+		completada: false,
 	})),
 });

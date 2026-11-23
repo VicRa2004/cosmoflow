@@ -4,6 +4,7 @@ import { Button } from "@/core/components/ui/Button";
 import { Kbd } from "@/core/components/ui/Kbd";
 import { useAppForm } from "@/core/components/form/useAppForm";
 import { useAtajoGuardar } from "@/core/components/form/useAtajoGuardar";
+import type { PlantillaTareaDto } from "@/modules/plantillas/api/plantillasApi";
 import { destinoDe, type TareaDto } from "../api/tareasApi";
 import { CampoResponsables } from "./CampoResponsables";
 import { useTareasQuery } from "../hooks/useTareasQuery";
@@ -17,6 +18,7 @@ import {
 	ETIQUETAS_ESTADO,
 	ETIQUETAS_PRIORIDAD,
 	ETIQUETAS_RECURRENCIA,
+	plantillaAFormValues,
 	tareaAFormValues,
 	tareaFormSchema,
 	tareaFormVacio,
@@ -30,6 +32,8 @@ interface TareaFormProps {
 	inicial?: TareaDto;
 	/** Al crear: organización, equipo o proyecto donde va (sin él, personal). */
 	contexto?: ContextoTareaSearch;
+	/** Al crear: rellena el formulario con ella (#175). */
+	plantilla?: PlantillaTareaDto;
 	onGuardado: () => void;
 	onVolver: () => void;
 }
@@ -41,6 +45,7 @@ const mismos = (a: number[], b: number[]) =>
 export function TareaForm({
 	inicial,
 	contexto,
+	plantilla,
 	onGuardado,
 	onVolver,
 }: TareaFormProps) {
@@ -63,7 +68,11 @@ export function TareaForm({
 	);
 
 	const form = useAppForm({
-		defaultValues: inicial ? tareaAFormValues(inicial) : tareaFormVacio(),
+		defaultValues: inicial
+			? tareaAFormValues(inicial)
+			: plantilla
+				? plantillaAFormValues(plantilla)
+				: tareaFormVacio(),
 		validators: { onSubmit: tareaFormSchema },
 		// `quedarse`: Ctrl+S al editar guarda sin salir; el botón sí sale.
 		onSubmitMeta: { quedarse: false },

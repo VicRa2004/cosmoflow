@@ -250,6 +250,23 @@ export function registrarHerramientas(servidor: McpServer, api: Api): void {
 	);
 
 	servidor.registerTool(
+		"listar_plantillas",
+		{
+			description:
+				"Plantillas de tareas personales o, con organizacionId, las de la organización. Para crear una tarea desde una, pasa sus campos a crear_tarea (cada subtarea como { titulo }).",
+			inputSchema: { organizacionId: id.optional() },
+			annotations: { readOnlyHint: true },
+		},
+		({ organizacionId }) =>
+			resultado(() =>
+				api(
+					"GET",
+					`${organizacionId ? `/api/organizaciones/${organizacionId}` : "/api"}/plantillas`,
+				),
+			),
+	);
+
+	servidor.registerTool(
 		"completar_tarea",
 		{
 			description: "Marca una tarea como completada.",

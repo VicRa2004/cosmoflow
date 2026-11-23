@@ -31,6 +31,8 @@ const EXENTOS: Record<string, string> = {
 		"avisos de la campana en la app: se marcan leídas y se purgan por antigüedad",
 	VinculoTelegram: "técnica: desvincular borra el vínculo",
 	SuscripcionCalendario: "técnica: revocar o regenerar sustituye el token",
+	PlantillaTarea:
+		"molde sin historial: borrarla no afecta a las tareas creadas con ella",
 	DispositivoPush: "técnica: tokens FCM que se dan de baja o caducan",
 	PreferenciaNotificacion: "ajuste del usuario; se sobrescribe, no se borra",
 	PreferenciaInterfaz: "ajuste del usuario; se sobrescribe, no se borra",

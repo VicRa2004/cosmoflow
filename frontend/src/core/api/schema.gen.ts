@@ -4535,6 +4535,524 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/plantillas": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Listar plantillas (por nombre, máx. 200) */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Plantillas */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PlantillaTareaDto"][];
+                    };
+                };
+                /** @description No autenticado */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Permiso denegado (requiere tareas:leer) */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        /** Crear plantilla */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        nombre: string;
+                        titulo: string;
+                        /** @default  */
+                        contenido?: string;
+                        /**
+                         * @default media
+                         * @enum {string}
+                         */
+                        prioridad?: "baja" | "media" | "alta";
+                        /**
+                         * @default null
+                         * @example #f59e0b
+                         */
+                        color?: string | null;
+                        /** @default [] */
+                        subtareas?: string[];
+                    };
+                };
+            };
+            responses: {
+                /** @description Plantilla creada */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PlantillaTareaDto"];
+                    };
+                };
+                /** @description Validación fallida */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description No autenticado */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Permiso denegado (requiere tareas:crear) */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/plantillas/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Actualizar plantilla */
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        nombre?: string;
+                        titulo?: string;
+                        contenido?: string;
+                        /** @enum {string} */
+                        prioridad?: "baja" | "media" | "alta";
+                        /** @example #f59e0b */
+                        color?: string | null;
+                        subtareas?: string[];
+                    };
+                };
+            };
+            responses: {
+                /** @description Plantilla actualizada */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PlantillaTareaDto"];
+                    };
+                };
+                /** @description Validación fallida */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description No autenticado */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Permiso denegado (requiere tareas:crear) */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Plantilla no encontrada */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        /** Eliminar plantilla (definitivo) */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Plantilla eliminada */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description No autenticado */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Permiso denegado (requiere tareas:crear) */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Plantilla no encontrada */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/organizaciones/{organizacionId}/plantillas": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Listar plantillas (por nombre, máx. 200) */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    organizacionId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Plantillas */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PlantillaTareaDto"][];
+                    };
+                };
+                /** @description No autenticado */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Permiso denegado (requiere tareas:leer) */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        /** Crear plantilla */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    organizacionId: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        nombre: string;
+                        titulo: string;
+                        /** @default  */
+                        contenido?: string;
+                        /**
+                         * @default media
+                         * @enum {string}
+                         */
+                        prioridad?: "baja" | "media" | "alta";
+                        /**
+                         * @default null
+                         * @example #f59e0b
+                         */
+                        color?: string | null;
+                        /** @default [] */
+                        subtareas?: string[];
+                    };
+                };
+            };
+            responses: {
+                /** @description Plantilla creada */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PlantillaTareaDto"];
+                    };
+                };
+                /** @description Validación fallida */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description No autenticado */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Sin plantillas:gestionar en la organización */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/organizaciones/{organizacionId}/plantillas/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Actualizar plantilla */
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                    organizacionId: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        nombre?: string;
+                        titulo?: string;
+                        contenido?: string;
+                        /** @enum {string} */
+                        prioridad?: "baja" | "media" | "alta";
+                        /** @example #f59e0b */
+                        color?: string | null;
+                        subtareas?: string[];
+                    };
+                };
+            };
+            responses: {
+                /** @description Plantilla actualizada */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PlantillaTareaDto"];
+                    };
+                };
+                /** @description Validación fallida */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description No autenticado */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Sin plantillas:gestionar en la organización */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Plantilla no encontrada */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        /** Eliminar plantilla (definitivo) */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                    organizacionId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Plantilla eliminada */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description No autenticado */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Sin plantillas:gestionar en la organización */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Plantilla no encontrada */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/calendario/tareas.ics": {
         parameters: {
             query?: never;
@@ -9927,6 +10445,18 @@ export interface components {
             /** @example 3 */
             afectadas: number;
         };
+        PlantillaTareaDto: {
+            /** @example 1 */
+            id: number;
+            nombre: string;
+            titulo: string;
+            contenido: string;
+            /** @enum {string} */
+            prioridad: "baja" | "media" | "alta";
+            /** @example #f59e0b */
+            color: string | null;
+            subtareas: string[];
+        };
         SuscripcionCalendario: {
             activa: boolean;
             /** Format: date-time */
@@ -10050,7 +10580,7 @@ export interface components {
             }[];
         };
         /** @enum {string} */
-        PermisoOrganizacion: "organizacion:editar" | "miembros:invitar" | "miembros:expulsar" | "roles:gestionar" | "equipos:crear" | "equipos:editar" | "equipos:eliminar" | "proyectos:crear" | "proyectos:editar" | "proyectos:eliminar" | "tags:gestionar";
+        PermisoOrganizacion: "organizacion:editar" | "miembros:invitar" | "miembros:expulsar" | "roles:gestionar" | "equipos:crear" | "equipos:editar" | "equipos:eliminar" | "proyectos:crear" | "proyectos:editar" | "proyectos:eliminar" | "tags:gestionar" | "plantillas:gestionar";
         RolOrganizacionDto: {
             /** @example 1 */
             id: number;
@@ -10271,6 +10801,7 @@ export type ComentarioTareaDto = components['schemas']['ComentarioTareaDto'];
 export type TareaDto = components['schemas']['TareaDto'];
 export type EstadisticasTareasDto = components['schemas']['EstadisticasTareasDto'];
 export type ResultadoLoteTareasDto = components['schemas']['ResultadoLoteTareasDto'];
+export type PlantillaTareaDto = components['schemas']['PlantillaTareaDto'];
 export type SuscripcionCalendario = components['schemas']['SuscripcionCalendario'];
 export type UrlCalendario = components['schemas']['UrlCalendario'];
 export type NotaDto = components['schemas']['NotaDto'];

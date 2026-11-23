@@ -15,6 +15,7 @@ export const PERMISOS_ORGANIZACION = [
 	"proyectos:editar",
 	"proyectos:eliminar",
 	"tags:gestionar",
+	"plantillas:gestionar",
 ] as const;
 
 export type PermisoOrganizacion = (typeof PERMISOS_ORGANIZACION)[number];
@@ -34,6 +35,7 @@ export const PLANTILLAS_ROL: {
 			"proyectos:editar",
 			"proyectos:eliminar",
 			"tags:gestionar",
+			"plantillas:gestionar",
 		],
 	},
 	// Solo ver: ser miembro ya da lectura.

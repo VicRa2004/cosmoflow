@@ -444,11 +444,24 @@ describe("Conector MCP (e2e)", () => {
 				"listar_miembros",
 				"listar_organizaciones",
 				"listar_pendientes",
+				"listar_plantillas",
 				"listar_proyectos",
 				"listar_tags",
 				"listar_tareas",
 				"mover_tarea",
 				"obtener_tarea",
+			]);
+		});
+
+		it("debería listar las plantillas personales", async () => {
+			await api("/api/plantillas", {
+				method: "POST",
+				token,
+				body: { nombre: "Release", titulo: "Publicar" },
+			});
+			const plantillas = await datos(token, "listar_plantillas");
+			expect(plantillas).toMatchObject([
+				{ nombre: "Release", titulo: "Publicar" },
 			]);
 		});
 

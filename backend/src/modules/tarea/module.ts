@@ -33,6 +33,13 @@ import { RevocarSuscripcionCalendarioUseCase } from "./application/useCases/Revo
 import { CalendarioController } from "./infrastructure/http/controllers/CalendarioController";
 import { CalendarioRouter } from "./infrastructure/http/routes/CalendarioRouter";
 import { PrismaSuscripcionCalendarioRepository } from "./infrastructure/repository/PrismaSuscripcionCalendarioRepository";
+import { ActualizarPlantillaUseCase } from "./application/useCases/plantillas/ActualizarPlantillaUseCase";
+import { CrearPlantillaUseCase } from "./application/useCases/plantillas/CrearPlantillaUseCase";
+import { EliminarPlantillaUseCase } from "./application/useCases/plantillas/EliminarPlantillaUseCase";
+import { ObtenerPlantillasUseCase } from "./application/useCases/plantillas/ObtenerPlantillasUseCase";
+import { PlantillaTareaController } from "./infrastructure/http/controllers/PlantillaTareaController";
+import { PlantillaTareaRouter } from "./infrastructure/http/routes/PlantillaTareaRouter";
+import { PrismaPlantillaTareaRepository } from "./infrastructure/repository/PrismaPlantillaTareaRepository";
 import { ObtenerCalendarioUseCase } from "./application/useCases/ObtenerCalendarioUseCase";
 import { ObtenerEstadisticasTareasUseCase } from "./application/useCases/ObtenerEstadisticasTareasUseCase";
 import { ObtenerTareaUseCase } from "./application/useCases/ObtenerTareaUseCase";
@@ -129,6 +136,24 @@ export const tareaModule: AppModule = {
 			).router,
 		);
 		app.route("/api/tareas", router.router);
+		const plantillas = new PrismaPlantillaTareaRepository();
+		const acceso = container.get(ORGANIZACION_TOKENS.AccesoOrganizacion);
+		const plantillaController = new PlantillaTareaController({
+			obtenerTodos: new ObtenerPlantillasUseCase(plantillas, acceso),
+			crear: new CrearPlantillaUseCase(plantillas, acceso),
+			actualizar: new ActualizarPlantillaUseCase(plantillas, acceso),
+			eliminar: new EliminarPlantillaUseCase(plantillas, acceso),
+		});
+		const auth = container.get(AUTH_TOKENS.AuthMiddleware);
+		const guard = container.get(TOKENS.PermisoGuard);
+		app.route(
+			"/api/plantillas",
+			new PlantillaTareaRouter(auth, guard, plantillaController).router,
+		);
+		app.route(
+			"/api/organizaciones/:organizacionId/plantillas",
+			new PlantillaTareaRouter(auth, guard, plantillaController, true).router,
+		);
 		const suscripciones = new PrismaSuscripcionCalendarioRepository();
 		app.route(
 			"/api/calendario",

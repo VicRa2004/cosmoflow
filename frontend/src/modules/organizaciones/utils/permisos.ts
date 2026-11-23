@@ -14,6 +14,8 @@ export const ETIQUETA_PERMISO: Record<PermisoOrganizacion, string> = {
 	"proyectos:editar": "Editar proyectos",
 	"proyectos:eliminar": "Eliminar proyectos",
 	"tags:gestionar": "Gestionar los tags de la organización",
+	"plantillas:gestionar":
+		"Gestionar las plantillas de tareas de la organización",
 };
 
 /** Solo oculta en la interfaz: quien decide es siempre el backend. */

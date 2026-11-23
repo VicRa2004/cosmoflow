@@ -32,6 +32,7 @@ export function OrganizacionLayout({ id }: { id: number }) {
 			? [{ to: "/organizaciones/$id/roles", etiqueta: "Roles" } as const]
 			: []),
 		{ to: "/organizaciones/$id/tags", etiqueta: "Tags" },
+		{ to: "/organizaciones/$id/plantillas", etiqueta: "Plantillas" },
 		...(puedeEn(data, "organizacion:editar") || data.isAdmin
 			? [{ to: "/organizaciones/$id/ajustes", etiqueta: "Ajustes" } as const]
 			: []),

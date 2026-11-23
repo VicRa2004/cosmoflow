@@ -1,11 +1,19 @@
 import { useCanGoBack, useNavigate, useRouter } from "@tanstack/react-router";
-import { Copy, FolderInput, Pencil, Pin, Trash2 } from "lucide-react";
+import {
+	Copy,
+	FolderInput,
+	LayoutTemplate,
+	Pencil,
+	Pin,
+	Trash2,
+} from "lucide-react";
 import { useState } from "react";
 import { usePermisos } from "@/core/auth/usePermisos";
 import { Button } from "@/core/components/ui/Button";
 import { ConfirmDialog } from "@/core/components/ui/ConfirmDialog";
 import { Spinner } from "@/core/components/ui/Spinner";
 import { PaginaLectura } from "@/modules/adjuntos/components/PaginaLectura";
+import { GuardarPlantillaDialog } from "@/modules/plantillas/components/GuardarPlantillaDialog";
 import { useMiembrosQuery } from "@/modules/organizaciones/hooks/useMiembros";
 import { TagsBadges } from "@/modules/tags/components/TagsBadges";
 import type { TareaDto } from "../api/tareasApi";
@@ -122,6 +130,7 @@ export function TareaLecturaPage({ id }: { id: number }) {
 	const fijar = useFijarTareaMutation();
 	const [moviendo, setMoviendo] = useState(false);
 	const [eliminando, setEliminando] = useState(false);
+	const [guardandoPlantilla, setGuardandoPlantilla] = useState(false);
 	// Vuelve a donde se abrió (lista, portada o correo); si se entró por URL, a la lista.
 	const volver = () =>
 		puedeVolver ? router.history.back() : navigate({ to: "/tareas" });
@@ -186,6 +195,16 @@ export function TareaLecturaPage({ id }: { id: number }) {
 								Duplicar
 							</Button>
 						)}
+						{puede("tareas:crear") && (
+							<Button
+								variant="outline"
+								size="sm"
+								onClick={() => setGuardandoPlantilla(true)}
+							>
+								<LayoutTemplate className="h-4 w-4" />
+								Guardar como plantilla
+							</Button>
+						)}
 						{puede("tareas:eliminar") && (
 							<Button
 								variant="dangerGhost"
@@ -228,6 +247,11 @@ export function TareaLecturaPage({ id }: { id: number }) {
 				abierto={moviendo}
 				onCerrar={() => setMoviendo(false)}
 				onMovida={() => setMoviendo(false)}
+			/>
+			<GuardarPlantillaDialog
+				tarea={tarea}
+				abierto={guardandoPlantilla}
+				onCerrar={() => setGuardandoPlantilla(false)}
 			/>
 			<ConfirmDialog
 				abierto={eliminando}

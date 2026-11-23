@@ -49,6 +49,7 @@ model Usuario {
   preferenciaInterfaz      PreferenciaInterfaz?
   vinculoTelegram          VinculoTelegram?
   suscripcionCalendario    SuscripcionCalendario?
+  plantillasTarea          PlantillaTarea[]
   dispositivosPush         DispositivoPush[]
   notificaciones           Notificacion[]
   notificacionesProvocadas Notificacion[]           @relation("NotificacionActor")
@@ -583,6 +584,7 @@ model Organizacion {
   invitaciones             Invitacion[]
   roles                    RolOrganizacion[]
   tags                     Tag[]
+  plantillasTarea          PlantillaTarea[]
   equipos                  Equipo[]
   proyectos                Proyecto[]
   tareas                   Tarea[]
@@ -921,4 +923,28 @@ model SuscripcionCalendario {
   usuario Usuario @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
 
   @@map("suscripcion_calendario")
+}
+
+/// Plantilla para crear tareas (#175): de un usuario o de una organización, nunca de
+/// los dos (CHECK `plantilla_tarea_un_solo_dueno`). Borrar es definitivo.
+model PlantillaTarea {
+  id             Int            @id @default(autoincrement()) @map("ptl_id")
+  usuarioId      Int?           @map("ptl_fkusuario")
+  organizacionId Int?           @map("ptl_fkorganizacion")
+  nombre         String         @map("ptl_nombre") @db.VarChar(100)
+  titulo         String         @map("ptl_titulo") @db.VarChar(255)
+  contenido      String         @default("") @map("ptl_contenido") @db.Text
+  prioridad      PrioridadTarea @default(media) @map("ptl_prioridad")
+  color          String?        @map("ptl_color") @db.VarChar(7)
+  /// Títulos de la checklist, en orden
+  subtareas      String[]       @map("ptl_subtareas")
+  createdAt      DateTime       @default(now()) @map("created_at")
+  updatedAt      DateTime?      @updatedAt @map("updated_at")
+
+  usuario      Usuario?      @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  organizacion Organizacion? @relation(fields: [organizacionId], references: [id], onDelete: Cascade)
+
+  @@index([usuarioId])
+  @@index([organizacionId])
+  @@map("plantilla_tarea")
 }
