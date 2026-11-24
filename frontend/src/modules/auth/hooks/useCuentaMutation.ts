@@ -3,7 +3,9 @@ import { useNavigate } from "@tanstack/react-router";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/core/api/client";
 import { useAuthStore } from "@/core/auth/store";
+import { descargarZip } from "@/modules/notas/utils/exportar";
 import { authApi } from "../api/authApi";
+import { archivosExportacion } from "../utils/exportarCuenta";
 
 const onError = (error: unknown) => toast.error(getErrorMessage(error));
 
@@ -63,6 +65,33 @@ export function useCerrarSesionesMutation() {
 		onSuccess: ({ mensaje }) => {
 			logout();
 			toast.success(mensaje);
+			navigate({ to: "/login" });
+		},
+		onError,
+	});
+}
+
+export function useExportarDatosMutation() {
+	return useMutation({
+		mutationFn: async () => {
+			const archivos = archivosExportacion(await authApi.exportarDatos());
+			descargarZip(
+				archivos,
+				`cosmoflow-mis-datos-${new Date().toISOString().slice(0, 10)}`,
+			);
+		},
+		onError,
+	});
+}
+
+export function useEliminarCuentaMutation() {
+	const navigate = useNavigate();
+	const logout = useAuthStore((state) => state.logout);
+	return useMutation({
+		mutationFn: authApi.eliminarCuenta,
+		onSuccess: () => {
+			logout();
+			toast.success("Tu cuenta se ha eliminado");
 			navigate({ to: "/login" });
 		},
 		onError,

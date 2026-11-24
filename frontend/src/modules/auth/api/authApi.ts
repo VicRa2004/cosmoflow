@@ -14,6 +14,7 @@ type TokenPersonalCreado = components["schemas"]["TokenPersonalCreado"];
 export type SesionDto = components["schemas"]["SesionDto"];
 type DosPasosRequerido = components["schemas"]["DosPasosRequerido"];
 type DosPasosEstado = components["schemas"]["DosPasosEstado"];
+export type DatosExportados = components["schemas"]["DatosExportados"];
 
 export const authApi = {
 	async tokensPersonales(): Promise<TokenPersonal[]> {
@@ -168,5 +169,16 @@ export const authApi = {
 
 	async revocarSesion(id: number): Promise<void> {
 		await apiClient.delete(`/auth/sesiones/${id}`);
+	},
+
+	async exportarDatos(): Promise<DatosExportados> {
+		const response = await apiClient.get<DatosExportados>(
+			"/cuenta/exportacion",
+		);
+		return response.data;
+	},
+
+	async eliminarCuenta(password: string): Promise<void> {
+		await apiClient.delete("/cuenta", { data: { password } });
 	},
 };

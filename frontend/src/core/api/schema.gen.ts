@@ -1644,6 +1644,142 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/cuenta/exportacion": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Exportar mis datos
+         * @description Tareas y notas (no borradas) que creó el usuario, personales y compartidas, con sus carpetas. El cliente las empaqueta en un ZIP.
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Mis datos */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["DatosExportados"];
+                    };
+                };
+                /** @description No autenticado */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Solo con sesión, no con un token personal */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/cuenta": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Eliminar mi cuenta
+         * @description Pide la contraseña. Borra lo personal (tareas, notas, carpetas, tags, plantillas, adjuntos, sesiones y tokens), saca al usuario de sus organizaciones y anonimiza la cuenta; lo compartido que creó se queda en su organización como «Usuario eliminado». No se puede siendo el único administrador de una organización.
+         */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        password: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Cuenta eliminada */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Validación fallida o contraseña incorrecta */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description No autenticado */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Solo con sesión, no con un token personal */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Único administrador de alguna organización */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/tokens-personales": {
         parameters: {
             query?: never;
@@ -10761,6 +10897,47 @@ export interface components {
             /** @example 10 */
             codigosRestantes: number;
         };
+        DatosExportados: {
+            tareas: {
+                id: number;
+                titulo: string;
+                contenido: string;
+                estado: string;
+                prioridad: string;
+                /** Format: date-time */
+                fechaInicio: string | null;
+                /** Format: date-time */
+                fechaVencimiento: string | null;
+                organizacionId: number | null;
+                equipoId: number | null;
+                proyectoId: number | null;
+                subtareas: {
+                    titulo: string;
+                    completada: boolean;
+                }[];
+                /** Format: date-time */
+                createdAt: string;
+                /** Format: date-time */
+                updatedAt: string | null;
+            }[];
+            notas: {
+                id: number;
+                titulo: string;
+                contenido: string;
+                carpetaId: number | null;
+                organizacionId: number | null;
+                proyectoId: number | null;
+                /** Format: date-time */
+                createdAt: string;
+                /** Format: date-time */
+                updatedAt: string;
+            }[];
+            carpetas: {
+                id: number;
+                nombre: string;
+                padreId: number | null;
+            }[];
+        };
         TokenPersonalCreado: components["schemas"]["TokenPersonalDto"] & {
             /** @description Solo se devuelve aquí */
             token: string;
@@ -11342,6 +11519,7 @@ export type AuthResponse = components['schemas']['AuthResponse'];
 export type DosPasosRequerido = components['schemas']['DosPasosRequerido'];
 export type SesionDto = components['schemas']['SesionDto'];
 export type DosPasosEstado = components['schemas']['DosPasosEstado'];
+export type DatosExportados = components['schemas']['DatosExportados'];
 export type TokenPersonalCreado = components['schemas']['TokenPersonalCreado'];
 export type TokenPersonalDto = components['schemas']['TokenPersonalDto'];
 export type AlcanceToken = components['schemas']['AlcanceToken'];
