@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import '../../../core/theme/colores_noche_indigo.dart';
 import '../../../core/widgets/editor_markdown.dart';
 import '../../tags/models/tag_model.dart';
@@ -80,9 +81,8 @@ class NotaFormState extends State<NotaForm> {
 
   @override
   Widget build(BuildContext context) {
-    final seccion = Theme.of(
-      context,
-    ).textTheme.labelLarge?.copyWith(color: context.colores.tintaTenue);
+    final seccion = Theme.of(context).textTheme.labelLarge
+        ?.copyWith(color: context.colores.tintaTenue);
     return Form(
       key: _formKey,
       onChanged: widget.onCambio,

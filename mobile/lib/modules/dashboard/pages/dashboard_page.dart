@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import '../../../core/auth/sesion_store.dart';
 import '../../../core/offline/aviso_pendientes.dart';
 import '../../../core/theme/colores_noche_indigo.dart';
@@ -88,9 +89,8 @@ class _DashboardPageState extends State<DashboardPage> {
               alignment: Alignment.centerLeft,
               child: Text(
                 resumen,
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: context.colores.tintaTenue,
-                ),
+                style: Theme.of(context).textTheme.bodySmall
+                    ?.copyWith(color: context.colores.tintaTenue),
               ),
             ),
           ),
@@ -122,8 +122,7 @@ class _DashboardPageState extends State<DashboardPage> {
               const EstadoVacio(
                 icono: Icons.task_alt_rounded,
                 titulo: 'Nada pendiente',
-                mensaje:
-                    'Crea una tarea y aparecerá aquí, ordenada por vencimiento.',
+                mensaje: 'Crea una tarea y aparecerá aquí, ordenada por vencimiento.',
               )
             else
               for (final tarea in _pendientes) ...<Widget>[

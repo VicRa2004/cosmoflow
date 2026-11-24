@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import '../../../core/theme/colores_noche_indigo.dart';
 
 /// Esqueleto común de login, registro y recuperar contraseña: marca, título,
@@ -118,9 +119,8 @@ class _Aviso extends StatelessWidget {
           Expanded(
             child: Text(
               texto,
-              style: Theme.of(
-                context,
-              ).textTheme.bodyMedium?.copyWith(color: color),
+              style: Theme.of(context).textTheme.bodyMedium
+                  ?.copyWith(color: color),
             ),
           ),
         ],

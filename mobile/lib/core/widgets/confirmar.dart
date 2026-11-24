@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import '../theme/colores_noche_indigo.dart';
 
 /// Diálogo de confirmación. Devuelve `true` solo si el usuario acepta.

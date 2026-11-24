@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import '../theme/colores_noche_indigo.dart';
 
 /// Primera carga de una lista: indicador centrado.

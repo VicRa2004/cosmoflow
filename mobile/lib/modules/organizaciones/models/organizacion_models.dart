@@ -237,7 +237,8 @@ const Map<String, String> etiquetasPermisoOrganizacion = <String, String>{
   'proyectos:editar': 'Editar proyectos',
   'proyectos:eliminar': 'Eliminar proyectos',
   'tags:gestionar': 'Gestionar los tags de la organización',
-  'plantillas:gestionar': 'Gestionar las plantillas de tareas de la organización',
+  'plantillas:gestionar':
+      'Gestionar las plantillas de tareas de la organización',
 };
 
 /// Integrante de un equipo con su flag de delegación (`puedeCrearTareas`).

@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+
 import '../api/api_client.dart';
 
 /// Consulta `GET /api/permisos/mios` y sincroniza los permisos efectivos en `SesionStore`.

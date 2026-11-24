@@ -1,8 +1,10 @@
 import 'dart:convert';
 import 'dart:math';
+
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
 import '../api/api_client.dart';
 
 /// Alta hecha sin red: el `POST` que se repetirá al volver la conexión.

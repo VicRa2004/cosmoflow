@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import '../../../core/theme/colores_noche_indigo.dart';
 import '../models/carpeta_model.dart';
 import '../models/nota_model.dart';
@@ -34,9 +35,8 @@ class NotaFila extends StatelessWidget {
               meta,
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
-              style: Theme.of(
-                context,
-              ).textTheme.bodySmall?.copyWith(color: colores.tintaTenue),
+              style: Theme.of(context).textTheme.bodySmall
+                  ?.copyWith(color: colores.tintaTenue),
             ),
     );
   }
