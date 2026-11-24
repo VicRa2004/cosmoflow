@@ -1,5 +1,5 @@
 import { useNavigate } from "@tanstack/react-router";
-import { FilePlus2, Trash2 } from "lucide-react";
+import { FilePlus2, Pencil, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/core/components/ui/Button";
 import {
@@ -18,10 +18,11 @@ import {
 	useEliminarPlantillaMutation,
 	usePlantillasQuery,
 } from "../hooks/usePlantillas";
+import { EditarPlantillaDialog } from "./EditarPlantillaDialog";
 
 /**
  * Plantillas personales o, con `organizacionId`, de la organización (las ven todos
- * sus miembros; con `plantillas:gestionar` se borran). Se crean desde una tarea.
+ * sus miembros; con `plantillas:gestionar` se editan y borran). Se crean desde una tarea.
  */
 export function PlantillasCard({
 	organizacionId,
@@ -34,6 +35,7 @@ export function PlantillasCard({
 	const { data: plantillas } = usePlantillasQuery(organizacionId);
 	const eliminar = useEliminarPlantillaMutation(organizacionId);
 	const [borrando, setBorrando] = useState<PlantillaTareaDto | null>(null);
+	const [editando, setEditando] = useState<PlantillaTareaDto | null>(null);
 
 	return (
 		<Card>
@@ -84,14 +86,24 @@ export function PlantillasCard({
 										Usar
 									</Button>
 									{puedeGestionar && (
-										<Button
-											variant="dangerGhost"
-											size="sm"
-											aria-label={`Eliminar la plantilla ${p.nombre}`}
-											onClick={() => setBorrando(p)}
-										>
-											<Trash2 className="h-4 w-4" />
-										</Button>
+										<>
+											<Button
+												variant="ghost"
+												size="sm"
+												aria-label={`Editar la plantilla ${p.nombre}`}
+												onClick={() => setEditando(p)}
+											>
+												<Pencil className="h-4 w-4" />
+											</Button>
+											<Button
+												variant="dangerGhost"
+												size="sm"
+												aria-label={`Eliminar la plantilla ${p.nombre}`}
+												onClick={() => setBorrando(p)}
+											>
+												<Trash2 className="h-4 w-4" />
+											</Button>
+										</>
 									)}
 								</div>
 							</li>
@@ -99,6 +111,11 @@ export function PlantillasCard({
 					</ul>
 				)}
 			</CardContent>
+			<EditarPlantillaDialog
+				plantilla={editando}
+				organizacionId={organizacionId}
+				onCerrar={() => setEditando(null)}
+			/>
 			<ConfirmDialog
 				abierto={borrando !== null}
 				titulo={`¿Eliminar la plantilla «${borrando?.nombre ?? ""}»?`}

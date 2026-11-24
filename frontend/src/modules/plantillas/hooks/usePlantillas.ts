@@ -1,7 +1,11 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/core/api/client";
-import { type CrearPlantillaInput, plantillasApi } from "../api/plantillasApi";
+import {
+	type ActualizarPlantillaInput,
+	type CrearPlantillaInput,
+	plantillasApi,
+} from "../api/plantillasApi";
 
 const plantillasKey = (organizacionId?: number) =>
 	["plantillas", organizacionId ?? "personales"] as const;
@@ -46,6 +50,26 @@ export function useCrearPlantillaMutation() {
 		}) => plantillasApi.crear(datos, organizacionId),
 		onSuccess: (_, { organizacionId }) => {
 			toast.success("Plantilla guardada");
+			return queryClient.invalidateQueries({
+				queryKey: plantillasKey(organizacionId),
+			});
+		},
+		onError,
+	});
+}
+
+export function useActualizarPlantillaMutation(organizacionId?: number) {
+	const queryClient = useQueryClient();
+	return useMutation({
+		mutationFn: ({
+			id,
+			datos,
+		}: {
+			id: number;
+			datos: ActualizarPlantillaInput;
+		}) => plantillasApi.actualizar(id, datos, organizacionId),
+		onSuccess: () => {
+			toast.success("Plantilla actualizada");
 			return queryClient.invalidateQueries({
 				queryKey: plantillasKey(organizacionId),
 			});
