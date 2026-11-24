@@ -380,6 +380,9 @@ model Tarea {
   @@index([organizacionId])
   @@index([equipoId])
   @@index([proyectoId])
+  /// Búsqueda global (#52): `contains` sin distinguir mayúsculas = ILIKE, que usa estos índices de pg_trgm
+  @@index([titulo(ops: raw("gin_trgm_ops"))], type: Gin)
+  @@index([contenido(ops: raw("gin_trgm_ops"))], type: Gin)
   @@map("tarea")
 }
 
@@ -495,6 +498,9 @@ model Nota {
   @@index([usuarioId, updatedAt])
   @@index([proyectoId, updatedAt])
   @@index([carpetaId])
+  /// Búsqueda global (#52): `contains` sin distinguir mayúsculas = ILIKE, que usa estos índices de pg_trgm
+  @@index([titulo(ops: raw("gin_trgm_ops"))], type: Gin)
+  @@index([contenido(ops: raw("gin_trgm_ops"))], type: Gin)
   @@map("nota")
 }
 
@@ -706,6 +712,8 @@ model Equipo {
   /// Destino de las FK compuestas de `MiembroEquipo` y `ProyectoEquipo`
   @@unique([organizacionId, id])
   @@index([organizacionId])
+  /// Búsqueda global (#52): `contains` sin distinguir mayúsculas = ILIKE, que usa estos índices de pg_trgm
+  @@index([nombre(ops: raw("gin_trgm_ops"))], type: Gin)
   @@map("equipo")
 }
 
@@ -776,6 +784,8 @@ model Proyecto {
   /// Destino de las FK compuestas de `ProyectoEquipo` e `IntegranteProyecto`
   @@unique([organizacionId, id])
   @@index([organizacionId])
+  /// Búsqueda global (#52): `contains` sin distinguir mayúsculas = ILIKE, que usa estos índices de pg_trgm
+  @@index([nombre(ops: raw("gin_trgm_ops"))], type: Gin)
   @@map("proyecto")
 }
 

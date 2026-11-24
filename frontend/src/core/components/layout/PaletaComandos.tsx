@@ -1,11 +1,13 @@
 import { useNavigate } from "@tanstack/react-router";
 import {
 	Building2,
+	FolderKanban,
 	ListTodo,
 	type LucideIcon,
 	Plus,
 	StickyNote,
 	Tag,
+	Users,
 } from "lucide-react";
 import {
 	type Dispatch,
@@ -19,6 +21,7 @@ import { Dialog } from "@/core/components/ui/Dialog";
 import { Input } from "@/core/components/ui/Input";
 import { cn } from "@/core/utils/cn";
 import { normalizar } from "@/core/utils/normalizar";
+import { useBusquedaQuery } from "@/modules/busqueda/hooks/useBusquedaQuery";
 import { useOrganizacionesQuery } from "@/modules/organizaciones/hooks/useOrganizacionesQuery";
 
 interface Comando {
@@ -28,7 +31,10 @@ interface Comando {
 	ejecutar: () => void;
 }
 
-/** Ctrl+K (⌘K): salta a tareas, notas, tags u organizaciones, o crea tareas, notas y tags. */
+/**
+ * Ctrl+K (⌘K): salta a tareas, notas, tags u organizaciones, o crea tareas, notas y tags.
+ * Desde 2 caracteres busca también en tareas, notas, proyectos y equipos (búsqueda global).
+ */
 export function PaletaComandos({
 	abierta,
 	setAbierta,
@@ -67,6 +73,13 @@ function ListaComandos({ onElegido }: { onElegido: () => void }) {
 		nombre: texto.trim() || undefined,
 		orden: "recientes",
 	});
+	// El backend exige los tres permisos de lectura (los mismos que los listados).
+	const buscarTodo =
+		puede("tareas:leer") && puede("notas:leer") && verOrganizaciones;
+	const { data: busqueda } = useBusquedaQuery(texto, buscarTodo);
+	// Con menos de 2 caracteres no hay búsqueda: no arrastrar los resultados anteriores.
+	const resultados =
+		buscarTodo && texto.trim().length >= 2 ? busqueda : undefined;
 
 	const fijos: (Comando & { visible: boolean })[] = [
 		{
@@ -132,6 +145,40 @@ function ListaComandos({ onElegido }: { onElegido: () => void }) {
 			ejecutar: () =>
 				navigate({ to: "/organizaciones/$id", params: { id: String(o.id) } }),
 		})),
+		...(resultados?.tareas ?? []).map((t) => ({
+			id: `tarea-${t.id}`,
+			etiqueta: t.titulo,
+			icono: ListTodo,
+			ejecutar: () =>
+				navigate({ to: "/tareas/$id", params: { id: String(t.id) } }),
+		})),
+		...(resultados?.notas ?? []).map((n) => ({
+			id: `nota-${n.id}`,
+			etiqueta: n.titulo,
+			icono: StickyNote,
+			ejecutar: () =>
+				navigate({ to: "/notas/$id", params: { id: String(n.id) } }),
+		})),
+		...(resultados?.proyectos ?? []).map((p) => ({
+			id: `proyecto-${p.id}`,
+			etiqueta: p.nombre,
+			icono: FolderKanban,
+			ejecutar: () =>
+				navigate({
+					to: "/tareas",
+					search: { organizacionId: p.organizacionId, proyectoId: p.id },
+				}),
+		})),
+		...(resultados?.equipos ?? []).map((e) => ({
+			id: `equipo-${e.id}`,
+			etiqueta: e.nombre,
+			icono: Users,
+			ejecutar: () =>
+				navigate({
+					to: "/organizaciones/$id/equipos/$equipoId",
+					params: { id: String(e.organizacionId), equipoId: String(e.id) },
+				}),
+		})),
 	];
 	const indice = Math.min(activo, comandos.length - 1);
 
@@ -148,13 +195,13 @@ function ListaComandos({ onElegido }: { onElegido: () => void }) {
 				// (sin él, la X); el `autoFocus` de React no lo pinta en el DOM.
 				ref={(input) => input?.setAttribute("autofocus", "")}
 				role="combobox"
-				aria-label="Buscar comando u organización"
+				aria-label="Buscar comandos, tareas, notas, proyectos, equipos u organizaciones"
 				aria-expanded
 				aria-controls={idLista}
 				aria-activedescendant={
 					comandos[indice] ? `${idLista}-${comandos[indice].id}` : undefined
 				}
-				placeholder="Buscar comando u organización..."
+				placeholder="Buscar tareas, notas, proyectos, equipos…"
 				value={texto}
 				onChange={(e) => {
 					setTexto(e.target.value);

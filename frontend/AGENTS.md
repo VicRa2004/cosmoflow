@@ -75,6 +75,7 @@ frontend/src/
 │   ├── conexiones/                 # Conector MCP: pasos para conectar Claude en el perfil (ConectarClaudeCard), pantalla de permiso OAuth (AutorizarConexionPage) y URL iCalendar de los pendientes (CalendarioCard, `/api/calendario`)
 │   ├── configuracion/              # /configuracion: preferencias de interfaz guardadas en la cuenta (Query; `aplicarPreferencias` las pone como `data-*` en <html> y guarda copia local para pintar sin parpadeo)
 │   ├── plantillas/                 # Plantillas de tareas personales (/plantillas) y de organización (pestaña «Plantillas», `plantillas:gestionar`; editar con EditarPlantillaDialog): «Guardar como plantilla» en la lectura de una tarea y «Desde plantilla» en /tareas/nueva (`?plantillaId=`, rellena TareaForm al montarlo)
+│   ├── busqueda/                   # Búsqueda global (`GET /api/busqueda`): sus resultados salen en la paleta Ctrl+K (core/components/layout/PaletaComandos)
 │   ├── tags/                       # Tags personales; SelectorTags, TagsBadges y useTagsDisponibles los usan tareas y notas
 │   ├── papelera/                   # /papelera: tareas y notas borradas que el usuario aún vería; restaurar o borrar del todo (el backend las purga a los 30 días)
 │   │

@@ -10278,6 +10278,71 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/busqueda": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Búsqueda global en tareas, notas, proyectos y equipos visibles (#52) */
+        get: {
+            parameters: {
+                query: {
+                    q: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Hasta 5 de cada tipo */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ResultadosBusquedaDto"];
+                    };
+                };
+                /** @description Texto vacío, de menos de 2 o más de 100 caracteres */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description No autenticado */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Permiso denegado (requiere tareas:leer, notas:leer y organizaciones:leer) */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -10878,6 +10943,26 @@ export interface components {
         ConexionAutorizada: {
             redirectUri: string;
         };
+        ResultadosBusquedaDto: {
+            tareas: {
+                id: number;
+                titulo: string;
+            }[];
+            notas: {
+                id: number;
+                titulo: string;
+            }[];
+            proyectos: {
+                id: number;
+                nombre: string;
+                organizacionId: number;
+            }[];
+            equipos: {
+                id: number;
+                nombre: string;
+                organizacionId: number;
+            }[];
+        };
     };
     responses: never;
     parameters: never;
@@ -10933,5 +11018,6 @@ export type EliminarDispositivoPush = components['schemas']['EliminarDispositivo
 export type PreferenciasInterfaz = components['schemas']['PreferenciasInterfaz'];
 export type DestinoConexion = components['schemas']['DestinoConexion'];
 export type ConexionAutorizada = components['schemas']['ConexionAutorizada'];
+export type ResultadosBusquedaDto = components['schemas']['ResultadosBusquedaDto'];
 export type $defs = Record<string, never>;
 export type operations = Record<string, never>;

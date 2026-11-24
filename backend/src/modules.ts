@@ -14,6 +14,7 @@ import { proyectoModule } from "@/modules/proyecto/module";
 import { notificacionModule } from "@/modules/notificacion/module";
 import { preferenciaModule } from "@/modules/preferencia/module";
 import { mcpModule } from "@/modules/mcp/module";
+import { busquedaModule } from "@/modules/busqueda/module";
 
 /**
  * Módulos activos, en orden de registro. Añadir o quitar un módulo = tocar esta lista
@@ -37,4 +38,5 @@ export const modules: AppModule[] = [
 	notificacionModule,
 	preferenciaModule,
 	mcpModule,
+	busquedaModule,
 ];

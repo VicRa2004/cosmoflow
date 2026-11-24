@@ -8,6 +8,7 @@ import type {
 	TareaFiltros,
 	TareaRepository,
 } from "../../domain/repository/TareaRepository";
+import { visiblePara } from "./visiblePara";
 import {
 	type DatosTarea,
 	ESTADOS_TAREA,
@@ -37,32 +38,6 @@ const aDia = (fecha: Date | null) => fecha?.toISOString().slice(0, 10) ?? null;
 const aFecha = (dia: string | null) => (dia ? new Date(dia) : null);
 
 const ABIERTAS = { in: ["pendiente" as const, "en_progreso" as const] };
-
-/** Misma visibilidad que `ContextosTarea`, en una sola consulta. */
-const visiblePara = (usuarioId: number): Prisma.TareaWhereInput => {
-	const esMiembro = { some: { usuarioId } };
-	return {
-		OR: [
-			{ usuarioId, organizacionId: null },
-			{ responsables: esMiembro },
-			{
-				equipoId: null,
-				proyectoId: null,
-				organizacion: { deletedAt: null, miembros: esMiembro },
-			},
-			{ equipo: { deletedAt: null, miembros: esMiembro } },
-			{
-				proyecto: {
-					deletedAt: null,
-					OR: [
-						{ integrantes: esMiembro },
-						{ equipos: { some: { equipo: { miembros: esMiembro } } } },
-					],
-				},
-			},
-		],
-	};
-};
 
 /**
  * Las que asignó a otros y aún ve. Las asignaciones anteriores a guardar quién
