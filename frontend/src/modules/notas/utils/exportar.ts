@@ -28,8 +28,8 @@ export function descargarNotaMd(nota: Pick<NotaDto, "titulo" | "contenido">) {
  * ámbito), listos para Obsidian. Un nombre repetido recibe « (2)», « (3)»…
  */
 export function archivosZip(
-	notas: NotaDto[],
-	carpetas: CarpetaDto[],
+	notas: Pick<NotaDto, "titulo" | "contenido" | "carpetaId">[],
+	carpetas: Pick<CarpetaDto, "id" | "nombre" | "padreId">[],
 	raizId: number | null,
 ): Record<string, Uint8Array> {
 	const dentro = raizId === null ? null : subarbol(raizId, carpetas);
