@@ -9,7 +9,8 @@ description: "Flujo de autenticación del backend: access token JWT + refresh to
 
 | Método | Ruta | Body | Respuesta |
 |--------|------|------|-----------|
-| POST | `/api/auth/login` | `{ email, password }` | `{ accessToken, usuario }` + cookie |
+| POST | `/api/auth/login` | `{ email, password }` | `{ accessToken, usuario }` + cookie, o `{ requiereDosPasos, tokenDosPasos }` con 2FA |
+| POST | `/api/auth/login/dos-pasos` | `{ tokenDosPasos, codigo }` | `{ accessToken, usuario }` + cookie |
 | POST | `/api/auth/registro` | `{ nombre, email, password }` | `{ accessToken, usuario }` + cookie |
 | POST | `/api/auth/refresh` | — (lee la cookie) | `{ accessToken, usuario }` + cookie nueva |
 | POST | `/api/auth/logout` | — (lee la cookie) | `{ mensaje }` y borra la cookie |
@@ -19,8 +20,35 @@ description: "Flujo de autenticación del backend: access token JWT + refresh to
 | POST | `/api/auth/verificar-email/reenviar` | — (Bearer) | `{ mensaje }` |
 | PUT | `/api/auth/password` | `{ passwordActual, passwordNueva }` (Bearer) | `{ accessToken }` + cookie nueva; revoca el resto de sesiones |
 | POST | `/api/auth/logout-todas` | — (Bearer) | `{ mensaje }`; revoca todos los refresh tokens y borra la cookie |
+| GET | `/api/auth/dos-pasos` | — (Bearer, solo sesión) | `{ isActivo, codigosRestantes }` |
+| POST | `/api/auth/dos-pasos/iniciar` | — (Bearer, solo sesión) | `{ secreto, uri }` (secreto pendiente para el QR) |
+| POST | `/api/auth/dos-pasos/activar` | `{ codigo }` (Bearer, solo sesión) | `{ codigosRecuperacion }` (se ven una sola vez) |
+| POST | `/api/auth/dos-pasos/desactivar` | `{ password }` o `{ codigo }` (Bearer, solo sesión) | `{ mensaje }` |
 | GET | `/api/auth/google` | — (navegación) | `302` a Google (state + PKCE en la cookie `google_oauth`) |
 | GET | `/api/auth/google/callback` | `?code&state` | `302` a `/login/google` + cookie, o a `/login?error=google` |
+
+## Verificación en dos pasos (TOTP)
+
+- RFC 6238 propio con `node:crypto` (`domain/totp.ts`, con los vectores del RFC en
+  su spec): SHA-1, 6 dígitos, 30 s, ±1 paso de tolerancia. `dos_pasos.ultimoPaso`
+  impide reutilizar un código (también el de la activación).
+- El secreto se guarda cifrado con AES-256-GCM (`infrastructure/service/cifradoSecretos.ts`)
+  con `DOS_PASOS_CLAVE`, o una clave derivada de `JWT_SECRET` si no está definida
+  (entonces rotar `JWT_SECRET` deja inservible el 2FA de todos: definirla en producción).
+- 10 códigos de recuperación `xxxxx-xxxxx` de un solo uso, guardados como hash
+  SHA-256 en `codigo_recuperacion`. Activar de nuevo los reemplaza.
+- Login: con la contraseña correcta y el 2FA activo, `/login` no emite sesión: da
+  un `tokenDosPasos` (JWT de 5 min firmado con un secreto derivado distinto, así
+  no vale como access token ni al revés). `/login/dos-pasos` lo canjea con un código
+  de la app o de recuperación. Límite 10 / 15 min por IP y los fallos suman al
+  **mismo bloqueo de cuenta** que la contraseña (5 seguidos = 15 min); acertar la
+  contraseña no reinicia el contador mientras falte el código.
+- **Login con Google no pide el código**: Google ya aplica su propia verificación
+  (y su 2FA si el usuario lo tiene). Tampoco `/refresh` ni los tokens personales.
+- Restablecer la contraseña por correo **no** desactiva el 2FA. Sin móvil ni
+  códigos, un admin debe borrar la fila de `dos_pasos` a mano.
+- Activar y desactivar publican `auth.dosPasosActivado` / `auth.dosPasosDesactivado`
+  (los guarda `auditoria`).
 
 ## Login con Google
 

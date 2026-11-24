@@ -4,6 +4,12 @@ import { TOKENS } from "@/core/shared/infrastructure/di/tokens";
 import { USUARIO_TOKENS } from "@/core/usuario";
 import { EmisorCorreosCuenta } from "./application/services/EmisorCorreosCuenta";
 import { EmisorSesion } from "./application/services/EmisorSesion";
+import { VerificadorDosPasos } from "./application/services/VerificadorDosPasos";
+import { ActivarDosPasosUseCase } from "./application/useCases/ActivarDosPasosUseCase";
+import { CompletarLoginDosPasosUseCase } from "./application/useCases/CompletarLoginDosPasosUseCase";
+import { DesactivarDosPasosUseCase } from "./application/useCases/DesactivarDosPasosUseCase";
+import { IniciarDosPasosUseCase } from "./application/useCases/IniciarDosPasosUseCase";
+import { ObtenerDosPasosUseCase } from "./application/useCases/ObtenerDosPasosUseCase";
 import { CambiarPasswordUseCase } from "./application/useCases/CambiarPasswordUseCase";
 import { AutenticarTokenPersonalUseCase } from "./application/useCases/AutenticarTokenPersonalUseCase";
 import { CerrarSesionesUseCase } from "./application/useCases/CerrarSesionesUseCase";
@@ -26,6 +32,7 @@ import { DIAS_CONEXION_SIN_USO } from "./application/useCases/tokensConexion";
 import { SolicitarRecuperacionUseCase } from "./application/useCases/SolicitarRecuperacionUseCase";
 import { VerificarEmailUseCase } from "./application/useCases/VerificarEmailUseCase";
 import { CuentaController } from "./infrastructure/http/controllers/CuentaController";
+import { DosPasosController } from "./infrastructure/http/controllers/DosPasosController";
 import { GoogleController } from "./infrastructure/http/controllers/GoogleController";
 import { LoginController } from "./infrastructure/http/controllers/LoginController";
 import { LogoutController } from "./infrastructure/http/controllers/LogoutController";
@@ -37,6 +44,7 @@ import { AuthMiddleware } from "./infrastructure/http/middlewares/authMiddleware
 import { AuthRouter } from "./infrastructure/http/routes/AuthRouter";
 import { TokenPersonalRouter } from "./infrastructure/http/routes/TokenPersonalRouter";
 import { PrismaCuentaRepository } from "./infrastructure/repository/PrismaCuentaRepository";
+import { PrismaDosPasosRepository } from "./infrastructure/repository/PrismaDosPasosRepository";
 import { PrismaRefreshTokenRepository } from "./infrastructure/repository/PrismaRefreshTokenRepository";
 import { PrismaTokenPersonalRepository } from "./infrastructure/repository/PrismaTokenPersonalRepository";
 import { GoogleOAuthService } from "./infrastructure/service/GoogleOAuthService";
@@ -48,6 +56,7 @@ const tokenService = new JwtService();
 const refreshTokenRepo = new PrismaRefreshTokenRepository();
 const cuentaRepo = new PrismaCuentaRepository();
 const tokenPersonalRepo = new PrismaTokenPersonalRepository();
+const dosPasosRepo = new PrismaDosPasosRepository();
 const google =
 	env.GOOGLE_CLIENT_ID && env.GOOGLE_CLIENT_SECRET
 		? new GoogleOAuthService(
@@ -89,6 +98,8 @@ export const authModule: AppModule = {
 		const usuarios = container.get(USUARIO_TOKENS.UsuarioRepository);
 		const hasher = container.get(USUARIO_TOKENS.PasswordHasher);
 		const sesiones = new EmisorSesion(tokenService, refreshTokenRepo);
+		const eventBus = container.get(TOKENS.EventBus);
+		const verificadorDosPasos = new VerificadorDosPasos(dosPasosRepo);
 		const correos = new EmisorCorreosCuenta(
 			tokenService,
 			cuentaRepo,
@@ -97,9 +108,23 @@ export const authModule: AppModule = {
 		);
 
 		const router = new AuthRouter(
-			new LoginController(
-				new LoginUseCase(usuarios, hasher, sesiones, cuentaRepo),
-			),
+			new LoginController({
+				login: new LoginUseCase(
+					usuarios,
+					hasher,
+					sesiones,
+					cuentaRepo,
+					dosPasosRepo,
+					tokenService,
+				),
+				completarDosPasos: new CompletarLoginDosPasosUseCase(
+					tokenService,
+					usuarios,
+					verificadorDosPasos,
+					cuentaRepo,
+					sesiones,
+				),
+			}),
 			new RegistroController(
 				new RegistroUseCase(usuarios, hasher, sesiones, correos),
 			),
@@ -156,6 +181,18 @@ export const authModule: AppModule = {
 					refreshTokenRepo,
 				),
 				revocar: new RevocarSesionUseCase(tokenService, refreshTokenRepo),
+			}),
+			new DosPasosController({
+				obtener: new ObtenerDosPasosUseCase(dosPasosRepo),
+				iniciar: new IniciarDosPasosUseCase(usuarios, dosPasosRepo),
+				activar: new ActivarDosPasosUseCase(dosPasosRepo, eventBus),
+				desactivar: new DesactivarDosPasosUseCase(
+					usuarios,
+					hasher,
+					dosPasosRepo,
+					verificadorDosPasos,
+					eventBus,
+				),
 			}),
 			container.get(AUTH_TOKENS.AuthMiddleware),
 		);

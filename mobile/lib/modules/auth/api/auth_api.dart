@@ -46,10 +46,38 @@ class AuthApi {
   final RecordatoriosService? recordatorios;
 
   /// Inicia sesión con email y contraseña (`POST /api/auth/login`).
-  Future<void> login({required String email, required String password}) async {
+  ///
+  /// Devuelve `null` si ya hay sesión, o el token intermedio si la cuenta tiene
+  /// la verificación en dos pasos: se completa con [completarDosPasos].
+  Future<String?> login({
+    required String email,
+    required String password,
+  }) async {
     final response = await apiClient.dio.post<Map<String, dynamic>>(
       '/auth/login',
       data: <String, dynamic>{'email': email.trim(), 'password': password},
+    );
+
+    final data = response.data;
+    if (data?['requiereDosPasos'] == true) {
+      return data!['tokenDosPasos'] as String;
+    }
+    await _procesarRespuestaSesion(data);
+    return null;
+  }
+
+  /// Segundo paso del login: código de la app autenticadora o de recuperación
+  /// (`POST /api/auth/login/dos-pasos`).
+  Future<void> completarDosPasos({
+    required String tokenDosPasos,
+    required String codigo,
+  }) async {
+    final response = await apiClient.dio.post<Map<String, dynamic>>(
+      '/auth/login/dos-pasos',
+      data: <String, dynamic>{
+        'tokenDosPasos': tokenDosPasos,
+        'codigo': codigo.trim(),
+      },
     );
 
     await _procesarRespuestaSesion(response.data);

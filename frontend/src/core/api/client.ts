@@ -17,6 +17,7 @@ type MensajeAuth = { tipo: "token"; accessToken: string } | { tipo: "logout" };
 const RUTAS_AUTH_SIN_REFRESH = new Set([
 	"/auth/refresh",
 	"/auth/login",
+	"/auth/login/dos-pasos",
 	"/auth/registro",
 	"/auth/logout",
 ]);

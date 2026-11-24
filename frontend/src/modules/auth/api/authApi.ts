@@ -12,6 +12,8 @@ export type TokenPersonal = components["schemas"]["TokenPersonalDto"];
 export type AlcanceToken = components["schemas"]["AlcanceToken"];
 type TokenPersonalCreado = components["schemas"]["TokenPersonalCreado"];
 export type SesionDto = components["schemas"]["SesionDto"];
+type DosPasosRequerido = components["schemas"]["DosPasosRequerido"];
+type DosPasosEstado = components["schemas"]["DosPasosEstado"];
 
 export const authApi = {
 	async tokensPersonales(): Promise<TokenPersonal[]> {
@@ -43,10 +45,55 @@ export const authApi = {
 		await apiClient.delete(`/tokens-personales/${id}`);
 	},
 
-	async login(credentials: LoginInput): Promise<AuthResponse> {
-		const response = await apiClient.post<AuthResponse>(
+	// Con la verificación en dos pasos activa no hay sesión aún: falta el código.
+	async login(
+		credentials: LoginInput,
+	): Promise<AuthResponse | DosPasosRequerido> {
+		const response = await apiClient.post<AuthResponse | DosPasosRequerido>(
 			"/auth/login",
 			credentials,
+		);
+		return response.data;
+	},
+
+	async loginDosPasos(datos: {
+		tokenDosPasos: string;
+		codigo: string;
+	}): Promise<AuthResponse> {
+		const response = await apiClient.post<AuthResponse>(
+			"/auth/login/dos-pasos",
+			datos,
+		);
+		return response.data;
+	},
+
+	async dosPasos(): Promise<DosPasosEstado> {
+		const response = await apiClient.get<DosPasosEstado>("/auth/dos-pasos");
+		return response.data;
+	},
+
+	async iniciarDosPasos(): Promise<{ secreto: string; uri: string }> {
+		const response = await apiClient.post<{ secreto: string; uri: string }>(
+			"/auth/dos-pasos/iniciar",
+		);
+		return response.data;
+	},
+
+	async activarDosPasos(codigo: string): Promise<string[]> {
+		const response = await apiClient.post<{ codigosRecuperacion: string[] }>(
+			"/auth/dos-pasos/activar",
+			{ codigo },
+		);
+		return response.data.codigosRecuperacion;
+	},
+
+	async desactivarDosPasos(datos: {
+		password?: string;
+		codigo?: string;
+	}): Promise<Mensaje> {
+		const response = await apiClient.post<Mensaje>(
+			"/auth/dos-pasos/desactivar",
+			datos,
 		);
 		return response.data;
 	},

@@ -14,6 +14,12 @@ const EnvSchema = z
 		JWT_SECRET: z
 			.string("JWT_SECRET es obligatorio")
 			.min(32, "JWT_SECRET debe tener al menos 32 caracteres"),
+		// Clave con la que se cifran los secretos TOTP (2FA). Sin ella se deriva de
+		// JWT_SECRET; definirla permite rotar JWT_SECRET sin invalidar el 2FA.
+		DOS_PASOS_CLAVE: z
+			.string()
+			.min(32, "DOS_PASOS_CLAVE debe tener al menos 32 caracteres")
+			.optional(),
 		// Orígenes permitidos por CORS, separados por comas.
 		CORS_ORIGIN: z
 			.string()
@@ -78,6 +84,7 @@ const envPrev = {
 	NODE_ENV: process.env.NODE_ENV,
 	DATABASE_URL: process.env.DATABASE_URL,
 	JWT_SECRET: process.env.JWT_SECRET,
+	DOS_PASOS_CLAVE: process.env.DOS_PASOS_CLAVE || undefined,
 	CORS_ORIGIN: process.env.CORS_ORIGIN,
 	APP_URL: process.env.APP_URL || undefined,
 	SMTP_HOST: process.env.SMTP_HOST || undefined,

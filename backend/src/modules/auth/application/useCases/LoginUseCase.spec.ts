@@ -14,6 +14,7 @@ const mockPasswordHasher = {
 
 const mockTokenService = {
 	generarToken: mock(() => "access"),
+	generarTokenDosPasos: mock(() => "token-2fa"),
 	generarRefreshToken: mock(() => "refresh"),
 	hashearRefreshToken: mock(() => "refresh_hash"),
 };
@@ -26,6 +27,10 @@ const mockCuentaRepo = {
 	bloqueadoHasta: mock(async (): Promise<Date | null> => null),
 	registrarFallo: mock(async () => {}),
 	reiniciarFallos: mock(async () => {}),
+};
+
+const mockDosPasosRepo = {
+	obtener: mock(async (): Promise<{ isActivo: boolean } | null> => null),
 };
 
 const construirUsuario = (isActivo: boolean) =>
@@ -49,6 +54,8 @@ describe("LoginUseCase", () => {
 				mockRefreshTokenRepo as never,
 			),
 			mockCuentaRepo as never,
+			mockDosPasosRepo as never,
+			mockTokenService as never,
 		);
 	});
 
@@ -66,7 +73,7 @@ describe("LoginUseCase", () => {
 		expect(mockUsuarioRepository.buscarPorEmail).toHaveBeenCalledWith(
 			"a@x.com",
 		);
-		expect(resultado.usuario.id).toBe(5);
+		expect("usuario" in resultado && resultado.usuario.id).toBe(5);
 		expect(mockRefreshTokenRepo.crear).toHaveBeenCalled();
 	});
 
@@ -134,5 +141,26 @@ describe("LoginUseCase", () => {
 		await useCase.ejecutar({ email: "a@x.com", password: "pass" });
 
 		expect(mockCuentaRepo.reiniciarFallos).toHaveBeenCalledWith(5);
+	});
+
+	it("con 2FA activo devuelve el token intermedio sin sesión ni reiniciar fallos", async () => {
+		mockUsuarioRepository.buscarPorEmail.mockResolvedValue(
+			construirUsuario(true),
+		);
+		mockPasswordHasher.comparar.mockResolvedValue(true);
+		mockDosPasosRepo.obtener.mockResolvedValueOnce({ isActivo: true });
+
+		const resultado = await useCase.ejecutar({
+			email: "a@x.com",
+			password: "pass",
+		});
+
+		expect(resultado).toEqual({
+			requiereDosPasos: true,
+			tokenDosPasos: "token-2fa",
+		});
+		expect(mockTokenService.generarTokenDosPasos).toHaveBeenCalledWith(5);
+		expect(mockRefreshTokenRepo.crear).not.toHaveBeenCalled();
+		expect(mockCuentaRepo.reiniciarFallos).not.toHaveBeenCalled();
 	});
 });

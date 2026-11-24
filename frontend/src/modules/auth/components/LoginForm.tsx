@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useNavigate, useRouter } from "@tanstack/react-router";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/core/api/client";
@@ -5,13 +6,24 @@ import { useAuthStore } from "@/core/auth/store";
 import { useAppForm } from "@/core/components/form/useAppForm";
 import { Button } from "@/core/components/ui/Button";
 import { authApi } from "../api/authApi";
+import type { AuthResponse } from "@/core/auth/types";
 import { type LoginInput, loginSchema } from "../schemas/authSchemas";
+import { CodigoDosPasosForm } from "./CodigoDosPasosForm";
 
 /** `destino`: ruta interna a la que volver tras entrar; sin él, la portada. */
 export function LoginForm({ destino }: { destino?: string }) {
 	const navigate = useNavigate();
 	const router = useRouter();
 	const login = useAuthStore((state) => state.login);
+	/** Contraseña correcta con 2FA activo: falta el código. */
+	const [tokenDosPasos, setTokenDosPasos] = useState<string | null>(null);
+
+	const entrar = (response: AuthResponse) => {
+		login(response);
+		toast.success(`¡Bienvenido de nuevo, ${response.usuario.nombre}!`);
+		if (destino) router.history.push(destino);
+		else navigate({ to: "/" });
+	};
 
 	const form = useAppForm({
 		defaultValues: { email: "", password: "" } as LoginInput,
@@ -19,10 +31,9 @@ export function LoginForm({ destino }: { destino?: string }) {
 		onSubmit: async ({ value }) => {
 			try {
 				const response = await authApi.login(value);
-				login(response);
-				toast.success(`¡Bienvenido de nuevo, ${response.usuario.nombre}!`);
-				if (destino) router.history.push(destino);
-				else navigate({ to: "/" });
+				if ("requiereDosPasos" in response) {
+					setTokenDosPasos(response.tokenDosPasos);
+				} else entrar(response);
 			} catch (error: unknown) {
 				toast.error(getErrorMessage(error));
 			}
@@ -33,6 +44,16 @@ export function LoginForm({ destino }: { destino?: string }) {
 		form.setFieldValue("email", "admin@dev.com");
 		form.setFieldValue("password", "SecurePass123!");
 	};
+
+	if (tokenDosPasos) {
+		return (
+			<CodigoDosPasosForm
+				tokenDosPasos={tokenDosPasos}
+				onEntrar={entrar}
+				onVolver={() => setTokenDosPasos(null)}
+			/>
+		);
+	}
 
 	return (
 		<form.AppForm>

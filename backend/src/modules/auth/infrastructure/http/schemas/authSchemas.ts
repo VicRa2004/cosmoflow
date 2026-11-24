@@ -41,6 +41,34 @@ export const cambiarPasswordSchema = z.object({
 	passwordNueva: passwordSchema,
 });
 
+const codigoTotpSchema = z
+	.string("El código es obligatorio")
+	.trim()
+	.regex(/^\d{6}$/, "El código tiene 6 dígitos");
+
+/** Código de la app (6 dígitos) o de recuperación (`xxxxx-xxxxx`). */
+const codigoDosPasosSchema = z
+	.string("El código es obligatorio")
+	.trim()
+	.min(6, "El código es obligatorio")
+	.max(20, "Código inválido");
+
+export const loginDosPasosSchema = z.object({
+	tokenDosPasos: z.string().min(1, "El token es obligatorio").max(1024),
+	codigo: codigoDosPasosSchema,
+});
+
+export const activarDosPasosSchema = z.object({ codigo: codigoTotpSchema });
+
+export const desactivarDosPasosSchema = z
+	.object({
+		password: z.string().min(1).optional(),
+		codigo: codigoDosPasosSchema.optional(),
+	})
+	.refine((d) => d.password || d.codigo, {
+		message: "Indica tu contraseña o un código",
+	});
+
 export const refreshTokenSchema = z.object({
 	refreshToken: z.string().min(1, "El refresh token es obligatorio"),
 });
@@ -71,6 +99,34 @@ export const authResponseSchema = z
 		refreshToken: refreshTokenMovilSchema,
 	})
 	.openapi("AuthResponse");
+
+export const dosPasosRequeridoSchema = z
+	.object({
+		requiereDosPasos: z.literal(true),
+		tokenDosPasos: z.string().openapi({
+			description:
+				"Token intermedio (5 min): se canjea con el código en `POST /api/auth/login/dos-pasos`.",
+		}),
+	})
+	.openapi("DosPasosRequerido");
+
+export const dosPasosEstadoSchema = z
+	.object({
+		isActivo: z.boolean(),
+		codigosRestantes: z.number().int().openapi({ example: 10 }),
+	})
+	.openapi("DosPasosEstado");
+
+export const iniciarDosPasosResponseSchema = z.object({
+	secreto: z.string().openapi({ example: "JBSWY3DPEHPK3PXPJBSWY3DPEHPK3PXP" }),
+	uri: z.string().openapi({ description: "URI `otpauth://` para el QR" }),
+});
+
+export const codigosRecuperacionResponseSchema = z.object({
+	codigosRecuperacion: z.array(z.string()).openapi({
+		description: "Códigos de un solo uso: solo se muestran ahora",
+	}),
+});
 
 export const refreshResponseSchema = z.object({
 	accessToken: accessTokenSchema,

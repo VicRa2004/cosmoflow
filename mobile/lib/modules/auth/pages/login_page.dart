@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../api/auth_api.dart';
 import '../widgets/auth_layout.dart';
 import '../widgets/boton_google.dart';
+import '../widgets/codigo_dos_pasos_form.dart';
 import '../widgets/google_oauth_sheet.dart';
 
 /// Pantalla de inicio de sesión con estética «Noche índigo».
@@ -25,6 +26,9 @@ class _LoginPageState extends State<LoginPage> with WidgetsBindingObserver {
   bool _isCargando = false;
   bool _isCargandoGoogle = false;
   String? _mensajeError;
+
+  /// Contraseña correcta con la verificación en dos pasos activa: falta el código.
+  String? _tokenDosPasos;
 
   bool get _ocupado => _isCargando || _isCargandoGoogle;
 
@@ -96,10 +100,13 @@ class _LoginPageState extends State<LoginPage> with WidgetsBindingObserver {
     });
 
     try {
-      await widget.authApi.login(
+      final tokenDosPasos = await widget.authApi.login(
         email: _emailController.text,
         password: _passwordController.text,
       );
+      if (tokenDosPasos != null && mounted) {
+        setState(() => _tokenDosPasos = tokenDosPasos);
+      }
     } on DioException catch (e) {
       final data = e.response?.data;
       final mensajeServidor = data is Map<String, dynamic>
@@ -129,6 +136,27 @@ class _LoginPageState extends State<LoginPage> with WidgetsBindingObserver {
 
   @override
   Widget build(BuildContext context) {
+    final tokenDosPasos = _tokenDosPasos;
+    if (tokenDosPasos != null) {
+      return AuthLayout(
+        formKey: _formKey,
+        titulo: 'Verificación en dos pasos',
+        subtitulo: 'Confirma que eres tú.',
+        mensajeError: _mensajeError,
+        children: <Widget>[
+          CodigoDosPasosForm(
+            authApi: widget.authApi,
+            tokenDosPasos: tokenDosPasos,
+            onError: (mensaje) => setState(() => _mensajeError = mensaje),
+            onVolver: () => setState(() {
+              _tokenDosPasos = null;
+              _mensajeError = null;
+            }),
+          ),
+        ],
+      );
+    }
+
     return AuthLayout(
       formKey: _formKey,
       titulo: 'Iniciar sesión',

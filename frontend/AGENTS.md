@@ -59,7 +59,7 @@ frontend/src/
 ├── modules/                        # Lógica de dominio modular
 │   ├── auth/                       # Módulo de Autenticación
 │   │   ├── api/                    # Llamadas a la API de auth (authApi.ts)
-│   │   ├── components/             # Formularios (Login, Registro, Recuperar/Restablecer/CambiarPassword, SeguridadCuentaCard)
+│   │   ├── components/             # Formularios (Login, Registro, Recuperar/Restablecer/CambiarPassword, SeguridadCuentaCard, DosPasosCard y CodigoDosPasosForm del login)
 │   │   ├── hooks/                  # Mutaciones de cuenta (useCuentaMutation.ts)
 │   │   ├── pages/                  # Login, Registro, RecuperarPassword, RestablecerPassword, VerificarEmail
 │   │   └── schemas/                # Validaciones Zod (authSchemas.ts)

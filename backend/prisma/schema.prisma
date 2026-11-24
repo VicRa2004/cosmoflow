@@ -37,6 +37,7 @@ model Usuario {
   permisosDirectos         UsuarioPermiso[]
   refreshTokens            RefreshToken[]
   tokensCuenta             TokenCuenta[]
+  dosPasos                 DosPasos?
   tokensPersonales         TokenPersonal[]
   codigosOAuth             CodigoOAuth[]
   tags                     Tag[]
@@ -191,6 +192,35 @@ model TokenCuenta {
 
   @@index([usuarioId, tipo])
   @@map("token_cuenta")
+}
+
+/// Verificación en dos pasos (TOTP, módulo auth). `activadoEn` null = configuración sin confirmar.
+model DosPasos {
+  usuarioId      Int       @id @map("dps_fkusuario")
+  /// Secreto TOTP cifrado con AES-256-GCM, nunca en claro
+  secretoCifrado String    @map("dps_secreto_cifrado") @db.VarChar(255)
+  activadoEn     DateTime? @map("dps_activado_en")
+  /// Último paso de 30 s aceptado: un código no vale dos veces
+  ultimoPaso     Int       @default(0) @map("dps_ultimo_paso")
+  createdAt      DateTime  @default(now()) @map("dps_created_at")
+
+  usuario             Usuario              @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  codigosRecuperacion CodigoRecuperacion[]
+
+  @@map("dos_pasos")
+}
+
+/// Código de recuperación de la verificación en dos pasos: un solo uso, guardado como hash SHA-256.
+model CodigoRecuperacion {
+  id         Int       @id @default(autoincrement()) @map("cdr_id")
+  usuarioId  Int       @map("cdr_fkusuario")
+  codigoHash String    @map("cdr_codigo_hash") @db.VarChar(64)
+  usadoEn    DateTime? @map("cdr_usado_en")
+
+  dosPasos DosPasos @relation(fields: [usuarioId], references: [usuarioId], onDelete: Cascade)
+
+  @@unique([usuarioId, codigoHash])
+  @@map("codigo_recuperacion")
 }
 
 /// Token personal para clientes de la API: creado a mano (no caduca) o una conexión

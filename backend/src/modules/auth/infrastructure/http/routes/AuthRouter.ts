@@ -5,6 +5,7 @@ import { RegistroController } from "../controllers/RegistroController";
 import { RefreshTokenController } from "../controllers/RefreshTokenController";
 import { LogoutController } from "../controllers/LogoutController";
 import type { CuentaController } from "../controllers/CuentaController";
+import type { DosPasosController } from "../controllers/DosPasosController";
 import type { GoogleController } from "../controllers/GoogleController";
 import type { SesionController } from "../controllers/SesionController";
 import type { AuthMiddleware } from "../middlewares/authMiddleware";
@@ -14,8 +15,15 @@ import {
 	jsonResponse,
 } from "@/core/shared/infrastructure/http/openapi";
 import {
+	activarDosPasosSchema,
 	authResponseSchema,
 	cambiarPasswordSchema,
+	codigosRecuperacionResponseSchema,
+	desactivarDosPasosSchema,
+	dosPasosEstadoSchema,
+	dosPasosRequeridoSchema,
+	iniciarDosPasosResponseSchema,
+	loginDosPasosSchema,
 	loginSchema,
 	mensajeResponseSchema,
 	recuperarPasswordSchema,
@@ -50,6 +58,7 @@ export class AuthRouter {
 		private readonly cuentaController: CuentaController,
 		private readonly googleController: GoogleController,
 		private readonly sesionController: SesionController,
+		private readonly dosPasosController: DosPasosController,
 		private readonly authMiddleware: AuthMiddleware,
 	) {
 		this.router = new OpenAPIHono();
@@ -67,6 +76,8 @@ export class AuthRouter {
 		// Envío de correos: evita usar la API como cañón de spam.
 		const limiteCorreos = rateLimit({ windowMs: 60 * MINUTE, limit: 5 });
 		const limiteTokens = rateLimit({ windowMs: 15 * MINUTE, limit: 10 });
+		// Paso del código del 2FA: además, sus fallos bloquean la cuenta (5 seguidos).
+		const limiteDosPasos = rateLimit({ windowMs: 15 * MINUTE, limit: 10 });
 
 		docs.registerPath({
 			method: "post",
@@ -75,7 +86,7 @@ export class AuthRouter {
 			security,
 			summary: "Iniciar sesión",
 			description:
-				"Devuelve el access token y fija el refresh token en la cookie httpOnly `refresh_token` (con `X-Client-Platform: mobile`, lo devuelve en el cuerpo).",
+				"Devuelve el access token y fija el refresh token en la cookie httpOnly `refresh_token` (con `X-Client-Platform: mobile`, lo devuelve en el cuerpo). Con la verificación en dos pasos activa devuelve `{ requiereDosPasos, tokenDosPasos }` y la sesión llega con `POST /login/dos-pasos`.",
 			request: {
 				body: {
 					required: true,
@@ -83,7 +94,10 @@ export class AuthRouter {
 				},
 			},
 			responses: {
-				200: jsonResponse(authResponseSchema, "Login exitoso"),
+				200: jsonResponse(
+					z.union([authResponseSchema, dosPasosRequeridoSchema]),
+					"Login exitoso, o falta el código del segundo paso",
+				),
 				400: errorResponse("Datos inválidos"),
 				401: errorResponse("Credenciales inválidas"),
 				403: errorResponse("Usuario desactivado"),
@@ -92,7 +106,29 @@ export class AuthRouter {
 				},
 			},
 		});
-		this.router.post("/login", limiteLogin, this.loginController.ejecutar);
+		this.router.post("/login", limiteLogin, this.loginController.login);
+
+		docs.registerPath({
+			method: "post",
+			path: "/login/dos-pasos",
+			tags,
+			security,
+			summary: "Segundo paso del login: código de la app o de recuperación",
+			description:
+				"Canjea el `tokenDosPasos` de `/login` y un código por la sesión (misma respuesta que `/login`). 5 códigos incorrectos seguidos bloquean la cuenta 15 minutos.",
+			request: { body: cuerpo(loginDosPasosSchema) },
+			responses: {
+				200: jsonResponse(authResponseSchema, "Login exitoso"),
+				400: errorResponse("Datos inválidos"),
+				401: errorResponse("Código incorrecto o token caducado"),
+				429: { description: "Demasiados intentos o cuenta bloqueada" },
+			},
+		});
+		this.router.post(
+			"/login/dos-pasos",
+			limiteDosPasos,
+			this.loginController.completarDosPasos,
+		);
 
 		docs.registerPath({
 			method: "post",
@@ -162,6 +198,94 @@ export class AuthRouter {
 
 		this.iniciarRutasCuenta(limiteCorreos, limiteTokens);
 		this.iniciarRutasGoogle(limiteTokens);
+		this.iniciarRutasDosPasos(limiteTokens);
+	}
+
+	private iniciarRutasDosPasos(limiteTokens: ReturnType<typeof rateLimit>) {
+		const docs = this.router.openAPIRegistry;
+		const auth = this.authMiddleware.handle;
+		const soloSesion = this.authMiddleware.soloSesion;
+		const dosPasos = this.dosPasosController;
+		const respuestasComunes = {
+			401: errorResponse("No autenticado"),
+			403: errorResponse("Solo con sesión, no con un token personal"),
+		};
+
+		docs.registerPath({
+			method: "get",
+			path: "/dos-pasos",
+			tags,
+			security: bearer,
+			summary: "Estado de la verificación en dos pasos",
+			responses: {
+				200: jsonResponse(dosPasosEstadoSchema, "Estado"),
+				...respuestasComunes,
+			},
+		});
+		this.router.get("/dos-pasos", auth, soloSesion, dosPasos.obtener);
+
+		docs.registerPath({
+			method: "post",
+			path: "/dos-pasos/iniciar",
+			tags,
+			security: bearer,
+			summary: "Generar el secreto TOTP para el QR (sin activar)",
+			description:
+				"Reemplaza un secreto anterior sin confirmar. Se activa con `POST /dos-pasos/activar`.",
+			responses: {
+				200: jsonResponse(iniciarDosPasosResponseSchema, "Secreto y URI"),
+				400: errorResponse("Ya está activada"),
+				...respuestasComunes,
+			},
+		});
+		this.router.post("/dos-pasos/iniciar", auth, soloSesion, dosPasos.iniciar);
+
+		docs.registerPath({
+			method: "post",
+			path: "/dos-pasos/activar",
+			tags,
+			security: bearer,
+			summary: "Confirmar el primer código y activar",
+			request: { body: cuerpo(activarDosPasosSchema) },
+			responses: {
+				200: jsonResponse(
+					codigosRecuperacionResponseSchema,
+					"Activada: códigos de recuperación",
+				),
+				400: errorResponse("Código incorrecto o sin secreto pendiente"),
+				...respuestasComunes,
+				429: { description: "Demasiados intentos" },
+			},
+		});
+		this.router.post(
+			"/dos-pasos/activar",
+			auth,
+			soloSesion,
+			limiteTokens,
+			dosPasos.activar,
+		);
+
+		docs.registerPath({
+			method: "post",
+			path: "/dos-pasos/desactivar",
+			tags,
+			security: bearer,
+			summary: "Desactivar con la contraseña o un código",
+			request: { body: cuerpo(desactivarDosPasosSchema) },
+			responses: {
+				200: jsonResponse(mensajeResponseSchema, "Desactivada"),
+				400: errorResponse("Contraseña o código incorrectos"),
+				...respuestasComunes,
+				429: { description: "Demasiados intentos" },
+			},
+		});
+		this.router.post(
+			"/dos-pasos/desactivar",
+			auth,
+			soloSesion,
+			limiteTokens,
+			dosPasos.desactivar,
+		);
 	}
 
 	private iniciarRutasGoogle(limiteTokens: ReturnType<typeof rateLimit>) {

@@ -471,7 +471,7 @@ export interface paths {
         put?: never;
         /**
          * Iniciar sesión
-         * @description Devuelve el access token y fija el refresh token en la cookie httpOnly `refresh_token` (con `X-Client-Platform: mobile`, lo devuelve en el cuerpo).
+         * @description Devuelve el access token y fija el refresh token en la cookie httpOnly `refresh_token` (con `X-Client-Platform: mobile`, lo devuelve en el cuerpo). Con la verificación en dos pasos activa devuelve `{ requiereDosPasos, tokenDosPasos }` y la sesión llega con `POST /login/dos-pasos`.
          */
         post: {
             parameters: {
@@ -490,13 +490,13 @@ export interface paths {
                 };
             };
             responses: {
-                /** @description Login exitoso */
+                /** @description Login exitoso, o falta el código del segundo paso */
                 200: {
                     headers: {
                         [name: string]: unknown;
                     };
                     content: {
-                        "application/json": components["schemas"]["AuthResponse"];
+                        "application/json": components["schemas"]["AuthResponse"] | components["schemas"]["DosPasosRequerido"];
                     };
                 };
                 /** @description Datos inválidos */
@@ -527,6 +527,77 @@ export interface paths {
                     };
                 };
                 /** @description Demasiados intentos (máx. 5 por IP cada 15 minutos) */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/auth/login/dos-pasos": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Segundo paso del login: código de la app o de recuperación
+         * @description Canjea el `tokenDosPasos` de `/login` y un código por la sesión (misma respuesta que `/login`). 5 códigos incorrectos seguidos bloquean la cuenta 15 minutos.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        tokenDosPasos: string;
+                        codigo: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Login exitoso */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["AuthResponse"];
+                    };
+                };
+                /** @description Datos inválidos */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Código incorrecto o token caducado */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Demasiados intentos o cuenta bloqueada */
                 429: {
                     headers: {
                         [name: string]: unknown;
@@ -1283,6 +1354,290 @@ export interface paths {
         };
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/auth/dos-pasos": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Estado de la verificación en dos pasos */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Estado */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["DosPasosEstado"];
+                    };
+                };
+                /** @description No autenticado */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Solo con sesión, no con un token personal */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/auth/dos-pasos/iniciar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Generar el secreto TOTP para el QR (sin activar)
+         * @description Reemplaza un secreto anterior sin confirmar. Se activa con `POST /dos-pasos/activar`.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Secreto y URI */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example JBSWY3DPEHPK3PXPJBSWY3DPEHPK3PXP */
+                            secreto: string;
+                            /** @description URI `otpauth://` para el QR */
+                            uri: string;
+                        };
+                    };
+                };
+                /** @description Ya está activada */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description No autenticado */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Solo con sesión, no con un token personal */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/auth/dos-pasos/activar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Confirmar el primer código y activar */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        codigo: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Activada: códigos de recuperación */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @description Códigos de un solo uso: solo se muestran ahora */
+                            codigosRecuperacion: string[];
+                        };
+                    };
+                };
+                /** @description Código incorrecto o sin secreto pendiente */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description No autenticado */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Solo con sesión, no con un token personal */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Demasiados intentos */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/auth/dos-pasos/desactivar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Desactivar con la contraseña o un código */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        password?: string;
+                        codigo?: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Desactivada */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example Sesión cerrada correctamente */
+                            mensaje: string;
+                        };
+                    };
+                };
+                /** @description Contraseña o código incorrectos */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description No autenticado */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Solo con sesión, no con un token personal */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Demasiados intentos */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
         delete?: never;
         options?: never;
         head?: never;
@@ -10385,6 +10740,12 @@ export interface components {
             /** @description Sólo con `X-Client-Platform: mobile` (y sin cookie): el refresh token, que la app reenvía en `X-Refresh-Token`. */
             refreshToken?: string;
         };
+        DosPasosRequerido: {
+            /** @enum {boolean} */
+            requiereDosPasos: true;
+            /** @description Token intermedio (5 min): se canjea con el código en `POST /api/auth/login/dos-pasos`. */
+            tokenDosPasos: string;
+        };
         SesionDto: {
             /** @example 12 */
             id: number;
@@ -10394,6 +10755,11 @@ export interface components {
             expiraEn: string;
             /** @example true */
             isActual: boolean;
+        };
+        DosPasosEstado: {
+            isActivo: boolean;
+            /** @example 10 */
+            codigosRestantes: number;
         };
         TokenPersonalCreado: components["schemas"]["TokenPersonalDto"] & {
             /** @description Solo se devuelve aquí */
@@ -10973,7 +11339,9 @@ export interface components {
 export type UsuarioDto = components['schemas']['UsuarioDto'];
 export type ErrorResponse = components['schemas']['ErrorResponse'];
 export type AuthResponse = components['schemas']['AuthResponse'];
+export type DosPasosRequerido = components['schemas']['DosPasosRequerido'];
 export type SesionDto = components['schemas']['SesionDto'];
+export type DosPasosEstado = components['schemas']['DosPasosEstado'];
 export type TokenPersonalCreado = components['schemas']['TokenPersonalCreado'];
 export type TokenPersonalDto = components['schemas']['TokenPersonalDto'];
 export type AlcanceToken = components['schemas']['AlcanceToken'];

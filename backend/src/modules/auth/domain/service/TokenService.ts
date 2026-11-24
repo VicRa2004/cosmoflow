@@ -15,6 +15,18 @@ export interface TokenService {
 	verificarToken(token: string): AccessTokenPayload;
 
 	/**
+	 * Token intermedio del login en dos pasos (vida corta): prueba que la
+	 * contraseña era correcta. Nunca vale como access token, ni al revés.
+	 */
+	generarTokenDosPasos(usuarioId: number): string;
+
+	/**
+	 * @returns el ID del usuario.
+	 * @throws si el token es inválido o expiró.
+	 */
+	verificarTokenDosPasos(token: string): number;
+
+	/**
 	 * Genera un string aleatorio opaco para usar como refresh token.
 	 */
 	generarRefreshToken(): string;

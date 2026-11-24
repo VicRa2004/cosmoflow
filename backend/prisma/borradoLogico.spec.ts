@@ -26,6 +26,9 @@ const EXENTOS: Record<string, string> = {
 	TokenPersonal: "técnica: revocarlo lo invalida (`revocadoEn`)",
 	EventoOutbox: "técnica",
 	CodigoOAuth: "técnica: de un solo uso y caduca en minutos",
+	DosPasos:
+		"técnica: desactivar el 2FA borra el secreto (queda en auditoría); un secreto borrado no debe poder volver",
+	CodigoRecuperacion: "técnica: de un solo uso; cae con su DosPasos",
 	NotificacionEnviada: "técnica: claves de idempotencia que se purgan",
 	Notificacion:
 		"avisos de la campana en la app: se marcan leídas y se purgan por antigüedad",
