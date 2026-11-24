@@ -8,6 +8,8 @@ import { VerificadorDosPasos } from "./application/services/VerificadorDosPasos"
 import { ActivarDosPasosUseCase } from "./application/useCases/ActivarDosPasosUseCase";
 import { CompletarLoginDosPasosUseCase } from "./application/useCases/CompletarLoginDosPasosUseCase";
 import { DesactivarDosPasosUseCase } from "./application/useCases/DesactivarDosPasosUseCase";
+import { EliminarCuentaUseCase } from "./application/useCases/EliminarCuentaUseCase";
+import { ExportarDatosUseCase } from "./application/useCases/ExportarDatosUseCase";
 import { IniciarDosPasosUseCase } from "./application/useCases/IniciarDosPasosUseCase";
 import { ObtenerDosPasosUseCase } from "./application/useCases/ObtenerDosPasosUseCase";
 import { CambiarPasswordUseCase } from "./application/useCases/CambiarPasswordUseCase";
@@ -32,6 +34,7 @@ import { DIAS_CONEXION_SIN_USO } from "./application/useCases/tokensConexion";
 import { SolicitarRecuperacionUseCase } from "./application/useCases/SolicitarRecuperacionUseCase";
 import { VerificarEmailUseCase } from "./application/useCases/VerificarEmailUseCase";
 import { CuentaController } from "./infrastructure/http/controllers/CuentaController";
+import { DatosCuentaController } from "./infrastructure/http/controllers/DatosCuentaController";
 import { DosPasosController } from "./infrastructure/http/controllers/DosPasosController";
 import { GoogleController } from "./infrastructure/http/controllers/GoogleController";
 import { LoginController } from "./infrastructure/http/controllers/LoginController";
@@ -42,8 +45,10 @@ import { SesionController } from "./infrastructure/http/controllers/SesionContro
 import { TokenPersonalController } from "./infrastructure/http/controllers/TokenPersonalController";
 import { AuthMiddleware } from "./infrastructure/http/middlewares/authMiddleware";
 import { AuthRouter } from "./infrastructure/http/routes/AuthRouter";
+import { DatosCuentaRouter } from "./infrastructure/http/routes/DatosCuentaRouter";
 import { TokenPersonalRouter } from "./infrastructure/http/routes/TokenPersonalRouter";
 import { PrismaCuentaRepository } from "./infrastructure/repository/PrismaCuentaRepository";
+import { PrismaDatosCuentaRepository } from "./infrastructure/repository/PrismaDatosCuentaRepository";
 import { PrismaDosPasosRepository } from "./infrastructure/repository/PrismaDosPasosRepository";
 import { PrismaRefreshTokenRepository } from "./infrastructure/repository/PrismaRefreshTokenRepository";
 import { PrismaTokenPersonalRepository } from "./infrastructure/repository/PrismaTokenPersonalRepository";
@@ -197,6 +202,24 @@ export const authModule: AppModule = {
 			container.get(AUTH_TOKENS.AuthMiddleware),
 		);
 		app.route("/api/auth", router.router);
+		const datosCuenta = new PrismaDatosCuentaRepository();
+		app.route(
+			"/api/cuenta",
+			new DatosCuentaRouter(
+				container.get(AUTH_TOKENS.AuthMiddleware),
+				new DatosCuentaController({
+					exportar: new ExportarDatosUseCase(datosCuenta),
+					eliminar: new EliminarCuentaUseCase(
+						usuarios,
+						hasher,
+						datosCuenta,
+						container.get(TOKENS.Almacenamiento),
+						eventBus,
+						container.get(TOKENS.UnitOfWork),
+					),
+				}),
+			).router,
+		);
 		app.route(
 			"/api/tokens-personales",
 			new TokenPersonalRouter(
