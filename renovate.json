@@ -31,6 +31,21 @@
 			"matchPackageNames": ["postgres"],
 			"description": "Postgres: misma major en CI (ci.yml) y en docker-compose.dev.yml.",
 			"groupName": "postgres"
+		},
+		{
+			"description": "Flutter: mismo PR para ci.yml y mobile.yml. Antes de fusionar, actualizar el SDK local y commitear lo que cambien dart format y pubspec.lock.",
+			"matchDatasources": ["flutter-version"],
+			"groupName": "flutter"
+		}
+	],
+	"customManagers": [
+		{
+			"customType": "regex",
+			"description": "Flutter fijado en los workflows (flutter-action no lo detecta Renovate).",
+			"managerFilePatterns": ["/^\\.github/workflows/.+\\.ya?ml$/"],
+			"matchStrings": ["flutter-version: (?<currentValue>\\d+\\.\\d+\\.\\d+)"],
+			"depNameTemplate": "flutter",
+			"datasourceTemplate": "flutter-version"
 		}
 	]
 }
