@@ -22,3 +22,9 @@ mobile/.dart_tool/
 mobile/build/
 mobile/ios/Pods/
 mobile/android/.gradle/
+
+# Playwright
+playwright-report/
+test-results/
+frontend/playwright-report/
+frontend/test-results/
