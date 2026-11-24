@@ -292,6 +292,7 @@ class _EquipoDetallePageState extends State<EquipoDetallePage> {
             TareasPage(
               sesionStore: widget.sesionStore,
               tareasApi: widget.tareasApi,
+              organizacionId: widget.organizacionId,
               equipoId: equipo.id,
               tags: _tags,
               responsables: responsables,

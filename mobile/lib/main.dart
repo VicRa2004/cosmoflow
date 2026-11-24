@@ -16,6 +16,7 @@ import 'modules/auth/api/auth_api.dart';
 import 'modules/auth/services/oauth_google_service.dart';
 import 'modules/notas/api/notas_api.dart';
 import 'modules/organizaciones/api/organizaciones_api.dart';
+import 'modules/plantillas/api/plantillas_api.dart';
 import 'modules/tags/api/tags_api.dart';
 import 'modules/tareas/api/tareas_api.dart';
 
@@ -44,6 +45,7 @@ Future<void> main() async {
   final notasApi = NotasApi(apiClient: apiClient, cola: cola);
   final tagsApi = TagsApi(apiClient: apiClient);
   final organizacionesApi = OrganizacionesApi(apiClient: apiClient);
+  final plantillasApi = PlantillasApi(apiClient: apiClient);
 
   runApp(
     CosmoflowMobileApp(
@@ -53,6 +55,7 @@ Future<void> main() async {
       notasApi: notasApi,
       tagsApi: tagsApi,
       organizacionesApi: organizacionesApi,
+      plantillasApi: plantillasApi,
       cola: cola,
       push: push,
       notificacionesLocales: notificacionesLocales,
@@ -89,6 +92,7 @@ class CosmoflowMobileApp extends StatefulWidget {
     this.notasApi,
     this.tagsApi,
     this.organizacionesApi,
+    this.plantillasApi,
     this.cola,
     this.push,
     this.notificacionesLocales,
@@ -103,6 +107,7 @@ class CosmoflowMobileApp extends StatefulWidget {
   final NotasApi? notasApi;
   final TagsApi? tagsApi;
   final OrganizacionesApi? organizacionesApi;
+  final PlantillasApi? plantillasApi;
   final OAuthGoogleService? oauthGoogleService;
 
   /// Notas y tareas creadas sin conexión; sin ella no hay modo offline.
@@ -135,6 +140,8 @@ class _CosmoflowMobileAppState extends State<CosmoflowMobileApp>
     final tagsApi = widget.tagsApi ?? TagsApi(apiClient: apiClient);
     final organizacionesApi =
         widget.organizacionesApi ?? OrganizacionesApi(apiClient: apiClient);
+    final plantillasApi =
+        widget.plantillasApi ?? PlantillasApi(apiClient: apiClient);
 
     _router = crearAppRouter(
       sesionStore: widget.sesionStore,
@@ -143,6 +150,7 @@ class _CosmoflowMobileAppState extends State<CosmoflowMobileApp>
       notasApi: notasApi,
       tagsApi: tagsApi,
       organizacionesApi: organizacionesApi,
+      plantillasApi: plantillasApi,
       push: widget.push,
       recordatorios: widget.recordatorios,
       cargarDatosIniciales: widget.restaurarAlIniciar,

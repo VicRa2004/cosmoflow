@@ -5,6 +5,8 @@ import '../../../core/auth/sesion_store.dart';
 import '../../../core/widgets/avisos.dart';
 import '../../../core/widgets/confirmar.dart';
 import '../../../core/widgets/estados.dart';
+import '../../plantillas/api/plantillas_api.dart';
+import '../../plantillas/pages/plantillas_page.dart';
 import '../../tags/api/tags_api.dart';
 import '../../tags/models/tag_model.dart';
 import '../../tags/pages/tags_page.dart';
@@ -23,7 +25,7 @@ import 'proyecto_detalle_page.dart';
 import 'proyecto_editor_page.dart';
 
 /// Vista `/organizaciones/:id` con pestañas de Proyectos, Equipos, Miembros,
-/// Tareas, Estadísticas, Tags y (según permisos) Roles y Ajustes.
+/// Tareas, Estadísticas, Tags, Plantillas y (según permisos) Roles y Ajustes.
 class OrganizacionDetallePage extends StatefulWidget {
   const OrganizacionDetallePage({
     super.key,
@@ -32,6 +34,7 @@ class OrganizacionDetallePage extends StatefulWidget {
     required this.organizacionesApi,
     required this.tareasApi,
     required this.tagsApi,
+    this.plantillasApi,
     this.organizacion,
     this.cargarAlIniciar = true,
   });
@@ -41,6 +44,7 @@ class OrganizacionDetallePage extends StatefulWidget {
   final OrganizacionesApi organizacionesApi;
   final TareasApi tareasApi;
   final TagsApi tagsApi;
+  final PlantillasApi? plantillasApi;
   final OrganizacionDto? organizacion;
   final bool cargarAlIniciar;
 
@@ -209,8 +213,11 @@ class _OrganizacionDetallePageState extends State<OrganizacionDetallePage> {
 
     final mostrarRoles = org.puede('roles:gestionar');
     final mostrarAjustes = org.puede('organizacion:editar') || org.isAdmin;
-    final totalPestanas = 6 + (mostrarRoles ? 1 : 0) + (mostrarAjustes ? 1 : 0);
+    final totalPestanas = 7 + (mostrarRoles ? 1 : 0) + (mostrarAjustes ? 1 : 0);
     final responsablesOrg = filtrarMiembrosDestino(miembros: _miembros);
+    final plantillasApi =
+        widget.plantillasApi ??
+        PlantillasApi(apiClient: widget.organizacionesApi.apiClient);
 
     return DefaultTabController(
       key: ValueKey<String>('tabs-$mostrarRoles-$mostrarAjustes'),
@@ -228,6 +235,7 @@ class _OrganizacionDetallePageState extends State<OrganizacionDetallePage> {
               const Tab(text: 'Tareas'),
               const Tab(text: 'Estadísticas'),
               const Tab(text: 'Tags'),
+              const Tab(text: 'Plantillas'),
               if (mostrarRoles) const Tab(text: 'Roles'),
               if (mostrarAjustes) const Tab(text: 'Ajustes'),
             ],
@@ -296,6 +304,16 @@ class _OrganizacionDetallePageState extends State<OrganizacionDetallePage> {
                     onTagsCambiados: (nuevos) {
                       if (mounted) setState(() => _tags = nuevos);
                     },
+                    cargarAlIniciar: widget.cargarAlIniciar,
+                  ),
+                  PlantillasPage(
+                    sesionStore: widget.sesionStore,
+                    plantillasApi: plantillasApi,
+                    organizacionId: org.id,
+                    puedeGestionar: org.puede('plantillas:gestionar'),
+                    tags: _tags,
+                    responsables: responsablesOrg,
+                    mostrarAppBar: false,
                     cargarAlIniciar: widget.cargarAlIniciar,
                   ),
                   if (mostrarRoles)

@@ -245,6 +245,7 @@ class _ProyectoDetallePageState extends State<ProyectoDetallePage> {
             TareasPage(
               sesionStore: widget.sesionStore,
               tareasApi: widget.tareasApi,
+              organizacionId: widget.organizacionId,
               proyectoId: proyecto.id,
               tags: _tags,
               responsables: responsables,

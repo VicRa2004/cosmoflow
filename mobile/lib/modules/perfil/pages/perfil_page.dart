@@ -161,6 +161,13 @@ class _PerfilPageState extends State<PerfilPage> {
               trailing: const Icon(Icons.chevron_right_rounded),
               onTap: () => context.push('/tags'),
             ),
+          if (store.puede('tareas:leer'))
+            ListTile(
+              leading: const Icon(Icons.description_outlined),
+              title: const Text('Plantillas'),
+              trailing: const Icon(Icons.chevron_right_rounded),
+              onTap: () => context.push('/plantillas'),
+            ),
           _seccion('Seguridad de la cuenta'),
           ListTile(
             leading: const Icon(Icons.lock_outline_rounded),

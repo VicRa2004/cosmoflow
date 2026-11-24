@@ -82,6 +82,7 @@ class TareasApi {
     String? color,
     List<int> tagIds = const <int>[],
     List<int> responsableIds = const <int>[],
+    List<SubtareaDto> subtareas = const <SubtareaDto>[],
     int? organizacionId,
     int? equipoId,
     int? proyectoId,
@@ -101,6 +102,7 @@ class TareasApi {
       'color': (color != null && color.isNotEmpty) ? color : null,
       'tagIds': tagIds,
       'responsableIds': responsableIds,
+      'subtareas': subtareas.map((s) => s.toJson()).toList(growable: false),
       if (proyectoId != null)
         'proyectoId': proyectoId
       else if (equipoId != null)

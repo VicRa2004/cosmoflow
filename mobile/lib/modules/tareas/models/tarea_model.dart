@@ -38,6 +38,26 @@ enum PrioridadTarea {
   }
 }
 
+/// Subtarea dentro del checklist de una tarea.
+class SubtareaDto {
+  const SubtareaDto({required this.titulo, this.completada = false});
+
+  final String titulo;
+  final bool completada;
+
+  factory SubtareaDto.fromJson(Map<String, dynamic> json) {
+    return SubtareaDto(
+      titulo: json['titulo'] as String? ?? '',
+      completada: json['completada'] as bool? ?? false,
+    );
+  }
+
+  Map<String, dynamic> toJson() => <String, dynamic>{
+    'titulo': titulo,
+    'completada': completada,
+  };
+}
+
 /// DTO de Tarea (`TareaDto` en `schema.gen.ts`).
 class TareaDto {
   const TareaDto({
@@ -51,6 +71,7 @@ class TareaDto {
     this.color,
     this.tagIds = const <int>[],
     this.responsableIds = const <int>[],
+    this.subtareas = const <SubtareaDto>[],
     this.organizacionId,
     this.equipoId,
     this.proyectoId,
@@ -66,6 +87,7 @@ class TareaDto {
   final String? color;
   final List<int> tagIds;
   final List<int> responsableIds;
+  final List<SubtareaDto> subtareas;
   final int? organizacionId;
   final int? equipoId;
   final int? proyectoId;
@@ -80,6 +102,14 @@ class TareaDto {
       return const <int>[];
     }
 
+    final rawSubtareas = json['subtareas'];
+    final listaSubtareas = rawSubtareas is List
+        ? rawSubtareas
+              .whereType<Map<String, dynamic>>()
+              .map(SubtareaDto.fromJson)
+              .toList(growable: false)
+        : const <SubtareaDto>[];
+
     return TareaDto(
       id: (json['id'] as num).toInt(),
       titulo: json['titulo'] as String? ?? '',
@@ -91,6 +121,7 @@ class TareaDto {
       color: json['color'] as String?,
       tagIds: parsearListaIds(json['tagIds']),
       responsableIds: parsearListaIds(json['responsableIds']),
+      subtareas: listaSubtareas,
       organizacionId: (json['organizacionId'] as num?)?.toInt(),
       equipoId: (json['equipoId'] as num?)?.toInt(),
       proyectoId: (json['proyectoId'] as num?)?.toInt(),

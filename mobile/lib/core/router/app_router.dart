@@ -24,6 +24,9 @@ import '../../modules/organizaciones/pages/proyecto_detalle_page.dart';
 import '../../modules/organizaciones/pages/proyecto_editor_page.dart';
 import '../../modules/organizaciones/pages/rol_organizacion_editor_page.dart';
 import '../../modules/perfil/pages/perfil_page.dart';
+import '../../modules/plantillas/api/plantillas_api.dart';
+import '../../modules/plantillas/pages/plantilla_editor_page.dart';
+import '../../modules/plantillas/pages/plantillas_page.dart';
 import '../../modules/tags/api/tags_api.dart';
 import '../../modules/tags/pages/tags_page.dart';
 import '../../modules/tareas/api/tareas_api.dart';
@@ -51,11 +54,14 @@ GoRouter crearAppRouter({
   required NotasApi notasApi,
   required TagsApi tagsApi,
   required OrganizacionesApi organizacionesApi,
+  PlantillasApi? plantillasApi,
   NotificacionesApi? notificacionesApi,
   PushService? push,
   RecordatoriosService? recordatorios,
   bool cargarDatosIniciales = true,
 }) {
+  final plantillas =
+      plantillasApi ?? PlantillasApi(apiClient: authApi.apiClient);
   final notifApi =
       notificacionesApi ?? NotificacionesApi(apiClient: authApi.apiClient);
   void resincronizarRecordatorios() {
@@ -114,6 +120,7 @@ GoRouter crearAppRouter({
           organizacionesApi: organizacionesApi,
           tareasApi: tareasApi,
           tagsApi: tagsApi,
+          plantillasApi: plantillas,
           organizacion: state.extra is OrganizacionDto
               ? state.extra as OrganizacionDto
               : null,
@@ -224,6 +231,22 @@ GoRouter crearAppRouter({
         ),
       ),
       GoRoute(
+        path: '/plantillas',
+        builder: (context, state) => PlantillasPage(
+          sesionStore: sesionStore,
+          plantillasApi: plantillas,
+          cargarAlIniciar: cargarDatosIniciales,
+        ),
+      ),
+      GoRoute(
+        path: '/plantillas/:id/editar',
+        builder: (context, state) => PlantillaEditorPage(
+          plantillaId: int.parse(state.pathParameters['id']!),
+          plantillasApi: plantillas,
+          args: PlantillaEditorArgs.fromExtra(state.extra),
+        ),
+      ),
+      GoRoute(
         path: '/calendario',
         builder: (context, state) => CalendarioPage(
           acciones: AccionesTarea(
@@ -237,7 +260,9 @@ GoRouter crearAppRouter({
         path: '/tareas/nueva',
         builder: (context, state) => TareaEditorPage(
           tareasApi: tareasApi,
+          plantillasApi: plantillas,
           args: TareaEditorArgs.fromExtra(state.extra),
+          cargarPlantillas: cargarDatosIniciales,
         ),
       ),
       GoRoute(
@@ -248,6 +273,8 @@ GoRouter crearAppRouter({
             id: int.parse(state.pathParameters['id']!),
             tarea: args.tarea,
             args: args,
+            plantillasApi: plantillas,
+            organizacionesApi: organizacionesApi,
             acciones: AccionesTarea(
               sesionStore: sesionStore,
               tareasApi: tareasApi,
@@ -266,8 +293,10 @@ GoRouter crearAppRouter({
           final args = TareaEditorArgs.fromExtra(state.extra);
           return TareaEditorPage(
             tareasApi: tareasApi,
+            plantillasApi: plantillas,
             tarea: args.tarea,
             args: args,
+            cargarPlantillas: cargarDatosIniciales,
           );
         },
       ),

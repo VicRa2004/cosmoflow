@@ -4,23 +4,30 @@ import 'package:go_router/go_router.dart';
 import '../../../core/theme/colores_noche_indigo.dart';
 import '../../../core/widgets/contenido_markdown.dart';
 import '../../../core/widgets/estados.dart';
+import '../../organizaciones/api/organizaciones_api.dart';
+import '../../plantillas/api/plantillas_api.dart';
+import '../../plantillas/widgets/guardar_plantilla_sheet.dart';
 import '../acciones_tarea.dart';
 import '../models/tarea_model.dart';
 import 'tarea_editor_page.dart';
 
 /// `/tareas/:id`: lectura a pantalla completa. Pinta al instante con la tarea
-/// recibida y la refresca por id; editar en la AppBar, eliminar en el menú.
+/// recibida y la refresca por id; editar en la AppBar, plantilla y eliminar en el menú.
 class TareaDetallePage extends StatefulWidget {
   const TareaDetallePage({
     super.key,
     required this.id,
     required this.acciones,
+    this.plantillasApi,
+    this.organizacionesApi,
     this.tarea,
     this.args = const TareaEditorArgs(),
   });
 
   final int id;
   final AccionesTarea acciones;
+  final PlantillasApi? plantillasApi;
+  final OrganizacionesApi? organizacionesApi;
   final TareaDto? tarea;
   final TareaEditorArgs args;
 
@@ -69,10 +76,30 @@ class _TareaDetallePageState extends State<TareaDetallePage> {
     }
   }
 
+  Future<void> _guardarComoPlantilla(TareaDto tarea) async {
+    final apiClient = widget.acciones.tareasApi.apiClient;
+    await showModalBottomSheet<bool>(
+      context: context,
+      isScrollControlled: true,
+      showDragHandle: true,
+      useSafeArea: true,
+      builder: (_) => GuardarPlantillaSheet(
+        tarea: tarea,
+        plantillasApi:
+            widget.plantillasApi ?? PlantillasApi(apiClient: apiClient),
+        organizacionesApi:
+            widget.organizacionesApi ?? OrganizacionesApi(apiClient: apiClient),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final tarea = _tarea;
     final store = widget.acciones.sesionStore;
+    final colores = context.colores;
+    final puedePlantilla = store.puede('tareas:crear');
+    final puedeEliminar = store.puede('tareas:eliminar');
     return Scaffold(
       appBar: AppBar(
         actions: <Widget>[
@@ -83,13 +110,26 @@ class _TareaDetallePageState extends State<TareaDetallePage> {
               onPressed: () =>
                   _tras(_accionesConContexto.editar(context, tarea)),
             ),
-          if (tarea != null && store.puede('tareas:eliminar'))
-            PopupMenuButton<void>(
-              itemBuilder: (_) => <PopupMenuEntry<void>>[
-                PopupMenuItem<void>(
-                  onTap: () => _eliminar(tarea),
-                  child: const Text('Eliminar'),
-                ),
+          if (tarea != null && (puedePlantilla || puedeEliminar))
+            PopupMenuButton<String>(
+              onSelected: (accion) {
+                if (accion == 'plantilla') _guardarComoPlantilla(tarea);
+                if (accion == 'eliminar') _eliminar(tarea);
+              },
+              itemBuilder: (_) => <PopupMenuEntry<String>>[
+                if (puedePlantilla)
+                  const PopupMenuItem<String>(
+                    value: 'plantilla',
+                    child: Text('Guardar como plantilla'),
+                  ),
+                if (puedeEliminar)
+                  PopupMenuItem<String>(
+                    value: 'eliminar',
+                    child: Text(
+                      'Eliminar',
+                      style: TextStyle(color: colores.rosePeligro),
+                    ),
+                  ),
               ],
             ),
         ],
@@ -186,6 +226,34 @@ class _TareaDetallePageState extends State<TareaDetallePage> {
               ],
             ),
           ),
+        if (tarea.subtareas.isNotEmpty) ...<Widget>[
+          const Divider(height: 32),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+            child: Text(
+              'Checklist',
+              style: textTheme.labelLarge?.copyWith(color: colores.tintaTenue),
+            ),
+          ),
+          for (final s in tarea.subtareas)
+            ListTile(
+              dense: true,
+              leading: Icon(
+                s.completada
+                    ? Icons.check_box_rounded
+                    : Icons.check_box_outline_blank_rounded,
+                size: 20,
+                color: s.completada ? colores.indigoMarca : colores.tintaTenue,
+              ),
+              title: Text(
+                s.titulo,
+                style: textTheme.bodyMedium?.copyWith(
+                  decoration: s.completada ? TextDecoration.lineThrough : null,
+                  color: s.completada ? colores.tintaTenue : null,
+                ),
+              ),
+            ),
+        ],
         const Divider(height: 32),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16),

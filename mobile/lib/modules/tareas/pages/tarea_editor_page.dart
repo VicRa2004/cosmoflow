@@ -3,6 +3,9 @@ import 'package:flutter/material.dart';
 import '../../../core/offline/aviso_pendientes.dart';
 import '../../../core/widgets/avisos.dart';
 import '../../../core/widgets/pagina_editor.dart';
+import '../../plantillas/api/plantillas_api.dart';
+import '../../plantillas/models/plantilla_model.dart';
+import '../../plantillas/widgets/selector_plantilla.dart';
 import '../../tags/models/tag_model.dart';
 import '../api/tareas_api.dart';
 import '../models/tarea_model.dart';
@@ -12,6 +15,7 @@ import '../widgets/tarea_form.dart';
 class TareaEditorArgs {
   const TareaEditorArgs({
     this.tarea,
+    this.plantillaInicial,
     this.organizacionId,
     this.equipoId,
     this.proyectoId,
@@ -20,6 +24,7 @@ class TareaEditorArgs {
   });
 
   final TareaDto? tarea;
+  final PlantillaTareaDto? plantillaInicial;
   final int? organizacionId;
   final int? equipoId;
   final int? proyectoId;
@@ -38,24 +43,71 @@ class TareaEditorPage extends StatefulWidget {
   const TareaEditorPage({
     super.key,
     required this.tareasApi,
+    this.plantillasApi,
     this.tarea,
     this.args = const TareaEditorArgs(),
+    this.cargarPlantillas = true,
   });
 
   final TareasApi tareasApi;
+  final PlantillasApi? plantillasApi;
 
   /// `null` = crear (también puede venir en `args.tarea`).
   final TareaDto? tarea;
   final TareaEditorArgs args;
+  final bool cargarPlantillas;
 
   @override
   State<TareaEditorPage> createState() => _TareaEditorPageState();
 }
 
 class _TareaEditorPageState extends State<TareaEditorPage> {
-  final _form = GlobalKey<TareaFormState>();
+  GlobalKey<TareaFormState> _form = GlobalKey<TareaFormState>();
+  late PlantillaTareaDto? _plantillaSeleccionada = widget.args.plantillaInicial;
+  List<PlantillaTareaDto> _personales = const <PlantillaTareaDto>[];
+  List<PlantillaTareaDto> _deOrganizacion = const <PlantillaTareaDto>[];
 
   TareaDto? get _tareaActual => widget.tarea ?? widget.args.tarea;
+
+  @override
+  void initState() {
+    super.initState();
+    if (_tareaActual == null && widget.cargarPlantillas) {
+      _cargarPlantillasDisponibles();
+    }
+  }
+
+  Future<void> _cargarPlantillasDisponibles() async {
+    final api =
+        widget.plantillasApi ??
+        PlantillasApi(apiClient: widget.tareasApi.apiClient);
+    final orgId = widget.args.organizacionId;
+    try {
+      final res = await Future.wait<List<PlantillaTareaDto>>(
+        <Future<List<PlantillaTareaDto>>>[
+          api.obtenerTodas(),
+          if (orgId != null)
+            api.obtenerTodas(organizacionId: orgId)
+          else
+            Future<List<PlantillaTareaDto>>.value(const <PlantillaTareaDto>[]),
+        ],
+      );
+      if (!mounted) return;
+      setState(() {
+        _personales = res[0];
+        _deOrganizacion = res[1];
+      });
+    } catch (_) {
+      // Sin conexión o sin acceso: se puede seguir creando tareas manualmente.
+    }
+  }
+
+  void _elegirPlantilla(PlantillaTareaDto? nueva) {
+    setState(() {
+      _plantillaSeleccionada = nueva;
+      _form = GlobalKey<TareaFormState>();
+    });
+  }
 
   static bool _mismosIds(List<int> a, List<int> b) {
     if (a.length != b.length) return false;
@@ -78,8 +130,10 @@ class _TareaEditorPageState extends State<TareaEditorPage> {
           prioridad: v.prioridad,
           fechaInicio: v.fechaInicio,
           fechaVencimiento: v.fechaVencimiento,
+          color: v.color,
           tagIds: v.tagIds,
           responsableIds: v.responsableIds,
+          subtareas: v.subtareas,
           organizacionId: a.organizacionId,
           equipoId: a.equipoId,
           proyectoId: a.proyectoId,
@@ -97,7 +151,11 @@ class _TareaEditorPageState extends State<TareaEditorPage> {
           'prioridad': v.prioridad.valorApi,
           'fechaInicio': v.fechaInicio,
           'fechaVencimiento': v.fechaVencimiento,
+          'color': v.color,
           'tagIds': v.tagIds,
+          'subtareas': v.subtareas
+              .map((s) => s.toJson())
+              .toList(growable: false),
           if (cambioResponsables) 'responsableIds': v.responsableIds,
         });
       }
@@ -113,6 +171,15 @@ class _TareaEditorPageState extends State<TareaEditorPage> {
       builder: (onCambio) => TareaForm(
         key: _form,
         tareaInicial: tarea,
+        plantillaInicial: _plantillaSeleccionada,
+        encabezado: tarea == null
+            ? SelectorPlantilla(
+                personales: _personales,
+                deOrganizacion: _deOrganizacion,
+                seleccionadaId: _plantillaSeleccionada?.id,
+                onElegir: _elegirPlantilla,
+              )
+            : null,
         tagsDisponibles: widget.args.tags,
         responsablesDisponibles: widget.args.responsables,
         onCambio: onCambio,
