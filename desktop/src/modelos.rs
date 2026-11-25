@@ -53,6 +53,10 @@ impl EstadoTarea {
             Self::Cancelada => "Cancelada",
         }
     }
+
+    pub fn is_abierta(self) -> bool {
+        matches!(self, Self::Pendiente | Self::EnProgreso)
+    }
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize)]
@@ -173,6 +177,42 @@ pub struct BandejaNotificaciones {
     pub no_leidas: usize,
 }
 
+#[derive(Debug, Clone, Default, Deserialize)]
+#[serde(rename_all = "camelCase", default)]
+pub struct ResponsableEstadistica {
+    pub usuario_id: i64,
+    pub abiertas: i64,
+    pub completadas: i64,
+}
+
+#[derive(Debug, Clone, Default, Deserialize)]
+#[serde(rename_all = "snake_case", default)]
+pub struct EstadisticasPorEstado {
+    pub pendiente: i64,
+    pub en_progreso: i64,
+    pub completada: i64,
+    pub cancelada: i64,
+}
+
+#[derive(Debug, Clone, Default, Deserialize)]
+#[serde(rename_all = "camelCase", default)]
+pub struct EstadisticasPorPrioridad {
+    pub baja: i64,
+    pub media: i64,
+    pub alta: i64,
+}
+
+/// Respuesta de `GET /api/tareas/estadisticas`.
+#[derive(Debug, Clone, Default, Deserialize)]
+#[serde(rename_all = "camelCase", default)]
+pub struct EstadisticasTareas {
+    pub total: i64,
+    pub por_estado: EstadisticasPorEstado,
+    pub abiertas_por_prioridad: EstadisticasPorPrioridad,
+    pub vencidas: i64,
+    pub por_responsable: Vec<ResponsableEstadistica>,
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -253,5 +293,41 @@ mod tests {
         assert_eq!(n.actor.as_ref().map(|a| a.nombre.as_str()), Some("Ana"));
         assert!(!n.leida);
         assert_eq!(n.created_at, "2026-11-20T18:00:00.000Z");
+    }
+
+    #[test]
+    fn decodifica_estadisticas_tareas() {
+        let json = serde_json::json!({
+            "total": 12,
+            "porEstado": {
+                "pendiente": 4,
+                "en_progreso": 2,
+                "completada": 5,
+                "cancelada": 1
+            },
+            "abiertasPorPrioridad": {
+                "baja": 1,
+                "media": 3,
+                "alta": 2
+            },
+            "vencidas": 1,
+            "porResponsable": [
+                { "usuarioId": 7, "abiertas": 3, "completadas": 4 }
+            ]
+        });
+        let est: EstadisticasTareas = serde_json::from_value(json).unwrap();
+        assert_eq!(est.total, 12);
+        assert_eq!(est.por_estado.pendiente, 4);
+        assert_eq!(est.por_estado.en_progreso, 2);
+        assert_eq!(est.por_estado.completada, 5);
+        assert_eq!(est.por_estado.cancelada, 1);
+        assert_eq!(est.abiertas_por_prioridad.baja, 1);
+        assert_eq!(est.abiertas_por_prioridad.media, 3);
+        assert_eq!(est.abiertas_por_prioridad.alta, 2);
+        assert_eq!(est.vencidas, 1);
+        assert_eq!(est.por_responsable.len(), 1);
+        assert_eq!(est.por_responsable[0].usuario_id, 7);
+        assert_eq!(est.por_responsable[0].abiertas, 3);
+        assert_eq!(est.por_responsable[0].completadas, 4);
     }
 }
