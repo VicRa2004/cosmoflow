@@ -7,8 +7,6 @@ use gpui_kit::component::{
     alert::Alert,
     button::{Button, ButtonVariants as _},
     checkbox::Checkbox,
-    dialog::DialogButtonProps,
-    input::{Input, InputEvent, InputState},
     notification::Notification,
     spinner::Spinner,
     tab::TabBar,
@@ -196,133 +194,19 @@ impl InicioView {
         .detach();
     }
 
+    /// Mismo editor completo que en Tareas; al guardar se recarga el resumen.
     fn abrir_nueva_tarea(&mut self, window: &mut Window, cx: &mut Context<Self>) {
-        let titulo = cx.new(|cx| InputState::new(window, cx).placeholder("¿Qué hay que hacer?"));
-        let fecha = cx
-            .new(|cx| InputState::new(window, cx).placeholder("Vencimiento opcional (AAAA-MM-DD)"));
-        let prioridad = cx.new(|_| Prioridad::Media);
-        titulo.read(cx).focus_handle(cx).focus(window, cx);
-
         let vista = cx.entity().downgrade();
-        let crear = {
-            let titulo = titulo.clone();
-            let fecha = fecha.clone();
-            let prioridad = prioridad.clone();
-            move |window: &mut Window, cx: &mut App| {
-                let texto = titulo.read(cx).value().trim().to_string();
-                if texto.is_empty() {
-                    window.push_notification(
-                        Notification::warning("Escribe un título para la tarea."),
-                        cx,
-                    );
-                    return false;
-                }
-                let fecha_txt = fecha.read(cx).value().trim().to_string();
-                let vencimiento = if fecha_txt.is_empty() {
-                    None
-                } else if let Some(parsed) = FechaCivil::parsear(&fecha_txt) {
-                    Some(parsed.formatear())
-                } else {
-                    window.push_notification(
-                        Notification::warning("Formato de fecha inválido; usa AAAA-MM-DD."),
-                        cx,
-                    );
-                    return false;
-                };
-                let prio = *prioridad.read(cx);
-                vista
-                    .update(cx, |v, cx| {
-                        v.crear_tarea(texto, prio, vencimiento, window, cx)
-                    })
-                    .ok();
-                true
-            }
-        };
-
-        let crear_enter = crear.clone();
-        let _ = window.subscribe(&titulo, cx, move |_, e: &InputEvent, window, cx| {
-            if matches!(e, InputEvent::PressEnter { .. }) && crear_enter(window, cx) {
-                window.close_dialog(cx);
-            }
-        });
-
-        window.open_dialog(cx, move |dialog, _, cx| {
-            let crear = crear.clone();
-            let prioridad_estado = prioridad.clone();
-            let actual = *prioridad.read(cx);
-            dialog
-                .title("Nueva tarea")
-                .w(px(460.))
-                .child(
-                    v_flex()
-                        .gap_3()
-                        .child(Input::new(&titulo))
-                        .child(
-                            v_flex()
-                                .gap_1p5()
-                                .child(
-                                    div()
-                                        .text_xs()
-                                        .text_color(cx.theme().muted_foreground)
-                                        .child("Prioridad"),
-                                )
-                                .child(h_flex().gap_1p5().children(Prioridad::TODAS.map(|p| {
-                                    let prioridad_btn = prioridad_estado.clone();
-                                    Button::new(("nueva-prio", p as u64))
-                                        .small()
-                                        .label(p.etiqueta())
-                                        .when(p == actual, |b| b.primary())
-                                        .when(p != actual, |b| b.outline())
-                                        .on_click(move |_, _, cx| {
-                                            prioridad_btn.update(cx, |val, cx| {
-                                                *val = p;
-                                                cx.notify();
-                                            });
-                                        })
-                                }))),
-                        )
-                        .child(Input::new(&fecha)),
-                )
-                .button_props(
-                    DialogButtonProps::default()
-                        .ok_text("Crear")
-                        .show_cancel(true)
-                        .cancel_text("Cancelar"),
-                )
-                .on_ok(move |_, window, cx| crear(window, cx))
-        });
-    }
-
-    fn crear_tarea(
-        &mut self,
-        titulo: String,
-        prioridad: Prioridad,
-        fecha_vencimiento: Option<String>,
-        window: &mut Window,
-        cx: &mut Context<Self>,
-    ) {
-        let api = crate::api(cx);
-        let cuerpo = json!({
-            "titulo": titulo,
-            "estado": EstadoTarea::Pendiente.api(),
-            "prioridad": prioridad.api(),
-            "fechaVencimiento": fecha_vencimiento,
-        });
-        cx.spawn_in(window, async move |this, cx| {
-            let r = cx
-                .background_spawn(async move { api.post::<Tarea>("/tareas", cuerpo) })
-                .await;
-            this.update_in(cx, |this, window, cx| match r {
-                Ok(t) => {
-                    this.seleccion = Some(t.id);
-                    window.push_notification(Notification::success("Tarea creada."), cx);
-                    this.cargar(window, cx);
-                }
-                Err(e) => window.push_notification(Notification::error(e.mensaje), cx),
-            })
-            .ok();
-        })
-        .detach();
+        crate::editor_tarea::abrir(
+            None,
+            crate::editor_tarea::Ambito::default(),
+            crate::modelos::EstadoTarea::Pendiente,
+            move |_, window, cx| {
+                vista.update(cx, |v, cx| v.cargar(window, cx)).ok();
+            },
+            window,
+            cx,
+        );
     }
 
     fn render_cabecera(&self, resumen: &ResumenInicio, cx: &mut Context<Self>) -> impl IntoElement {
