@@ -1,5 +1,5 @@
 import { Link, useNavigate } from "@tanstack/react-router";
-import { LogOut, Settings, UserRound } from "lucide-react";
+import { Download, LogOut, Settings, UserRound } from "lucide-react";
 import { useRef } from "react";
 import { toast } from "sonner";
 import { useAuthStore } from "@/core/auth/store";
@@ -67,6 +67,10 @@ export function MenuUsuario() {
 				<Link to="/configuracion" onClick={cerrar} className={opcion}>
 					<Settings aria-hidden className="size-4 text-tinta-tenue" />
 					Configuración
+				</Link>
+				<Link to="/descargar" onClick={cerrar} className={opcion}>
+					<Download aria-hidden className="size-4 text-tinta-tenue" />
+					Descargar apps
 				</Link>
 				<button type="button" onClick={handleLogout} className={opcion}>
 					<LogOut aria-hidden className="size-4 text-tinta-tenue" />
