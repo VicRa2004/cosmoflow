@@ -3,8 +3,9 @@ import 'package:flutter/material.dart';
 import '../theme/colores_noche_indigo.dart';
 import 'cola_sin_conexion.dart';
 
-/// Lista lo creado sin conexión que aún no llegó al servidor. Al vaciarse
-/// (sincronizado), avisa con [onSincronizado] para recargar la lista real.
+/// Lista las operaciones hechas sin conexión que aún no llegaron al servidor.
+/// Al vaciarse (sincronizado), avisa con [onSincronizado] para recargar la lista
+/// real y muestra un `SnackBar` si hubo conflictos resueltos («gana el último»).
 class AvisoPendientes extends StatefulWidget {
   const AvisoPendientes({
     super.key,
@@ -24,13 +25,23 @@ class AvisoPendientes extends StatefulWidget {
 }
 
 class _AvisoPendientesState extends State<AvisoPendientes> {
-  late int _anterior = _cuantas();
+  int _anterior = 0;
 
   int _cuantas() =>
       widget.cola.pendientes(widget.usuarioId, widget.ruta).length;
 
   void _alCambiar() {
     final ahora = _cuantas();
+    final conflictos = widget.cola.consumirConflictos(
+      widget.usuarioId,
+      widget.ruta,
+    );
+    if (conflictos.isNotEmpty && mounted) {
+      final mensajero = ScaffoldMessenger.of(context);
+      for (final c in conflictos) {
+        mensajero.showSnackBar(SnackBar(content: Text(c.mensaje)));
+      }
+    }
     if (ahora < _anterior) widget.onSincronizado();
     setState(() => _anterior = ahora);
   }
@@ -38,6 +49,7 @@ class _AvisoPendientesState extends State<AvisoPendientes> {
   @override
   void initState() {
     super.initState();
+    _anterior = _cuantas();
     widget.cola.addListener(_alCambiar);
   }
 
@@ -54,6 +66,7 @@ class _AvisoPendientesState extends State<AvisoPendientes> {
     final colores = context.colores;
     final textTheme = Theme.of(context).textTheme;
     return Card(
+      margin: const EdgeInsets.symmetric(horizontal: 16),
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -64,12 +77,12 @@ class _AvisoPendientesState extends State<AvisoPendientes> {
                 Icon(
                   Icons.cloud_off_rounded,
                   size: 18,
-                  color: colores.tintaTenue,
+                  color: colores.amberAviso,
                 ),
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
-                    '${pendientes.length} sin sincronizar: se enviarán al recuperar la conexión.',
+                    '${pendientes.length} ${pendientes.length == 1 ? 'cambio pendiente' : 'cambios pendientes'} de subir.',
                     style: textTheme.bodySmall?.copyWith(
                       color: colores.tintaSuave,
                     ),
@@ -79,11 +92,26 @@ class _AvisoPendientesState extends State<AvisoPendientes> {
             ),
             for (final op in pendientes) ...<Widget>[
               const SizedBox(height: 8),
-              Text(
-                op.titulo,
-                style: textTheme.bodyMedium?.copyWith(
-                  fontWeight: FontWeight.w500,
-                ),
+              Row(
+                children: <Widget>[
+                  Expanded(
+                    child: Text(
+                      op.titulo,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: textTheme.bodyMedium?.copyWith(
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    op.etiquetaTipo,
+                    style: textTheme.labelMedium?.copyWith(
+                      color: colores.amberAviso,
+                    ),
+                  ),
+                ],
               ),
             ],
           ],
@@ -112,12 +140,14 @@ Widget avisoPendientes({
   );
 }
 
-/// Tras crear: `creada == null` significa que quedó en la cola sin conexión.
-void avisarSiEncolada(BuildContext context, Object? creada) {
-  if (creada != null || !context.mounted) return;
-  ScaffoldMessenger.of(context).showSnackBar(
-    const SnackBar(
-      content: Text('Sin conexión: se guardó y se sincronizará al volver.'),
-    ),
-  );
+/// Tras crear/editar/eliminar: si quedó en la cola sin conexión, avisa al usuario.
+void avisarSiEncolada(
+  BuildContext context,
+  Object? resultado, {
+  String mensaje =
+      'Sin conexión: el cambio quedó pendiente y se subirá al volver.',
+}) {
+  if (resultado != null && resultado != false) return;
+  if (!context.mounted) return;
+  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(mensaje)));
 }

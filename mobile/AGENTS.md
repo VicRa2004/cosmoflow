@@ -72,11 +72,12 @@ mobile/lib/
 - El form va en `widgets/<entidad>_form.dart`, separado de la página; si pasa de ~200 líneas se divide por secciones. Toda eliminación pide confirmación.
 - Detalle completo en la skill **`disenar-formularios-mobile`**.
 
-### 5. Sin conexión (básico)
-- Crear notas y tareas sin red: `NotasApi`/`TareasApi.crear` usan `ColaSinConexion.crearOEncolar`, que devuelve `null` si la guardó en la cola (la página avisa con `avisarSiEncolada` y muestra `avisoPendientes`).
+### 5. Sin conexión (cola persistente)
+- Crear, editar, completar y eliminar notas y tareas sin red: `NotasApi` y `TareasApi` usan `ColaSinConexion` (`crearOEncolar`, `actualizarOEncolar`, `eliminarOEncolar`). Los cambios encolados se reflejan al instante en listas y detalles con el indicador «Pendiente de subir».
 - Si al abrir la app el refresh no llega al servidor (`intentarRefresh` devuelve `null`), `restaurarSesion` entra en **sesión sin conexión** con el último usuario guardado (`SesionStore.sinConexion`, sin token). Un refresh rechazado (401) no entra.
-- `main.dart` sincroniza al restaurar la sesión, al volver a primer plano y cada 30 s, de una en una (dos refresh en paralelo revocarían la sesión). Solo se crean offline; editar, borrar y leer necesitan red.
+- `main.dart` sincroniza al restaurar la sesión, al volver a primer plano y cada 30 s, de una en una (dos refresh en paralelo revocarían la sesión).
 - Cada alta lleva una `Idempotency-Key` propia desde el primer envío y la repite en los reintentos: si el servidor guardó pero la respuesta se perdió, el backend devuelve la misma respuesta y no duplica.
+- Ante conflictos en ediciones offline (el servidor tiene una versión más nueva al sincronizar): **gana el último cambio** (se aplica la edición local) y `AvisoPendientes` avisa al usuario con un `SnackBar`.
 
 ## Skills
 
