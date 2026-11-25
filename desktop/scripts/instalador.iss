@@ -48,3 +48,5 @@ Name: "{autodesktop}\Cosmoflow"; Filename: "{app}\cosmoflow.exe"; Tasks: desktop
 
 [Run]
 Filename: "{app}\cosmoflow.exe"; Description: "{cm:LaunchProgram,Cosmoflow}"; Flags: nowait postinstall skipifsilent
+; Actualización automática (la app lanza el instalador con /VERYSILENT): reabrirla al terminar.
+Filename: "{app}\cosmoflow.exe"; Flags: nowait; Check: WizardSilent

@@ -9,6 +9,7 @@ use gpui_kit::component::{
     badge::Badge,
     button::ButtonVariants as _,
     command::{Command, CommandGroup, CommandItem, CommandState},
+    kbd::Kbd,
     sidebar::{Sidebar, SidebarFooter, SidebarGroup, SidebarHeader, SidebarMenu, SidebarMenuItem},
 };
 use gpui_kit::prelude::FluentBuilder as _;
@@ -195,8 +196,12 @@ impl Espacio {
             (etiqueta, icono, Rc::new(move |e, _, cx| e.ir(seccion, cx)))
         };
         vec![
-            ir("Ir a inicio", IconName::House, Seccion::Inicio),
-            ir("Ir a calendario", IconName::Calendar, Seccion::Calendario),
+            ir("Ir a inicio", IconName::CircleDot, Seccion::Inicio),
+            ir(
+                "Ir a calendario",
+                IconName::CalendarDays,
+                Seccion::Calendario,
+            ),
             ir(
                 "Ir a organizaciones",
                 IconName::Building2,
@@ -211,12 +216,12 @@ impl Espacio {
             ir("Ir a perfil", IconName::User, Seccion::Perfil),
             (
                 "Ir a tareas",
-                IconName::SquareCheck,
+                IconName::ListTodo,
                 Rc::new(|e, _, cx| e.ir(Seccion::Tareas, cx)),
             ),
             (
                 "Ir a notas",
-                IconName::BookOpen,
+                IconName::StickyNote,
                 Rc::new(|e, _, cx| e.ir(Seccion::Notas, cx)),
             ),
             (
@@ -292,7 +297,7 @@ impl Espacio {
 }
 
 impl Render for Espacio {
-    fn render(&mut self, _: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
+    fn render(&mut self, window: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
         let item =
             |etiqueta: &'static str, icono: IconName, seccion: Seccion, cx: &mut Context<Self>| {
                 let espacio = cx.entity().downgrade();
@@ -304,11 +309,26 @@ impl Render for Espacio {
                     })
             };
         let no_leidas = self.no_leidas;
-        let menu = SidebarMenu::new().children([
-            item("Inicio", IconName::House, Seccion::Inicio, cx),
-            item("Tareas", IconName::SquareCheck, Seccion::Tareas, cx),
-            item("Notas", IconName::BookOpen, Seccion::Notas, cx),
-            item("Calendario", IconName::Calendar, Seccion::Calendario, cx),
+        // Mismos grupos, nombres de icono y orden que el menú lateral de la web.
+        let personal = SidebarMenu::new().children([
+            item("Inicio", IconName::CircleDot, Seccion::Inicio, cx),
+            item("Tareas", IconName::ListTodo, Seccion::Tareas, cx),
+            item(
+                "Calendario",
+                IconName::CalendarDays,
+                Seccion::Calendario,
+                cx,
+            ),
+            item("Notas", IconName::StickyNote, Seccion::Notas, cx),
+            item("Tags", IconName::Tag, Seccion::Tags, cx),
+            item(
+                "Plantillas",
+                IconName::LayoutTemplate,
+                Seccion::Plantillas,
+                cx,
+            ),
+        ]);
+        let colaboracion = SidebarMenu::new().children([
             item(
                 "Organizaciones",
                 IconName::Building2,
@@ -328,16 +348,6 @@ impl Render for Espacio {
                         .child(Badge::new().count(no_leidas).child(div().w_4().h_3()))
                 })
             }),
-        ]);
-        let biblioteca = SidebarMenu::new().children([
-            item("Tags", IconName::Tag, Seccion::Tags, cx),
-            item(
-                "Plantillas",
-                IconName::LayoutTemplate,
-                Seccion::Plantillas,
-                cx,
-            ),
-            item("Perfil", IconName::User, Seccion::Perfil, cx),
         ]);
         let espacio = cx.entity().downgrade();
         let contenido: AnyElement = match self.seccion {
@@ -375,9 +385,21 @@ impl Render for Espacio {
             .child(
                 Sidebar::new("navegacion")
                     .w(px(232.))
-                    .header(SidebarHeader::new().child(div().font_semibold().child("Cosmoflow")))
-                    .child(SidebarGroup::new("Espacio").child(menu))
-                    .child(SidebarGroup::new("Biblioteca").child(biblioteca))
+                    .header(
+                        SidebarHeader::new()
+                            // macOS pinta los semáforos encima del sidebar.
+                            .when(cfg!(target_os = "macos"), |h| h.mt_6())
+                            .child(
+                                h_flex().gap_2p5().child(marca(cx)).child(
+                                    div()
+                                        .text_color(cx.theme().sidebar_accent_foreground)
+                                        .font_semibold()
+                                        .child("Cosmoflow"),
+                                ),
+                            ),
+                    )
+                    .child(SidebarGroup::new("Personal").child(personal))
+                    .child(SidebarGroup::new("Colaboración").child(colaboracion))
                     .footer(
                         SidebarFooter::new().child(
                             h_flex()
@@ -385,8 +407,13 @@ impl Render for Espacio {
                                 .gap_2()
                                 .child(
                                     v_flex()
+                                        .id("ir-perfil")
                                         .flex_1()
                                         .min_w_0()
+                                        .cursor_pointer()
+                                        .on_click(
+                                            cx.listener(|e, _, _, cx| e.ir(Seccion::Perfil, cx)),
+                                        )
                                         .child(
                                             div()
                                                 .text_sm()
@@ -408,6 +435,7 @@ impl Render for Espacio {
                                         .icon(IconName::LogOut)
                                         .ghost()
                                         .small()
+                                        .text_color(cx.theme().sidebar_foreground)
                                         .tooltip("Cerrar sesión")
                                         .on_click(move |_, window, cx| {
                                             espacio
@@ -418,6 +446,62 @@ impl Render for Espacio {
                         ),
                     ),
             )
-            .child(div().flex_1().min_w_0().h_full().child(contenido))
+            .child(
+                v_flex()
+                    .flex_1()
+                    .min_w_0()
+                    .h_full()
+                    .child(self.barra_superior(window, cx))
+                    .child(div().flex_1().min_h_0().child(contenido)),
+            )
+    }
+}
+
+/// Isotipo de la web (`Marca.tsx`): hexágono blanco sobre un cuadrado índigo.
+fn marca(cx: &App) -> impl IntoElement {
+    div()
+        .size_7()
+        .flex_shrink_0()
+        .flex()
+        .items_center()
+        .justify_center()
+        .rounded(cx.theme().radius)
+        .bg(cx.theme().primary)
+        .text_color(cx.theme().primary_foreground)
+        .child(Icon::new(IconName::Hexagon).small())
+}
+
+impl Espacio {
+    /// Equivale al `Navbar` de la web: búsqueda (paleta) y campana, alineadas a la derecha.
+    fn barra_superior(&self, window: &Window, cx: &mut Context<Self>) -> impl IntoElement {
+        let no_leidas = self.no_leidas;
+        TitleBar::new().child(
+            h_flex()
+                .flex_1()
+                .justify_end()
+                .gap_1()
+                .pr_2()
+                .child(
+                    button::Button::new("abrir-paleta")
+                        .ghost()
+                        .small()
+                        .icon(IconName::Search)
+                        .label("Ir a…")
+                        .when_some(
+                            Kbd::binding_for_action_in(&AbrirPaleta, &self.foco, window),
+                            |b, kbd| b.child(kbd),
+                        )
+                        .on_click(cx.listener(|e, _, w, cx| e.abrir_paleta(w, cx))),
+                )
+                .child(
+                    button::Button::new("ir-notificaciones")
+                        .ghost()
+                        .small()
+                        .icon(IconName::Bell)
+                        .tooltip("Notificaciones")
+                        .when(no_leidas > 0, |b| b.child(Badge::new().dot().child(div())))
+                        .on_click(cx.listener(|e, _, _, cx| e.ir(Seccion::Notificaciones, cx))),
+                ),
+        )
     }
 }

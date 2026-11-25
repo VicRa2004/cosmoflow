@@ -16,6 +16,7 @@ use gpui_kit::component::{
     notification::Notification,
     select::{Select, SelectEvent, SelectState},
     tab::TabBar,
+    text::TextView,
 };
 use gpui_kit::prelude::FluentBuilder as _;
 use gpui_kit::*;
@@ -246,6 +247,12 @@ impl EditorTarea {
             cx.new(|cx| InputState::new(window, cx).placeholder("Añadir subtarea y pulsar Enter"));
         let selector_plantilla = cx.new(|cx| SelectState::new(Vec::new(), None, window, cx));
         let subs = vec![
+            // Vista previa en vivo: cada tecla en la descripción vuelve a pintar el Markdown.
+            cx.subscribe(&contenido, |_, _, e: &InputEvent, cx| {
+                if matches!(e, InputEvent::Change) {
+                    cx.notify();
+                }
+            }),
             cx.subscribe_in(&nueva_subtarea, window, |this, input, e, window, cx| {
                 if matches!(e, InputEvent::PressEnter { .. }) {
                     let texto = input.read(cx).value().trim().to_string();
@@ -435,6 +442,43 @@ impl EditorTarea {
         .detach();
     }
 
+    /// Markdown de la descripción renderizado mientras se escribe.
+    fn vista_previa(&self, cx: &App) -> impl IntoElement {
+        let texto = self.contenido.read(cx).value();
+        v_flex()
+            .gap_1()
+            .child(
+                h_flex()
+                    .gap_1()
+                    .text_xs()
+                    .text_color(cx.theme().muted_foreground)
+                    .child(Icon::new(IconName::Eye).xsmall())
+                    .child("Vista previa"),
+            )
+            .child(
+                div()
+                    .id("vista-previa-tarea")
+                    .min_h(px(48.))
+                    .max_h(px(280.))
+                    .overflow_y_scroll()
+                    .px_3()
+                    .py_2()
+                    .rounded(cx.theme().radius)
+                    .border_1()
+                    .border_color(cx.theme().border)
+                    .bg(cx.theme().muted.opacity(0.4))
+                    .text_sm()
+                    .map(|d| {
+                        if texto.trim().is_empty() {
+                            d.text_color(cx.theme().muted_foreground)
+                                .child("El formato Markdown se verá aquí mientras escribes.")
+                        } else {
+                            d.child(TextView::markdown("vista-previa-md", texto).selectable(true))
+                        }
+                    }),
+            )
+    }
+
     fn seccion(titulo: &'static str, cx: &App) -> Div {
         div()
             .text_sm()
@@ -499,7 +543,8 @@ impl Render for EditorTarea {
                 v_flex()
                     .gap_2()
                     .child(Self::seccion("Descripción", cx))
-                    .child(Textarea::new(&self.contenido).h(px(160.))),
+                    .child(Textarea::new(&self.contenido).h(px(160.)))
+                    .child(self.vista_previa(cx)),
             )
             .child(
                 h_flex()

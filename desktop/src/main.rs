@@ -17,6 +17,7 @@ mod notificaciones;
 mod organizaciones;
 mod perfil;
 mod plantillas;
+mod recursos;
 mod tags;
 mod tareas;
 
@@ -54,9 +55,10 @@ fn aplicar_tema(cx: &mut App) {
 fn main() {
     let _monitoreo = monitoreo::iniciar();
     gpui_kit::application()
-        .with_assets(gpui_kit::assets::Assets)
+        .with_assets(recursos::Recursos)
         .run(|cx| {
             gpui_kit::init(cx);
+            recursos::registrar_fuentes(cx);
             cx.set_app_identity("com.cosmoflow.desktop", "Cosmoflow");
             cx.set_global(ApiGlobal(api::Api::new()));
             aplicar_tema(cx);

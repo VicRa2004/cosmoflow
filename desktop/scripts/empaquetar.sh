@@ -60,14 +60,6 @@ mapear_arch_generica() {
   esac
 }
 
-mapear_arch_deb() {
-  case "$1" in
-    x86_64|amd64) echo "amd64" ;;
-    aarch64|arm64) echo "arm64" ;;
-    *) echo "$1" ;;
-  esac
-}
-
 escribir_desktop_entry() {
   local destino="$1"
   local exec_cmd="$2"
@@ -99,6 +91,21 @@ copiar_iconos_hicolor() {
   install -m 0644 "$ICONS_DIR/icon.png" "$base_icons/512x512/apps/cosmoflow.png"
 }
 
+# appimagetool del PATH, de $APPIMAGETOOL o descargado del release oficial de AppImage.
+obtener_appimagetool() {
+  if [ -n "${APPIMAGETOOL:-}" ]; then
+    echo "$APPIMAGETOOL"
+  elif command -v appimagetool >/dev/null 2>&1; then
+    command -v appimagetool
+  else
+    local herramienta="$TMP_DIR/appimagetool"
+    curl -fsSL -o "$herramienta" \
+      "https://github.com/AppImage/appimagetool/releases/download/continuous/appimagetool-${MAQUINA}.AppImage"
+    chmod +x "$herramienta"
+    echo "$herramienta"
+  fi
+}
+
 empaquetar_linux() {
   local bin="$TARGET_DIR/release/cosmoflow"
   if [ ! -f "$bin" ]; then
@@ -106,51 +113,23 @@ empaquetar_linux() {
     exit 1
   fi
 
-  local arch
-  local deb_arch
-  arch="$(mapear_arch_generica "$MAQUINA")"
-  deb_arch="$(mapear_arch_deb "$MAQUINA")"
+  # AppImage: un solo archivo ejecutable; la app se actualiza sustituyéndolo (src/actualizaciones.rs).
+  # El nombre termina en -<uname -m>.AppImage, que es lo que busca el actualizador.
+  local appdir="$TMP_DIR/Cosmoflow.AppDir"
+  mkdir -p "$appdir/usr/bin" "$appdir/usr/share/applications"
+  install -m 0755 "$bin" "$appdir/usr/bin/cosmoflow"
+  ln -s usr/bin/cosmoflow "$appdir/AppRun"
+  escribir_desktop_entry "$appdir/usr/share/applications/cosmoflow.desktop" "cosmoflow"
+  cp "$appdir/usr/share/applications/cosmoflow.desktop" "$appdir/cosmoflow.desktop"
+  copiar_iconos_hicolor "$appdir/usr/share/icons/hicolor"
+  install -m 0644 "$ICONS_DIR/icon.png" "$appdir/cosmoflow.png"
+  ln -s cosmoflow.png "$appdir/.DirIcon"
 
-  # Tarball portable
-  local portable_dir="$TMP_DIR/portable/cosmoflow-$VERSION"
-  mkdir -p "$portable_dir/bin" "$portable_dir/share/applications"
-  install -m 0755 "$bin" "$portable_dir/bin/cosmoflow"
-  escribir_desktop_entry "$portable_dir/share/applications/cosmoflow.desktop" "cosmoflow"
-  copiar_iconos_hicolor "$portable_dir/share/icons/hicolor"
-
-  local tarball="$DIST_DIR/cosmoflow-${VERSION}-linux-${arch}.tar.gz"
-  tar -czf "$tarball" -C "$TMP_DIR/portable" "cosmoflow-$VERSION"
-
-  # Paquete .deb
-  if command -v dpkg-deb >/dev/null 2>&1; then
-    local deb_root="$TMP_DIR/deb-root"
-    mkdir -p \
-      "$deb_root/DEBIAN" \
-      "$deb_root/usr/lib/cosmoflow" \
-      "$deb_root/usr/bin" \
-      "$deb_root/usr/share/applications"
-
-    install -m 0755 "$bin" "$deb_root/usr/lib/cosmoflow/cosmoflow"
-    ln -s ../lib/cosmoflow/cosmoflow "$deb_root/usr/bin/cosmoflow"
-    escribir_desktop_entry "$deb_root/usr/share/applications/cosmoflow.desktop" "/usr/lib/cosmoflow/cosmoflow"
-    copiar_iconos_hicolor "$deb_root/usr/share/icons/hicolor"
-
-    cat > "$deb_root/DEBIAN/control" <<EOF
-Package: cosmoflow
-Version: $VERSION
-Section: utils
-Priority: optional
-Architecture: $deb_arch
-Maintainer: Cosmoflow <soporte@cosmoflow.saasil.mx>
-Depends: libvulkan1, libfontconfig1, libxkbcommon-x11-0, libxcb1, libx11-xcb1, libwayland-client0
-Description: Cliente de escritorio nativo de Cosmoflow
-EOF
-
-    local deb_file="$DIST_DIR/cosmoflow_${VERSION}_${deb_arch}.deb"
-    dpkg-deb --root-owner-group --build "$deb_root" "$deb_file"
-  else
-    echo "Aviso: dpkg-deb no está disponible; se omite el paquete .deb." >&2
-  fi
+  local herramienta
+  herramienta="$(obtener_appimagetool)"
+  # Sin FUSE (contenedores, CI) la herramienta se extrae y se ejecuta igual.
+  APPIMAGE_EXTRACT_AND_RUN=1 ARCH="$MAQUINA" "$herramienta" --no-appstream \
+    "$appdir" "$DIST_DIR/Cosmoflow-${VERSION}-${MAQUINA}.AppImage"
 }
 
 empaquetar_macos() {

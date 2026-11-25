@@ -7,6 +7,8 @@
 			"name": "Cosmoflow claro",
 			"mode": "light",
 			"radius": 8,
+			"font.family": "Inter",
+			"font.size": 15,
 			"radius.lg": 12,
 			"colors": {
 				"background": "#FCFCFD",
@@ -55,6 +57,8 @@
 			"name": "Cosmoflow oscuro",
 			"mode": "dark",
 			"radius": 8,
+			"font.family": "Inter",
+			"font.size": 15,
 			"radius.lg": 12,
 			"colors": {
 				"background": "#0E101A",

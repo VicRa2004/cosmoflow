@@ -391,19 +391,19 @@ impl InicioView {
             .child(acceso(
                 "acceso-tareas",
                 "Tareas",
-                IconName::SquareCheck,
+                IconName::ListTodo,
                 Box::new(IrATareas),
             ))
             .child(acceso(
                 "acceso-calendario",
                 "Calendario",
-                IconName::Calendar,
+                IconName::CalendarDays,
                 Box::new(IrACalendario),
             ))
             .child(acceso(
                 "acceso-notas",
                 "Notas",
-                IconName::BookOpen,
+                IconName::StickyNote,
                 Box::new(IrANotas),
             ))
             .child(acceso(
