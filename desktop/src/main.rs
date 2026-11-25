@@ -18,6 +18,7 @@ mod organizaciones;
 mod perfil;
 mod plantillas;
 mod recursos;
+mod sistema;
 mod tags;
 mod tareas;
 
@@ -65,6 +66,7 @@ fn main() {
             Theme::sync_system_appearance(None, cx);
             espacio::registrar_atajos(cx);
             notas::registrar_atajos(cx);
+            sistema::registrar(cx);
             cx.on_window_closed(|cx, _| cx.quit()).detach();
 
             let opciones = WindowOptions {

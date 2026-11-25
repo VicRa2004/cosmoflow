@@ -453,13 +453,7 @@ impl Render for NotificacionesView {
 
 fn notificar_sistema(nuevas: &[&Notificacion], cx: &App) {
     let notif = if nuevas.len() == 1 {
-        let primera = nuevas[0];
-        SystemNotification {
-            tag: format!("cosmoflow-notif-{}", primera.id).into(),
-            title: primera.asunto.clone().into(),
-            body: primera.texto.clone().into(),
-            actions: Vec::new(),
-        }
+        crate::sistema::aviso(nuevas[0])
     } else {
         let resumen = nuevas.first().map(|n| n.asunto.clone()).unwrap_or_default();
         SystemNotification {

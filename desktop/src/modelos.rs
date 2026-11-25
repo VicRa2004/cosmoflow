@@ -166,6 +166,13 @@ pub struct Notificacion {
     pub actor: Option<ActorNotificacion>,
     pub leida: bool,
     pub created_at: String,
+    /// "tarea" | "nota"; con `recurso_id` y `evento` deciden los botones del aviso del sistema.
+    #[serde(default)]
+    pub tipo: Option<String>,
+    #[serde(default)]
+    pub recurso_id: Option<i64>,
+    #[serde(default)]
+    pub evento: Option<String>,
 }
 
 #[derive(Debug, Clone, Deserialize)]

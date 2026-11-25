@@ -36,6 +36,7 @@ desktop/
     ├── login.rs        # login + verificación en dos pasos
     ├── espacio.rs      # sidebar, atajos y paleta de comandos (Ctrl/Cmd+K)
     ├── editor_tarea.rs # editor completo de tareas (panel lateral), reutilizado en Inicio y Organizaciones
+    ├── sistema.rs      # integración con el SO: avisos nativos con botones (Completar, Posponer un día) vía `show_system_notification`
     └── <capacidad>.rs  # una vista por capacidad (inicio, tareas, notas/, calendario, organizaciones/, notificaciones, tags, plantillas, perfil)
 ```
 
