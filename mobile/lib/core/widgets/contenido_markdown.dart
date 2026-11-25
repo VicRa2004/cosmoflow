@@ -56,6 +56,7 @@ class ContenidoMarkdown extends StatelessWidget {
   };
 
   static Future<void> abrirEnlace(BuildContext context, String? href) async {
+    if (href != null && href.startsWith('mencion:')) return;
     final uri = href == null ? null : Uri.tryParse(href);
     final mensajero = ScaffoldMessenger.of(context);
     final abierto =

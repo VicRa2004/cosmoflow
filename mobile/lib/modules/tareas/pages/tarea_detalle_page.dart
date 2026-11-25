@@ -2,13 +2,18 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/theme/colores_noche_indigo.dart';
+import '../../../core/widgets/avisos.dart';
 import '../../../core/widgets/contenido_markdown.dart';
 import '../../../core/widgets/estados.dart';
 import '../../organizaciones/api/organizaciones_api.dart';
 import '../../plantillas/api/plantillas_api.dart';
 import '../../plantillas/widgets/guardar_plantilla_sheet.dart';
 import '../acciones_tarea.dart';
+import '../api/comentarios_api.dart';
 import '../models/tarea_model.dart';
+import '../widgets/checklist_subtareas.dart';
+import '../widgets/comentarios_tarea_section.dart';
+import '../widgets/tarea_form.dart';
 import 'tarea_editor_page.dart';
 
 /// `/tareas/:id`: lectura a pantalla completa. Pinta al instante con la tarea
@@ -20,16 +25,20 @@ class TareaDetallePage extends StatefulWidget {
     required this.acciones,
     this.plantillasApi,
     this.organizacionesApi,
+    this.comentariosApi,
     this.tarea,
     this.args = const TareaEditorArgs(),
+    this.cargarComentarios = true,
   });
 
   final int id;
   final AccionesTarea acciones;
   final PlantillasApi? plantillasApi;
   final OrganizacionesApi? organizacionesApi;
+  final ComentariosApi? comentariosApi;
   final TareaDto? tarea;
   final TareaEditorArgs args;
+  final bool cargarComentarios;
 
   @override
   State<TareaDetallePage> createState() => _TareaDetallePageState();
@@ -37,6 +46,11 @@ class TareaDetallePage extends StatefulWidget {
 
 class _TareaDetallePageState extends State<TareaDetallePage> {
   late TareaDto? _tarea = widget.tarea ?? widget.args.tarea;
+  late final ComentariosApi _comentariosApi =
+      widget.comentariosApi ??
+      ComentariosApi(apiClient: widget.acciones.tareasApi.apiClient);
+  late List<ResponsableCandidato> _miembros = widget.args.responsables;
+  bool _guardandoSubtareas = false;
   String? _mensajeError;
 
   AccionesTarea get _accionesConContexto => AccionesTarea(
@@ -59,10 +73,78 @@ class _TareaDetallePageState extends State<TareaDetallePage> {
     try {
       final tarea = await widget.acciones.tareasApi.obtenerUno(widget.id);
       if (mounted) setState(() => _tarea = tarea);
+      if (tarea.organizacionId != null && _miembros.isEmpty) {
+        _cargarMiembros(tarea.organizacionId!);
+      }
     } catch (_) {
       if (mounted && _tarea == null) {
         setState(() => _mensajeError = 'No se pudo cargar la tarea.');
       }
+    }
+  }
+
+  Future<void> _cargarMiembros(int organizacionId) async {
+    final orgApi =
+        widget.organizacionesApi ??
+        OrganizacionesApi(apiClient: widget.acciones.tareasApi.apiClient);
+    try {
+      final lista = await orgApi.obtenerMiembros(organizacionId);
+      if (mounted) {
+        setState(() {
+          _miembros = lista
+              .map((m) => (id: m.usuarioId, nombre: m.nombre))
+              .toList(growable: false);
+        });
+      }
+    } catch (_) {
+      // Sin acceso a miembros: los comentarios siguen funcionando sin autocompletado.
+    }
+  }
+
+  Future<void> _alternarSubtarea(TareaDto tarea, int indice) async {
+    if (_guardandoSubtareas) return;
+    final nuevas = <SubtareaDto>[
+      for (var i = 0; i < tarea.subtareas.length; i++)
+        SubtareaDto(
+          titulo: tarea.subtareas[i].titulo,
+          completada: i == indice
+              ? !tarea.subtareas[i].completada
+              : tarea.subtareas[i].completada,
+        ),
+    ];
+    final anterior = _tarea;
+    setState(() {
+      _guardandoSubtareas = true;
+      _tarea = TareaDto(
+        id: tarea.id,
+        titulo: tarea.titulo,
+        contenido: tarea.contenido,
+        estado: tarea.estado,
+        prioridad: tarea.prioridad,
+        fechaInicio: tarea.fechaInicio,
+        fechaVencimiento: tarea.fechaVencimiento,
+        color: tarea.color,
+        tagIds: tarea.tagIds,
+        responsableIds: tarea.responsableIds,
+        subtareas: nuevas,
+        organizacionId: tarea.organizacionId,
+        equipoId: tarea.equipoId,
+        proyectoId: tarea.proyectoId,
+      );
+    });
+    try {
+      final ok = await ejecutarConAviso(context, () async {
+        final actualizada = await widget.acciones.tareasApi.actualizar(
+          tarea.id,
+          <String, dynamic>{
+            'subtareas': nuevas.map((s) => s.toJson()).toList(growable: false),
+          },
+        );
+        if (mounted) setState(() => _tarea = actualizada);
+      }, error: 'No se pudo actualizar la subtarea.');
+      if (!ok && mounted) setState(() => _tarea = anterior);
+    } finally {
+      if (mounted) setState(() => _guardandoSubtareas = false);
     }
   }
 
@@ -228,36 +310,25 @@ class _TareaDetallePageState extends State<TareaDetallePage> {
           ),
         if (tarea.subtareas.isNotEmpty) ...<Widget>[
           const Divider(height: 32),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-            child: Text(
-              'Checklist',
-              style: textTheme.labelLarge?.copyWith(color: colores.tintaTenue),
-            ),
+          ChecklistSubtareas(
+            subtareas: tarea.subtareas,
+            puedeEditar: widget.acciones.sesionStore.puede('tareas:actualizar'),
+            guardando: _guardandoSubtareas,
+            onAlternar: (i) => _alternarSubtarea(tarea, i),
           ),
-          for (final s in tarea.subtareas)
-            ListTile(
-              dense: true,
-              leading: Icon(
-                s.completada
-                    ? Icons.check_box_rounded
-                    : Icons.check_box_outline_blank_rounded,
-                size: 20,
-                color: s.completada ? colores.indigoMarca : colores.tintaTenue,
-              ),
-              title: Text(
-                s.titulo,
-                style: textTheme.bodyMedium?.copyWith(
-                  decoration: s.completada ? TextDecoration.lineThrough : null,
-                  color: s.completada ? colores.tintaTenue : null,
-                ),
-              ),
-            ),
         ],
         const Divider(height: 32),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16),
           child: ContenidoMarkdown(texto: tarea.contenido),
+        ),
+        const Divider(height: 32),
+        ComentariosTareaSection(
+          tarea: tarea,
+          comentariosApi: _comentariosApi,
+          yoId: widget.acciones.sesionStore.usuario?.id,
+          miembros: _miembros,
+          cargarAlIniciar: widget.cargarComentarios,
         ),
       ],
     );
