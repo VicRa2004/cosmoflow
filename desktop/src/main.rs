@@ -3,12 +3,18 @@
 
 mod api;
 mod app;
+mod calendario;
 mod espacio;
 mod google;
+mod inicio;
 mod login;
 mod modelos;
 mod notas;
 mod notificaciones;
+mod organizaciones;
+mod perfil;
+mod plantillas;
+mod tags;
 mod tareas;
 
 use std::rc::Rc;

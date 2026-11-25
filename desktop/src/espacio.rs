@@ -14,17 +14,27 @@ use gpui_kit::component::{
 use gpui_kit::prelude::FluentBuilder as _;
 use gpui_kit::*;
 
+use crate::calendario::CalendarioView;
+use crate::inicio::InicioView;
 use crate::modelos::Usuario;
 use crate::notas::NotasView;
 use crate::notificaciones::{EventoNotificaciones, NotificacionesView};
+use crate::organizaciones::OrganizacionesView;
+use crate::perfil::PerfilView;
+use crate::plantillas::PlantillasView;
+use crate::tags::TagsView;
 use crate::tareas::TareasView;
 
 actions!(
     cosmoflow,
     [
+        IrAInicio,
         IrATareas,
         IrANotas,
+        IrACalendario,
+        IrAOrganizaciones,
         IrANotificaciones,
+        IrAPerfil,
         AbrirPaleta,
         NuevaTarea,
         Recargar,
@@ -42,9 +52,13 @@ pub fn registrar_atajos(cx: &mut App) {
     };
     let atajo = |tecla: &str| -> &'static str { format!("{m}-{tecla}").leak() };
     cx.bind_keys([
-        KeyBinding::new(atajo("1"), IrATareas, Some(CONTEXTO)),
-        KeyBinding::new(atajo("2"), IrANotas, Some(CONTEXTO)),
-        KeyBinding::new(atajo("3"), IrANotificaciones, Some(CONTEXTO)),
+        KeyBinding::new(atajo("1"), IrAInicio, Some(CONTEXTO)),
+        KeyBinding::new(atajo("2"), IrATareas, Some(CONTEXTO)),
+        KeyBinding::new(atajo("3"), IrANotas, Some(CONTEXTO)),
+        KeyBinding::new(atajo("4"), IrACalendario, Some(CONTEXTO)),
+        KeyBinding::new(atajo("5"), IrAOrganizaciones, Some(CONTEXTO)),
+        KeyBinding::new(atajo("6"), IrANotificaciones, Some(CONTEXTO)),
+        KeyBinding::new(atajo(","), IrAPerfil, Some(CONTEXTO)),
         KeyBinding::new(atajo("k"), AbrirPaleta, Some(CONTEXTO)),
         KeyBinding::new(atajo("n"), NuevaTarea, Some(CONTEXTO)),
         KeyBinding::new(atajo("r"), Recargar, Some(CONTEXTO)),
@@ -53,9 +67,15 @@ pub fn registrar_atajos(cx: &mut App) {
 
 #[derive(Clone, Copy, PartialEq, Eq)]
 enum Seccion {
+    Inicio,
     Tareas,
     Notas,
+    Calendario,
+    Organizaciones,
     Notificaciones,
+    Tags,
+    Plantillas,
+    Perfil,
 }
 
 pub enum EventoEspacio {
@@ -68,9 +88,15 @@ type Comando = Rc<dyn Fn(&mut Espacio, &mut Window, &mut Context<Espacio>)>;
 pub struct Espacio {
     usuario: Usuario,
     seccion: Seccion,
+    inicio: Entity<InicioView>,
     tareas: Entity<TareasView>,
     notas: Entity<NotasView>,
+    calendario: Entity<CalendarioView>,
+    organizaciones: Entity<OrganizacionesView>,
     notificaciones: Entity<NotificacionesView>,
+    tags: Entity<TagsView>,
+    plantillas: Entity<PlantillasView>,
+    perfil: Entity<PerfilView>,
     no_leidas: usize,
     foco: FocusHandle,
     _suscripciones: Vec<Subscription>,
@@ -91,12 +117,19 @@ impl Espacio {
                 }
             },
         );
+        // shortcut: todas las vistas se crean (y cargan) al entrar; hacerlas perezosas si el arranque pesa.
         Self {
             usuario,
-            seccion: Seccion::Tareas,
+            seccion: Seccion::Inicio,
+            inicio: cx.new(|cx| InicioView::new(window, cx)),
             tareas: cx.new(|cx| TareasView::new(window, cx)),
             notas: cx.new(|cx| NotasView::new(window, cx)),
+            calendario: cx.new(|cx| CalendarioView::new(window, cx)),
+            organizaciones: cx.new(|cx| OrganizacionesView::new(window, cx)),
             notificaciones,
+            tags: cx.new(|cx| TagsView::new(window, cx)),
+            plantillas: cx.new(|cx| PlantillasView::new(window, cx)),
+            perfil: cx.new(|cx| PerfilView::new(window, cx)),
             no_leidas,
             foco,
             _suscripciones: vec![sub_notifs],
@@ -110,9 +143,15 @@ impl Espacio {
 
     fn recargar(&mut self, window: &mut Window, cx: &mut Context<Self>) {
         match self.seccion {
+            Seccion::Inicio => self.inicio.update(cx, |v, cx| v.cargar(window, cx)),
             Seccion::Tareas => self.tareas.update(cx, |v, cx| v.cargar(window, cx)),
             Seccion::Notas => self.notas.update(cx, |v, cx| v.cargar(window, cx)),
+            Seccion::Calendario => self.calendario.update(cx, |v, cx| v.cargar(window, cx)),
+            Seccion::Organizaciones => self.organizaciones.update(cx, |v, cx| v.cargar(window, cx)),
             Seccion::Notificaciones => self.notificaciones.update(cx, |v, cx| v.cargar(window, cx)),
+            Seccion::Tags => self.tags.update(cx, |v, cx| v.cargar(window, cx)),
+            Seccion::Plantillas => self.plantillas.update(cx, |v, cx| v.cargar(window, cx)),
+            Seccion::Perfil => self.perfil.update(cx, |v, cx| v.cargar(window, cx)),
         }
     }
 
@@ -137,7 +176,24 @@ impl Espacio {
     }
 
     fn comandos() -> Vec<(&'static str, IconName, Comando)> {
+        let ir = |etiqueta, icono, seccion: Seccion| -> (&'static str, IconName, Comando) {
+            (etiqueta, icono, Rc::new(move |e, _, cx| e.ir(seccion, cx)))
+        };
         vec![
+            ir("Ir a inicio", IconName::House, Seccion::Inicio),
+            ir("Ir a calendario", IconName::Calendar, Seccion::Calendario),
+            ir(
+                "Ir a organizaciones",
+                IconName::Building2,
+                Seccion::Organizaciones,
+            ),
+            ir("Ir a tags", IconName::Tag, Seccion::Tags),
+            ir(
+                "Ir a plantillas",
+                IconName::LayoutTemplate,
+                Seccion::Plantillas,
+            ),
+            ir("Ir a perfil", IconName::User, Seccion::Perfil),
             (
                 "Ir a tareas",
                 IconName::SquareCheck,
@@ -229,8 +285,16 @@ impl Render for Espacio {
             };
         let no_leidas = self.no_leidas;
         let menu = SidebarMenu::new().children([
+            item("Inicio", IconName::House, Seccion::Inicio, cx),
             item("Tareas", IconName::SquareCheck, Seccion::Tareas, cx),
             item("Notas", IconName::BookOpen, Seccion::Notas, cx),
+            item("Calendario", IconName::Calendar, Seccion::Calendario, cx),
+            item(
+                "Organizaciones",
+                IconName::Building2,
+                Seccion::Organizaciones,
+                cx,
+            ),
             item(
                 "Notificaciones",
                 IconName::Bell,
@@ -245,11 +309,27 @@ impl Render for Espacio {
                 })
             }),
         ]);
+        let biblioteca = SidebarMenu::new().children([
+            item("Tags", IconName::Tag, Seccion::Tags, cx),
+            item(
+                "Plantillas",
+                IconName::LayoutTemplate,
+                Seccion::Plantillas,
+                cx,
+            ),
+            item("Perfil", IconName::User, Seccion::Perfil, cx),
+        ]);
         let espacio = cx.entity().downgrade();
         let contenido: AnyElement = match self.seccion {
+            Seccion::Inicio => self.inicio.clone().into_any_element(),
             Seccion::Tareas => self.tareas.clone().into_any_element(),
             Seccion::Notas => self.notas.clone().into_any_element(),
+            Seccion::Calendario => self.calendario.clone().into_any_element(),
+            Seccion::Organizaciones => self.organizaciones.clone().into_any_element(),
             Seccion::Notificaciones => self.notificaciones.clone().into_any_element(),
+            Seccion::Tags => self.tags.clone().into_any_element(),
+            Seccion::Plantillas => self.plantillas.clone().into_any_element(),
+            Seccion::Perfil => self.perfil.clone().into_any_element(),
         };
 
         h_flex()
@@ -257,8 +337,14 @@ impl Render for Espacio {
             .size_full()
             .track_focus(&self.foco)
             .key_context(CONTEXTO)
+            .on_action(cx.listener(|e, _: &IrAInicio, _, cx| e.ir(Seccion::Inicio, cx)))
             .on_action(cx.listener(|e, _: &IrATareas, _, cx| e.ir(Seccion::Tareas, cx)))
             .on_action(cx.listener(|e, _: &IrANotas, _, cx| e.ir(Seccion::Notas, cx)))
+            .on_action(cx.listener(|e, _: &IrACalendario, _, cx| e.ir(Seccion::Calendario, cx)))
+            .on_action(
+                cx.listener(|e, _: &IrAOrganizaciones, _, cx| e.ir(Seccion::Organizaciones, cx)),
+            )
+            .on_action(cx.listener(|e, _: &IrAPerfil, _, cx| e.ir(Seccion::Perfil, cx)))
             .on_action(
                 cx.listener(|e, _: &IrANotificaciones, _, cx| e.ir(Seccion::Notificaciones, cx)),
             )
@@ -271,6 +357,7 @@ impl Render for Espacio {
                     .w(px(232.))
                     .header(SidebarHeader::new().child(div().font_semibold().child("Cosmoflow")))
                     .child(SidebarGroup::new("Espacio").child(menu))
+                    .child(SidebarGroup::new("Biblioteca").child(biblioteca))
                     .footer(
                         SidebarFooter::new().child(
                             h_flex()

@@ -1,4 +1,6 @@
 //! DTOs del backend (ver `frontend/src/core/api/schema.gen.ts`). Solo los campos que usa la app.
+// shortcut: temporal mientras se implementan las vistas que usan Tag, Carpeta y los campos nuevos; quitar al integrarlas.
+#![allow(dead_code)]
 
 use serde::Deserialize;
 
@@ -61,6 +63,26 @@ pub enum Prioridad {
     Alta,
 }
 
+impl Prioridad {
+    pub const TODAS: [Self; 3] = [Self::Baja, Self::Media, Self::Alta];
+
+    pub fn api(self) -> &'static str {
+        match self {
+            Self::Baja => "baja",
+            Self::Media => "media",
+            Self::Alta => "alta",
+        }
+    }
+
+    pub fn etiqueta(self) -> &'static str {
+        match self {
+            Self::Baja => "Baja",
+            Self::Media => "Media",
+            Self::Alta => "Alta",
+        }
+    }
+}
+
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Subtarea {
@@ -77,19 +99,53 @@ pub struct Tarea {
     pub contenido: String,
     pub estado: EstadoTarea,
     pub prioridad: Prioridad,
+    pub fecha_inicio: Option<String>,
     pub fecha_vencimiento: Option<String>,
+    pub color: Option<String>,
+    #[serde(default)]
+    pub is_fijada: bool,
+    #[serde(default)]
+    pub tag_ids: Vec<i64>,
+    #[serde(default)]
+    pub responsable_ids: Vec<i64>,
+    pub organizacion_id: Option<i64>,
+    pub proyecto_id: Option<i64>,
     pub subtareas: Vec<Subtarea>,
     pub bloqueada: bool,
 }
 
-#[derive(Debug, Clone, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Debug, Clone, Default, Deserialize)]
+#[serde(rename_all = "camelCase", default)]
 pub struct Nota {
     pub id: i64,
     pub titulo: String,
     pub contenido: String,
     pub is_fijada: bool,
     pub updated_at: String,
+    pub color: Option<String>,
+    pub tag_ids: Vec<i64>,
+    pub carpeta_id: Option<i64>,
+    pub organizacion_id: Option<i64>,
+    pub proyecto_id: Option<i64>,
+}
+
+/// Tag del usuario (`GET /api/tags`) o de una organización.
+#[derive(Debug, Clone, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Tag {
+    pub id: i64,
+    pub nombre: String,
+    pub color: Option<String>,
+}
+
+/// Carpeta de notas (`GET /api/carpetas`); `padre_id` forma el árbol.
+#[derive(Debug, Clone, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Carpeta {
+    pub id: i64,
+    pub nombre: String,
+    pub color: Option<String>,
+    pub padre_id: Option<i64>,
 }
 
 #[derive(Debug, Clone, Deserialize)]

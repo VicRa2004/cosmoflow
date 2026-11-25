@@ -650,6 +650,7 @@ mod tests {
                 contenido: String::new(),
                 is_fijada: false,
                 updated_at: "2026-10-01T10:00:00Z".into(),
+                ..Default::default()
             },
             Nota {
                 id: 2,
@@ -657,6 +658,7 @@ mod tests {
                 contenido: String::new(),
                 is_fijada: true,
                 updated_at: "2026-09-01T10:00:00Z".into(),
+                ..Default::default()
             },
             Nota {
                 id: 3,
@@ -664,6 +666,7 @@ mod tests {
                 contenido: String::new(),
                 is_fijada: false,
                 updated_at: "2026-10-20T10:00:00Z".into(),
+                ..Default::default()
             },
         ];
         super::ordenar_notas(&mut notas);
