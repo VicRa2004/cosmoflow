@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../core/auth/sesion_store.dart';
 import '../../../core/theme/colores_noche_indigo.dart';
 import '../../../core/widgets/avisos.dart';
 import '../../../core/widgets/confirmar.dart';
 import '../../../core/widgets/estados.dart';
+import '../../../core/widgets/tarjeta_seccion.dart';
 import '../../organizaciones/widgets/selector_color.dart';
 import '../../tags/models/tag_model.dart';
 import '../../tareas/pages/tarea_editor_page.dart';
@@ -49,9 +51,7 @@ class _PlantillasPageState extends State<PlantillasPage> {
   @override
   void initState() {
     super.initState();
-    if (widget.cargarAlIniciar) {
-      _cargar();
-    }
+    if (widget.cargarAlIniciar) _cargar();
   }
 
   Future<void> _cargar() async {
@@ -93,16 +93,15 @@ class _PlantillasPageState extends State<PlantillasPage> {
         organizacionId: widget.organizacionId,
       ),
     );
-    if (guardado == true && mounted) {
-      await _cargar();
-    }
+    if (guardado == true && mounted) await _cargar();
   }
 
   Future<void> _eliminar(PlantillaTareaDto plantilla) async {
     final ok = await confirmar(
       context,
       titulo: '¿Eliminar la plantilla «${plantilla.nombre}»?',
-      mensaje: 'Las tareas creadas con ella no cambian. Esta acción no se puede deshacer.',
+      mensaje:
+          'Las tareas creadas con ella no cambian. Esta acción no se puede deshacer.',
       accion: 'Eliminar',
     );
     if (!ok || !mounted) return;
@@ -115,9 +114,7 @@ class _PlantillasPageState extends State<PlantillasPage> {
       error: 'No se pudo eliminar la plantilla.',
       exito: 'Plantilla eliminada',
     );
-    if (eliminado && mounted) {
-      await _cargar();
-    }
+    if (eliminado && mounted) await _cargar();
   }
 
   String _subtitulo(PlantillaTareaDto p) {
@@ -144,92 +141,96 @@ class _PlantillasPageState extends State<PlantillasPage> {
           : null,
       body: RefreshIndicator(
         onRefresh: _cargar,
-        child: _isCargando
-            ? ListView(
-                children: const <Widget>[
-                  SizedBox(height: 120),
-                  EstadoCargando(),
-                ],
+        child: ListView(
+          padding: const EdgeInsets.only(top: 12, bottom: 40),
+          children: <Widget>[
+            if (_isCargando)
+              const EstadoCargando()
+            else if (_mensajeError != null)
+              EstadoError(mensaje: _mensajeError!, onReintentar: _cargar)
+            else if (_plantillas.isEmpty)
+              EstadoVacio(
+                icono: LucideIcons.layoutTemplate,
+                titulo: 'Sin plantillas',
+                mensaje: widget.organizacionId != null
+                    ? 'Para crear una, abre una tarea y pulsa «Guardar como plantilla». Las de la organización las pueden usar todos sus miembros.'
+                    : 'Para crear una, abre una tarea y pulsa «Guardar como plantilla».',
               )
-            : _mensajeError != null
-            ? ListView(
+            else
+              TarjetaSeccion(
+                divisorIndent: 64,
                 children: <Widget>[
-                  const SizedBox(height: 80),
-                  EstadoError(mensaje: _mensajeError!, onReintentar: _cargar),
-                ],
-              )
-            : _plantillas.isEmpty
-            ? ListView(
-                children: <Widget>[
-                  const SizedBox(height: 80),
-                  EstadoVacio(
-                    icono: Icons.description_outlined,
-                    titulo: 'Sin plantillas',
-                    mensaje: widget.organizacionId != null
-                        ? 'Para crear una, abre una tarea y pulsa «Guardar como plantilla». Las de la organización las pueden usar todos sus miembros.'
-                        : 'Para crear una, abre una tarea y pulsa «Guardar como plantilla».',
-                  ),
-                ],
-              )
-            : ListView.separated(
-                padding: const EdgeInsets.only(bottom: 32),
-                itemCount: _plantillas.length,
-                separatorBuilder: (_, _) => const Divider(indent: 56),
-                itemBuilder: (context, index) {
-                  final p = _plantillas[index];
-                  return ListTile(
-                    onTap: puedeUsar ? () => _usar(p) : null,
-                    leading: Icon(
-                      Icons.description_outlined,
-                      color: parsearColorHex(p.color) ?? colores.tintaTenue,
-                    ),
-                    title: Text(
-                      p.nombre,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    subtitle: Text(
-                      _subtitulo(p),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    trailing: puedeEditarOBorrar
-                        ? PopupMenuButton<String>(
-                            tooltip: 'Opciones',
-                            onSelected: (accion) {
-                              if (accion == 'usar') _usar(p);
-                              if (accion == 'editar') _editar(p);
-                              if (accion == 'eliminar') _eliminar(p);
-                            },
-                            itemBuilder: (_) => <PopupMenuEntry<String>>[
-                              if (puedeUsar)
+                  for (final p in _plantillas)
+                    ListTile(
+                      onTap: puedeUsar ? () => _usar(p) : null,
+                      leading: IconoCaja(
+                        icono: LucideIcons.layoutTemplate,
+                        color: parsearColorHex(p.color) ?? colores.indigoMarca,
+                        fondo: parsearColorHex(p.color) != null
+                            ? parsearColorHex(p.color)!.withValues(alpha: 0.14)
+                            : colores.indigoSuave,
+                        dimension: 36,
+                        tamanoIcono: 18,
+                      ),
+                      title: Text(
+                        p.nombre,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      subtitle: Text(
+                        _subtitulo(p),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      trailing: puedeEditarOBorrar
+                          ? PopupMenuButton<String>(
+                              tooltip: 'Opciones',
+                              icon: Icon(
+                                LucideIcons.ellipsisVertical,
+                                size: 18,
+                                color: colores.tintaTenue,
+                              ),
+                              onSelected: (accion) {
+                                if (accion == 'usar') _usar(p);
+                                if (accion == 'editar') _editar(p);
+                                if (accion == 'eliminar') _eliminar(p);
+                              },
+                              itemBuilder: (_) => <PopupMenuEntry<String>>[
+                                if (puedeUsar)
+                                  const PopupMenuItem<String>(
+                                    value: 'usar',
+                                    child: Text('Usar'),
+                                  ),
                                 const PopupMenuItem<String>(
-                                  value: 'usar',
-                                  child: Text('Usar'),
+                                  value: 'editar',
+                                  child: Text('Editar'),
                                 ),
-                              const PopupMenuItem<String>(
-                                value: 'editar',
-                                child: Text('Editar'),
-                              ),
-                              PopupMenuItem<String>(
-                                value: 'eliminar',
-                                child: Text(
-                                  'Eliminar',
-                                  style: TextStyle(color: colores.rosePeligro),
+                                PopupMenuItem<String>(
+                                  value: 'eliminar',
+                                  child: Text(
+                                    'Eliminar',
+                                    style: TextStyle(
+                                      color: colores.rosePeligro,
+                                    ),
+                                  ),
                                 ),
-                              ),
-                            ],
-                          )
-                        : (puedeUsar
-                              ? IconButton(
-                                  tooltip: 'Usar plantilla',
-                                  onPressed: () => _usar(p),
-                                  icon: const Icon(Icons.add_task_rounded),
-                                )
-                              : null),
-                  );
-                },
+                              ],
+                            )
+                          : (puedeUsar
+                                ? IconButton(
+                                    tooltip: 'Usar plantilla',
+                                    onPressed: () => _usar(p),
+                                    icon: const Icon(
+                                      LucideIcons.listPlus,
+                                      size: 18,
+                                    ),
+                                  )
+                                : null),
+                    ),
+                ],
               ),
+          ],
+        ),
       ),
     );
   }

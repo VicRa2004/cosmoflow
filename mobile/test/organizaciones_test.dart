@@ -291,6 +291,8 @@ void main() {
         200,
         scrollable: listaScroll,
       );
+      await tester.ensureVisible(find.text('Urgente'));
+      await tester.pumpAndSettle();
       await tester.tap(find.text('Urgente'));
       await tester.pump();
 

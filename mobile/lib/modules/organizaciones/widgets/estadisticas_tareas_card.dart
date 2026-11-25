@@ -97,9 +97,9 @@ class EstadisticasTareasCard extends StatelessWidget {
             if (total > 0) ...<Widget>[
               const SizedBox(height: 16),
               ClipRRect(
-                borderRadius: BorderRadius.circular(4),
+                borderRadius: BorderRadius.circular(999),
                 child: SizedBox(
-                  height: 8,
+                  height: 9,
                   child: Row(
                     children: <Widget>[
                       for (final seg in segmentos)
@@ -205,8 +205,13 @@ class _CifraBox extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: colores.borde),
+        color: alerta ? colores.roseSuave : colores.fondo,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: alerta
+              ? colores.rosePeligro.withValues(alpha: 0.3)
+              : colores.borde,
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
