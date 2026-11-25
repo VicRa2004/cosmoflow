@@ -17,6 +17,12 @@ const archivos: [string, RegExp, string][] = [
 	["frontend/package.json", /"version": "[^"]+"/, `"version": "${version}"`],
 	["mobile/pubspec.yaml", /^version: .+$/m, `version: ${version}+1`],
 	["desktop/Cargo.toml", /^version = "[^"]+"/m, `version = "${version}"`],
+	// El CI compila con `--locked`: el lock debe llevar la misma versión que Cargo.toml.
+	[
+		"desktop/Cargo.lock",
+		/name = "cosmoflow"\nversion = "[^"]+"/,
+		`name = "cosmoflow"\nversion = "${version}"`,
+	],
 ];
 
 for (const [ruta, patron, reemplazo] of archivos) {
