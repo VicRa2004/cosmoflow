@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../core/api/adjuntos_api.dart';
 import '../../../core/theme/colores_noche_indigo.dart';
@@ -84,7 +85,7 @@ class TareaFormOpciones extends StatelessWidget {
           initialValue: recurrencia,
           decoration: const InputDecoration(
             labelText: 'Repetición',
-            prefixIcon: Icon(Icons.repeat_rounded),
+            prefixIcon: Icon(LucideIcons.repeat, size: 18),
           ),
           items: <DropdownMenuItem<RecurrenciaTarea?>>[
             const DropdownMenuItem<RecurrenciaTarea?>(
@@ -106,14 +107,14 @@ class TareaFormOpciones extends StatelessWidget {
           child: InputDecorator(
             decoration: InputDecoration(
               labelText: 'Depende de',
-              prefixIcon: const Icon(Icons.link_rounded),
+              prefixIcon: const Icon(LucideIcons.link, size: 18),
               suffixIcon: dependeDeId != null
                   ? IconButton(
                       tooltip: 'Quitar dependencia',
                       onPressed: () => onDependeDeChanged(null),
-                      icon: const Icon(Icons.close_rounded),
+                      icon: const Icon(LucideIcons.x, size: 18),
                     )
-                  : const Icon(Icons.chevron_right_rounded),
+                  : const Icon(LucideIcons.chevronRight, size: 18),
             ),
             child: Text(
               _etiquetaDependencia(),
@@ -126,7 +127,8 @@ class TareaFormOpciones extends StatelessWidget {
         SwitchListTile(
           contentPadding: EdgeInsets.zero,
           secondary: Icon(
-            isFijada ? Icons.push_pin_rounded : Icons.push_pin_outlined,
+            LucideIcons.pin,
+            size: 18,
             color: isFijada ? colores.indigoMarca : colores.tintaTenue,
           ),
           title: const Text('Fijar tarea'),
@@ -187,8 +189,9 @@ class _SelectorDependenciaSheet extends StatelessWidget {
                   ListTile(
                     leading: Icon(
                       seleccionActual == null
-                          ? Icons.radio_button_checked_rounded
-                          : Icons.radio_button_unchecked_rounded,
+                          ? LucideIcons.circleCheck
+                          : LucideIcons.circle,
+                      size: 18,
                       color: seleccionActual == null ? colorSeleccion : null,
                     ),
                     title: const Text('Ninguna'),
@@ -207,8 +210,9 @@ class _SelectorDependenciaSheet extends StatelessWidget {
                       ListTile(
                         leading: Icon(
                           seleccionActual == tarea.id
-                              ? Icons.radio_button_checked_rounded
-                              : Icons.radio_button_unchecked_rounded,
+                              ? LucideIcons.circleCheck
+                              : LucideIcons.circle,
+                          size: 18,
                           color: seleccionActual == tarea.id
                               ? colorSeleccion
                               : null,

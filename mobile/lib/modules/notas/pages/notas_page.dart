@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../core/auth/sesion_store.dart';
 import '../../../core/offline/aviso_pendientes.dart';
+import '../../../core/theme/colores_noche_indigo.dart';
 import '../../../core/widgets/estados.dart';
+import '../../../core/widgets/tarjeta_seccion.dart';
 import '../../tags/api/tags_api.dart';
 import '../../tags/models/tag_model.dart';
 import '../api/notas_api.dart';
@@ -115,7 +118,6 @@ class _NotasPageState extends State<NotasPage> {
         proyectoId: widget.proyectoId,
       ),
     );
-    // Pudo editarse o eliminarse dentro.
     if (mounted) await _cargar();
   }
 
@@ -159,21 +161,24 @@ class _NotasPageState extends State<NotasPage> {
                   : 'fab-notas-personal',
               tooltip: 'Nueva nota',
               onPressed: () => _abrirEditor('/notas/nueva'),
-              child: const Icon(Icons.add_rounded),
+              child: const Icon(LucideIcons.plus),
             )
           : null,
       body: RefreshIndicator(
         onRefresh: _cargar,
         child: ListView(
-          padding: const EdgeInsets.only(bottom: 96),
+          padding: const EdgeInsets.only(bottom: 104),
           children: <Widget>[
             Padding(
-              padding: const EdgeInsets.fromLTRB(16, 4, 16, 12),
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
               child: SearchBar(
                 controller: _busqueda,
                 hintText: 'Buscar en notas',
-                leading: const Icon(Icons.search_rounded),
-                elevation: const WidgetStatePropertyAll<double>(0),
+                leading: Icon(
+                  LucideIcons.search,
+                  size: 18,
+                  color: context.colores.tintaTenue,
+                ),
                 textInputAction: TextInputAction.search,
                 onSubmitted: (_) => _cargar(),
               ),
@@ -192,7 +197,7 @@ class _NotasPageState extends State<NotasPage> {
                 ),
               ),
             if (_tags.isNotEmpty) _filtroTags(),
-            const SizedBox(height: 8),
+            const SizedBox(height: 12),
             avisoPendientes(
               cola: widget.notasApi.cola,
               usuarioId: widget.sesionStore.usuario?.id,
@@ -205,23 +210,26 @@ class _NotasPageState extends State<NotasPage> {
               EstadoError(mensaje: _mensajeError!, onReintentar: _cargar)
             else if (_notas.isEmpty)
               const EstadoVacio(
-                icono: Icons.sticky_note_2_outlined,
+                icono: LucideIcons.fileText,
                 titulo: 'Sin notas',
                 mensaje: 'Crea una nota para guardar apuntes e ideas.',
               )
             else
-              for (final nota in _notas) ...<Widget>[
-                NotaFila(
-                  nota: nota,
-                  carpeta: _carpetaId == null
-                      ? _carpetas
-                            .where((c) => c.id == nota.carpetaId)
-                            .firstOrNull
-                      : null,
-                  onTap: () => _abrirDetalle(nota),
-                ),
-                const Divider(indent: 56),
-              ],
+              TarjetaSeccion(
+                divisorIndent: 62,
+                children: <Widget>[
+                  for (final nota in _notas)
+                    NotaFila(
+                      nota: nota,
+                      carpeta: _carpetaId == null
+                          ? _carpetas
+                                .where((c) => c.id == nota.carpetaId)
+                                .firstOrNull
+                          : null,
+                      onTap: () => _abrirDetalle(nota),
+                    ),
+                ],
+              ),
           ],
         ),
       ),

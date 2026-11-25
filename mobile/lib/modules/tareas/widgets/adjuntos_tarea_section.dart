@@ -2,6 +2,7 @@ import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../core/api/adjuntos_api.dart';
 import '../../../core/theme/colores_noche_indigo.dart';
@@ -64,12 +65,12 @@ class _AdjuntosTareaSectionState extends State<AdjuntosTareaSection> {
           mainAxisSize: MainAxisSize.min,
           children: <Widget>[
             ListTile(
-              leading: const Icon(Icons.photo_library_outlined),
+              leading: const Icon(LucideIcons.image, size: 20),
               title: const Text('Elegir de la galería'),
               onTap: () => Navigator.of(ctx).pop(ImageSource.gallery),
             ),
             ListTile(
-              leading: const Icon(Icons.photo_camera_outlined),
+              leading: const Icon(LucideIcons.camera, size: 20),
               title: const Text('Tomar una foto'),
               onTap: () => Navigator.of(ctx).pop(ImageSource.camera),
             ),
@@ -165,7 +166,7 @@ class _AdjuntosTareaSectionState extends State<AdjuntosTareaSection> {
                         dimension: 16,
                         child: CircularProgressIndicator(strokeWidth: 2),
                       )
-                    : const Icon(Icons.attach_file_rounded, size: 20),
+                    : const Icon(LucideIcons.paperclip, size: 18),
                 label: Text(_subiendo ? 'Subiendo…' : 'Adjuntar'),
               ),
           ],
@@ -255,7 +256,7 @@ class _TarjetaAdjunto extends StatelessWidget {
                   iconSize: 18,
                   color: colores.rosePeligro,
                   onPressed: onEliminar,
-                  icon: const Icon(Icons.delete_outline_rounded),
+                  icon: const Icon(LucideIcons.trash2),
                 ),
               ),
             ),

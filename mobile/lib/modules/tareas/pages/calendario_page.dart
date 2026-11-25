@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../core/theme/colores_noche_indigo.dart';
 import '../../../core/widgets/estados.dart';
+import '../../../core/widgets/tarjeta_seccion.dart';
 import '../acciones_tarea.dart';
 import '../api/tareas_api.dart';
 import '../models/tarea_model.dart';
@@ -82,7 +84,6 @@ class _CalendarioPageState extends State<CalendarioPage> {
       );
       final porDia = <String, List<TareaDto>>{};
       for (final t in tareas) {
-        // Cada tarea va en su vencimiento o, sin él, en su inicio (como en la API).
         final dia = t.fechaVencimiento ?? t.fechaInicio;
         if (dia == null || !t.estado.isAbierta) continue;
         (porDia[dia] ??= <TareaDto>[]).add(t);
@@ -105,6 +106,7 @@ class _CalendarioPageState extends State<CalendarioPage> {
   @override
   Widget build(BuildContext context) {
     final colores = context.colores;
+    final textTheme = Theme.of(context).textTheme;
     final hoy = diaLocal(DateTime.now());
     final tareasDia = _porDia[_seleccionado] ?? const <TareaDto>[];
 
@@ -114,12 +116,12 @@ class _CalendarioPageState extends State<CalendarioPage> {
         actions: <Widget>[
           IconButton(
             tooltip: 'Mes anterior',
-            icon: const Icon(Icons.chevron_left_rounded),
+            icon: const Icon(LucideIcons.chevronLeft),
             onPressed: () => _mover(-1),
           ),
           IconButton(
             tooltip: 'Mes siguiente',
-            icon: const Icon(Icons.chevron_right_rounded),
+            icon: const Icon(LucideIcons.chevronRight),
             onPressed: () => _mover(1),
           ),
         ],
@@ -127,55 +129,76 @@ class _CalendarioPageState extends State<CalendarioPage> {
       body: RefreshIndicator(
         onRefresh: _cargar,
         child: ListView(
+          padding: const EdgeInsets.only(top: 8, bottom: 40),
           children: <Widget>[
-            if (_isCargando) const LinearProgressIndicator(),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 8),
-              child: GridView.count(
-                crossAxisCount: 7,
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                children: <Widget>[
-                  for (final d in _diasSemana)
-                    Center(
-                      child: Text(
-                        d,
-                        style: TextStyle(color: colores.tintaTenue),
-                      ),
-                    ),
-                  for (final fecha in diasDelMes(_mes.year, _mes.month))
-                    _Dia(
-                      fecha: fecha,
-                      delMes: fecha.month == _mes.month,
-                      esHoy: diaLocal(fecha) == hoy,
-                      seleccionado: diaLocal(fecha) == _seleccionado,
-                      tareas: _porDia[diaLocal(fecha)]?.length ?? 0,
-                      vencidas: diaLocal(fecha).compareTo(hoy) < 0,
-                      onTap: () =>
-                          setState(() => _seleccionado = diaLocal(fecha)),
-                    ),
-                ],
+            if (_isCargando)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(999),
+                  child: const LinearProgressIndicator(minHeight: 3),
+                ),
               ),
+            TarjetaSeccion(
+              mostrarDivisores: false,
+              paddingInterno: const EdgeInsets.fromLTRB(8, 12, 8, 12),
+              children: <Widget>[
+                GridView.count(
+                  crossAxisCount: 7,
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  children: <Widget>[
+                    for (final d in _diasSemana)
+                      Center(
+                        child: Text(
+                          d,
+                          style: textTheme.labelSmall?.copyWith(
+                            color: colores.tintaTenue,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    for (final fecha in diasDelMes(_mes.year, _mes.month))
+                      _Dia(
+                        fecha: fecha,
+                        delMes: fecha.month == _mes.month,
+                        esHoy: diaLocal(fecha) == hoy,
+                        seleccionado: diaLocal(fecha) == _seleccionado,
+                        tareas: _porDia[diaLocal(fecha)]?.length ?? 0,
+                        vencidas: diaLocal(fecha).compareTo(hoy) < 0,
+                        onTap: () =>
+                            setState(() => _seleccionado = diaLocal(fecha)),
+                      ),
+                  ],
+                ),
+              ],
             ),
-            const Divider(),
+            const SizedBox(height: 20),
             if (_mensajeError != null)
               EstadoError(mensaje: _mensajeError!, onReintentar: _cargar)
             else if (tareasDia.isEmpty)
               const EstadoVacio(
-                icono: Icons.event_available_outlined,
+                icono: LucideIcons.calendarCheck,
                 titulo: 'Día libre',
                 mensaje: 'No hay tareas abiertas para este día.',
               )
             else
-              for (final t in tareasDia)
-                TareaFila(
-                  tarea: t,
-                  mostrarEstado: false,
-                  onTap: () async {
-                    await widget.acciones.abrirDetalle(context, t);
-                    _cargar();
-                  },
-                ),
+              TarjetaSeccion(
+                titulo: _seleccionado == hoy ? 'Hoy' : _seleccionado,
+                contador: tareasDia.length,
+                divisorIndent: 56,
+                children: <Widget>[
+                  for (final t in tareasDia)
+                    TareaFila(
+                      tarea: t,
+                      mostrarEstado: false,
+                      onTap: () async {
+                        await widget.acciones.abrirDetalle(context, t);
+                        _cargar();
+                      },
+                    ),
+                ],
+              ),
           ],
         ),
       ),
@@ -205,10 +228,10 @@ class _Dia extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colores = context.colores;
-    final scheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
     return InkWell(
       onTap: onTap,
-      customBorder: const CircleBorder(),
+      borderRadius: BorderRadius.circular(12),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: <Widget>[
@@ -217,34 +240,45 @@ class _Dia extends StatelessWidget {
             height: 32,
             alignment: Alignment.center,
             decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: esHoy ? scheme.primary : null,
+              borderRadius: BorderRadius.circular(10),
+              color: esHoy
+                  ? colores.indigoMarca
+                  : seleccionado
+                  ? colores.indigoSuave
+                  : null,
               border: seleccionado && !esHoy
-                  ? Border.all(color: scheme.primary)
+                  ? Border.all(
+                      color: colores.indigoMarca.withValues(alpha: 0.45),
+                    )
                   : null,
             ),
             child: Text(
               '${fecha.day}',
-              style: TextStyle(
+              style: textTheme.labelMedium?.copyWith(
+                fontWeight: esHoy || seleccionado
+                    ? FontWeight.w600
+                    : FontWeight.w500,
                 color: esHoy
-                    ? scheme.onPrimary
+                    ? Colors.white
+                    : seleccionado
+                    ? colores.indigoMarca
                     : delMes
                     ? colores.tinta
-                    : colores.tintaTenue,
+                    : colores.tintaTenue.withValues(alpha: 0.5),
               ),
             ),
           ),
-          const SizedBox(height: 2),
+          const SizedBox(height: 3),
           Container(
-            width: 6,
-            height: 6,
+            width: 5,
+            height: 5,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               color: tareas == 0
                   ? Colors.transparent
                   : vencidas
                   ? colores.rosePeligro
-                  : scheme.primary,
+                  : colores.indigoMarca,
             ),
           ),
         ],

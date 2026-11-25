@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../core/api/adjuntos_api.dart';
 import '../../../core/theme/colores_noche_indigo.dart';
@@ -343,7 +344,7 @@ class TareaFormState extends State<TareaForm> {
               children: <Widget>[
                 for (final m in widget.responsablesDisponibles)
                   FilterChip(
-                    avatar: const Icon(Icons.person_outline_rounded, size: 18),
+                    avatar: const Icon(LucideIcons.user, size: 15),
                     label: Text(m.nombre),
                     selected: _responsables.contains(m.id),
                     onSelected: (sel) {

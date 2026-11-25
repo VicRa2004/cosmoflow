@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../core/api/adjuntos_api.dart';
 import '../../../core/theme/colores_noche_indigo.dart';
 import '../../../core/widgets/contenido_markdown.dart';
 import '../../../core/widgets/estados.dart';
+import '../../../core/widgets/tarjeta_seccion.dart';
 import '../../organizaciones/api/organizaciones_api.dart';
 import '../../plantillas/api/plantillas_api.dart';
 import '../../plantillas/widgets/guardar_plantilla_sheet.dart';
@@ -13,8 +15,7 @@ import '../models/tarea_model.dart';
 import '../widgets/adjuntos_tarea_section.dart';
 import 'tarea_editor_page.dart';
 
-/// `/tareas/:id`: lectura a pantalla completa. Pinta al instante con la tarea
-/// recibida y la refresca por id; fijar y editar en la AppBar, plantilla y eliminar en el menú.
+/// `/tareas/:id`: lectura a pantalla completa agrupada en tarjetas limpias.
 class TareaDetallePage extends StatefulWidget {
   const TareaDetallePage({
     super.key,
@@ -74,9 +75,7 @@ class _TareaDetallePageState extends State<TareaDetallePage> {
           principal = await widget.acciones.tareasApi.obtenerUno(
             tarea.dependeDeId!,
           );
-        } catch (_) {
-          // Si ya no existe o no es visible, mostramos solo el id.
-        }
+        } catch (_) {}
       }
       if (mounted) {
         setState(() {
@@ -164,9 +163,7 @@ class _TareaDetallePageState extends State<TareaDetallePage> {
             IconButton(
               tooltip: tarea.isFijada ? 'Desfijar' : 'Fijar',
               icon: Icon(
-                tarea.isFijada
-                    ? Icons.push_pin_rounded
-                    : Icons.push_pin_outlined,
+                LucideIcons.pin,
                 color: tarea.isFijada ? colores.indigoMarca : null,
               ),
               onPressed: () =>
@@ -175,12 +172,13 @@ class _TareaDetallePageState extends State<TareaDetallePage> {
           if (tarea != null && store.puede('tareas:actualizar'))
             IconButton(
               tooltip: 'Editar',
-              icon: const Icon(Icons.edit_outlined),
+              icon: const Icon(LucideIcons.pencil),
               onPressed: () =>
                   _tras(_accionesConContexto.editar(context, tarea)),
             ),
           if (tarea != null && (puedePlantilla || puedeEliminar))
             PopupMenuButton<String>(
+              icon: const Icon(LucideIcons.ellipsisVertical),
               onSelected: (accion) {
                 if (accion == 'plantilla') _guardarComoPlantilla(tarea);
                 if (accion == 'eliminar') _eliminar(tarea);
@@ -230,15 +228,16 @@ class _TareaDetallePageState extends State<TareaDetallePage> {
     final tagsTarea = widget.args.tags
         .where((t) => tarea.tagIds.contains(t.id))
         .toList(growable: false);
+    final subtareasHechas = tarea.subtareas.where((s) => s.completada).length;
 
     return ListView(
-      padding: const EdgeInsets.only(bottom: 48),
+      padding: const EdgeInsets.only(top: 4, bottom: 48),
       children: <Widget>[
         Padding(
-          padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
+          padding: const EdgeInsets.fromLTRB(16, 4, 16, 14),
           child: Text(
             tarea.titulo,
-            style: textTheme.headlineSmall?.copyWith(
+            style: textTheme.headlineMedium?.copyWith(
               decoration: completada ? TextDecoration.lineThrough : null,
               color: completada ? colores.tintaTenue : null,
             ),
@@ -246,126 +245,165 @@ class _TareaDetallePageState extends State<TareaDetallePage> {
         ),
         if (tarea.bloqueada)
           Padding(
-            padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 14),
             child: _AvisoBloqueada(tituloPrincipal: _tareaPrincipal?.titulo),
           ),
         if (puedeMarcar)
           Padding(
-            padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-            child: FilledButton.tonalIcon(
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 18),
+            child: FilledButton.icon(
+              style: completada
+                  ? FilledButton.styleFrom(
+                      backgroundColor: colores.superficie,
+                      foregroundColor: colores.tinta,
+                      side: BorderSide(color: colores.borde),
+                    )
+                  : null,
               onPressed: () => _tras(
                 _accionesConContexto.alternarCompletada(context, tarea),
               ),
               icon: Icon(
-                completada ? Icons.replay_rounded : Icons.check_rounded,
+                completada ? LucideIcons.rotateCcw : LucideIcons.check,
+                size: 18,
               ),
               label: Text(completada ? 'Reabrir' : 'Marcar como completada'),
             ),
           ),
-        _Dato(
-          icono: Icons.flag_outlined,
-          etiqueta: 'Estado',
-          valor: tarea.estado.etiqueta,
-        ),
-        _Dato(
-          icono: Icons.priority_high_rounded,
-          etiqueta: 'Prioridad',
-          valor: tarea.prioridad.etiqueta,
-        ),
-        _Dato(
-          icono: Icons.event_outlined,
-          etiqueta: 'Fechas',
-          valor:
-              '${tarea.fechaInicio ?? 'Sin inicio'} → ${tarea.fechaVencimiento ?? 'Sin vencimiento'}',
-        ),
-        if (tarea.recurrencia != null)
-          _Dato(
-            icono: Icons.repeat_rounded,
-            etiqueta: 'Repetición',
-            valor: tarea.recurrencia!.etiqueta,
-          ),
-        if (tarea.dependeDeId != null)
-          _Dato(
-            icono: Icons.link_rounded,
-            etiqueta: 'Depende de',
-            valor: _tareaPrincipal?.titulo ?? 'Tarea #${tarea.dependeDeId}',
-            trailing: const Icon(Icons.chevron_right_rounded),
-            onTap: () => context.push('/tareas/${tarea.dependeDeId}'),
-          ),
-        if (nombresResponsables.isNotEmpty)
-          _Dato(
-            icono: Icons.people_outline_rounded,
-            etiqueta: 'Responsables',
-            valor: nombresResponsables.join(', '),
-          ),
-        if (tarea.isCompartida)
-          const _Dato(
-            icono: Icons.group_outlined,
-            etiqueta: 'Ámbito',
-            valor: 'Compartida',
-          ),
-        if (tagsTarea.isNotEmpty)
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-            child: Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: <Widget>[
-                for (final tag in tagsTarea) Chip(label: Text(tag.nombre)),
-              ],
+        TarjetaSeccion(
+          titulo: 'Detalles',
+          divisorIndent: 62,
+          children: <Widget>[
+            _Dato(
+              icono: LucideIcons.flag,
+              etiqueta: 'Estado',
+              valor: tarea.estado.etiqueta,
             ),
-          ),
-        if (tarea.subtareas.isNotEmpty) ...<Widget>[
-          const Divider(height: 32),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-            child: Text(
-              'Checklist',
-              style: textTheme.labelLarge?.copyWith(color: colores.tintaTenue),
+            _Dato(
+              icono: LucideIcons.circleAlert,
+              colorIcono: tarea.prioridad == PrioridadTarea.alta
+                  ? colores.rosePeligro
+                  : null,
+              fondoIcono: tarea.prioridad == PrioridadTarea.alta
+                  ? colores.roseSuave
+                  : null,
+              etiqueta: 'Prioridad',
+              valor: tarea.prioridad.etiqueta,
             ),
-          ),
-          for (final s in tarea.subtareas)
-            ListTile(
-              dense: true,
-              leading: Icon(
-                s.completada
-                    ? Icons.check_box_rounded
-                    : Icons.check_box_outline_blank_rounded,
-                size: 20,
-                color: s.completada ? colores.indigoMarca : colores.tintaTenue,
+            _Dato(
+              icono: LucideIcons.calendar,
+              etiqueta: 'Fechas',
+              valor:
+                  '${tarea.fechaInicio ?? 'Sin inicio'} → ${tarea.fechaVencimiento ?? 'Sin vencimiento'}',
+            ),
+            if (tarea.recurrencia != null)
+              _Dato(
+                icono: LucideIcons.repeat,
+                colorIcono: colores.indigoMarca,
+                fondoIcono: colores.indigoSuave,
+                etiqueta: 'Repetición',
+                valor: tarea.recurrencia!.etiqueta,
               ),
-              title: Text(
-                s.titulo,
-                style: textTheme.bodyMedium?.copyWith(
-                  decoration: s.completada ? TextDecoration.lineThrough : null,
-                  color: s.completada ? colores.tintaTenue : null,
+            if (tarea.dependeDeId != null)
+              _Dato(
+                icono: LucideIcons.link,
+                etiqueta: 'Depende de',
+                valor: _tareaPrincipal?.titulo ?? 'Tarea #${tarea.dependeDeId}',
+                trailing: Icon(
+                  LucideIcons.chevronRight,
+                  size: 18,
+                  color: colores.tintaTenue,
+                ),
+                onTap: () => context.push('/tareas/${tarea.dependeDeId}'),
+              ),
+            if (nombresResponsables.isNotEmpty)
+              _Dato(
+                icono: LucideIcons.users,
+                etiqueta: 'Responsables',
+                valor: nombresResponsables.join(', '),
+              ),
+            if (tarea.isCompartida)
+              const _Dato(
+                icono: LucideIcons.share2,
+                etiqueta: 'Ámbito',
+                valor: 'Compartida',
+              ),
+            if (tagsTarea.isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+                child: Wrap(
+                  spacing: 6,
+                  runSpacing: 6,
+                  children: <Widget>[
+                    for (final tag in tagsTarea)
+                      InsigniaPill(
+                        texto: tag.nombre,
+                        icono: LucideIcons.tag,
+                      ),
+                  ],
                 ),
               ),
-            ),
-        ],
-        const Divider(height: 32),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: ContenidoMarkdown(
-            texto: tarea.contenido,
-            adjuntosApi: _adjuntosApi,
-          ),
+          ],
         ),
-        const Divider(height: 32),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: AdjuntosTareaSection(
-            contenido: tarea.contenido,
-            adjuntosApi: _adjuntosApi,
-            organizacionId: tarea.organizacionId,
-            equipoId: tarea.equipoId,
-            proyectoId: tarea.proyectoId,
-            puedeEditar: puedeActualizar && store.puede('adjuntos:crear'),
-            onAdjuntoSubido: (adjunto, alt) =>
-                _alSubirAdjunto(tarea, adjunto, alt),
-            onEliminarAdjunto: (adjunto) => _alEliminarAdjunto(tarea, adjunto),
-            selectorArchivo: widget.selectorArchivo,
+        if (tarea.subtareas.isNotEmpty) ...<Widget>[
+          const SizedBox(height: 18),
+          TarjetaSeccion(
+            titulo: 'Checklist ($subtareasHechas/${tarea.subtareas.length})',
+            divisorIndent: 50,
+            children: <Widget>[
+              for (final s in tarea.subtareas)
+                ListTile(
+                  dense: true,
+                  leading: Icon(
+                    s.completada ? LucideIcons.squareCheck : LucideIcons.square,
+                    size: 18,
+                    color: s.completada
+                        ? colores.indigoMarca
+                        : colores.tintaTenue,
+                  ),
+                  title: Text(
+                    s.titulo,
+                    style: textTheme.bodyMedium?.copyWith(
+                      decoration: s.completada
+                          ? TextDecoration.lineThrough
+                          : null,
+                      color: s.completada ? colores.tintaTenue : colores.tinta,
+                    ),
+                  ),
+                ),
+            ],
           ),
+        ],
+        const SizedBox(height: 18),
+        TarjetaSeccion(
+          titulo: 'Descripción',
+          mostrarDivisores: false,
+          paddingInterno: const EdgeInsets.all(16),
+          children: <Widget>[
+            ContenidoMarkdown(
+              texto: tarea.contenido,
+              adjuntosApi: _adjuntosApi,
+            ),
+          ],
+        ),
+        const SizedBox(height: 18),
+        TarjetaSeccion(
+          mostrarDivisores: false,
+          paddingInterno: const EdgeInsets.all(16),
+          children: <Widget>[
+            AdjuntosTareaSection(
+              contenido: tarea.contenido,
+              adjuntosApi: _adjuntosApi,
+              organizacionId: tarea.organizacionId,
+              equipoId: tarea.equipoId,
+              proyectoId: tarea.proyectoId,
+              puedeEditar: puedeActualizar && store.puede('adjuntos:crear'),
+              onAdjuntoSubido: (adjunto, alt) =>
+                  _alSubirAdjunto(tarea, adjunto, alt),
+              onEliminarAdjunto: (adjunto) =>
+                  _alEliminarAdjunto(tarea, adjunto),
+              selectorArchivo: widget.selectorArchivo,
+            ),
+          ],
         ),
       ],
     );
@@ -384,21 +422,23 @@ class _AvisoBloqueada extends StatelessWidget {
         ? 'Bloqueada: primero hay que completar «$tituloPrincipal».'
         : 'Bloqueada: depende de una tarea sin completar.';
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       decoration: BoxDecoration(
-        color: colores.amberAviso.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: colores.amberAviso.withValues(alpha: 0.4)),
+        color: colores.amberSuave,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: colores.amberAviso.withValues(alpha: 0.35)),
       ),
       child: Row(
         children: <Widget>[
-          Icon(Icons.lock_outline_rounded, size: 20, color: colores.amberAviso),
+          Icon(LucideIcons.lock, size: 18, color: colores.amberAviso),
           const SizedBox(width: 10),
           Expanded(
             child: Text(
               texto,
-              style: Theme.of(context).textTheme.bodyMedium
-                  ?.copyWith(color: colores.tinta),
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                color: colores.tinta,
+                fontWeight: FontWeight.w500,
+              ),
             ),
           ),
         ],
@@ -412,6 +452,8 @@ class _Dato extends StatelessWidget {
     required this.icono,
     required this.etiqueta,
     required this.valor,
+    this.colorIcono,
+    this.fondoIcono,
     this.trailing,
     this.onTap,
   });
@@ -419,6 +461,8 @@ class _Dato extends StatelessWidget {
   final IconData icono;
   final String etiqueta;
   final String valor;
+  final Color? colorIcono;
+  final Color? fondoIcono;
   final Widget? trailing;
   final VoidCallback? onTap;
 
@@ -426,9 +470,20 @@ class _Dato extends StatelessWidget {
   Widget build(BuildContext context) {
     return ListTile(
       dense: true,
-      leading: Icon(icono),
+      leading: IconoCaja(
+        icono: icono,
+        color: colorIcono,
+        fondo: fondoIcono,
+        dimension: 32,
+        tamanoIcono: 16,
+      ),
       title: Text(etiqueta, style: Theme.of(context).textTheme.bodySmall),
-      subtitle: Text(valor, style: Theme.of(context).textTheme.bodyLarge),
+      subtitle: Text(
+        valor,
+        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+          fontWeight: FontWeight.w500,
+        ),
+      ),
       trailing: trailing,
       onTap: onTap,
     );

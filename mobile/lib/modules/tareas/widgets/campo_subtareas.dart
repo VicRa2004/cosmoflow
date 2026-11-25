@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../core/theme/colores_noche_indigo.dart';
 
@@ -54,15 +55,15 @@ class _CampoSubtareasState extends State<CampoSubtareas> {
             dense: true,
             contentPadding: EdgeInsets.zero,
             leading: Icon(
-              Icons.check_box_outline_blank_rounded,
-              size: 20,
+              LucideIcons.square,
+              size: 18,
               color: colores.tintaTenue,
             ),
             title: Text(widget.titulos[i], style: textTheme.bodyMedium),
             trailing: IconButton(
               tooltip: 'Quitar subtarea',
               onPressed: () => widget.onEliminar(i),
-              icon: const Icon(Icons.close_rounded, size: 20),
+              icon: const Icon(LucideIcons.x, size: 18),
             ),
           ),
         Row(
@@ -85,7 +86,7 @@ class _CampoSubtareasState extends State<CampoSubtareas> {
             IconButton.filledTonal(
               tooltip: 'Añadir subtarea',
               onPressed: limiteAlcanzado ? null : _enviar,
-              icon: const Icon(Icons.add_rounded),
+              icon: const Icon(LucideIcons.plus, size: 18),
             ),
           ],
         ),

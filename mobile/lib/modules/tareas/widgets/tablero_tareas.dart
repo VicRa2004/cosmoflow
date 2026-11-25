@@ -1,8 +1,10 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../core/theme/colores_noche_indigo.dart';
+import '../../../core/widgets/tarjeta_seccion.dart';
 import '../models/tarea_model.dart';
 
 /// Tablero Kanban por estado: columnas horizontales con arrastrar y soltar
@@ -27,7 +29,6 @@ class TableroTareas extends StatelessWidget {
 
   List<TareaDto> _tareasPorEstado(EstadoTarea estado) {
     final filtradas = tareas.where((t) => t.estado == estado).toList();
-    // Fijadas siempre primero conservando el orden relativo del resto.
     final fijadas = filtradas.where((t) => t.isFijada);
     final normales = filtradas.where((t) => !t.isFijada);
     return <TareaDto>[...fijadas, ...normales];
@@ -44,7 +45,7 @@ class TableroTareas extends StatelessWidget {
         Expanded(
           child: ListView.separated(
             scrollDirection: Axis.horizontal,
-            padding: const EdgeInsets.fromLTRB(16, 4, 16, 88),
+            padding: const EdgeInsets.fromLTRB(16, 4, 16, 92),
             itemCount: EstadoTarea.values.length,
             separatorBuilder: (_, _) => const SizedBox(width: 12),
             itemBuilder: (context, index) {
@@ -68,8 +69,9 @@ class TableroTareas extends StatelessWidget {
             padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
             child: Text(
               'Se muestran ${tareas.length} de $totalElementos tareas. Usa la búsqueda o la lista para ver el resto.',
-              style: Theme.of(context).textTheme.bodySmall
-                  ?.copyWith(color: context.colores.tintaTenue),
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: context.colores.tintaTenue,
+              ),
             ),
           ),
       ],
@@ -94,10 +96,18 @@ class _ColumnaKanban extends StatelessWidget {
   final void Function(TareaDto tarea, EstadoTarea nuevoEstado) onMoverEstado;
   final ValueChanged<TareaDto>? onAlternarFijada;
 
+  Color _colorEstado(ColoresNocheIndigo colores) => switch (estado) {
+    EstadoTarea.pendiente => colores.tintaTenue,
+    EstadoTarea.enProgreso => colores.indigoMarca,
+    EstadoTarea.completada => colores.emeraldExito,
+    EstadoTarea.cancelada => colores.rosePeligro,
+  };
+
   @override
   Widget build(BuildContext context) {
     final colores = context.colores;
     final textTheme = Theme.of(context).textTheme;
+    final tono = _colorEstado(colores);
 
     return DragTarget<TareaDto>(
       onWillAcceptWithDetails: (details) =>
@@ -108,8 +118,10 @@ class _ColumnaKanban extends StatelessWidget {
         return AnimatedContainer(
           duration: const Duration(milliseconds: 140),
           decoration: BoxDecoration(
-            color: encima ? colores.elevada : colores.fondo,
-            borderRadius: BorderRadius.circular(12),
+            color: encima
+                ? colores.indigoSuave.withValues(alpha: 0.65)
+                : colores.elevada.withValues(alpha: 0.6),
+            borderRadius: BorderRadius.circular(16),
             border: Border.all(
               color: encima ? colores.indigoMarca : colores.borde,
               width: encima ? 1.5 : 1,
@@ -119,13 +131,22 @@ class _ColumnaKanban extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: <Widget>[
               Padding(
-                padding: const EdgeInsets.fromLTRB(12, 12, 12, 8),
+                padding: const EdgeInsets.fromLTRB(14, 14, 12, 10),
                 child: Row(
                   children: <Widget>[
+                    Container(
+                      width: 8,
+                      height: 8,
+                      decoration: BoxDecoration(
+                        color: tono,
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
                     Expanded(
                       child: Text(
                         estado.etiqueta,
-                        style: textTheme.titleMedium,
+                        style: textTheme.titleSmall,
                       ),
                     ),
                     Container(
@@ -134,13 +155,15 @@ class _ColumnaKanban extends StatelessWidget {
                         vertical: 2,
                       ),
                       decoration: BoxDecoration(
-                        color: colores.elevada,
-                        borderRadius: BorderRadius.circular(12),
+                        color: colores.superficie,
+                        borderRadius: BorderRadius.circular(999),
+                        border: Border.all(color: colores.borde),
                       ),
                       child: Text(
                         '${tareas.length}',
-                        style: textTheme.labelMedium?.copyWith(
-                          color: colores.tintaTenue,
+                        style: textTheme.labelSmall?.copyWith(
+                          color: colores.tintaSuave,
+                          fontWeight: FontWeight.w600,
                         ),
                       ),
                     ),
@@ -163,7 +186,7 @@ class _ColumnaKanban extends StatelessWidget {
                         ),
                       )
                     : ListView.separated(
-                        padding: const EdgeInsets.fromLTRB(8, 4, 8, 12),
+                        padding: const EdgeInsets.fromLTRB(10, 2, 10, 12),
                         itemCount: tareas.length,
                         separatorBuilder: (_, _) => const SizedBox(height: 8),
                         itemBuilder: (context, index) {
@@ -185,7 +208,7 @@ class _ColumnaKanban extends StatelessWidget {
                               color: Colors.transparent,
                               child: SizedBox(
                                 width: 260,
-                                child: Opacity(opacity: 0.9, child: tarjeta),
+                                child: Opacity(opacity: 0.92, child: tarjeta),
                               ),
                             ),
                             childWhenDragging: Opacity(
@@ -232,7 +255,7 @@ class _TarjetaKanban extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
             Padding(
-              padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+              padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
               child: Text(
                 'Mover a columna',
                 style: Theme.of(ctx).textTheme.titleMedium,
@@ -242,13 +265,17 @@ class _TarjetaKanban extends StatelessWidget {
               ListTile(
                 leading: Icon(
                   estado == tarea.estado
-                      ? Icons.radio_button_checked_rounded
-                      : Icons.radio_button_unchecked_rounded,
-                  color: estado == tarea.estado ? colores.indigoMarca : null,
+                      ? LucideIcons.circleCheck
+                      : LucideIcons.circle,
+                  size: 20,
+                  color: estado == tarea.estado
+                      ? colores.indigoMarca
+                      : colores.tintaTenue,
                 ),
                 title: Text(estado.etiqueta),
                 onTap: () => Navigator.of(ctx).pop(estado),
               ),
+            const SizedBox(height: 8),
           ],
         ),
       ),
@@ -267,11 +294,11 @@ class _TarjetaKanban extends StatelessWidget {
     return Material(
       color: colores.superficie,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(14),
         side: BorderSide(color: colores.borde),
       ),
       child: InkWell(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(14),
         onTap: onAbrir,
         child: Padding(
           padding: const EdgeInsets.fromLTRB(12, 10, 4, 10),
@@ -288,7 +315,8 @@ class _TarjetaKanban extends StatelessWidget {
                         tarea.titulo,
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
-                        style: textTheme.bodyLarge?.copyWith(
+                        style: textTheme.bodyMedium?.copyWith(
+                          fontWeight: FontWeight.w500,
                           decoration: completada
                               ? TextDecoration.lineThrough
                               : null,
@@ -305,16 +333,14 @@ class _TarjetaKanban extends StatelessWidget {
                           ? 'Desfijar tarea'
                           : 'Fijar tarea',
                       constraints: const BoxConstraints.tightFor(
-                        width: 40,
-                        height: 40,
+                        width: 36,
+                        height: 36,
                       ),
                       padding: EdgeInsets.zero,
-                      iconSize: 18,
+                      iconSize: 16,
                       onPressed: onAlternarFijada,
                       icon: Icon(
-                        tarea.isFijada
-                            ? Icons.push_pin_rounded
-                            : Icons.push_pin_outlined,
+                        LucideIcons.pin,
                         color: tarea.isFijada
                             ? colores.indigoMarca
                             : colores.tintaTenue,
@@ -324,49 +350,48 @@ class _TarjetaKanban extends StatelessWidget {
                     Padding(
                       padding: const EdgeInsets.only(right: 8, top: 2),
                       child: Icon(
-                        Icons.push_pin_rounded,
-                        size: 16,
+                        LucideIcons.pin,
+                        size: 15,
                         color: colores.indigoMarca,
                       ),
                     ),
                 ],
               ),
-              const SizedBox(height: 6),
+              const SizedBox(height: 8),
               Row(
                 children: <Widget>[
                   Expanded(
                     child: Wrap(
-                      spacing: 8,
+                      spacing: 6,
                       runSpacing: 4,
                       crossAxisAlignment: WrapCrossAlignment.center,
                       children: <Widget>[
-                        Text(
-                          tarea.prioridad.etiqueta,
-                          style: textTheme.labelMedium?.copyWith(
-                            color: tarea.prioridad == PrioridadTarea.alta
-                                ? colores.rosePeligro
-                                : colores.tintaTenue,
-                          ),
+                        InsigniaPill(
+                          texto: tarea.prioridad.etiqueta,
+                          colorTexto: tarea.prioridad == PrioridadTarea.alta
+                              ? colores.rosePeligro
+                              : colores.tintaSuave,
+                          colorFondo: tarea.prioridad == PrioridadTarea.alta
+                              ? colores.roseSuave
+                              : colores.elevada,
                         ),
                         if (tarea.fechaVencimiento != null &&
                             tarea.fechaVencimiento!.isNotEmpty)
-                          Text(
-                            tarea.fechaVencimiento!,
-                            style: textTheme.bodySmall?.copyWith(
-                              color: colores.tintaTenue,
-                            ),
+                          InsigniaPill(
+                            texto: tarea.fechaVencimiento!,
+                            icono: LucideIcons.calendar,
                           ),
                         if (tarea.bloqueada)
                           Icon(
-                            Icons.lock_outline_rounded,
-                            size: 15,
+                            LucideIcons.lock,
+                            size: 14,
                             color: colores.amberAviso,
                             semanticLabel: 'Bloqueada',
                           ),
                         if (tarea.recurrencia != null)
                           Icon(
-                            Icons.repeat_rounded,
-                            size: 15,
+                            LucideIcons.repeat,
+                            size: 14,
                             color: colores.indigoMarca,
                             semanticLabel:
                                 'Se repite: ${tarea.recurrencia!.etiqueta}',
@@ -378,14 +403,14 @@ class _TarjetaKanban extends StatelessWidget {
                     IconButton(
                       tooltip: 'Mover de columna',
                       constraints: const BoxConstraints.tightFor(
-                        width: 40,
-                        height: 40,
+                        width: 36,
+                        height: 36,
                       ),
                       padding: EdgeInsets.zero,
-                      iconSize: 18,
+                      iconSize: 16,
                       color: colores.tintaTenue,
                       onPressed: () => _elegirColumna(context),
-                      icon: const Icon(Icons.swap_horiz_rounded),
+                      icon: const Icon(LucideIcons.arrowLeftRight),
                     ),
                 ],
               ),

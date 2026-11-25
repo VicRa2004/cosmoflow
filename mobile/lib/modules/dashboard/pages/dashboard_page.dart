@@ -1,15 +1,18 @@
 import 'package:flutter/material.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../core/auth/sesion_store.dart';
 import '../../../core/offline/aviso_pendientes.dart';
 import '../../../core/theme/colores_noche_indigo.dart';
 import '../../../core/widgets/estados.dart';
+import '../../../core/widgets/tarjeta_seccion.dart';
 import '../../tareas/acciones_tarea.dart';
 import '../../tareas/api/tareas_api.dart';
 import '../../tareas/models/tarea_model.dart';
 import '../../tareas/widgets/tarea_fila.dart';
 
-/// Portada `/dashboard` («Pendientes»): tareas abiertas ordenadas por vencimiento (RN-43).
+/// Portada `/dashboard` («Pendientes»): tareas abiertas agrupadas en tarjetas
+/// por vencimiento (Vencidas, Hoy, Próximas y Sin fecha).
 class DashboardPage extends StatefulWidget {
   const DashboardPage({
     super.key,
@@ -70,27 +73,84 @@ class _DashboardPageState extends State<DashboardPage> {
     if (await cambio) await _cargar();
   }
 
+  List<_GrupoPendientes> _agruparPorVencimiento(ColoresNocheIndigo colores) {
+    final ahora = DateTime.now();
+    final hoy = DateTime(ahora.year, ahora.month, ahora.day);
+    final vencidas = <TareaDto>[];
+    final deHoy = <TareaDto>[];
+    final proximas = <TareaDto>[];
+    final sinFecha = <TareaDto>[];
+
+    for (final tarea in _pendientes) {
+      final raw = tarea.fechaVencimiento;
+      final fecha = raw == null || raw.isEmpty ? null : DateTime.tryParse(raw);
+      if (fecha == null) {
+        sinFecha.add(tarea);
+      } else {
+        final dias = fecha.difference(hoy).inDays;
+        if (dias < 0) {
+          vencidas.add(tarea);
+        } else if (dias == 0) {
+          deHoy.add(tarea);
+        } else {
+          proximas.add(tarea);
+        }
+      }
+    }
+
+    return <_GrupoPendientes>[
+      if (vencidas.isNotEmpty)
+        _GrupoPendientes(
+          titulo: 'Vencidas',
+          color: colores.rosePeligro,
+          tareas: vencidas,
+        ),
+      if (deHoy.isNotEmpty)
+        _GrupoPendientes(
+          titulo: 'Hoy',
+          color: colores.amberAviso,
+          tareas: deHoy,
+        ),
+      if (proximas.isNotEmpty)
+        _GrupoPendientes(
+          titulo: 'Próximas',
+          color: colores.indigoMarca,
+          tareas: proximas,
+        ),
+      if (sinFecha.isNotEmpty)
+        _GrupoPendientes(
+          titulo: 'Sin fecha',
+          color: colores.tintaTenue,
+          tareas: sinFecha,
+        ),
+    ];
+  }
+
   @override
   Widget build(BuildContext context) {
+    final colores = context.colores;
     final nombre = widget.sesionStore.usuario?.nombre ?? '';
     final puedeActualizar = widget.sesionStore.puede('tareas:actualizar');
+    final saludo = nombre.isEmpty ? 'Hola' : 'Hola, $nombre';
     final resumen = _total == 0
-        ? 'Hola${nombre.isEmpty ? '' : ', $nombre'}'
-        : 'Hola${nombre.isEmpty ? '' : ', $nombre'} · $_total ${_total == 1 ? 'abierta' : 'abiertas'}';
+        ? '$saludo · Todo al día'
+        : '$saludo · $_total ${_total == 1 ? 'pendiente' : 'pendientes'}';
+    final grupos = _agruparPorVencimiento(colores);
 
     return Scaffold(
       appBar: AppBar(
         title: const Text('Pendientes'),
         bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(20),
+          preferredSize: const Size.fromHeight(24),
           child: Padding(
-            padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
             child: Align(
               alignment: Alignment.centerLeft,
               child: Text(
                 resumen,
-                style: Theme.of(context).textTheme.bodySmall
-                    ?.copyWith(color: context.colores.tintaTenue),
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: colores.tintaTenue,
+                ),
               ),
             ),
           ),
@@ -99,14 +159,14 @@ class _DashboardPageState extends State<DashboardPage> {
       floatingActionButton: widget.sesionStore.puede('tareas:crear')
           ? FloatingActionButton.extended(
               onPressed: () => _recargarSi(_acciones.crear(context)),
-              icon: const Icon(Icons.add_rounded),
+              icon: const Icon(LucideIcons.plus, size: 20),
               label: const Text('Nueva tarea'),
             )
           : null,
       body: RefreshIndicator(
         onRefresh: _cargar,
         child: ListView(
-          padding: const EdgeInsets.only(bottom: 96),
+          padding: const EdgeInsets.only(top: 8, bottom: 104),
           children: <Widget>[
             avisoPendientes(
               cola: widget.tareasApi.cola,
@@ -120,28 +180,53 @@ class _DashboardPageState extends State<DashboardPage> {
               EstadoError(mensaje: _mensajeError!, onReintentar: _cargar)
             else if (_pendientes.isEmpty)
               const EstadoVacio(
-                icono: Icons.task_alt_rounded,
+                icono: LucideIcons.circleCheck,
                 titulo: 'Nada pendiente',
-                mensaje: 'Crea una tarea y aparecerá aquí, ordenada por vencimiento.',
+                mensaje:
+                    'Crea una tarea y aparecerá aquí, ordenada por vencimiento.',
               )
             else
-              for (final tarea in _pendientes) ...<Widget>[
-                TareaFila(
-                  tarea: tarea,
-                  mostrarEstado: false,
-                  puedeActualizar: puedeActualizar,
-                  onTap: () =>
-                      _recargarSi(_acciones.abrirDetalle(context, tarea)),
-                  onAlternarCompletada: () =>
-                      _recargarSi(_acciones.alternarCompletada(context, tarea)),
-                  onAlternarFijada: () =>
-                      _recargarSi(_acciones.alternarFijada(context, tarea)),
+              for (final grupo in grupos) ...<Widget>[
+                TarjetaSeccion(
+                  titulo: grupo.titulo,
+                  contador: grupo.tareas.length,
+                  colorTitulo: grupo.color,
+                  divisorIndent: 56,
+                  children: <Widget>[
+                    for (final tarea in grupo.tareas)
+                      TareaFila(
+                        tarea: tarea,
+                        mostrarEstado: false,
+                        puedeActualizar: puedeActualizar,
+                        onTap: () => _recargarSi(
+                          _acciones.abrirDetalle(context, tarea),
+                        ),
+                        onAlternarCompletada: () => _recargarSi(
+                          _acciones.alternarCompletada(context, tarea),
+                        ),
+                        onAlternarFijada: () => _recargarSi(
+                          _acciones.alternarFijada(context, tarea),
+                        ),
+                      ),
+                  ],
                 ),
-                const Divider(indent: 56),
+                const SizedBox(height: 20),
               ],
           ],
         ),
       ),
     );
   }
+}
+
+class _GrupoPendientes {
+  const _GrupoPendientes({
+    required this.titulo,
+    required this.color,
+    required this.tareas,
+  });
+
+  final String titulo;
+  final Color color;
+  final List<TareaDto> tareas;
 }

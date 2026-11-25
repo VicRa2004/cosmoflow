@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../core/theme/colores_noche_indigo.dart';
+import '../../../core/theme/tema_app.dart';
 
-/// Esqueleto común de login, registro y recuperar contraseña: marca, título,
-/// avisos y el formulario. En registro/recuperar la AppBar trae «atrás».
+/// Esqueleto común de login, registro y recuperar contraseña: marca Cosmoflow,
+/// cabecera limpia y formulario agrupado en una tarjeta de superficie.
 class AuthLayout extends StatelessWidget {
   const AuthLayout({
     super.key,
@@ -33,57 +35,84 @@ class AuthLayout extends StatelessWidget {
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
-            padding: const EdgeInsets.fromLTRB(16, 24, 16, 32),
+            padding: const EdgeInsets.fromLTRB(16, 20, 16, 32),
             child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 400),
+              constraints: const BoxConstraints(maxWidth: 420),
               child: Form(
                 key: formKey,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: <Widget>[
                     if (!puedeVolver) ...<Widget>[
-                      Align(
-                        alignment: Alignment.centerLeft,
-                        child: Container(
-                          width: 48,
-                          height: 48,
-                          decoration: BoxDecoration(
-                            color: colores.indigoMarca,
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          alignment: Alignment.center,
-                          child: Text(
-                            'C',
-                            style: textTheme.headlineSmall?.copyWith(
+                      Row(
+                        children: <Widget>[
+                          Container(
+                            width: 42,
+                            height: 42,
+                            decoration: BoxDecoration(
+                              color: colores.indigoMarca,
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            alignment: Alignment.center,
+                            child: const Icon(
+                              LucideIcons.sparkles,
                               color: Colors.white,
+                              size: 20,
                             ),
                           ),
-                        ),
+                          const SizedBox(width: 12),
+                          Text(
+                            'Cosmoflow',
+                            style: textTheme.titleLarge?.copyWith(
+                              fontWeight: FontWeight.w700,
+                              letterSpacing: -0.4,
+                            ),
+                          ),
+                        ],
                       ),
-                      const SizedBox(height: 32),
+                      const SizedBox(height: 28),
                     ],
                     Text(titulo, style: textTheme.headlineMedium),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: 6),
                     Text(
                       subtitulo,
-                      style: textTheme.bodyLarge?.copyWith(
+                      style: textTheme.bodyMedium?.copyWith(
                         color: colores.tintaTenue,
                       ),
                     ),
-                    const SizedBox(height: 32),
-                    if (mensajeError != null)
-                      _Aviso(
-                        texto: mensajeError!,
-                        icono: Icons.error_outline_rounded,
-                        color: colores.rosePeligro,
+                    const SizedBox(height: 24),
+                    Material(
+                      color: colores.superficie,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(
+                          TemaApp.radioTarjeta + 4,
+                        ),
+                        side: BorderSide(color: colores.borde, width: 1),
                       ),
-                    if (mensajeExito != null)
-                      _Aviso(
-                        texto: mensajeExito!,
-                        icono: Icons.mark_email_read_outlined,
-                        color: colores.indigoMarca,
+                      child: Padding(
+                        padding: const EdgeInsets.all(20),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: <Widget>[
+                            if (mensajeError != null)
+                              _Aviso(
+                                texto: mensajeError!,
+                                icono: LucideIcons.circleAlert,
+                                color: colores.rosePeligro,
+                                fondo: colores.roseSuave,
+                              ),
+                            if (mensajeExito != null)
+                              _Aviso(
+                                texto: mensajeExito!,
+                                icono: LucideIcons.mailCheck,
+                                color: colores.indigoMarca,
+                                fondo: colores.indigoSuave,
+                              ),
+                            ...children,
+                          ],
+                        ),
                       ),
-                    ...children,
+                    ),
                   ],
                 ),
               ),
@@ -96,11 +125,17 @@ class AuthLayout extends StatelessWidget {
 }
 
 class _Aviso extends StatelessWidget {
-  const _Aviso({required this.texto, required this.icono, required this.color});
+  const _Aviso({
+    required this.texto,
+    required this.icono,
+    required this.color,
+    required this.fondo,
+  });
 
   final String texto;
   final IconData icono;
   final Color color;
+  final Color fondo;
 
   @override
   Widget build(BuildContext context) {
@@ -108,19 +143,22 @@ class _Aviso extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 16),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.08),
-        borderRadius: BorderRadius.circular(8),
+        color: fondo,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: color.withValues(alpha: 0.25)),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
-        spacing: 12,
+        spacing: 10,
         children: <Widget>[
-          Icon(icono, color: color, size: 20),
+          Icon(icono, color: color, size: 18),
           Expanded(
             child: Text(
               texto,
-              style: Theme.of(context).textTheme.bodyMedium
-                  ?.copyWith(color: color),
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                color: color,
+                fontWeight: FontWeight.w500,
+              ),
             ),
           ),
         ],
@@ -149,7 +187,7 @@ class CampoEmail extends StatelessWidget {
       onFieldSubmitted: onSubmitted,
       decoration: const InputDecoration(
         labelText: 'Email',
-        prefixIcon: Icon(Icons.mail_outline_rounded),
+        prefixIcon: Icon(LucideIcons.mail, size: 18),
       ),
       validator: (v) {
         if (v == null || v.trim().isEmpty) return 'Ingresa tu email';
@@ -198,11 +236,12 @@ class _CampoPasswordState extends State<CampoPassword> {
       decoration: InputDecoration(
         labelText: 'Contraseña',
         helperText: widget.nueva ? 'Mínimo 8 caracteres' : null,
-        prefixIcon: const Icon(Icons.lock_outline_rounded),
+        prefixIcon: const Icon(LucideIcons.lock, size: 18),
         suffixIcon: IconButton(
           tooltip: _oculta ? 'Mostrar contraseña' : 'Ocultar contraseña',
           icon: Icon(
-            _oculta ? Icons.visibility_outlined : Icons.visibility_off_outlined,
+            _oculta ? LucideIcons.eye : LucideIcons.eyeOff,
+            size: 18,
           ),
           onPressed: () => setState(() => _oculta = !_oculta),
         ),
@@ -231,7 +270,10 @@ class BotonEnviar extends StatelessWidget {
       child: cargando
           ? const SizedBox.square(
               dimension: 20,
-              child: CircularProgressIndicator(strokeWidth: 2),
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+                color: Colors.white,
+              ),
             )
           : Text(texto),
     );
