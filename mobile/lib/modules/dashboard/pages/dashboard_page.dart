@@ -134,6 +134,8 @@ class _DashboardPageState extends State<DashboardPage> {
                       _recargarSi(_acciones.abrirDetalle(context, tarea)),
                   onAlternarCompletada: () =>
                       _recargarSi(_acciones.alternarCompletada(context, tarea)),
+                  onAlternarFijada: () =>
+                      _recargarSi(_acciones.alternarFijada(context, tarea)),
                 ),
                 const Divider(indent: 56),
               ],
