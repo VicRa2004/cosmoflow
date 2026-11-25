@@ -11,9 +11,10 @@ mod notas;
 mod notificaciones;
 mod tareas;
 
+use std::rc::Rc;
 use std::sync::Arc;
 
-use gpui_kit::component::{Theme, TitleBar};
+use gpui_kit::component::{Theme, ThemeSet, TitleBar};
 use gpui_kit::*;
 
 /// Cliente del backend compartido por todas las vistas.
@@ -24,6 +25,23 @@ pub fn api(cx: &App) -> Arc<api::Api> {
     cx.global::<ApiGlobal>().0.clone()
 }
 
+/// Tema «Noche índigo» de la marca (misma paleta que `mobile/lib/core/theme/`), claro y oscuro.
+fn tema() -> ThemeSet {
+    serde_json::from_str(include_str!("../tema.json")).expect("tema.json inválido")
+}
+
+/// Registra los dos modos; `sync_system_appearance` elige según el sistema.
+fn aplicar_tema(cx: &mut App) {
+    let global = Theme::global_mut(cx);
+    for config in tema().themes {
+        if config.mode.is_dark() {
+            global.dark_theme = Rc::new(config);
+        } else {
+            global.light_theme = Rc::new(config);
+        }
+    }
+}
+
 fn main() {
     gpui_kit::application()
         .with_assets(gpui_kit::assets::Assets)
@@ -31,6 +49,7 @@ fn main() {
             gpui_kit::init(cx);
             cx.set_app_identity("com.cosmoflow.desktop", "Cosmoflow");
             cx.set_global(ApiGlobal(api::Api::new()));
+            aplicar_tema(cx);
             Theme::sync_system_appearance(None, cx);
             espacio::registrar_atajos(cx);
             notas::registrar_atajos(cx);
@@ -48,4 +67,18 @@ fn main() {
             .expect("no se pudo abrir la ventana");
             cx.activate(true);
         });
+}
+
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn el_tema_tiene_modo_claro_y_oscuro() {
+        let modos: Vec<bool> = super::tema()
+            .themes
+            .iter()
+            .map(|t| t.mode.is_dark())
+            .collect();
+        assert_eq!(modos.len(), 2);
+        assert!(modos.contains(&true) && modos.contains(&false));
+    }
 }

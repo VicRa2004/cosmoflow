@@ -290,7 +290,9 @@ impl Render for Espacio {
                                             div()
                                                 .text_xs()
                                                 .truncate()
-                                                .text_color(cx.theme().muted_foreground)
+                                                .text_color(
+                                                    cx.theme().sidebar_foreground.opacity(0.7),
+                                                )
                                                 .child(self.usuario.email.clone()),
                                         ),
                                 )
