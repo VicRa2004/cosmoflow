@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/auth/sesion_store.dart';
+import '../../../core/offline/aviso_pendientes.dart';
+import '../../../core/theme/colores_noche_indigo.dart';
 import '../../../core/widgets/avisos.dart';
 import '../../../core/widgets/confirmar.dart';
 import '../../../core/widgets/contenido_markdown.dart';
@@ -39,7 +41,18 @@ class _NotaDetallePageState extends State<NotaDetallePage> {
   @override
   void initState() {
     super.initState();
+    widget.notasApi.cola?.addListener(_alCambiarCola);
     _cargar();
+  }
+
+  @override
+  void dispose() {
+    widget.notasApi.cola?.removeListener(_alCambiarCola);
+    super.dispose();
+  }
+
+  void _alCambiarCola() {
+    if (mounted) setState(() {});
   }
 
   Future<void> _cargar() async {
@@ -75,18 +88,42 @@ class _NotaDetallePageState extends State<NotaDetallePage> {
       accion: 'Eliminar',
     );
     if (!ok || !mounted) return;
-    final hecho = await ejecutarConAviso(
-      context,
-      () => widget.notasApi.eliminar(nota.id),
-      error: 'No se pudo eliminar la nota.',
-      exito: 'Nota eliminada.',
-    );
+    final hecho = await ejecutarConAviso(context, () async {
+      final borrada = await widget.notasApi.eliminar(
+        nota.id,
+        titulo: nota.titulo,
+      );
+      if (!mounted) return;
+      if (borrada) {
+        ScaffoldMessenger.of(context)
+            .showSnackBar(const SnackBar(content: Text('Nota eliminada.')));
+      } else {
+        avisarSiEncolada(
+          context,
+          false,
+          mensaje: 'Sin conexión: la eliminación quedó pendiente de subir.',
+        );
+      }
+    }, error: 'No se pudo eliminar la nota.');
     if (hecho && mounted) context.pop();
   }
 
   @override
   Widget build(BuildContext context) {
-    final nota = _nota;
+    final usuarioId = widget.sesionStore.usuario?.id;
+    final notaBase = _nota;
+    final nota = notaBase == null
+        ? null
+        : widget.notasApi.aplicarPendiente(usuarioId, notaBase);
+    final pendiente =
+        nota != null &&
+        usuarioId != null &&
+        (widget.notasApi.cola?.tieneCambiosPendientes(
+              usuarioId,
+              '/notas',
+              nota.id,
+            ) ??
+            false);
     final store = widget.sesionStore;
     return Scaffold(
       appBar: AppBar(
@@ -112,12 +149,16 @@ class _NotaDetallePageState extends State<NotaDetallePage> {
           ? (_mensajeError == null
                 ? const EstadoCargando()
                 : EstadoError(mensaje: _mensajeError!, onReintentar: _cargar))
-          : RefreshIndicator(onRefresh: _cargar, child: _contenido(nota)),
+          : RefreshIndicator(
+              onRefresh: _cargar,
+              child: _contenido(nota, pendiente),
+            ),
     );
   }
 
-  Widget _contenido(NotaDto nota) {
+  Widget _contenido(NotaDto nota, bool pendiente) {
     final textTheme = Theme.of(context).textTheme;
+    final colores = context.colores;
     final carpeta = widget.args.carpetas
         .where((c) => c.id == nota.carpetaId)
         .firstOrNull;
@@ -129,6 +170,25 @@ class _NotaDetallePageState extends State<NotaDetallePage> {
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 48),
       children: <Widget>[
         Text(nota.titulo, style: textTheme.headlineSmall),
+        if (pendiente) ...<Widget>[
+          const SizedBox(height: 8),
+          Row(
+            children: <Widget>[
+              Icon(
+                Icons.cloud_upload_outlined,
+                size: 16,
+                color: colores.amberAviso,
+              ),
+              const SizedBox(width: 6),
+              Text(
+                'Cambios pendientes de subir',
+                style: textTheme.labelMedium?.copyWith(
+                  color: colores.amberAviso,
+                ),
+              ),
+            ],
+          ),
+        ],
         if (carpeta != null || tags.isNotEmpty) ...<Widget>[
           const SizedBox(height: 12),
           Wrap(

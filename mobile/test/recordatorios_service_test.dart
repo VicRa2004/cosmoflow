@@ -363,7 +363,7 @@ void main() {
         // 2. Completar tarea: cancela los 3 y no programa ninguno.
         programados.clear();
         cancelados.clear();
-        await tareasApi.alternarCompletada(editada);
+        await tareasApi.alternarCompletada(editada!);
         await Future<void>.delayed(Duration.zero);
 
         expect(cancelados, RecordatoriosService.idsDeTarea(15));

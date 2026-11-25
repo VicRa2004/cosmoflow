@@ -51,18 +51,24 @@ class _NotasPageState extends State<NotasPage> {
   @override
   void initState() {
     super.initState();
+    widget.notasApi.cola?.addListener(_alCambiarCola);
     if (widget.cargarAlIniciar) _cargar();
   }
 
   @override
   void dispose() {
+    widget.notasApi.cola?.removeListener(_alCambiarCola);
     _busqueda.dispose();
     super.dispose();
   }
 
+  void _alCambiarCola() {
+    if (mounted) setState(() {});
+  }
+
   Future<void> _cargar() async {
     setState(() {
-      _isCargando = true;
+      _isCargando = _notas.isEmpty;
       _mensajeError = null;
     });
     try {
@@ -84,7 +90,7 @@ class _NotasPageState extends State<NotasPage> {
         });
       }
     } catch (_) {
-      if (mounted) {
+      if (mounted && _notas.isEmpty) {
         setState(() => _mensajeError = 'No se pudieron cargar las notas.');
       }
     } finally {
@@ -150,6 +156,9 @@ class _NotasPageState extends State<NotasPage> {
 
   @override
   Widget build(BuildContext context) {
+    final usuarioId = widget.sesionStore.usuario?.id;
+    final cola = widget.notasApi.cola;
+    final visibles = widget.notasApi.aplicarPendientes(usuarioId, _notas);
     return Scaffold(
       appBar: widget.mostrarAppBar ? AppBar(title: const Text('Notas')) : null,
       floatingActionButton: widget.sesionStore.puede('notas:crear')
@@ -203,16 +212,24 @@ class _NotasPageState extends State<NotasPage> {
               const EstadoCargando()
             else if (_mensajeError != null)
               EstadoError(mensaje: _mensajeError!, onReintentar: _cargar)
-            else if (_notas.isEmpty)
+            else if (visibles.isEmpty)
               const EstadoVacio(
                 icono: Icons.sticky_note_2_outlined,
                 titulo: 'Sin notas',
                 mensaje: 'Crea una nota para guardar apuntes e ideas.',
               )
             else
-              for (final nota in _notas) ...<Widget>[
+              for (final nota in visibles) ...<Widget>[
                 NotaFila(
                   nota: nota,
+                  pendienteDeSubir:
+                      usuarioId != null &&
+                      (cola?.tieneCambiosPendientes(
+                            usuarioId,
+                            '/notas',
+                            nota.id,
+                          ) ??
+                          false),
                   carpeta: _carpetaId == null
                       ? _carpetas
                             .where((c) => c.id == nota.carpetaId)

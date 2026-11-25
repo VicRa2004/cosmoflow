@@ -55,14 +55,16 @@ class _NotaEditorPageState extends State<NotaEditorPage> {
         );
         if (mounted) avisarSiEncolada(context, creada);
       } else {
-        await widget.notasApi.actualizar(
+        final actualizada = await widget.notasApi.actualizar(
           nota.id,
           titulo: v.titulo,
           contenido: v.contenido,
           color: nota.color,
           tagIds: v.tagIds,
           carpetaId: v.carpetaId,
+          base: nota,
         );
+        if (mounted) avisarSiEncolada(context, actualizada);
       }
     }, error: 'No se pudo guardar la nota.');
   }

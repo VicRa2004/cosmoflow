@@ -52,7 +52,18 @@ class _TareaDetallePageState extends State<TareaDetallePage> {
   @override
   void initState() {
     super.initState();
+    widget.acciones.tareasApi.cola?.addListener(_alCambiarCola);
     _cargar();
+  }
+
+  @override
+  void dispose() {
+    widget.acciones.tareasApi.cola?.removeListener(_alCambiarCola);
+    super.dispose();
+  }
+
+  void _alCambiarCola() {
+    if (mounted) setState(() {});
   }
 
   Future<void> _cargar() async {
@@ -95,8 +106,21 @@ class _TareaDetallePageState extends State<TareaDetallePage> {
 
   @override
   Widget build(BuildContext context) {
-    final tarea = _tarea;
     final store = widget.acciones.sesionStore;
+    final usuarioId = store.usuario?.id;
+    final tareaBase = _tarea;
+    final tarea = tareaBase == null
+        ? null
+        : widget.acciones.tareasApi.aplicarPendiente(usuarioId, tareaBase);
+    final pendiente =
+        tarea != null &&
+        usuarioId != null &&
+        (widget.acciones.tareasApi.cola?.tieneCambiosPendientes(
+              usuarioId,
+              '/tareas',
+              tarea.id,
+            ) ??
+            false);
     final colores = context.colores;
     final puedePlantilla = store.puede('tareas:crear');
     final puedeEliminar = store.puede('tareas:eliminar');
@@ -138,11 +162,14 @@ class _TareaDetallePageState extends State<TareaDetallePage> {
           ? (_mensajeError == null
                 ? const EstadoCargando()
                 : EstadoError(mensaje: _mensajeError!, onReintentar: _cargar))
-          : RefreshIndicator(onRefresh: _cargar, child: _contenido(tarea)),
+          : RefreshIndicator(
+              onRefresh: _cargar,
+              child: _contenido(tarea, pendiente),
+            ),
     );
   }
 
-  Widget _contenido(TareaDto tarea) {
+  Widget _contenido(TareaDto tarea, bool pendiente) {
     final colores = context.colores;
     final textTheme = Theme.of(context).textTheme;
     final completada = tarea.estado == EstadoTarea.completada;
@@ -165,13 +192,37 @@ class _TareaDetallePageState extends State<TareaDetallePage> {
       padding: const EdgeInsets.only(bottom: 48),
       children: <Widget>[
         Padding(
-          padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-          child: Text(
-            tarea.titulo,
-            style: textTheme.headlineSmall?.copyWith(
-              decoration: completada ? TextDecoration.lineThrough : null,
-              color: completada ? colores.tintaTenue : null,
-            ),
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: <Widget>[
+              Text(
+                tarea.titulo,
+                style: textTheme.headlineSmall?.copyWith(
+                  decoration: completada ? TextDecoration.lineThrough : null,
+                  color: completada ? colores.tintaTenue : null,
+                ),
+              ),
+              if (pendiente) ...<Widget>[
+                const SizedBox(height: 8),
+                Row(
+                  children: <Widget>[
+                    Icon(
+                      Icons.cloud_upload_outlined,
+                      size: 16,
+                      color: colores.amberAviso,
+                    ),
+                    const SizedBox(width: 6),
+                    Text(
+                      'Cambios pendientes de subir',
+                      style: textTheme.labelMedium?.copyWith(
+                        color: colores.amberAviso,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ],
           ),
         ),
         if (puedeMarcar)

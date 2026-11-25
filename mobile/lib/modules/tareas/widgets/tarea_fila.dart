@@ -14,6 +14,7 @@ class TareaFila extends StatelessWidget {
     this.onAlternarCompletada,
     this.mostrarEstado = true,
     this.puedeActualizar = true,
+    this.pendienteDeSubir = false,
   });
 
   final TareaDto tarea;
@@ -21,6 +22,7 @@ class TareaFila extends StatelessWidget {
   final VoidCallback? onAlternarCompletada;
   final bool mostrarEstado;
   final bool puedeActualizar;
+  final bool pendienteDeSubir;
 
   @override
   Widget build(BuildContext context) {
@@ -73,10 +75,24 @@ class TareaFila extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 2),
-                    _Metadatos(tarea: tarea, mostrarEstado: mostrarEstado),
+                    _Metadatos(
+                      tarea: tarea,
+                      mostrarEstado: mostrarEstado,
+                      pendienteDeSubir: pendienteDeSubir,
+                    ),
                   ],
                 ),
               ),
+              if (pendienteDeSubir)
+                Padding(
+                  padding: const EdgeInsets.only(left: 8),
+                  child: Icon(
+                    Icons.cloud_upload_outlined,
+                    size: 18,
+                    color: colores.amberAviso,
+                    semanticLabel: 'Pendiente de subir',
+                  ),
+                ),
             ],
           ),
         ),
@@ -86,10 +102,15 @@ class TareaFila extends StatelessWidget {
 }
 
 class _Metadatos extends StatelessWidget {
-  const _Metadatos({required this.tarea, required this.mostrarEstado});
+  const _Metadatos({
+    required this.tarea,
+    required this.mostrarEstado,
+    required this.pendienteDeSubir,
+  });
 
   final TareaDto tarea;
   final bool mostrarEstado;
+  final bool pendienteDeSubir;
 
   @override
   Widget build(BuildContext context) {
@@ -97,6 +118,11 @@ class _Metadatos extends StatelessWidget {
     final base = Theme.of(context).textTheme.bodySmall;
     final (texto, color) = _vencimiento(colores);
     final partes = <InlineSpan>[
+      if (pendienteDeSubir)
+        TextSpan(
+          text: 'Pendiente de subir · ',
+          style: TextStyle(color: colores.amberAviso),
+        ),
       if (tarea.prioridad == PrioridadTarea.alta)
         TextSpan(
           text: '● Alta  ',

@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/auth/sesion_store.dart';
+import '../../core/offline/aviso_pendientes.dart';
 import '../../core/widgets/avisos.dart';
 import '../../core/widgets/confirmar.dart';
 import '../tags/models/tag_model.dart';
@@ -53,11 +54,10 @@ class AccionesTarea {
 
   Future<bool> alternarCompletada(BuildContext context, TareaDto tarea) {
     HapticFeedback.selectionClick();
-    return ejecutarConAviso(
-      context,
-      () => tareasApi.alternarCompletada(tarea),
-      error: 'No se pudo actualizar la tarea.',
-    );
+    return ejecutarConAviso(context, () async {
+      final actualizada = await tareasApi.alternarCompletada(tarea);
+      if (context.mounted) avisarSiEncolada(context, actualizada);
+    }, error: 'No se pudo actualizar la tarea.');
   }
 
   Future<bool> eliminar(BuildContext context, TareaDto tarea) async {
@@ -68,12 +68,20 @@ class AccionesTarea {
       accion: 'Eliminar',
     );
     if (!ok || !context.mounted) return false;
-    return ejecutarConAviso(
-      context,
-      () => tareasApi.eliminar(tarea.id),
-      error: 'No se pudo eliminar la tarea.',
-      exito: 'Tarea eliminada.',
-    );
+    return ejecutarConAviso(context, () async {
+      final borrada = await tareasApi.eliminar(tarea.id, titulo: tarea.titulo);
+      if (!context.mounted) return;
+      if (borrada) {
+        ScaffoldMessenger.of(context)
+            .showSnackBar(const SnackBar(content: Text('Tarea eliminada.')));
+      } else {
+        avisarSiEncolada(
+          context,
+          false,
+          mensaje: 'Sin conexión: la eliminación quedó pendiente de subir.',
+        );
+      }
+    }, error: 'No se pudo eliminar la tarea.');
   }
 
   /// Abre `/tareas/:id`. Devuelve `true` siempre: dentro pudo editarse o eliminarse.

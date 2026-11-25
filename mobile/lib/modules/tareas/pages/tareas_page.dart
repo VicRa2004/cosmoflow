@@ -65,18 +65,24 @@ class _TareasPageState extends State<TareasPage> {
   @override
   void initState() {
     super.initState();
+    widget.tareasApi.cola?.addListener(_alCambiarCola);
     if (widget.cargarAlIniciar) _cargar();
   }
 
   @override
   void dispose() {
+    widget.tareasApi.cola?.removeListener(_alCambiarCola);
     _busqueda.dispose();
     super.dispose();
   }
 
+  void _alCambiarCola() {
+    if (mounted) setState(() {});
+  }
+
   Future<void> _cargar() async {
     setState(() {
-      _isCargando = true;
+      _isCargando = _tareas.isEmpty;
       _mensajeError = null;
     });
     try {
@@ -90,7 +96,7 @@ class _TareasPageState extends State<TareasPage> {
       );
       if (mounted) setState(() => _tareas = pagina.datos);
     } catch (_) {
-      if (mounted) {
+      if (mounted && _tareas.isEmpty) {
         setState(() => _mensajeError = 'No se pudieron cargar las tareas.');
       }
     } finally {
@@ -133,6 +139,9 @@ class _TareasPageState extends State<TareasPage> {
 
   @override
   Widget build(BuildContext context) {
+    final usuarioId = widget.sesionStore.usuario?.id;
+    final cola = widget.tareasApi.cola;
+    final visibles = widget.tareasApi.aplicarPendientes(usuarioId, _tareas);
     final puedeActualizar = widget.sesionStore.puede('tareas:actualizar');
     final permiteCrear =
         (widget.puedeCrear ?? true) && widget.sesionStore.puede('tareas:crear');
@@ -189,17 +198,25 @@ class _TareasPageState extends State<TareasPage> {
               const EstadoCargando()
             else if (_mensajeError != null)
               EstadoError(mensaje: _mensajeError!, onReintentar: _cargar)
-            else if (_tareas.isEmpty)
+            else if (visibles.isEmpty)
               const EstadoVacio(
                 icono: Icons.task_alt_rounded,
                 titulo: 'Sin tareas',
                 mensaje: 'No hay tareas que coincidan con los filtros.',
               )
             else
-              for (final tarea in _tareas) ...<Widget>[
+              for (final tarea in visibles) ...<Widget>[
                 TareaFila(
                   tarea: tarea,
                   puedeActualizar: puedeActualizar,
+                  pendienteDeSubir:
+                      usuarioId != null &&
+                      (cola?.tieneCambiosPendientes(
+                            usuarioId,
+                            '/tareas',
+                            tarea.id,
+                          ) ??
+                          false),
                   onTap: () =>
                       _recargarSi(_acciones.abrirDetalle(context, tarea)),
                   onAlternarCompletada: () =>

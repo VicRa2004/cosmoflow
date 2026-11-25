@@ -39,7 +39,18 @@ class _DashboardPageState extends State<DashboardPage> {
   @override
   void initState() {
     super.initState();
+    widget.tareasApi.cola?.addListener(_alCambiarCola);
     if (widget.cargarAlIniciar) _cargar();
+  }
+
+  @override
+  void dispose() {
+    widget.tareasApi.cola?.removeListener(_alCambiarCola);
+    super.dispose();
+  }
+
+  void _alCambiarCola() {
+    if (mounted) setState(() {});
   }
 
   Future<void> _cargar() async {
@@ -56,7 +67,7 @@ class _DashboardPageState extends State<DashboardPage> {
         });
       }
     } catch (_) {
-      if (mounted) {
+      if (mounted && _pendientes.isEmpty) {
         setState(
           () => _mensajeError = 'No se pudieron cargar las tareas pendientes.',
         );
@@ -72,6 +83,9 @@ class _DashboardPageState extends State<DashboardPage> {
 
   @override
   Widget build(BuildContext context) {
+    final usuarioId = widget.sesionStore.usuario?.id;
+    final cola = widget.tareasApi.cola;
+    final visibles = widget.tareasApi.aplicarPendientes(usuarioId, _pendientes);
     final nombre = widget.sesionStore.usuario?.nombre ?? '';
     final puedeActualizar = widget.sesionStore.puede('tareas:actualizar');
     final resumen = _total == 0
@@ -118,18 +132,26 @@ class _DashboardPageState extends State<DashboardPage> {
               const EstadoCargando()
             else if (_mensajeError != null)
               EstadoError(mensaje: _mensajeError!, onReintentar: _cargar)
-            else if (_pendientes.isEmpty)
+            else if (visibles.isEmpty)
               const EstadoVacio(
                 icono: Icons.task_alt_rounded,
                 titulo: 'Nada pendiente',
                 mensaje: 'Crea una tarea y aparecerá aquí, ordenada por vencimiento.',
               )
             else
-              for (final tarea in _pendientes) ...<Widget>[
+              for (final tarea in visibles) ...<Widget>[
                 TareaFila(
                   tarea: tarea,
                   mostrarEstado: false,
                   puedeActualizar: puedeActualizar,
+                  pendienteDeSubir:
+                      usuarioId != null &&
+                      (cola?.tieneCambiosPendientes(
+                            usuarioId,
+                            '/tareas',
+                            tarea.id,
+                          ) ??
+                          false),
                   onTap: () =>
                       _recargarSi(_acciones.abrirDetalle(context, tarea)),
                   onAlternarCompletada: () =>

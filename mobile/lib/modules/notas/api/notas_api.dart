@@ -83,26 +83,44 @@ class NotasApi {
     return respuesta == null ? null : NotaDto.fromJson(respuesta);
   }
 
+  static Map<String, dynamic> _snapshotNota(NotaDto nota) => <String, dynamic>{
+    'titulo': nota.titulo,
+    'contenido': nota.contenido,
+    'color': nota.color,
+    'carpetaId': nota.carpetaId,
+  };
+
   /// Actualiza una nota existente (`PUT /api/notas/{id}`).
-  Future<NotaDto> actualizar(
+  /// Devuelve `null` si sin conexión quedó en la cola.
+  Future<NotaDto?> actualizar(
     int id, {
     required String titulo,
     required String contenido,
     String? color,
     List<int> tagIds = const <int>[],
     int? carpetaId,
+    NotaDto? base,
   }) async {
-    final response = await apiClient.dio.put<Map<String, dynamic>>(
-      '/notas/$id',
-      data: <String, dynamic>{
-        'titulo': titulo.trim(),
-        'contenido': contenido,
-        'color': (color != null && color.isNotEmpty) ? color : null,
-        'tagIds': tagIds,
-        'carpetaId': carpetaId,
-      },
-    );
-    return NotaDto.fromJson(response.data!);
+    final datos = <String, dynamic>{
+      'titulo': titulo.trim(),
+      'contenido': contenido,
+      'color': (color != null && color.isNotEmpty) ? color : null,
+      'tagIds': tagIds,
+      'carpetaId': carpetaId,
+    };
+    final respuesta = cola == null
+        ? (await apiClient.dio.put<Map<String, dynamic>>(
+            '/notas/$id',
+            data: datos,
+          )).data
+        : await cola!.actualizarOEncolar(
+            '/notas',
+            id,
+            datos,
+            titulo: titulo.trim(),
+            baseServidor: base != null ? _snapshotNota(base) : null,
+          );
+    return respuesta == null ? null : NotaDto.fromJson(respuesta);
   }
 
   /// Una nota por id (`GET /api/notas/{id}`).
@@ -114,7 +132,51 @@ class NotasApi {
   }
 
   /// Elimina una nota (`DELETE /api/notas/{id}`).
-  Future<void> eliminar(int id) async {
-    await apiClient.dio.delete<void>('/notas/$id');
+  /// Devuelve `true` si se borró en el servidor o `false` si quedó encolada.
+  Future<bool> eliminar(int id, {String? titulo}) async {
+    if (cola == null) {
+      await apiClient.dio.delete<void>('/notas/$id');
+      return true;
+    }
+    return cola!.eliminarOEncolar('/notas', id, titulo: titulo);
+  }
+
+  /// Aplica ediciones y borrados pendientes sobre una lista de notas en memoria.
+  List<NotaDto> aplicarPendientes(int? usuarioId, List<NotaDto> notas) {
+    final c = cola;
+    if (c == null || usuarioId == null) return notas;
+    final resultado = <NotaDto>[];
+    for (final nota in notas) {
+      if (c.estaEliminadaPendiente(usuarioId, '/notas', nota.id)) continue;
+      resultado.add(aplicarPendiente(usuarioId, nota));
+    }
+    return resultado;
+  }
+
+  /// Aplica ediciones pendientes de la cola sobre una nota concreta.
+  NotaDto aplicarPendiente(int? usuarioId, NotaDto nota) {
+    final c = cola;
+    if (c == null || usuarioId == null) return nota;
+    final cambios = c.cambiosPendientes(usuarioId, '/notas', nota.id);
+    if (cambios == null || cambios.isEmpty) return nota;
+    final tagIds = cambios['tagIds'] is List
+        ? (cambios['tagIds'] as List)
+              .whereType<num>()
+              .map((e) => e.toInt())
+              .toList()
+        : nota.tagIds;
+    return NotaDto(
+      id: nota.id,
+      titulo: cambios['titulo'] as String? ?? nota.titulo,
+      contenido: cambios['contenido'] as String? ?? nota.contenido,
+      color: cambios.containsKey('color')
+          ? cambios['color'] as String?
+          : nota.color,
+      tagIds: tagIds,
+      proyectoId: nota.proyectoId,
+      carpetaId: cambios.containsKey('carpetaId')
+          ? (cambios['carpetaId'] as num?)?.toInt()
+          : nota.carpetaId,
+    );
   }
 }

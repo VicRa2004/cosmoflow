@@ -11,17 +11,20 @@ class NotaFila extends StatelessWidget {
     required this.nota,
     required this.onTap,
     this.carpeta,
+    this.pendienteDeSubir = false,
   });
 
   final NotaDto nota;
   final VoidCallback onTap;
   final CarpetaDto? carpeta;
+  final bool pendienteDeSubir;
 
   @override
   Widget build(BuildContext context) {
     final colores = context.colores;
     final extracto = nota.contenido.trim().replaceAll(RegExp(r'\s+'), ' ');
     final meta = <String>[
+      if (pendienteDeSubir) 'Pendiente de subir',
       if (carpeta != null) carpeta!.nombre,
       if (extracto.isNotEmpty) extracto,
     ].join(' · ');
@@ -35,9 +38,20 @@ class NotaFila extends StatelessWidget {
               meta,
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
-              style: Theme.of(context).textTheme.bodySmall
-                  ?.copyWith(color: colores.tintaTenue),
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: pendienteDeSubir
+                    ? colores.amberAviso
+                    : colores.tintaTenue,
+              ),
             ),
+      trailing: pendienteDeSubir
+          ? Icon(
+              Icons.cloud_upload_outlined,
+              size: 18,
+              color: colores.amberAviso,
+              semanticLabel: 'Pendiente de subir',
+            )
+          : null,
     );
   }
 }

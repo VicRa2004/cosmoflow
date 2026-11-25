@@ -144,20 +144,25 @@ class _TareaEditorPageState extends State<TareaEditorPage> {
           tarea.responsableIds,
           v.responsableIds,
         );
-        await widget.tareasApi.actualizar(tarea.id, <String, dynamic>{
-          'titulo': v.titulo,
-          'contenido': v.contenido,
-          'estado': v.estado.valorApi,
-          'prioridad': v.prioridad.valorApi,
-          'fechaInicio': v.fechaInicio,
-          'fechaVencimiento': v.fechaVencimiento,
-          'color': v.color,
-          'tagIds': v.tagIds,
-          'subtareas': v.subtareas
-              .map((s) => s.toJson())
-              .toList(growable: false),
-          if (cambioResponsables) 'responsableIds': v.responsableIds,
-        });
+        final actualizada = await widget.tareasApi.actualizar(
+          tarea.id,
+          <String, dynamic>{
+            'titulo': v.titulo,
+            'contenido': v.contenido,
+            'estado': v.estado.valorApi,
+            'prioridad': v.prioridad.valorApi,
+            'fechaInicio': v.fechaInicio,
+            'fechaVencimiento': v.fechaVencimiento,
+            'color': v.color,
+            'tagIds': v.tagIds,
+            'subtareas': v.subtareas
+                .map((s) => s.toJson())
+                .toList(growable: false),
+            if (cambioResponsables) 'responsableIds': v.responsableIds,
+          },
+          base: tarea,
+        );
+        if (mounted) avisarSiEncolada(context, actualizada);
       }
     }, error: 'No se pudo guardar la tarea.');
   }

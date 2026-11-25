@@ -144,13 +144,38 @@ class TareasApi {
     return TareaDto.fromJson(response.data!);
   }
 
+  static Map<String, dynamic> _snapshotTarea(TareaDto tarea) =>
+      <String, dynamic>{
+        'titulo': tarea.titulo,
+        'contenido': tarea.contenido,
+        'estado': tarea.estado.valorApi,
+        'prioridad': tarea.prioridad.valorApi,
+        'fechaInicio': tarea.fechaInicio,
+        'fechaVencimiento': tarea.fechaVencimiento,
+        'color': tarea.color,
+      };
+
   /// Actualiza campos de una tarea existente (`PUT /api/tareas/{id}`).
-  Future<TareaDto> actualizar(int id, Map<String, dynamic> datos) async {
-    final response = await apiClient.dio.put<Map<String, dynamic>>(
-      '/tareas/$id',
-      data: datos,
-    );
-    final tarea = TareaDto.fromJson(response.data!);
+  /// Devuelve `null` si sin conexión quedó en la cola para subirla después.
+  Future<TareaDto?> actualizar(
+    int id,
+    Map<String, dynamic> datos, {
+    TareaDto? base,
+  }) async {
+    final respuesta = cola == null
+        ? (await apiClient.dio.put<Map<String, dynamic>>(
+            '/tareas/$id',
+            data: datos,
+          )).data
+        : await cola!.actualizarOEncolar(
+            '/tareas',
+            id,
+            datos,
+            titulo: base?.titulo ?? datos['titulo'] as String?,
+            baseServidor: base != null ? _snapshotTarea(base) : null,
+          );
+    if (respuesta == null) return null;
+    final tarea = TareaDto.fromJson(respuesta);
     if (recordatorios != null) {
       unawaited(recordatorios!.actualizarTarea(tarea));
     }
@@ -158,13 +183,14 @@ class TareasApi {
   }
 
   /// Alterna entre `completada` y `pendiente` (acción de `BotonCompletar`).
-  Future<TareaDto> alternarCompletada(TareaDto tarea) {
+  /// Devuelve `null` si quedó encolada sin conexión.
+  Future<TareaDto?> alternarCompletada(TareaDto tarea) {
     final nuevoEstado = tarea.estado == EstadoTarea.completada
         ? EstadoTarea.pendiente
         : EstadoTarea.completada;
     return actualizar(tarea.id, <String, dynamic>{
       'estado': nuevoEstado.valorApi,
-    });
+    }, base: tarea);
   }
 
   /// Recuento de tareas por destino (`GET /api/tareas/estadisticas`).
@@ -191,10 +217,80 @@ class TareasApi {
   }
 
   /// Elimina una tarea (`DELETE /api/tareas/{id}`).
-  Future<void> eliminar(int id) async {
-    await apiClient.dio.delete<void>('/tareas/$id');
+  /// Devuelve `true` si se borró en el servidor o `false` si quedó encolada.
+  Future<bool> eliminar(int id, {String? titulo}) async {
+    final borrada = cola == null
+        ? (await apiClient.dio.delete<void>('/tareas/$id'), true).$2
+        : await cola!.eliminarOEncolar('/tareas', id, titulo: titulo);
     if (recordatorios != null) {
       unawaited(recordatorios!.cancelarTarea(id));
     }
+    return borrada;
+  }
+
+  /// Aplica cambios pendientes de la cola (ediciones/completados/borrados) sobre
+  /// una lista en memoria para reflejarlos al instante en la interfaz.
+  List<TareaDto> aplicarPendientes(int? usuarioId, List<TareaDto> tareas) {
+    final c = cola;
+    if (c == null || usuarioId == null) return tareas;
+    final resultado = <TareaDto>[];
+    for (final tarea in tareas) {
+      if (c.estaEliminadaPendiente(usuarioId, '/tareas', tarea.id)) continue;
+      resultado.add(aplicarPendiente(usuarioId, tarea));
+    }
+    return resultado;
+  }
+
+  /// Aplica cambios pendientes de la cola a una tarea concreta.
+  TareaDto aplicarPendiente(int? usuarioId, TareaDto tarea) {
+    final c = cola;
+    if (c == null || usuarioId == null) return tarea;
+    final cambios = c.cambiosPendientes(usuarioId, '/tareas', tarea.id);
+    if (cambios == null || cambios.isEmpty) return tarea;
+    List<int> parseIds(Object? valor, List<int> actual) {
+      if (valor is List) {
+        return valor.whereType<num>().map((e) => e.toInt()).toList();
+      }
+      return actual;
+    }
+
+    final rawSubtareas = cambios['subtareas'];
+    final subtareas = rawSubtareas is List
+        ? rawSubtareas
+              .whereType<Map<String, dynamic>>()
+              .map(SubtareaDto.fromJson)
+              .toList(growable: false)
+        : tarea.subtareas;
+
+    return TareaDto(
+      id: tarea.id,
+      titulo: cambios['titulo'] as String? ?? tarea.titulo,
+      contenido: cambios['contenido'] as String? ?? tarea.contenido,
+      estado: cambios.containsKey('estado')
+          ? EstadoTarea.fromValorApi(cambios['estado'] as String?)
+          : tarea.estado,
+      prioridad: cambios.containsKey('prioridad')
+          ? PrioridadTarea.fromValorApi(cambios['prioridad'] as String?)
+          : tarea.prioridad,
+      fechaInicio: cambios.containsKey('fechaInicio')
+          ? cambios['fechaInicio'] as String?
+          : tarea.fechaInicio,
+      fechaVencimiento: cambios.containsKey('fechaVencimiento')
+          ? cambios['fechaVencimiento'] as String?
+          : tarea.fechaVencimiento,
+      color: cambios.containsKey('color')
+          ? cambios['color'] as String?
+          : tarea.color,
+      tagIds: cambios.containsKey('tagIds')
+          ? parseIds(cambios['tagIds'], tarea.tagIds)
+          : tarea.tagIds,
+      responsableIds: cambios.containsKey('responsableIds')
+          ? parseIds(cambios['responsableIds'], tarea.responsableIds)
+          : tarea.responsableIds,
+      subtareas: subtareas,
+      organizacionId: tarea.organizacionId,
+      equipoId: tarea.equipoId,
+      proyectoId: tarea.proyectoId,
+    );
   }
 }
