@@ -48,6 +48,7 @@ pub struct Api {
     base: String,
     agente: Agent,
     access_token: Mutex<Option<String>>,
+    usuario: Mutex<Option<Usuario>>,
     /// Serializa las renovaciones: con varios 401 a la vez solo uno llama a `/auth/refresh`.
     renovando: Mutex<()>,
 }
@@ -64,6 +65,7 @@ impl Api {
             base: base.trim_end_matches('/').into(),
             agente,
             access_token: Mutex::new(None),
+            usuario: Mutex::new(None),
             renovando: Mutex::new(()),
         })
     }
@@ -71,6 +73,20 @@ impl Api {
     /// URL de la web (sin `/api`) para abrir en el navegador lo que aún no es nativo.
     pub fn url_web(&self) -> String {
         self.base.trim_end_matches("/api").into()
+    }
+
+    /// Resuelve una ruta relativa al servidor (ej. `/api/avatares/1`) a URL absoluta.
+    pub fn url_recurso(&self, ruta: &str) -> String {
+        if ruta.starts_with("http://") || ruta.starts_with("https://") {
+            ruta.to_string()
+        } else {
+            format!("{}{}", self.url_web(), ruta)
+        }
+    }
+
+    /// Último usuario autenticado en la sesión actual.
+    pub fn usuario(&self) -> Option<Usuario> {
+        self.usuario.lock().unwrap().clone()
     }
 
     pub fn get<T: DeserializeOwned>(&self, ruta: &str) -> Resultado<T> {
@@ -140,6 +156,48 @@ impl Api {
         }
         llavero::borrar();
         *self.access_token.lock().unwrap() = None;
+        *self.usuario.lock().unwrap() = None;
+    }
+
+    /// Cambia la contraseña actual (`PUT /api/auth/password`); revoca el resto de sesiones.
+    pub fn cambiar_password(&self, actual: &str, nueva: &str) -> Resultado<()> {
+        let r = self.pedir(
+            "PUT",
+            "/auth/password",
+            Some(serde_json::json!({
+                "passwordActual": actual,
+                "passwordNueva": nueva,
+            })),
+        )?;
+        if let Some(token) = r.get("accessToken").and_then(Value::as_str)
+            && !token.is_empty()
+        {
+            *self.access_token.lock().unwrap() = Some(token.to_string());
+        }
+        if let Some(refresh) = r.get("refreshToken").and_then(Value::as_str)
+            && !refresh.is_empty()
+        {
+            llavero::guardar(refresh);
+        }
+        Ok(())
+    }
+
+    /// Cierra todas las sesiones activas en todos los dispositivos (`POST /api/auth/logout-todas`).
+    pub fn logout_todas(&self) -> Resultado<()> {
+        let r = self.pedir("POST", "/auth/logout-todas", None);
+        llavero::borrar();
+        *self.access_token.lock().unwrap() = None;
+        *self.usuario.lock().unwrap() = None;
+        r.map(|_| ())
+    }
+
+    /// Reenvía el correo de verificación de email (`POST /api/auth/verificar-email/reenviar`).
+    pub fn reenviar_verificacion_email(&self) -> Resultado<String> {
+        let r = self.pedir("POST", "/auth/verificar-email/reenviar", None)?;
+        Ok(r.get("mensaje")
+            .and_then(Value::as_str)
+            .unwrap_or("Correo de verificación enviado.")
+            .to_string())
     }
 
     fn guardar_sesion(&self, r: Value) -> Resultado<Usuario> {
@@ -148,6 +206,7 @@ impl Api {
             llavero::guardar(refresh);
         }
         *self.access_token.lock().unwrap() = Some(sesion.access_token);
+        *self.usuario.lock().unwrap() = Some(sesion.usuario.clone());
         Ok(sesion.usuario)
     }
 

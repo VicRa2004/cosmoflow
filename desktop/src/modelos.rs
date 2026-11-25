@@ -10,6 +10,10 @@ pub struct Usuario {
     pub id: i64,
     pub nombre: String,
     pub email: String,
+    #[serde(default)]
+    pub email_verificado: bool,
+    #[serde(default)]
+    pub avatar_url: Option<String>,
 }
 
 #[derive(Debug, Clone, Deserialize)]
@@ -173,6 +177,48 @@ pub struct BandejaNotificaciones {
     pub no_leidas: usize,
 }
 
+fn prioridad_por_defecto() -> Prioridad {
+    Prioridad::Media
+}
+
+/// Plantilla de tarea (`GET /api/plantillas` o `/api/organizaciones/{id}/plantillas`).
+#[derive(Debug, Clone, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct PlantillaTarea {
+    pub id: i64,
+    pub nombre: String,
+    pub titulo: String,
+    #[serde(default)]
+    pub contenido: String,
+    #[serde(default = "prioridad_por_defecto")]
+    pub prioridad: Prioridad,
+    #[serde(default)]
+    pub color: Option<String>,
+    #[serde(default)]
+    pub subtareas: Vec<String>,
+}
+
+/// Preferencia de notificación por evento y canal (`GET/PUT /api/notificaciones/preferencias`).
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct PreferenciaNotificacion {
+    pub evento: String,
+    pub canal: String,
+    pub activo: bool,
+    #[serde(default)]
+    pub personalizado: bool,
+}
+
+/// Estado del canal Telegram (`GET /api/notificaciones/telegram`).
+#[derive(Debug, Clone, Copy, Default, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct EstadoTelegram {
+    #[serde(default)]
+    pub disponible: bool,
+    #[serde(default)]
+    pub vinculado: bool,
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -253,5 +299,60 @@ mod tests {
         assert_eq!(n.actor.as_ref().map(|a| a.nombre.as_str()), Some("Ana"));
         assert!(!n.leida);
         assert_eq!(n.created_at, "2026-11-20T18:00:00.000Z");
+    }
+
+    #[test]
+    fn decodifica_usuario_con_verificacion_y_avatar() {
+        let json = serde_json::json!({
+            "id": 9,
+            "nombre": "Ada Lovelace",
+            "email": "ada@cosmoflow.dev",
+            "emailVerificado": true,
+            "avatarUrl": "/api/avatares/9?v=123"
+        });
+        let u: Usuario = serde_json::from_value(json).unwrap();
+        assert_eq!(u.id, 9);
+        assert_eq!(u.nombre, "Ada Lovelace");
+        assert!(u.email_verificado);
+        assert_eq!(u.avatar_url.as_deref(), Some("/api/avatares/9?v=123"));
+    }
+
+    #[test]
+    fn decodifica_plantilla_tarea() {
+        let json = serde_json::json!({
+            "id": 5,
+            "nombre": "Release",
+            "titulo": "Preparar release",
+            "contenido": "## Checklist",
+            "prioridad": "alta",
+            "color": "#4F46E5",
+            "subtareas": ["Ejecutar tests", "Publicar tag"]
+        });
+        let p: PlantillaTarea = serde_json::from_value(json).unwrap();
+        assert_eq!(p.id, 5);
+        assert_eq!(p.nombre, "Release");
+        assert_eq!(p.prioridad, Prioridad::Alta);
+        assert_eq!(p.color.as_deref(), Some("#4F46E5"));
+        assert_eq!(p.subtareas, vec!["Ejecutar tests", "Publicar tag"]);
+    }
+
+    #[test]
+    fn decodifica_preferencia_y_telegram() {
+        let pref_json = serde_json::json!({
+            "evento": "tareaAsignada",
+            "canal": "correo",
+            "activo": true,
+            "personalizado": false
+        });
+        let pref: PreferenciaNotificacion = serde_json::from_value(pref_json).unwrap();
+        assert_eq!(pref.evento, "tareaAsignada");
+        assert_eq!(pref.canal, "correo");
+        assert!(pref.activo);
+        assert!(!pref.personalizado);
+
+        let tg_json = serde_json::json!({ "disponible": true, "vinculado": false });
+        let tg: EstadoTelegram = serde_json::from_value(tg_json).unwrap();
+        assert!(tg.disponible);
+        assert!(!tg.vinculado);
     }
 }

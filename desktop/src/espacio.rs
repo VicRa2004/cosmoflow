@@ -20,7 +20,7 @@ use crate::modelos::Usuario;
 use crate::notas::NotasView;
 use crate::notificaciones::{EventoNotificaciones, NotificacionesView};
 use crate::organizaciones::OrganizacionesView;
-use crate::perfil::PerfilView;
+use crate::perfil::{EventoPerfil, PerfilView};
 use crate::plantillas::PlantillasView;
 use crate::tags::TagsView;
 use crate::tareas::TareasView;
@@ -117,6 +117,10 @@ impl Espacio {
                 }
             },
         );
+        let perfil = cx.new(|cx| PerfilView::new(window, cx));
+        let sub_perfil = cx.subscribe(&perfil, |_, _, evento: &EventoPerfil, cx| match evento {
+            EventoPerfil::SesionCerrada => cx.emit(EventoEspacio::SesionCerrada),
+        });
         // shortcut: todas las vistas se crean (y cargan) al entrar; hacerlas perezosas si el arranque pesa.
         Self {
             usuario,
@@ -129,10 +133,10 @@ impl Espacio {
             notificaciones,
             tags: cx.new(|cx| TagsView::new(window, cx)),
             plantillas: cx.new(|cx| PlantillasView::new(window, cx)),
-            perfil: cx.new(|cx| PerfilView::new(window, cx)),
+            perfil,
             no_leidas,
             foco,
-            _suscripciones: vec![sub_notifs],
+            _suscripciones: vec![sub_notifs, sub_perfil],
         }
     }
 
