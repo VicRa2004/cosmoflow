@@ -450,47 +450,6 @@ impl OrganizacionesView {
         .detach();
     }
 
-    pub(crate) fn crear_tarea_destino(
-        &mut self,
-        org_id: i64,
-        proyecto_id: Option<i64>,
-        equipo_id: Option<i64>,
-        titulo: String,
-        window: &mut Window,
-        cx: &mut Context<Self>,
-    ) {
-        let api = crate::api(cx);
-        let mut cuerpo = json!({
-            "titulo": titulo,
-            "organizacionId": org_id,
-        });
-        if let Some(pid) = proyecto_id {
-            cuerpo["proyectoId"] = json!(pid);
-        }
-        if let Some(eid) = equipo_id {
-            cuerpo["equipoId"] = json!(eid);
-        }
-        cx.spawn_in(window, async move |this, cx| {
-            let r = cx
-                .background_spawn(async move { api.post::<Tarea>("/tareas", cuerpo) })
-                .await;
-            this.update_in(cx, |this, window, cx| match r {
-                Ok(_) => {
-                    window.push_notification(Notification::success("Tarea creada."), cx);
-                    if let Some(pid) = proyecto_id {
-                        this.cargar_tareas_proyecto(pid, window, cx);
-                    }
-                    if let Some(eid) = equipo_id {
-                        this.cargar_tareas_equipo(eid, window, cx);
-                    }
-                }
-                Err(e) => window.push_notification(Notification::error(e.mensaje), cx),
-            })
-            .ok();
-        })
-        .detach();
-    }
-
     pub(crate) fn cambiar_estado_tarea(
         &mut self,
         tarea_id: i64,

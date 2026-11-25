@@ -10,13 +10,12 @@ use gpui_kit::component::*;
 use gpui_kit::prelude::FluentBuilder as _;
 use gpui_kit::*;
 
+use crate::editor_tarea::Ambito;
 use crate::modelos::{Equipo, EstadoTarea, Organizacion};
 
 use super::OrganizacionesView;
 use super::datos::{inicial_texto, parsear_color_hex};
-use super::formularios::{
-    abrir_dialogo_delegados, abrir_dialogo_equipo, abrir_dialogo_nueva_tarea_destino,
-};
+use super::formularios::{abrir_dialogo_delegados, abrir_dialogo_equipo};
 
 pub fn render_equipos(
     vista: &OrganizacionesView,
@@ -381,11 +380,17 @@ fn render_detalle_equipo(
                             .label("Nueva tarea")
                             .on_click(cx.listener(move |_, _, w, cx| {
                                 let weak = cx.entity().downgrade();
-                                abrir_dialogo_nueva_tarea_destino(
-                                    org_id,
+                                crate::editor_tarea::abrir(
                                     None,
-                                    Some(eid),
-                                    weak,
+                                    Ambito {
+                                        organizacion_id: Some(org_id),
+                                        proyecto_id: None,
+                                    },
+                                    EstadoTarea::Pendiente,
+                                    move |_, w, cx| {
+                                        weak.update(cx, |v, cx| v.cargar_tareas_equipo(eid, w, cx))
+                                            .ok();
+                                    },
                                     w,
                                     cx,
                                 );
@@ -420,6 +425,7 @@ fn render_detalle_equipo(
                         _ => d.children(vista.tareas_equipo.iter().map(|t| {
                             let tid = t.id;
                             let completada = t.estado == EstadoTarea::Completada;
+                            let tarea_clone = t.clone();
                             h_flex()
                                 .id(("tarea-eq", tid as u64))
                                 .px_3()
@@ -428,6 +434,26 @@ fn render_detalle_equipo(
                                 .rounded(cx.theme().radius)
                                 .border_1()
                                 .border_color(cx.theme().border)
+                                .hover(|d| d.bg(cx.theme().accent.opacity(0.4)))
+                                .on_click(cx.listener(move |_, _, w, cx| {
+                                    let weak = cx.entity().downgrade();
+                                    crate::editor_tarea::abrir(
+                                        Some(tarea_clone.clone()),
+                                        Ambito {
+                                            organizacion_id: Some(org_id),
+                                            proyecto_id: None,
+                                        },
+                                        tarea_clone.estado,
+                                        move |_, w, cx| {
+                                            weak.update(cx, |v, cx| {
+                                                v.cargar_tareas_equipo(eid, w, cx)
+                                            })
+                                            .ok();
+                                        },
+                                        w,
+                                        cx,
+                                    );
+                                }))
                                 .child(
                                     Checkbox::new(("chk-tarea-eq", tid as u64))
                                         .checked(completada)

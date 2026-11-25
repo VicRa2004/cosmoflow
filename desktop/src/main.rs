@@ -4,6 +4,7 @@
 mod api;
 mod app;
 mod calendario;
+mod editor_tarea;
 mod espacio;
 mod google;
 mod inicio;

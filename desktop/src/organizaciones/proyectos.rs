@@ -11,11 +11,12 @@ use gpui_kit::component::*;
 use gpui_kit::prelude::FluentBuilder as _;
 use gpui_kit::*;
 
+use crate::editor_tarea::Ambito;
 use crate::modelos::{EstadoProyecto, EstadoTarea, Organizacion, Proyecto};
 
 use super::OrganizacionesView;
 use super::datos::parsear_color_hex;
-use super::formularios::{abrir_dialogo_nueva_tarea_destino, abrir_dialogo_proyecto};
+use super::formularios::abrir_dialogo_proyecto;
 
 pub fn render_proyectos(
     vista: &OrganizacionesView,
@@ -316,7 +317,20 @@ fn render_detalle_proyecto(
                         .label("Nueva tarea")
                         .on_click(cx.listener(move |_, _, w, cx| {
                             let weak = cx.entity().downgrade();
-                            abrir_dialogo_nueva_tarea_destino(org_id, Some(pid), None, weak, w, cx);
+                            crate::editor_tarea::abrir(
+                                None,
+                                Ambito {
+                                    organizacion_id: Some(org_id),
+                                    proyecto_id: Some(pid),
+                                },
+                                EstadoTarea::Pendiente,
+                                move |_, w, cx| {
+                                    weak.update(cx, |v, cx| v.cargar_tareas_proyecto(pid, w, cx))
+                                        .ok();
+                                },
+                                w,
+                                cx,
+                            );
                         })),
                 ),
         )
@@ -347,6 +361,7 @@ fn render_detalle_proyecto(
                         _ => d.children(vista.tareas_proyecto.iter().map(|t| {
                             let tid = t.id;
                             let completada = t.estado == EstadoTarea::Completada;
+                            let tarea_clone = t.clone();
                             h_flex()
                                 .id(("tarea-proy", tid as u64))
                                 .px_3()
@@ -355,6 +370,26 @@ fn render_detalle_proyecto(
                                 .rounded(cx.theme().radius)
                                 .border_1()
                                 .border_color(cx.theme().border)
+                                .hover(|d| d.bg(cx.theme().accent.opacity(0.4)))
+                                .on_click(cx.listener(move |_, _, w, cx| {
+                                    let weak = cx.entity().downgrade();
+                                    crate::editor_tarea::abrir(
+                                        Some(tarea_clone.clone()),
+                                        Ambito {
+                                            organizacion_id: Some(org_id),
+                                            proyecto_id: Some(pid),
+                                        },
+                                        tarea_clone.estado,
+                                        move |_, w, cx| {
+                                            weak.update(cx, |v, cx| {
+                                                v.cargar_tareas_proyecto(pid, w, cx)
+                                            })
+                                            .ok();
+                                        },
+                                        w,
+                                        cx,
+                                    );
+                                }))
                                 .child(
                                     Checkbox::new(("chk-tarea-proy", tid as u64))
                                         .checked(completada)
