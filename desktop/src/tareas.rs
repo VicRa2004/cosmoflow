@@ -17,16 +17,23 @@ use gpui_kit::prelude::FluentBuilder as _;
 use gpui_kit::*;
 use serde_json::json;
 
-use crate::modelos::{EstadoTarea, Pagina, Prioridad, Tarea};
+use crate::editor_tarea::{self, Ambito, color_hex};
+use crate::modelos::{EstadoTarea, Pagina, Prioridad, Tag, Tarea};
 
-const FILTROS: [EstadoTarea; 3] = [
-    EstadoTarea::Pendiente,
-    EstadoTarea::EnProgreso,
-    EstadoTarea::Completada,
+/// `None` = todas (como móvil al no elegir estado).
+const FILTROS: [Option<EstadoTarea>; 5] = [
+    None,
+    Some(EstadoTarea::Pendiente),
+    Some(EstadoTarea::EnProgreso),
+    Some(EstadoTarea::Completada),
+    Some(EstadoTarea::Cancelada),
 ];
 
 pub struct TareasView {
-    filtro: EstadoTarea,
+    filtro: Option<EstadoTarea>,
+    solo_asignadas: bool,
+    /// Para mostrar el nombre de los tags en el detalle.
+    tags: Vec<Tag>,
     busqueda: Entity<InputState>,
     tareas: Vec<Tarea>,
     total: i64,
@@ -47,7 +54,9 @@ impl TareasView {
             }
         });
         let mut vista = Self {
-            filtro: EstadoTarea::Pendiente,
+            filtro: Some(EstadoTarea::Pendiente),
+            solo_asignadas: false,
+            tags: vec![],
             busqueda,
             tareas: vec![],
             total: 0,
@@ -71,19 +80,31 @@ impl TareasView {
         let api = crate::api(cx);
         let busqueda = self.busqueda.read(cx).value().trim().to_string();
         // shortcut: solo la primera página de 100; paginar si alguien tiene más tareas por estado.
-        let mut ruta = format!("/tareas?limite=100&estado={}", self.filtro.api());
+        let mut ruta = "/tareas?limite=100".to_string();
+        if let Some(estado) = self.filtro {
+            ruta.push_str(&format!("&estado={}", estado.api()));
+        }
+        if self.solo_asignadas {
+            ruta.push_str("&asignadas=true");
+        }
         if !busqueda.is_empty() {
             ruta.push_str(&format!("&busqueda={}", crate::api::codificar(&busqueda)));
         }
         cx.spawn_in(window, async move |this, cx| {
-            let r = cx
-                .background_spawn(async move { api.get::<Pagina<Tarea>>(&ruta) })
+            let (r, tags) = cx
+                .background_spawn(async move {
+                    let tags = api.get::<Pagina<Tag>>("/tags?limite=100").map(|p| p.datos);
+                    (api.get::<Pagina<Tarea>>(&ruta), tags)
+                })
                 .await;
             this.update(cx, |this, cx| {
                 if this.revision != revision {
                     return;
                 }
                 this.cargando = false;
+                if let Ok(tags) = tags {
+                    this.tags = tags;
+                }
                 match r {
                     Ok(p) => {
                         this.total = p.total_elementos;
@@ -101,7 +122,12 @@ impl TareasView {
         .detach();
     }
 
-    fn filtrar(&mut self, filtro: EstadoTarea, window: &mut Window, cx: &mut Context<Self>) {
+    fn filtrar(
+        &mut self,
+        filtro: Option<EstadoTarea>,
+        window: &mut Window,
+        cx: &mut Context<Self>,
+    ) {
         self.filtro = filtro;
         self.seleccion = None;
         self.cargar(window, cx);
@@ -216,75 +242,111 @@ impl TareasView {
         });
     }
 
-    /// Diálogo con el título de la nueva tarea; Enter la crea en el estado del filtro actual.
+    /// Editor completo (panel lateral); la tarea creada queda seleccionada.
     pub fn abrir_nueva(&mut self, window: &mut Window, cx: &mut Context<Self>) {
-        let titulo = cx.new(|cx| InputState::new(window, cx).placeholder("¿Qué hay que hacer?"));
-        titulo.read(cx).focus_handle(cx).focus(window, cx);
+        let estado = self.filtro.unwrap_or(EstadoTarea::Pendiente);
         let vista = cx.entity().downgrade();
-        let estado = self.filtro;
-        let crear = {
-            let titulo = titulo.clone();
-            move |window: &mut Window, cx: &mut App| {
-                let texto = titulo.read(cx).value().trim().to_string();
-                if texto.is_empty() {
-                    return false;
-                }
+        editor_tarea::abrir(
+            None,
+            Ambito::default(),
+            estado,
+            move |t, window, cx| {
                 vista
-                    .update(cx, |v, cx| v.crear(texto, estado, window, cx))
+                    .update(cx, |v, cx| {
+                        v.seleccion = Some(t.id);
+                        v.cargar(window, cx);
+                    })
                     .ok();
-                true
-            }
+            },
+            window,
+            cx,
+        );
+    }
+
+    fn abrir_editar(&mut self, id: i64, window: &mut Window, cx: &mut Context<Self>) {
+        let Some(tarea) = self.tareas.iter().find(|t| t.id == id).cloned() else {
+            return;
         };
-        let crear_enter = crear.clone();
-        let _ = window.subscribe(&titulo, cx, move |_, e: &InputEvent, window, cx| {
-            if matches!(e, InputEvent::PressEnter { .. }) && crear_enter(window, cx) {
-                window.close_dialog(cx);
-            }
+        let vista = cx.entity().downgrade();
+        editor_tarea::abrir(
+            Some(tarea),
+            Ambito::default(),
+            EstadoTarea::Pendiente,
+            move |t, _, cx| {
+                vista
+                    .update(cx, |v, cx| {
+                        if let Some(local) = v.tareas.iter_mut().find(|x| x.id == t.id) {
+                            *local = t;
+                        }
+                        cx.notify();
+                    })
+                    .ok();
+            },
+            window,
+            cx,
+        );
+    }
+
+    /// Como móvil: pide un nombre y guarda título, contenido, prioridad, color y subtareas.
+    fn guardar_como_plantilla(&mut self, id: i64, window: &mut Window, cx: &mut Context<Self>) {
+        let Some(t) = self.tareas.iter().find(|t| t.id == id).cloned() else {
+            return;
+        };
+        let nombre = cx.new(|cx| {
+            InputState::new(window, cx)
+                .placeholder("Nombre de la plantilla")
+                .default_value(t.titulo.clone())
         });
+        nombre.read(cx).focus_handle(cx).focus(window, cx);
         window.open_dialog(cx, move |dialog, _, _| {
-            let crear = crear.clone();
+            let nombre = nombre.clone();
+            let t = t.clone();
             dialog
-                .title("Nueva tarea")
+                .title("Guardar como plantilla")
                 .w(px(440.))
-                .child(Input::new(&titulo))
+                .child(Input::new(&nombre))
                 .button_props(
                     gpui_kit::component::dialog::DialogButtonProps::default()
-                        .ok_text("Crear")
+                        .ok_text("Guardar")
                         .show_cancel(true)
                         .cancel_text("Cancelar"),
                 )
-                .on_ok(move |_, window, cx| crear(window, cx))
-        });
-    }
-
-    fn crear(
-        &mut self,
-        titulo: String,
-        estado: EstadoTarea,
-        window: &mut Window,
-        cx: &mut Context<Self>,
-    ) {
-        let api = crate::api(cx);
-        cx.spawn_in(window, async move |this, cx| {
-            let cuerpo = json!({ "titulo": titulo, "estado": estado.api() });
-            let r = cx
-                .background_spawn(async move { api.post::<Tarea>("/tareas", cuerpo) })
-                .await;
-            this.update_in(cx, |this, window, cx| {
-                match r {
-                    Ok(t) => {
-                        if t.estado == this.filtro {
-                            this.seleccion = Some(t.id);
-                            this.tareas.insert(0, t);
-                        }
+                .on_ok(move |_, window, cx| {
+                    let texto = nombre.read(cx).value().trim().to_string();
+                    if texto.is_empty() {
+                        return false;
                     }
-                    Err(e) => window.push_notification(Notification::error(e.mensaje), cx),
-                }
-                cx.notify();
-            })
-            .ok();
-        })
-        .detach();
+                    let cuerpo = json!({
+                        "nombre": texto,
+                        "titulo": t.titulo,
+                        "contenido": t.contenido,
+                        "prioridad": t.prioridad.api(),
+                        "color": t.color,
+                        "subtareas": t.subtareas.iter().map(|s| s.titulo.clone()).collect::<Vec<_>>(),
+                    });
+                    let api = crate::api(cx);
+                    window
+                        .spawn(cx, async move |cx| {
+                            let r = cx
+                                .background_spawn(async move {
+                                    api.post::<serde_json::Value>("/plantillas", cuerpo)
+                                })
+                                .await;
+                            cx.update(|window, cx| match r {
+                                Ok(_) => window.push_notification(
+                                    Notification::success("Plantilla guardada."),
+                                    cx,
+                                ),
+                                Err(e) => {
+                                    window.push_notification(Notification::error(e.mensaje), cx)
+                                }
+                            })
+                            .ok();
+                        })
+                        .detach();
+                    true
+                })
+        });
     }
 
     fn fila(&self, t: &Tarea, cx: &mut Context<Self>) -> impl IntoElement {
@@ -337,6 +399,42 @@ impl TareasView {
             }))
     }
 
+    /// Prioridad, fechas, color y tags de la tarea.
+    fn metadatos(&self, t: &Tarea, cx: &mut Context<Self>) -> impl IntoElement {
+        let tenue = cx.theme().muted_foreground;
+        let dato = move |etiqueta: &'static str, valor: String| {
+            h_flex()
+                .gap_1()
+                .text_sm()
+                .child(div().text_color(tenue).child(etiqueta))
+                .child(valor)
+        };
+        let tags = t
+            .tag_ids
+            .iter()
+            .filter_map(|id| self.tags.iter().find(|x| x.id == *id))
+            .map(|tag| {
+                gpui_kit::component::tag::Tag::new()
+                    .small()
+                    .child(tag.nombre.clone())
+                    .into_any_element()
+            })
+            .collect::<Vec<_>>();
+        h_flex()
+            .flex_wrap()
+            .gap_x_4()
+            .gap_y_2()
+            .child(dato("Prioridad", t.prioridad.etiqueta().into()))
+            .children(t.fecha_inicio.clone().map(|f| dato("Inicio", f)))
+            .children(t.fecha_vencimiento.clone().map(|f| dato("Vence", f)))
+            .children(
+                t.color
+                    .as_deref()
+                    .map(|c| div().size_3().rounded_full().bg(color_hex(c))),
+            )
+            .children(tags)
+    }
+
     fn detalle(&self, t: &Tarea, cx: &mut Context<Self>) -> impl IntoElement {
         let id = t.id;
         let hechas = t.subtareas.iter().filter(|s| s.completada).count();
@@ -359,6 +457,26 @@ impl TareasView {
                             .child(t.titulo.clone()),
                     )
                     .child(
+                        Button::new("editar-tarea")
+                            .icon(IconName::Pencil)
+                            .ghost()
+                            .small()
+                            .tooltip("Editar")
+                            .on_click(cx.listener(move |this, _, window, cx| {
+                                this.abrir_editar(id, window, cx)
+                            })),
+                    )
+                    .child(
+                        Button::new("plantilla-tarea")
+                            .icon(IconName::LayoutTemplate)
+                            .ghost()
+                            .small()
+                            .tooltip("Guardar como plantilla")
+                            .on_click(cx.listener(move |this, _, window, cx| {
+                                this.guardar_como_plantilla(id, window, cx)
+                            })),
+                    )
+                    .child(
                         Button::new("eliminar-tarea")
                             .icon(IconName::Delete)
                             .ghost()
@@ -379,6 +497,7 @@ impl TareasView {
                         this.cambiar_estado(id, estado, window, cx)
                     }))
             })))
+            .child(self.metadatos(t, cx))
             .when(t.bloqueada, |d| {
                 d.child(Alert::warning(
                     "bloqueada",
@@ -428,7 +547,7 @@ impl Render for TareasView {
             .collect();
 
         let lista = v_flex()
-            .w(px(380.))
+            .w(px(440.))
             .h_full()
             .flex_shrink_0()
             .border_r_1()
@@ -441,6 +560,18 @@ impl Render for TareasView {
                         h_flex()
                             .gap_2()
                             .child(Input::new(&self.busqueda).small().cleanable(true).flex_1())
+                            .child(
+                                Button::new("solo-asignadas")
+                                    .icon(IconName::UserCheck)
+                                    .small()
+                                    .when(self.solo_asignadas, |b| b.primary())
+                                    .when(!self.solo_asignadas, |b| b.outline())
+                                    .tooltip("Asignadas a mí")
+                                    .on_click(cx.listener(|this, _, window, cx| {
+                                        this.solo_asignadas = !this.solo_asignadas;
+                                        this.cargar(window, cx);
+                                    })),
+                            )
                             .child(
                                 Button::new("nueva-tarea")
                                     .icon(IconName::Plus)
@@ -456,7 +587,7 @@ impl Render for TareasView {
                             .segmented()
                             .small()
                             .selected_index(indice)
-                            .children(FILTROS.map(|f| f.etiqueta()))
+                            .children(FILTROS.map(|f| f.map_or("Todas", |e| e.etiqueta())))
                             .on_click(cx.listener(|this, i: &usize, window, cx| {
                                 this.filtrar(FILTROS[*i], window, cx)
                             })),

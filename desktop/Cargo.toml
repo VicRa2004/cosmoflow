@@ -8,6 +8,7 @@ publish = false
 [dependencies]
 getrandom = "=0.4.3"
 gpui-kit = "=0.11.0"
+jiff = "=1.0.3"
 keyring = { version = "=4.2.0" }
 open = "=5.4.5"
 serde = { version = "=1.0.229", features = ["derive"] }
