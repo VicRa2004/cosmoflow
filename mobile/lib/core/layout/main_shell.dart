@@ -5,6 +5,7 @@ import '../../modules/notificaciones/api/notificaciones_api.dart';
 import '../../modules/notificaciones/preferencias_push_prompt.dart';
 import '../auth/sesion_store.dart';
 import '../push/push_service.dart';
+import '../theme/colores_noche_indigo.dart';
 import 'navegacion.dart';
 
 /// Shell autenticado: `NavigationBar` filtrada por permisos y disparo del aviso
@@ -89,21 +90,28 @@ class _MainShellState extends State<MainShell> {
     return Scaffold(
       body: widget.child,
       bottomNavigationBar: items.length >= 2
-          ? NavigationBar(
-              selectedIndex: indice < 0 ? 0 : indice,
-              onDestinationSelected: (i) {
-                if (widget.ubicacionActual != items[i].ruta) {
-                  context.go(items[i].ruta);
-                }
-              },
-              destinations: <Widget>[
-                for (final item in items)
-                  NavigationDestination(
-                    icon: Icon(item.icono),
-                    selectedIcon: Icon(item.iconoActivo ?? item.icono),
-                    label: item.etiqueta,
-                  ),
-              ],
+          ? DecoratedBox(
+              decoration: BoxDecoration(
+                border: Border(
+                  top: BorderSide(color: context.colores.borde, width: 1),
+                ),
+              ),
+              child: NavigationBar(
+                selectedIndex: indice < 0 ? 0 : indice,
+                onDestinationSelected: (i) {
+                  if (widget.ubicacionActual != items[i].ruta) {
+                    context.go(items[i].ruta);
+                  }
+                },
+                destinations: <Widget>[
+                  for (final item in items)
+                    NavigationDestination(
+                      icon: Icon(item.icono),
+                      selectedIcon: Icon(item.iconoActivo ?? item.icono),
+                      label: item.etiqueta,
+                    ),
+                ],
+              ),
             )
           : null,
     );

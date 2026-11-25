@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../auth/sesion_store.dart';
 
@@ -37,46 +38,41 @@ const List<GrupoNavegacion> gruposNavegacion = <GrupoNavegacion>[
       ItemNavegacion(
         ruta: '/dashboard',
         etiqueta: 'Pendientes',
-        icono: Icons.inbox_outlined,
-        iconoActivo: Icons.inbox_rounded,
+        icono: LucideIcons.inbox,
         permiso: 'tareas:leer',
         enBarraInferior: true,
       ),
       ItemNavegacion(
         ruta: '/tareas',
         etiqueta: 'Tareas',
-        icono: Icons.task_alt_outlined,
-        iconoActivo: Icons.task_alt_rounded,
+        icono: LucideIcons.circleCheck,
         permiso: 'tareas:leer',
         enBarraInferior: true,
       ),
       ItemNavegacion(
         ruta: '/notas',
         etiqueta: 'Notas',
-        icono: Icons.sticky_note_2_outlined,
-        iconoActivo: Icons.sticky_note_2_rounded,
+        icono: LucideIcons.fileText,
         permiso: 'notas:leer',
         enBarraInferior: true,
       ),
       ItemNavegacion(
         ruta: '/organizaciones',
         etiqueta: 'Orgs',
-        icono: Icons.workspaces_outlined,
-        iconoActivo: Icons.workspaces_rounded,
+        icono: LucideIcons.building2,
         enBarraInferior: true,
       ),
       ItemNavegacion(
         ruta: '/tags',
         etiqueta: 'Tags',
-        icono: Icons.sell_outlined,
+        icono: LucideIcons.tag,
         permiso: 'tags:leer',
         // Secundaria: se llega desde Perfil.
       ),
       ItemNavegacion(
         ruta: '/perfil',
         etiqueta: 'Perfil',
-        icono: Icons.person_outline_rounded,
-        iconoActivo: Icons.person_rounded,
+        icono: LucideIcons.user,
         enBarraInferior: true,
       ),
     ],
