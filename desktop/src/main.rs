@@ -32,6 +32,7 @@ fn main() {
             cx.set_global(ApiGlobal(api::Api::new()));
             Theme::sync_system_appearance(None, cx);
             espacio::registrar_atajos(cx);
+            notas::registrar_atajos(cx);
             cx.on_window_closed(|cx, _| cx.quit()).detach();
 
             let opciones = WindowOptions {

@@ -104,6 +104,11 @@ impl Espacio {
         self.tareas.update(cx, |v, cx| v.abrir_nueva(window, cx));
     }
 
+    fn nueva_nota(&mut self, window: &mut Window, cx: &mut Context<Self>) {
+        self.ir(Seccion::Notas, cx);
+        self.notas.update(cx, |v, cx| v.abrir_nueva(window, cx));
+    }
+
     fn cerrar_sesion(&mut self, window: &mut Window, cx: &mut Context<Self>) {
         let api = crate::api(cx);
         cx.spawn_in(window, async move |this, cx| {
@@ -135,6 +140,11 @@ impl Espacio {
                 "Nueva tarea",
                 IconName::Plus,
                 Rc::new(|e, w, cx| e.nueva_tarea(w, cx)),
+            ),
+            (
+                "Nueva nota",
+                IconName::FilePlus,
+                Rc::new(|e, w, cx| e.nueva_nota(w, cx)),
             ),
             (
                 "Recargar",

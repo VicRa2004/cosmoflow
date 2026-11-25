@@ -82,6 +82,16 @@ pub struct Tarea {
     pub bloqueada: bool,
 }
 
+#[derive(Debug, Clone, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Nota {
+    pub id: i64,
+    pub titulo: String,
+    pub contenido: String,
+    pub is_fijada: bool,
+    pub updated_at: String,
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -98,5 +108,28 @@ mod tests {
         assert_eq!(t.estado, EstadoTarea::EnProgreso);
         assert_eq!(t.estado.api(), "en_progreso");
         assert_eq!(t.prioridad, Prioridad::Alta);
+    }
+
+    #[test]
+    fn decodifica_nota_del_backend() {
+        let json = serde_json::json!({
+            "id": 42,
+            "titulo": "Ideas para el viaje",
+            "contenido": "## Lugares\n- Lisboa",
+            "color": "#f59e0b",
+            "isFijada": true,
+            "tagIds": [1, 2],
+            "organizacionId": null,
+            "proyectoId": null,
+            "carpetaId": 3,
+            "updatedAt": "2026-10-28T10:00:00Z",
+            "createdAt": "2026-10-27T10:00:00Z"
+        });
+        let n: Nota = serde_json::from_value(json).unwrap();
+        assert_eq!(n.id, 42);
+        assert_eq!(n.titulo, "Ideas para el viaje");
+        assert_eq!(n.contenido, "## Lugares\n- Lisboa");
+        assert!(n.is_fijada);
+        assert_eq!(n.updated_at, "2026-10-28T10:00:00Z");
     }
 }
