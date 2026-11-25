@@ -162,17 +162,6 @@ void main() {
       await tester.tap(find.text('Perfil'));
       await tester.pumpAndSettle();
       expect(find.text('Email verificado'), findsOneWidget);
-      await tester.scrollUntilVisible(
-        find.text('Seguridad de la cuenta'),
-        200,
-        scrollable: find.byType(Scrollable).first,
-      );
-      expect(find.text('Seguridad de la cuenta'), findsOneWidget);
-      await tester.scrollUntilVisible(
-        find.text('Tags'),
-        -200,
-        scrollable: find.byType(Scrollable).first,
-      );
 
       await tester.tap(find.text('Tags'));
       await tester.pumpAndSettle();
@@ -188,6 +177,13 @@ void main() {
       await tester.tap(find.text('Oscuro'));
       await tester.pumpAndSettle();
       expect(sesionStore.modoTema, equals(ThemeMode.dark));
+
+      await tester.scrollUntilVisible(
+        find.text('Seguridad de la cuenta'),
+        200,
+        scrollable: find.byType(Scrollable).first,
+      );
+      expect(find.text('Seguridad de la cuenta'), findsOneWidget);
     },
   );
 

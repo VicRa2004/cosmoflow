@@ -223,6 +223,14 @@ class _PerfilPageState extends State<PerfilPage> {
                   titulo: 'Plantillas',
                   onTap: () => context.push('/plantillas'),
                 ),
+              if (store.puede('tareas:leer') || store.puede('notas:leer'))
+                _FilaPerfil(
+                  icono: LucideIcons.trash2,
+                  colorIcono: colores.rosePeligro,
+                  fondoIcono: colores.roseSuave,
+                  titulo: 'Papelera',
+                  onTap: () => context.push('/papelera'),
+                ),
             ],
           ),
           const SizedBox(height: 16),

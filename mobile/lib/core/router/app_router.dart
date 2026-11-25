@@ -6,12 +6,15 @@ import '../../modules/auth/api/auth_api.dart';
 import '../../modules/auth/pages/login_page.dart';
 import '../../modules/auth/pages/recuperar_password_page.dart';
 import '../../modules/auth/pages/registro_page.dart';
+import '../../modules/busqueda/api/busqueda_api.dart';
+import '../../modules/busqueda/pages/busqueda_page.dart';
 import '../../modules/dashboard/pages/dashboard_page.dart';
 import '../../modules/notas/api/notas_api.dart';
 import '../../modules/notas/pages/nota_detalle_page.dart';
 import '../../modules/notas/pages/nota_editor_page.dart';
 import '../../modules/notas/pages/notas_page.dart';
 import '../../modules/notificaciones/api/notificaciones_api.dart';
+import '../../modules/notificaciones/pages/notificaciones_page.dart';
 import '../../modules/notificaciones/pages/notificaciones_preferencias_page.dart';
 import '../../modules/organizaciones/api/organizaciones_api.dart';
 import '../../modules/organizaciones/models/organizacion_models.dart';
@@ -23,6 +26,8 @@ import '../../modules/organizaciones/pages/organizaciones_page.dart';
 import '../../modules/organizaciones/pages/proyecto_detalle_page.dart';
 import '../../modules/organizaciones/pages/proyecto_editor_page.dart';
 import '../../modules/organizaciones/pages/rol_organizacion_editor_page.dart';
+import '../../modules/papelera/api/papelera_api.dart';
+import '../../modules/papelera/pages/papelera_page.dart';
 import '../../modules/perfil/pages/perfil_page.dart';
 import '../../modules/plantillas/api/plantillas_api.dart';
 import '../../modules/plantillas/pages/plantilla_editor_page.dart';
@@ -56,6 +61,8 @@ GoRouter crearAppRouter({
   required OrganizacionesApi organizacionesApi,
   PlantillasApi? plantillasApi,
   NotificacionesApi? notificacionesApi,
+  PapeleraApi? papeleraApi,
+  BusquedaApi? busquedaApi,
   PushService? push,
   RecordatoriosService? recordatorios,
   bool cargarDatosIniciales = true,
@@ -64,6 +71,8 @@ GoRouter crearAppRouter({
       plantillasApi ?? PlantillasApi(apiClient: authApi.apiClient);
   final notifApi =
       notificacionesApi ?? NotificacionesApi(apiClient: authApi.apiClient);
+  final papelera = papeleraApi ?? PapeleraApi(apiClient: authApi.apiClient);
+  final busqueda = busquedaApi ?? BusquedaApi(apiClient: authApi.apiClient);
   void resincronizarRecordatorios() {
     if (recordatorios != null) {
       unawaited(recordatorios.sincronizar(forzar: true));
@@ -215,6 +224,18 @@ GoRouter crearAppRouter({
         ),
       ),
       GoRoute(
+        path: '/buscar',
+        builder: (context, state) => BusquedaPage(busquedaApi: busqueda),
+      ),
+      GoRoute(
+        path: '/notificaciones',
+        builder: (context, state) => NotificacionesPage(
+          sesionStore: sesionStore,
+          notificacionesApi: notifApi,
+          cargarAlIniciar: cargarDatosIniciales,
+        ),
+      ),
+      GoRoute(
         path: '/perfil/notificaciones',
         builder: (context, state) => NotificacionesPreferenciasPage(
           notificacionesApi: notifApi,
@@ -227,6 +248,14 @@ GoRouter crearAppRouter({
         builder: (context, state) => TagsPage(
           sesionStore: sesionStore,
           tagsApi: tagsApi,
+          cargarAlIniciar: cargarDatosIniciales,
+        ),
+      ),
+      GoRoute(
+        path: '/papelera',
+        builder: (context, state) => PapeleraPage(
+          sesionStore: sesionStore,
+          papeleraApi: papelera,
           cargarAlIniciar: cargarDatosIniciales,
         ),
       ),
@@ -339,6 +368,7 @@ GoRouter crearAppRouter({
             builder: (context, state) => DashboardPage(
               sesionStore: sesionStore,
               tareasApi: tareasApi,
+              notificacionesApi: notifApi,
               cargarAlIniciar: cargarDatosIniciales,
             ),
           ),

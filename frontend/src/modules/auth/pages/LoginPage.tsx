@@ -46,6 +46,11 @@ export function LoginPage({
 				>
 					Regístrate aquí
 				</Link>
+				<p className="mt-3">
+					<Link to="/descargar" className="hover:text-tinta hover:underline">
+						Apps para escritorio y Android
+					</Link>
+				</p>
 			</div>
 		</AuthLayout>
 	);
