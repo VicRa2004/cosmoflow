@@ -58,6 +58,25 @@ class SubtareaDto {
   };
 }
 
+/// Recurrencias de una tarea según el contrato OpenAPI del backend.
+enum RecurrenciaTarea {
+  diaria('diaria', 'Diaria'),
+  semanal('semanal', 'Semanal'),
+  mensual('mensual', 'Mensual');
+
+  const RecurrenciaTarea(this.valorApi, this.etiqueta);
+  final String valorApi;
+  final String etiqueta;
+
+  static RecurrenciaTarea? fromValorApi(String? valor) {
+    if (valor == null) return null;
+    for (final recurrencia in RecurrenciaTarea.values) {
+      if (recurrencia.valorApi == valor) return recurrencia;
+    }
+    return null;
+  }
+}
+
 /// DTO de Tarea (`TareaDto` en `schema.gen.ts`).
 class TareaDto {
   const TareaDto({
@@ -69,12 +88,16 @@ class TareaDto {
     this.fechaInicio,
     this.fechaVencimiento,
     this.color,
+    this.isFijada = false,
     this.tagIds = const <int>[],
     this.responsableIds = const <int>[],
     this.subtareas = const <SubtareaDto>[],
     this.organizacionId,
     this.equipoId,
     this.proyectoId,
+    this.dependeDeId,
+    this.bloqueada = false,
+    this.recurrencia,
   });
 
   final int id;
@@ -85,12 +108,16 @@ class TareaDto {
   final String? fechaInicio;
   final String? fechaVencimiento;
   final String? color;
+  final bool isFijada;
   final List<int> tagIds;
   final List<int> responsableIds;
   final List<SubtareaDto> subtareas;
   final int? organizacionId;
   final int? equipoId;
   final int? proyectoId;
+  final int? dependeDeId;
+  final bool bloqueada;
+  final RecurrenciaTarea? recurrencia;
 
   bool get isCompartida => organizacionId != null;
 
@@ -119,12 +146,18 @@ class TareaDto {
       fechaInicio: json['fechaInicio'] as String?,
       fechaVencimiento: json['fechaVencimiento'] as String?,
       color: json['color'] as String?,
+      isFijada: json['isFijada'] as bool? ?? false,
       tagIds: parsearListaIds(json['tagIds']),
       responsableIds: parsearListaIds(json['responsableIds']),
       subtareas: listaSubtareas,
       organizacionId: (json['organizacionId'] as num?)?.toInt(),
       equipoId: (json['equipoId'] as num?)?.toInt(),
       proyectoId: (json['proyectoId'] as num?)?.toInt(),
+      dependeDeId: (json['dependeDeId'] as num?)?.toInt(),
+      bloqueada: json['bloqueada'] as bool? ?? false,
+      recurrencia: RecurrenciaTarea.fromValorApi(
+        json['recurrencia'] as String?,
+      ),
     );
   }
 }

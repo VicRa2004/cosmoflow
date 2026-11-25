@@ -1,7 +1,9 @@
 //! Raíz de la ventana: decide entre login y espacio de trabajo según la sesión.
 
 use gpui_kit::component::*;
-use gpui_kit::component::{ActiveTheme, TitleBar, spinner::Spinner};
+use gpui_kit::component::{
+    ActiveTheme, TitleBar, button::Button, notification::Notification, spinner::Spinner,
+};
 use gpui_kit::*;
 
 use crate::espacio::{Espacio, EventoEspacio};
@@ -31,6 +33,36 @@ impl CosmoflowApp {
             .ok();
         })
         .detach();
+        cx.spawn_in(window, async move |_, cx| {
+            let Some(nueva) = cx
+                .background_spawn(async { crate::actualizaciones::buscar() })
+                .await
+            else {
+                return;
+            };
+            cx.update(|window, cx| {
+                let url = nueva.url.clone();
+                window.push_notification(
+                    Notification::info(format!(
+                        "Cosmoflow {} ya está disponible (tienes la {}).",
+                        nueva.numero,
+                        env!("CARGO_PKG_VERSION")
+                    ))
+                    .title("Nueva versión")
+                    .action(move |_, _, _| {
+                        let url = url.clone();
+                        Button::new("descargar-version")
+                            .label("Descargar")
+                            .on_click(move |_, _, _| {
+                                let _ = open::that_detached(&url);
+                            })
+                    }),
+                    cx,
+                );
+            })
+            .ok();
+        })
+        .detach();
         Self {
             pantalla: Pantalla::Cargando,
             _suscripcion: None,
@@ -38,6 +70,7 @@ impl CosmoflowApp {
     }
 
     fn mostrar_login(&mut self, window: &mut Window, cx: &mut Context<Self>) {
+        crate::monitoreo::usuario(None);
         let login = cx.new(|cx| LoginView::new(window, cx));
         self._suscripcion = Some(cx.subscribe_in(
             &login,
@@ -51,6 +84,7 @@ impl CosmoflowApp {
     }
 
     fn mostrar_espacio(&mut self, usuario: Usuario, window: &mut Window, cx: &mut Context<Self>) {
+        crate::monitoreo::usuario(Some(usuario.id));
         let espacio = cx.new(|cx| Espacio::new(usuario, window, cx));
         self._suscripcion = Some(cx.subscribe_in(
             &espacio,

@@ -60,6 +60,29 @@ class AccionesTarea {
     );
   }
 
+  Future<bool> cambiarEstado(
+    BuildContext context,
+    TareaDto tarea,
+    EstadoTarea estado,
+  ) {
+    if (tarea.estado == estado) return Future<bool>.value(false);
+    HapticFeedback.selectionClick();
+    return ejecutarConAviso(
+      context,
+      () => tareasApi.cambiarEstado(tarea.id, estado),
+      error: 'No se pudo cambiar el estado.',
+    );
+  }
+
+  Future<bool> alternarFijada(BuildContext context, TareaDto tarea) {
+    HapticFeedback.selectionClick();
+    return ejecutarConAviso(
+      context,
+      () => tareasApi.alternarFijada(tarea),
+      error: 'No se pudo actualizar el fijado.',
+    );
+  }
+
   Future<bool> eliminar(BuildContext context, TareaDto tarea) async {
     final ok = await confirmar(
       context,

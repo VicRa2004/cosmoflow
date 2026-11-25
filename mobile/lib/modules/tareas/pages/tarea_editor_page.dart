@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../core/api/adjuntos_api.dart';
 import '../../../core/offline/aviso_pendientes.dart';
 import '../../../core/widgets/avisos.dart';
 import '../../../core/widgets/pagina_editor.dart';
@@ -9,6 +10,7 @@ import '../../plantillas/widgets/selector_plantilla.dart';
 import '../../tags/models/tag_model.dart';
 import '../api/tareas_api.dart';
 import '../models/tarea_model.dart';
+import '../widgets/adjuntos_tarea_section.dart';
 import '../widgets/tarea_form.dart';
 
 /// Argumentos que recibe el editor o detalle de tarea por `extra` de GoRouter.
@@ -44,18 +46,22 @@ class TareaEditorPage extends StatefulWidget {
     super.key,
     required this.tareasApi,
     this.plantillasApi,
+    this.adjuntosApi,
     this.tarea,
     this.args = const TareaEditorArgs(),
     this.cargarPlantillas = true,
+    this.selectorArchivo,
   });
 
   final TareasApi tareasApi;
   final PlantillasApi? plantillasApi;
+  final AdjuntosApi? adjuntosApi;
 
   /// `null` = crear (también puede venir en `args.tarea`).
   final TareaDto? tarea;
   final TareaEditorArgs args;
   final bool cargarPlantillas;
+  final SelectorArchivoAdjunto? selectorArchivo;
 
   @override
   State<TareaEditorPage> createState() => _TareaEditorPageState();
@@ -63,9 +69,12 @@ class TareaEditorPage extends StatefulWidget {
 
 class _TareaEditorPageState extends State<TareaEditorPage> {
   GlobalKey<TareaFormState> _form = GlobalKey<TareaFormState>();
+  late final AdjuntosApi _adjuntosApi =
+      widget.adjuntosApi ?? AdjuntosApi(apiClient: widget.tareasApi.apiClient);
   late PlantillaTareaDto? _plantillaSeleccionada = widget.args.plantillaInicial;
   List<PlantillaTareaDto> _personales = const <PlantillaTareaDto>[];
   List<PlantillaTareaDto> _deOrganizacion = const <PlantillaTareaDto>[];
+  List<TareaDto> _candidatas = const <TareaDto>[];
 
   TareaDto? get _tareaActual => widget.tarea ?? widget.args.tarea;
 
@@ -75,6 +84,7 @@ class _TareaEditorPageState extends State<TareaEditorPage> {
     if (_tareaActual == null && widget.cargarPlantillas) {
       _cargarPlantillasDisponibles();
     }
+    _cargarCandidatas();
   }
 
   Future<void> _cargarPlantillasDisponibles() async {
@@ -109,6 +119,27 @@ class _TareaEditorPageState extends State<TareaEditorPage> {
     });
   }
 
+  Future<void> _cargarCandidatas() async {
+    final tarea = _tareaActual;
+    final a = widget.args;
+    try {
+      final pagina = await widget.tareasApi.obtenerTodos(
+        limite: 100,
+        organizacionId: a.organizacionId ?? tarea?.organizacionId,
+        equipoId: a.equipoId ?? tarea?.equipoId,
+        proyectoId: a.proyectoId ?? tarea?.proyectoId,
+      );
+      if (mounted) {
+        setState(() {
+          _candidatas = pagina.datos
+              .where((t) => t.id != tarea?.id)
+              .toList(growable: false);
+        });
+      }
+    } catch (_) {
+      // Sin red o sin permisos, el selector de dependencia queda vacío sin bloquear.
+    }
+  }
   static bool _mismosIds(List<int> a, List<int> b) {
     if (a.length != b.length) return false;
     final setA = a.toSet();
@@ -131,6 +162,9 @@ class _TareaEditorPageState extends State<TareaEditorPage> {
           fechaInicio: v.fechaInicio,
           fechaVencimiento: v.fechaVencimiento,
           color: v.color,
+          isFijada: v.isFijada,
+          dependeDeId: v.dependeDeId,
+          recurrencia: v.recurrencia,
           tagIds: v.tagIds,
           responsableIds: v.responsableIds,
           subtareas: v.subtareas,
@@ -152,6 +186,9 @@ class _TareaEditorPageState extends State<TareaEditorPage> {
           'fechaInicio': v.fechaInicio,
           'fechaVencimiento': v.fechaVencimiento,
           'color': v.color,
+          'isFijada': v.isFijada,
+          'dependeDeId': v.dependeDeId,
+          'recurrencia': v.recurrencia?.valorApi,
           'tagIds': v.tagIds,
           'subtareas': v.subtareas
               .map((s) => s.toJson())
@@ -165,6 +202,7 @@ class _TareaEditorPageState extends State<TareaEditorPage> {
   @override
   Widget build(BuildContext context) {
     final tarea = _tareaActual;
+    final a = widget.args;
     return PaginaEditor(
       titulo: tarea == null ? 'Nueva tarea' : 'Editar tarea',
       onGuardar: _guardar,
@@ -180,8 +218,14 @@ class _TareaEditorPageState extends State<TareaEditorPage> {
                 onElegir: _elegirPlantilla,
               )
             : null,
-        tagsDisponibles: widget.args.tags,
-        responsablesDisponibles: widget.args.responsables,
+        tagsDisponibles: a.tags,
+        responsablesDisponibles: a.responsables,
+        tareasCandidatas: _candidatas,
+        adjuntosApi: _adjuntosApi,
+        organizacionId: a.organizacionId ?? tarea?.organizacionId,
+        equipoId: a.equipoId ?? tarea?.equipoId,
+        proyectoId: a.proyectoId ?? tarea?.proyectoId,
+        selectorArchivo: widget.selectorArchivo,
         onCambio: onCambio,
       ),
     );

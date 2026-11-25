@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/api/adjuntos_api.dart';
 import '../../../core/theme/colores_noche_indigo.dart';
 import '../../../core/widgets/avisos.dart';
 import '../../../core/widgets/contenido_markdown.dart';
@@ -11,13 +12,14 @@ import '../../plantillas/widgets/guardar_plantilla_sheet.dart';
 import '../acciones_tarea.dart';
 import '../api/comentarios_api.dart';
 import '../models/tarea_model.dart';
+import '../widgets/adjuntos_tarea_section.dart';
 import '../widgets/checklist_subtareas.dart';
 import '../widgets/comentarios_tarea_section.dart';
 import '../widgets/tarea_form.dart';
 import 'tarea_editor_page.dart';
 
 /// `/tareas/:id`: lectura a pantalla completa. Pinta al instante con la tarea
-/// recibida y la refresca por id; editar en la AppBar, plantilla y eliminar en el menú.
+/// recibida y la refresca por id; fijar y editar en la AppBar, plantilla y eliminar en el menú.
 class TareaDetallePage extends StatefulWidget {
   const TareaDetallePage({
     super.key,
@@ -25,9 +27,11 @@ class TareaDetallePage extends StatefulWidget {
     required this.acciones,
     this.plantillasApi,
     this.organizacionesApi,
+    this.adjuntosApi,
     this.comentariosApi,
     this.tarea,
     this.args = const TareaEditorArgs(),
+    this.selectorArchivo,
     this.cargarComentarios = true,
   });
 
@@ -35,9 +39,11 @@ class TareaDetallePage extends StatefulWidget {
   final AccionesTarea acciones;
   final PlantillasApi? plantillasApi;
   final OrganizacionesApi? organizacionesApi;
+  final AdjuntosApi? adjuntosApi;
   final ComentariosApi? comentariosApi;
   final TareaDto? tarea;
   final TareaEditorArgs args;
+  final SelectorArchivoAdjunto? selectorArchivo;
   final bool cargarComentarios;
 
   @override
@@ -46,10 +52,14 @@ class TareaDetallePage extends StatefulWidget {
 
 class _TareaDetallePageState extends State<TareaDetallePage> {
   late TareaDto? _tarea = widget.tarea ?? widget.args.tarea;
+  late final AdjuntosApi _adjuntosApi =
+      widget.adjuntosApi ??
+      AdjuntosApi(apiClient: widget.acciones.tareasApi.apiClient);
   late final ComentariosApi _comentariosApi =
       widget.comentariosApi ??
       ComentariosApi(apiClient: widget.acciones.tareasApi.apiClient);
   late List<ResponsableCandidato> _miembros = widget.args.responsables;
+  TareaDto? _tareaPrincipal;
   bool _guardandoSubtareas = false;
   String? _mensajeError;
 
@@ -72,7 +82,22 @@ class _TareaDetallePageState extends State<TareaDetallePage> {
   Future<void> _cargar() async {
     try {
       final tarea = await widget.acciones.tareasApi.obtenerUno(widget.id);
-      if (mounted) setState(() => _tarea = tarea);
+      TareaDto? principal;
+      if (tarea.dependeDeId != null) {
+        try {
+          principal = await widget.acciones.tareasApi.obtenerUno(
+            tarea.dependeDeId!,
+          );
+        } catch (_) {
+          // Si ya no existe o no es visible, mostramos solo el id.
+        }
+      }
+      if (mounted) {
+        setState(() {
+          _tarea = tarea;
+          _tareaPrincipal = principal;
+        });
+      }
       if (tarea.organizacionId != null && _miembros.isEmpty) {
         _cargarMiembros(tarea.organizacionId!);
       }
@@ -124,12 +149,16 @@ class _TareaDetallePageState extends State<TareaDetallePage> {
         fechaInicio: tarea.fechaInicio,
         fechaVencimiento: tarea.fechaVencimiento,
         color: tarea.color,
+        isFijada: tarea.isFijada,
         tagIds: tarea.tagIds,
         responsableIds: tarea.responsableIds,
         subtareas: nuevas,
         organizacionId: tarea.organizacionId,
         equipoId: tarea.equipoId,
         proyectoId: tarea.proyectoId,
+        dependeDeId: tarea.dependeDeId,
+        bloqueada: tarea.bloqueada,
+        recurrencia: tarea.recurrencia,
       );
     });
     try {
@@ -175,6 +204,38 @@ class _TareaDetallePageState extends State<TareaDetallePage> {
     );
   }
 
+  Future<void> _alSubirAdjunto(
+    TareaDto tarea,
+    AdjuntoDto adjunto,
+    String alt,
+  ) async {
+    final nuevoContenido = agregarAdjuntoAMarkdown(
+      tarea.contenido,
+      adjunto,
+      alt: alt,
+    );
+    final actualizada = await widget.acciones.tareasApi.actualizar(
+      tarea.id,
+      <String, dynamic>{'contenido': nuevoContenido},
+    );
+    if (mounted) setState(() => _tarea = actualizada);
+  }
+
+  Future<void> _alEliminarAdjunto(
+    TareaDto tarea,
+    AdjuntoReferencia adjunto,
+  ) async {
+    final nuevoContenido = quitarAdjuntoDeMarkdown(
+      tarea.contenido,
+      adjunto.url,
+    );
+    final actualizada = await widget.acciones.tareasApi.actualizar(
+      tarea.id,
+      <String, dynamic>{'contenido': nuevoContenido},
+    );
+    if (mounted) setState(() => _tarea = actualizada);
+  }
+
   @override
   Widget build(BuildContext context) {
     final tarea = _tarea;
@@ -185,6 +246,18 @@ class _TareaDetallePageState extends State<TareaDetallePage> {
     return Scaffold(
       appBar: AppBar(
         actions: <Widget>[
+          if (tarea != null && store.puede('tareas:actualizar'))
+            IconButton(
+              tooltip: tarea.isFijada ? 'Desfijar' : 'Fijar',
+              icon: Icon(
+                tarea.isFijada
+                    ? Icons.push_pin_rounded
+                    : Icons.push_pin_outlined,
+                color: tarea.isFijada ? colores.indigoMarca : null,
+              ),
+              onPressed: () =>
+                  _tras(_accionesConContexto.alternarFijada(context, tarea)),
+            ),
           if (tarea != null && store.puede('tareas:actualizar'))
             IconButton(
               tooltip: 'Editar',
@@ -227,10 +300,11 @@ class _TareaDetallePageState extends State<TareaDetallePage> {
   Widget _contenido(TareaDto tarea) {
     final colores = context.colores;
     final textTheme = Theme.of(context).textTheme;
+    final store = widget.acciones.sesionStore;
     final completada = tarea.estado == EstadoTarea.completada;
+    final puedeActualizar = store.puede('tareas:actualizar');
     final puedeMarcar =
-        widget.acciones.sesionStore.puede('tareas:actualizar') &&
-        tarea.estado != EstadoTarea.cancelada;
+        puedeActualizar && tarea.estado != EstadoTarea.cancelada;
     final nombresResponsables = tarea.responsableIds
         .map((id) {
           final m = widget.args.responsables
@@ -247,7 +321,7 @@ class _TareaDetallePageState extends State<TareaDetallePage> {
       padding: const EdgeInsets.only(bottom: 48),
       children: <Widget>[
         Padding(
-          padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
           child: Text(
             tarea.titulo,
             style: textTheme.headlineSmall?.copyWith(
@@ -256,6 +330,11 @@ class _TareaDetallePageState extends State<TareaDetallePage> {
             ),
           ),
         ),
+        if (tarea.bloqueada)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+            child: _AvisoBloqueada(tituloPrincipal: _tareaPrincipal?.titulo),
+          ),
         if (puedeMarcar)
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
@@ -285,6 +364,20 @@ class _TareaDetallePageState extends State<TareaDetallePage> {
           valor:
               '${tarea.fechaInicio ?? 'Sin inicio'} → ${tarea.fechaVencimiento ?? 'Sin vencimiento'}',
         ),
+        if (tarea.recurrencia != null)
+          _Dato(
+            icono: Icons.repeat_rounded,
+            etiqueta: 'Repetición',
+            valor: tarea.recurrencia!.etiqueta,
+          ),
+        if (tarea.dependeDeId != null)
+          _Dato(
+            icono: Icons.link_rounded,
+            etiqueta: 'Depende de',
+            valor: _tareaPrincipal?.titulo ?? 'Tarea #${tarea.dependeDeId}',
+            trailing: const Icon(Icons.chevron_right_rounded),
+            onTap: () => context.push('/tareas/${tarea.dependeDeId}'),
+          ),
         if (nombresResponsables.isNotEmpty)
           _Dato(
             icono: Icons.people_outline_rounded,
@@ -320,7 +413,26 @@ class _TareaDetallePageState extends State<TareaDetallePage> {
         const Divider(height: 32),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: ContenidoMarkdown(texto: tarea.contenido),
+          child: ContenidoMarkdown(
+            texto: tarea.contenido,
+            adjuntosApi: _adjuntosApi,
+          ),
+        ),
+        const Divider(height: 32),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: AdjuntosTareaSection(
+            contenido: tarea.contenido,
+            adjuntosApi: _adjuntosApi,
+            organizacionId: tarea.organizacionId,
+            equipoId: tarea.equipoId,
+            proyectoId: tarea.proyectoId,
+            puedeEditar: puedeActualizar && store.puede('adjuntos:crear'),
+            onAdjuntoSubido: (adjunto, alt) =>
+                _alSubirAdjunto(tarea, adjunto, alt),
+            onEliminarAdjunto: (adjunto) => _alEliminarAdjunto(tarea, adjunto),
+            selectorArchivo: widget.selectorArchivo,
+          ),
         ),
         const Divider(height: 32),
         ComentariosTareaSection(
@@ -335,16 +447,55 @@ class _TareaDetallePageState extends State<TareaDetallePage> {
   }
 }
 
+class _AvisoBloqueada extends StatelessWidget {
+  const _AvisoBloqueada({this.tituloPrincipal});
+
+  final String? tituloPrincipal;
+
+  @override
+  Widget build(BuildContext context) {
+    final colores = context.colores;
+    final texto = tituloPrincipal != null
+        ? 'Bloqueada: primero hay que completar «$tituloPrincipal».'
+        : 'Bloqueada: depende de una tarea sin completar.';
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: BoxDecoration(
+        color: colores.amberAviso.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: colores.amberAviso.withValues(alpha: 0.4)),
+      ),
+      child: Row(
+        children: <Widget>[
+          Icon(Icons.lock_outline_rounded, size: 20, color: colores.amberAviso),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              texto,
+              style: Theme.of(context).textTheme.bodyMedium
+                  ?.copyWith(color: colores.tinta),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class _Dato extends StatelessWidget {
   const _Dato({
     required this.icono,
     required this.etiqueta,
     required this.valor,
+    this.trailing,
+    this.onTap,
   });
 
   final IconData icono;
   final String etiqueta;
   final String valor;
+  final Widget? trailing;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
@@ -353,6 +504,8 @@ class _Dato extends StatelessWidget {
       leading: Icon(icono),
       title: Text(etiqueta, style: Theme.of(context).textTheme.bodySmall),
       subtitle: Text(valor, style: Theme.of(context).textTheme.bodyLarge),
+      trailing: trailing,
+      onTap: onTap,
     );
   }
 }

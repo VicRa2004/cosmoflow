@@ -101,6 +101,9 @@ jobs:
           workspaces: desktop
       - name: Compilar y empaquetar
         shell: bash
+        # DSN de GlitchTip embebido al compilar; sin el secret, la app no envía errores.
+        env:
+          SENTRY_DSN: ${{ secrets.SENTRY_DSN_DESKTOP }}
         run: bash desktop/scripts/empaquetar.sh
       - uses: actions/upload-artifact@v5
         with:

@@ -2,14 +2,17 @@ import 'package:flutter/material.dart';
 import 'package:flutter_markdown_plus/flutter_markdown_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../api/adjuntos_api.dart';
 import '../theme/colores_noche_indigo.dart';
+import 'adjunto_imagen.dart';
 
 /// Contenido Markdown de tareas y notas con la tipografía del tema.
 /// Los enlaces http(s) y mailto se abren fuera de la app.
 class ContenidoMarkdown extends StatelessWidget {
-  const ContenidoMarkdown({super.key, required this.texto});
+  const ContenidoMarkdown({super.key, required this.texto, this.adjuntosApi});
 
   final String texto;
+  final AdjuntosApi? adjuntosApi;
 
   @override
   Widget build(BuildContext context) {
@@ -45,6 +48,32 @@ class ContenidoMarkdown extends StatelessWidget {
       selectable: true,
       styleSheet: hoja,
       onTapLink: (_, href, _) => abrirEnlace(context, href),
+      imageBuilder: (uri, title, alt) {
+        final ruta = uri.toString();
+        if (adjuntosApi != null && ruta.startsWith('/api/adjuntos/')) {
+          return Padding(
+            padding: const EdgeInsets.symmetric(vertical: 8),
+            child: AdjuntoImagen(
+              url: ruta,
+              adjuntosApi: adjuntosApi!,
+              alt: alt ?? title,
+              alto: 200,
+              fit: BoxFit.contain,
+            ),
+          );
+        }
+        return Image.network(
+          ruta,
+          errorBuilder: (_, _, _) => Text(
+            alt?.isNotEmpty == true
+                ? '[Imagen: $alt]'
+                : '[Imagen no disponible]',
+            style: tema.textTheme.bodySmall?.copyWith(
+              color: colores.tintaTenue,
+            ),
+          ),
+        );
+      },
     );
   }
 
