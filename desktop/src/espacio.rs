@@ -6,15 +6,17 @@ use gpui_kit::assets::IconName;
 use gpui_kit::component::*;
 use gpui_kit::component::{
     ActiveTheme,
+    badge::Badge,
     button::ButtonVariants as _,
     command::{Command, CommandGroup, CommandItem, CommandState},
     sidebar::{Sidebar, SidebarFooter, SidebarGroup, SidebarHeader, SidebarMenu, SidebarMenuItem},
 };
+use gpui_kit::prelude::FluentBuilder as _;
 use gpui_kit::*;
 
 use crate::modelos::Usuario;
 use crate::notas::NotasView;
-use crate::notificaciones::NotificacionesView;
+use crate::notificaciones::{EventoNotificaciones, NotificacionesView};
 use crate::tareas::TareasView;
 
 actions!(
@@ -69,20 +71,35 @@ pub struct Espacio {
     tareas: Entity<TareasView>,
     notas: Entity<NotasView>,
     notificaciones: Entity<NotificacionesView>,
+    no_leidas: usize,
     foco: FocusHandle,
+    _suscripciones: Vec<Subscription>,
 }
 
 impl Espacio {
     pub fn new(usuario: Usuario, window: &mut Window, cx: &mut Context<Self>) -> Self {
         let foco = cx.focus_handle();
         foco.focus(window, cx);
+        let notificaciones = cx.new(|cx| NotificacionesView::new(window, cx));
+        let no_leidas = notificaciones.read(cx).no_leidas();
+        let sub_notifs = cx.subscribe(
+            &notificaciones,
+            |this, _, evento: &EventoNotificaciones, cx| {
+                if this.no_leidas != evento.no_leidas {
+                    this.no_leidas = evento.no_leidas;
+                    cx.notify();
+                }
+            },
+        );
         Self {
             usuario,
             seccion: Seccion::Tareas,
             tareas: cx.new(|cx| TareasView::new(window, cx)),
             notas: cx.new(|cx| NotasView::new(window, cx)),
-            notificaciones: cx.new(|cx| NotificacionesView::new(window, cx)),
+            notificaciones,
+            no_leidas,
             foco,
+            _suscripciones: vec![sub_notifs],
         }
     }
 
@@ -210,6 +227,7 @@ impl Render for Espacio {
                         espacio.update(cx, |e, cx| e.ir(seccion, cx)).ok();
                     })
             };
+        let no_leidas = self.no_leidas;
         let menu = SidebarMenu::new().children([
             item("Tareas", IconName::SquareCheck, Seccion::Tareas, cx),
             item("Notas", IconName::BookOpen, Seccion::Notas, cx),
@@ -218,7 +236,14 @@ impl Render for Espacio {
                 IconName::Bell,
                 Seccion::Notificaciones,
                 cx,
-            ),
+            )
+            .when(no_leidas > 0, |it| {
+                it.suffix(move |_, _| {
+                    div()
+                        .pr_2p5()
+                        .child(Badge::new().count(no_leidas).child(div().w_4().h_3()))
+                })
+            }),
         ]);
         let espacio = cx.entity().downgrade();
         let contenido: AnyElement = match self.seccion {

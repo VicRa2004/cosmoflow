@@ -89,6 +89,14 @@ impl Api {
         self.pedir("DELETE", ruta, None).map(|_| ())
     }
 
+    pub fn post_vacio(&self, ruta: &str) -> Resultado<()> {
+        self.pedir("POST", ruta, None).map(|_| ())
+    }
+
+    pub fn put_vacio(&self, ruta: &str) -> Resultado<()> {
+        self.pedir("PUT", ruta, None).map(|_| ())
+    }
+
     pub fn login(&self, email: &str, password: &str) -> Resultado<Login> {
         let r = self.enviar(
             "POST",
@@ -205,6 +213,7 @@ impl Api {
             ("GET", _) => cabeceras!(self.agente.get(&url)).call(),
             ("DELETE", _) => cabeceras!(self.agente.delete(&url)).call(),
             ("PUT", Some(c)) => cabeceras!(self.agente.put(&url)).send_json(&c),
+            ("PUT", None) => cabeceras!(self.agente.put(&url)).send_empty(),
             (_, Some(c)) => cabeceras!(self.agente.post(&url)).send_json(&c),
             (_, None) => cabeceras!(self.agente.post(&url)).send_empty(),
         };

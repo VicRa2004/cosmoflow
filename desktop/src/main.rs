@@ -29,6 +29,7 @@ fn main() {
         .with_assets(gpui_kit::assets::Assets)
         .run(|cx| {
             gpui_kit::init(cx);
+            cx.set_app_identity("com.cosmoflow.desktop", "Cosmoflow");
             cx.set_global(ApiGlobal(api::Api::new()));
             Theme::sync_system_appearance(None, cx);
             espacio::registrar_atajos(cx);

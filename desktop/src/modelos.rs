@@ -92,6 +92,31 @@ pub struct Nota {
     pub updated_at: String,
 }
 
+#[derive(Debug, Clone, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ActorNotificacion {
+    pub nombre: String,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Notificacion {
+    pub id: i64,
+    pub asunto: String,
+    pub texto: String,
+    pub actor: Option<ActorNotificacion>,
+    pub leida: bool,
+    pub created_at: String,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct BandejaNotificaciones {
+    pub datos: Vec<Notificacion>,
+    pub total_elementos: i64,
+    pub no_leidas: usize,
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -131,5 +156,46 @@ mod tests {
         assert_eq!(n.contenido, "## Lugares\n- Lisboa");
         assert!(n.is_fijada);
         assert_eq!(n.updated_at, "2026-10-28T10:00:00Z");
+    }
+
+    #[test]
+    fn decodifica_bandeja_notificaciones() {
+        let json = serde_json::json!({
+            "datos": [
+                {
+                    "id": 42,
+                    "asunto": "Te asignaron una tarea: Preparar demo",
+                    "texto": "Ana te asignó la tarea «Preparar demo».",
+                    "enlace": "https://app.cosmoflow.dev/tareas/42",
+                    "tipo": "tarea",
+                    "recursoId": 42,
+                    "evento": "tareaAsignada",
+                    "actor": { "id": 7, "nombre": "Ana" },
+                    "tarea": {
+                        "titulo": "Preparar demo",
+                        "responsables": [
+                            { "id": 7, "nombre": "Ana", "asignadoPor": null }
+                        ]
+                    },
+                    "leida": false,
+                    "createdAt": "2026-11-20T18:00:00.000Z"
+                }
+            ],
+            "pagina": 1,
+            "totalElementos": 3,
+            "totalPaginas": 1,
+            "noLeidas": 2
+        });
+        let bandeja: BandejaNotificaciones = serde_json::from_value(json).unwrap();
+        assert_eq!(bandeja.total_elementos, 3);
+        assert_eq!(bandeja.no_leidas, 2);
+        assert_eq!(bandeja.datos.len(), 1);
+        let n = &bandeja.datos[0];
+        assert_eq!(n.id, 42);
+        assert_eq!(n.asunto, "Te asignaron una tarea: Preparar demo");
+        assert_eq!(n.texto, "Ana te asignó la tarea «Preparar demo».");
+        assert_eq!(n.actor.as_ref().map(|a| a.nombre.as_str()), Some("Ana"));
+        assert!(!n.leida);
+        assert_eq!(n.created_at, "2026-11-20T18:00:00.000Z");
     }
 }
