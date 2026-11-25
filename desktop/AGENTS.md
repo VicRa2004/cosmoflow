@@ -34,7 +34,8 @@ desktop/
     ├── app.rs          # raíz: cargando → login → espacio
     ├── login.rs        # login + verificación en dos pasos
     ├── espacio.rs      # sidebar, atajos y paleta de comandos (Ctrl/Cmd+K)
-    └── <capacidad>.rs  # una vista por capacidad: tareas, notas, notificaciones
+    ├── editor_tarea.rs # editor completo de tareas (panel lateral), reutilizado en Inicio y Organizaciones
+    └── <capacidad>.rs  # una vista por capacidad (inicio, tareas, notas/, calendario, organizaciones/, notificaciones, tags, plantillas, perfil)
 ```
 
 Un archivo (o carpeta) por **capacidad**, no carpetas globales `views/`/`models/`. Si una capacidad crece mucho, pasa a `src/<capacidad>/`.
@@ -46,7 +47,8 @@ Un archivo (o carpeta) por **capacidad**, no carpetas globales `views/`/`models/
 - E/S siempre en `cx.background_spawn`; actualiza la entidad en `this.update(...)` y llama a `cx.notify()` una vez. Estados explícitos de carga, vacío y error en cada vista.
 - Errores de acciones → `window.push_notification(Notification::error(..))`; errores de carga → `Alert` en la vista.
 - IDs de elementos repetidos con el id de dominio (`("tarea", id)`), nunca con el índice.
-- Atajos: `Ctrl`/`Cmd` + `1/2/3` secciones, `K` paleta, `N` nueva tarea, `R` recargar (`espacio.rs`). Un comando nuevo va en la paleta y, si es frecuente, con atajo.
+- Paridad con móvil: cada pantalla ofrece las mismas opciones que `mobile/lib/modules/<capacidad>` con diseño de escritorio (maestro-detalle, paneles, atajos).
+- Atajos: `Ctrl`/`Cmd` + `1`–`6` secciones, `,` perfil, `K` paleta, `N` nueva tarea, `R` recargar (`espacio.rs`). Un comando nuevo va en la paleta y, si es frecuente, con atajo.
 - Textos de UI y código en español (ver `../AGENTS.md`).
 
 ## Operación

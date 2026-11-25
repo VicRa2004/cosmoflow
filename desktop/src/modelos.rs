@@ -1,6 +1,4 @@
 //! DTOs del backend (ver `frontend/src/core/api/schema.gen.ts`). Solo los campos que usa la app.
-// shortcut: temporal mientras se implementan las vistas que usan Tag, Carpeta y los campos nuevos; quitar al integrarlas.
-#![allow(dead_code)]
 
 use serde::Deserialize;
 
@@ -10,6 +8,10 @@ pub struct Usuario {
     pub id: i64,
     pub nombre: String,
     pub email: String,
+    #[serde(default)]
+    pub email_verificado: bool,
+    #[serde(default)]
+    pub avatar_url: Option<String>,
 }
 
 #[derive(Debug, Clone, Deserialize)]
@@ -107,8 +109,6 @@ pub struct Tarea {
     pub fecha_vencimiento: Option<String>,
     pub color: Option<String>,
     #[serde(default)]
-    pub is_fijada: bool,
-    #[serde(default)]
     pub tag_ids: Vec<i64>,
     #[serde(default)]
     pub responsable_ids: Vec<i64>,
@@ -148,7 +148,6 @@ pub struct Tag {
 pub struct Carpeta {
     pub id: i64,
     pub nombre: String,
-    pub color: Option<String>,
     pub padre_id: Option<i64>,
 }
 
@@ -175,6 +174,163 @@ pub struct BandejaNotificaciones {
     pub datos: Vec<Notificacion>,
     pub total_elementos: i64,
     pub no_leidas: usize,
+}
+
+#[derive(Debug, Clone, Default, Deserialize)]
+#[serde(rename_all = "camelCase", default)]
+pub struct Organizacion {
+    pub id: i64,
+    pub nombre: String,
+    pub descripcion: String,
+    pub color: Option<String>,
+    pub avatar_url: Option<String>,
+    pub is_admin: bool,
+    pub permisos: Vec<String>,
+}
+
+impl Organizacion {
+    /// Comprueba si el usuario tiene un permiso dentro de esta organización.
+    pub fn puede(&self, permiso: &str) -> bool {
+        self.is_admin || self.permisos.iter().any(|p| p == permiso)
+    }
+}
+
+#[derive(Debug, Clone, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct RolResumen {
+    pub id: i64,
+    pub nombre: String,
+}
+
+#[derive(Debug, Clone, Default, Deserialize)]
+#[serde(rename_all = "camelCase", default)]
+pub struct MiembroOrganizacion {
+    pub usuario_id: i64,
+    pub nombre: String,
+    pub email: String,
+    pub avatar_url: Option<String>,
+    pub is_admin: bool,
+    pub roles: Vec<RolResumen>,
+}
+
+#[derive(Debug, Clone, Default, Deserialize)]
+#[serde(rename_all = "camelCase", default)]
+pub struct InvitacionOrganizacion {
+    pub id: i64,
+    pub email: String,
+    pub expira_en: String,
+    pub is_caducada: bool,
+}
+
+#[derive(Debug, Clone, Default, Deserialize)]
+#[serde(rename_all = "camelCase", default)]
+pub struct RolOrganizacion {
+    pub id: i64,
+    pub nombre: String,
+    pub permisos: Vec<String>,
+    pub total_miembros: i64,
+}
+
+#[derive(Debug, Clone, Default, Deserialize)]
+#[serde(rename_all = "camelCase", default)]
+pub struct PlantillaRol {
+    pub nombre: String,
+    pub permisos: Vec<String>,
+}
+
+#[derive(Debug, Clone, Default, Deserialize)]
+#[serde(rename_all = "camelCase", default)]
+pub struct CatalogoPermisosOrganizacion {
+    pub permisos: Vec<String>,
+    pub plantillas: Vec<PlantillaRol>,
+}
+
+#[derive(Debug, Clone, Default, Deserialize)]
+#[serde(rename_all = "camelCase", default)]
+pub struct MiembroEquipo {
+    pub usuario_id: i64,
+    pub puede_crear_tareas: bool,
+}
+
+#[derive(Debug, Clone, Default, Deserialize)]
+#[serde(rename_all = "camelCase", default)]
+pub struct Equipo {
+    pub id: i64,
+    pub nombre: String,
+    pub descripcion: String,
+    pub color: Option<String>,
+    pub avatar_url: Option<String>,
+    pub lider_id: Option<i64>,
+    pub miembros: Vec<MiembroEquipo>,
+    pub tag_ids: Vec<i64>,
+}
+
+impl Equipo {
+    /// RN-22: sin líder, cualquier miembro del equipo puede crear tareas;
+    /// con líder, solo el líder o quien tenga `puede_crear_tareas`.
+    pub fn puede_crear_tareas(&self, usuario_id: Option<i64>) -> bool {
+        let Some(uid) = usuario_id else {
+            return false;
+        };
+        let Some(miembro) = self.miembros.iter().find(|m| m.usuario_id == uid) else {
+            return false;
+        };
+        match self.lider_id {
+            None => true,
+            Some(lider) => lider == uid || miembro.puede_crear_tareas,
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum EstadoProyecto {
+    #[default]
+    Activo,
+    EnPausa,
+    Terminado,
+}
+
+impl EstadoProyecto {
+    pub const TODOS: [Self; 3] = [Self::Activo, Self::EnPausa, Self::Terminado];
+
+    pub fn api(self) -> &'static str {
+        match self {
+            Self::Activo => "activo",
+            Self::EnPausa => "en_pausa",
+            Self::Terminado => "terminado",
+        }
+    }
+
+    pub fn etiqueta(self) -> &'static str {
+        match self {
+            Self::Activo => "Activo",
+            Self::EnPausa => "En pausa",
+            Self::Terminado => "Terminado",
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy, Default, Deserialize)]
+#[serde(rename_all = "camelCase", default)]
+pub struct ProgresoProyecto {
+    pub tareas: i64,
+    pub completadas: i64,
+}
+
+#[derive(Debug, Clone, Default, Deserialize)]
+#[serde(rename_all = "camelCase", default)]
+pub struct Proyecto {
+    pub id: i64,
+    pub nombre: String,
+    pub descripcion: String,
+    pub estado: EstadoProyecto,
+    pub color: Option<String>,
+    pub fecha_inicio: Option<String>,
+    pub fecha_fin: Option<String>,
+    pub progreso: ProgresoProyecto,
+    pub equipo_ids: Vec<i64>,
+    pub integrante_ids: Vec<i64>,
 }
 
 #[derive(Debug, Clone, Default, Deserialize)]
@@ -211,6 +367,67 @@ pub struct EstadisticasTareas {
     pub abiertas_por_prioridad: EstadisticasPorPrioridad,
     pub vencidas: i64,
     pub por_responsable: Vec<ResponsableEstadistica>,
+}
+
+fn prioridad_por_defecto() -> Prioridad {
+    Prioridad::Media
+}
+
+/// Plantilla de tarea (`GET /api/plantillas` o `/api/organizaciones/{id}/plantillas`).
+#[derive(Debug, Clone, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct PlantillaTarea {
+    pub id: i64,
+    pub nombre: String,
+    pub titulo: String,
+    #[serde(default)]
+    pub contenido: String,
+    #[serde(default = "prioridad_por_defecto")]
+    pub prioridad: Prioridad,
+    #[serde(default)]
+    pub color: Option<String>,
+    #[serde(default)]
+    pub subtareas: Vec<String>,
+}
+
+/// Preferencia de notificación por evento y canal (`GET/PUT /api/notificaciones/preferencias`).
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct PreferenciaNotificacion {
+    pub evento: String,
+    pub canal: String,
+    pub activo: bool,
+    #[serde(default)]
+    pub personalizado: bool,
+}
+
+/// Estado del canal Telegram (`GET /api/notificaciones/telegram`).
+#[derive(Debug, Clone, Copy, Default, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct EstadoTelegram {
+    #[serde(default)]
+    pub disponible: bool,
+    #[serde(default)]
+    pub vinculado: bool,
+}
+
+impl EstadisticasTareas {
+    pub fn abiertas(&self) -> i64 {
+        self.por_estado.pendiente + self.por_estado.en_progreso
+    }
+
+    pub fn cerradas(&self) -> i64 {
+        self.por_estado.completada + self.por_estado.cancelada
+    }
+
+    pub fn porcentaje_avance(&self) -> i64 {
+        let cerradas = self.cerradas();
+        if cerradas == 0 {
+            0
+        } else {
+            ((self.por_estado.completada as f64 / cerradas as f64) * 100.0).round() as i64
+        }
+    }
 }
 
 #[cfg(test)]
@@ -329,5 +546,60 @@ mod tests {
         assert_eq!(est.por_responsable[0].usuario_id, 7);
         assert_eq!(est.por_responsable[0].abiertas, 3);
         assert_eq!(est.por_responsable[0].completadas, 4);
+    }
+
+    #[test]
+    fn decodifica_usuario_con_verificacion_y_avatar() {
+        let json = serde_json::json!({
+            "id": 9,
+            "nombre": "Ada Lovelace",
+            "email": "ada@cosmoflow.dev",
+            "emailVerificado": true,
+            "avatarUrl": "/api/avatares/9?v=123"
+        });
+        let u: Usuario = serde_json::from_value(json).unwrap();
+        assert_eq!(u.id, 9);
+        assert_eq!(u.nombre, "Ada Lovelace");
+        assert!(u.email_verificado);
+        assert_eq!(u.avatar_url.as_deref(), Some("/api/avatares/9?v=123"));
+    }
+
+    #[test]
+    fn decodifica_plantilla_tarea() {
+        let json = serde_json::json!({
+            "id": 5,
+            "nombre": "Release",
+            "titulo": "Preparar release",
+            "contenido": "## Checklist",
+            "prioridad": "alta",
+            "color": "#4F46E5",
+            "subtareas": ["Ejecutar tests", "Publicar tag"]
+        });
+        let p: PlantillaTarea = serde_json::from_value(json).unwrap();
+        assert_eq!(p.id, 5);
+        assert_eq!(p.nombre, "Release");
+        assert_eq!(p.prioridad, Prioridad::Alta);
+        assert_eq!(p.color.as_deref(), Some("#4F46E5"));
+        assert_eq!(p.subtareas, vec!["Ejecutar tests", "Publicar tag"]);
+    }
+
+    #[test]
+    fn decodifica_preferencia_y_telegram() {
+        let pref_json = serde_json::json!({
+            "evento": "tareaAsignada",
+            "canal": "correo",
+            "activo": true,
+            "personalizado": false
+        });
+        let pref: PreferenciaNotificacion = serde_json::from_value(pref_json).unwrap();
+        assert_eq!(pref.evento, "tareaAsignada");
+        assert_eq!(pref.canal, "correo");
+        assert!(pref.activo);
+        assert!(!pref.personalizado);
+
+        let tg_json = serde_json::json!({ "disponible": true, "vinculado": false });
+        let tg: EstadoTelegram = serde_json::from_value(tg_json).unwrap();
+        assert!(tg.disponible);
+        assert!(!tg.vinculado);
     }
 }

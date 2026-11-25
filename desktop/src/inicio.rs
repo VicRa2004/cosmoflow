@@ -810,7 +810,6 @@ mod tests {
             fecha_inicio: None,
             fecha_vencimiento: vencimiento.map(str::to_string),
             color: None,
-            is_fijada: false,
             tag_ids: vec![],
             responsable_ids: vec![],
             organizacion_id: None,

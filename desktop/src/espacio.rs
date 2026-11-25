@@ -20,7 +20,7 @@ use crate::modelos::Usuario;
 use crate::notas::NotasView;
 use crate::notificaciones::{EventoNotificaciones, NotificacionesView};
 use crate::organizaciones::OrganizacionesView;
-use crate::perfil::PerfilView;
+use crate::perfil::{EventoPerfil, PerfilView};
 use crate::plantillas::PlantillasView;
 use crate::tags::TagsView;
 use crate::tareas::TareasView;
@@ -107,6 +107,11 @@ impl Espacio {
         let foco = cx.focus_handle();
         foco.focus(window, cx);
         let notificaciones = cx.new(|cx| NotificacionesView::new(window, cx));
+        let organizaciones = cx.new(|cx| {
+            let mut v = OrganizacionesView::new(window, cx);
+            v.establecer_usuario(usuario.id, cx);
+            v
+        });
         let no_leidas = notificaciones.read(cx).no_leidas();
         let sub_notifs = cx.subscribe(
             &notificaciones,
@@ -117,6 +122,10 @@ impl Espacio {
                 }
             },
         );
+        let perfil = cx.new(|cx| PerfilView::new(window, cx));
+        let sub_perfil = cx.subscribe(&perfil, |_, _, evento: &EventoPerfil, cx| match evento {
+            EventoPerfil::SesionCerrada => cx.emit(EventoEspacio::SesionCerrada),
+        });
         // shortcut: todas las vistas se crean (y cargan) al entrar; hacerlas perezosas si el arranque pesa.
         Self {
             usuario,
@@ -125,14 +134,14 @@ impl Espacio {
             tareas: cx.new(|cx| TareasView::new(window, cx)),
             notas: cx.new(|cx| NotasView::new(window, cx)),
             calendario: cx.new(|cx| CalendarioView::new(window, cx)),
-            organizaciones: cx.new(|cx| OrganizacionesView::new(window, cx)),
+            organizaciones,
             notificaciones,
             tags: cx.new(|cx| TagsView::new(window, cx)),
             plantillas: cx.new(|cx| PlantillasView::new(window, cx)),
-            perfil: cx.new(|cx| PerfilView::new(window, cx)),
+            perfil,
             no_leidas,
             foco,
-            _suscripciones: vec![sub_notifs],
+            _suscripciones: vec![sub_notifs, sub_perfil],
         }
     }
 
@@ -163,6 +172,12 @@ impl Espacio {
     fn nueva_nota(&mut self, window: &mut Window, cx: &mut Context<Self>) {
         self.ir(Seccion::Notas, cx);
         self.notas.update(cx, |v, cx| v.abrir_nueva(window, cx));
+    }
+
+    fn nueva_organizacion(&mut self, window: &mut Window, cx: &mut Context<Self>) {
+        self.ir(Seccion::Organizaciones, cx);
+        self.organizaciones
+            .update(cx, |v, cx| v.abrir_nueva(window, cx));
     }
 
     fn cerrar_sesion(&mut self, window: &mut Window, cx: &mut Context<Self>) {
@@ -218,6 +233,11 @@ impl Espacio {
                 "Nueva nota",
                 IconName::FilePlus,
                 Rc::new(|e, w, cx| e.nueva_nota(w, cx)),
+            ),
+            (
+                "Nueva organización",
+                IconName::Building2,
+                Rc::new(|e, w, cx| e.nueva_organizacion(w, cx)),
             ),
             (
                 "Recargar",

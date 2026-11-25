@@ -181,7 +181,6 @@ mod tests {
         Carpeta {
             id,
             nombre: nombre.into(),
-            color: None,
             padre_id,
         }
     }
