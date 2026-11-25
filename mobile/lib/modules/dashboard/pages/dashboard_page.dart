@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../core/auth/sesion_store.dart';
 import '../../../core/offline/aviso_pendientes.dart';
 import '../../../core/theme/colores_noche_indigo.dart';
 import '../../../core/widgets/estados.dart';
+import '../../notificaciones/api/notificaciones_api.dart';
+import '../../notificaciones/widgets/boton_notificaciones.dart';
 import '../../tareas/acciones_tarea.dart';
 import '../../tareas/api/tareas_api.dart';
 import '../../tareas/models/tarea_model.dart';
@@ -15,11 +18,13 @@ class DashboardPage extends StatefulWidget {
     super.key,
     required this.sesionStore,
     required this.tareasApi,
+    this.notificacionesApi,
     this.cargarAlIniciar = true,
   });
 
   final SesionStore sesionStore;
   final TareasApi tareasApi;
+  final NotificacionesApi? notificacionesApi;
   final bool cargarAlIniciar;
 
   @override
@@ -78,9 +83,27 @@ class _DashboardPageState extends State<DashboardPage> {
         ? 'Hola${nombre.isEmpty ? '' : ', $nombre'}'
         : 'Hola${nombre.isEmpty ? '' : ', $nombre'} · $_total ${_total == 1 ? 'abierta' : 'abiertas'}';
 
+    final puedeBuscar =
+        widget.sesionStore.puede('tareas:leer') ||
+        widget.sesionStore.puede('notas:leer') ||
+        widget.sesionStore.puede('organizaciones:leer');
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Pendientes'),
+        actions: <Widget>[
+          if (puedeBuscar)
+            IconButton(
+              tooltip: 'Buscar',
+              icon: const Icon(Icons.search_rounded),
+              onPressed: () => context.push('/buscar'),
+            ),
+          if (widget.notificacionesApi != null)
+            BotonNotificaciones(
+              notificacionesApi: widget.notificacionesApi!,
+              cargarAlIniciar: widget.cargarAlIniciar,
+            ),
+        ],
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(20),
           child: Padding(
