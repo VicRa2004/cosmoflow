@@ -34,6 +34,7 @@ const COLORES: [&str; 8] = [
 pub struct Ambito {
     pub organizacion_id: Option<i64>,
     pub proyecto_id: Option<i64>,
+    pub equipo_id: Option<i64>,
 }
 
 #[derive(Debug, Clone, Deserialize)]
@@ -106,6 +107,9 @@ impl Valores {
             }
             if let Some(p) = ambito.proyecto_id {
                 c["proyectoId"] = json!(p);
+            }
+            if let Some(e) = ambito.equipo_id {
+                c["equipoId"] = json!(e);
             }
         }
         c
@@ -204,6 +208,7 @@ impl EditorTarea {
         let ambito = Ambito {
             organizacion_id: t.and_then(|t| t.organizacion_id).or(ambito.organizacion_id),
             proyecto_id: t.and_then(|t| t.proyecto_id).or(ambito.proyecto_id),
+            equipo_id: ambito.equipo_id,
         };
         let texto = |v: Option<&String>| v.cloned().unwrap_or_default();
         let titulo = cx.new(|cx| {
@@ -738,6 +743,7 @@ mod tests {
         let ambito = Ambito {
             organizacion_id: Some(1),
             proyecto_id: Some(2),
+            equipo_id: None,
         };
         let nueva = valores().cuerpo(ambito, true);
         assert_eq!(
