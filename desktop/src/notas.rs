@@ -98,7 +98,7 @@ impl NotasView {
         // shortcut: primera página de 100; paginar si alguien supera 100 notas.
         let mut ruta = "/notas?limite=100".to_string();
         if !busqueda.is_empty() {
-            ruta.push_str(&format!("&busqueda={}", codificar(&busqueda)));
+            ruta.push_str(&format!("&busqueda={}", crate::api::codificar(&busqueda)));
         }
         cx.spawn_in(window, async move |this, cx| {
             let r = cx
@@ -629,18 +629,6 @@ fn ordenar_notas(notas: &mut [Nota]) {
 /// Extrae `YYYY-MM-DD` de una marca ISO-8601 para mostrarla en la lista y cabecera.
 fn formatear_fecha(iso: &str) -> &str {
     iso.split('T').next().unwrap_or(iso)
-}
-
-/// Codifica un valor para la query string (sin dependencias para tan poco).
-fn codificar(s: &str) -> String {
-    s.bytes()
-        .map(|b| match b {
-            b'A'..=b'Z' | b'a'..=b'z' | b'0'..=b'9' | b'-' | b'_' | b'.' | b'~' => {
-                (b as char).to_string()
-            }
-            _ => format!("%{b:02X}"),
-        })
-        .collect()
 }
 
 #[cfg(test)]

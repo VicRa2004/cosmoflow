@@ -237,6 +237,18 @@ impl Api {
     }
 }
 
+/// Codifica un valor para la query string (sin dependencias para tan poco).
+pub fn codificar(s: &str) -> String {
+    s.bytes()
+        .map(|b| match b {
+            b'A'..=b'Z' | b'a'..=b'z' | b'0'..=b'9' | b'-' | b'_' | b'.' | b'~' => {
+                (b as char).to_string()
+            }
+            _ => format!("%{b:02X}"),
+        })
+        .collect()
+}
+
 fn decodificar<T: DeserializeOwned>(v: Value) -> Resultado<T> {
     serde_json::from_value(v).map_err(|e| ErrorApi {
         estado: None,
@@ -261,5 +273,13 @@ mod llavero {
         if let Some(e) = entrada() {
             let _ = e.delete_credential();
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn codifica_busqueda() {
+        assert_eq!(super::codificar("diseño web&x"), "dise%C3%B1o%20web%26x");
     }
 }

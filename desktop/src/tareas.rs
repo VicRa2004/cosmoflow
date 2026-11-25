@@ -73,7 +73,7 @@ impl TareasView {
         // shortcut: solo la primera página de 100; paginar si alguien tiene más tareas por estado.
         let mut ruta = format!("/tareas?limite=100&estado={}", self.filtro.api());
         if !busqueda.is_empty() {
-            ruta.push_str(&format!("&busqueda={}", codificar(&busqueda)));
+            ruta.push_str(&format!("&busqueda={}", crate::api::codificar(&busqueda)));
         }
         cx.spawn_in(window, async move |this, cx| {
             let r = cx
@@ -526,25 +526,5 @@ impl Render for TareasView {
                         ),
                 }
             }))
-    }
-}
-
-/// Codifica un valor para la query string (sin dependencias para tan poco).
-fn codificar(s: &str) -> String {
-    s.bytes()
-        .map(|b| match b {
-            b'A'..=b'Z' | b'a'..=b'z' | b'0'..=b'9' | b'-' | b'_' | b'.' | b'~' => {
-                (b as char).to_string()
-            }
-            _ => format!("%{b:02X}"),
-        })
-        .collect()
-}
-
-#[cfg(test)]
-mod tests {
-    #[test]
-    fn codifica_busqueda() {
-        assert_eq!(super::codificar("diseño web&x"), "dise%C3%B1o%20web%26x");
     }
 }
