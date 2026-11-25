@@ -244,7 +244,8 @@ empaquetar_windows() {
     icon_win="$(cygpath -w "$ICONS_DIR/icon.ico")"
     dist_win="$(cygpath -w "$DIST_DIR")"
 
-    "$iscc" \
+    # Sin esto, Git Bash (MSYS) convierte "/DAppVersion=…" en una ruta y ISCC lo toma por otro script.
+    MSYS2_ARG_CONV_EXCL='*' "$iscc" \
       "/DAppVersion=$VERSION" \
       "/DAppArch=$arch" \
       "/DExePath=$exe_win" \
