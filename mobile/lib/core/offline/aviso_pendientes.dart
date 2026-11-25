@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../theme/colores_noche_indigo.dart';
 import 'cola_sin_conexion.dart';
@@ -53,32 +54,35 @@ class _AvisoPendientesState extends State<AvisoPendientes> {
     if (pendientes.isEmpty) return const SizedBox.shrink();
     final colores = context.colores;
     final textTheme = Theme.of(context).textTheme;
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Container(
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: colores.amberSuave,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: colores.amberAviso.withValues(alpha: 0.35)),
+        ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
             Row(
               children: <Widget>[
-                Icon(
-                  Icons.cloud_off_rounded,
-                  size: 18,
-                  color: colores.tintaTenue,
-                ),
+                Icon(LucideIcons.cloudOff, size: 17, color: colores.amberAviso),
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
                     '${pendientes.length} sin sincronizar: se enviarán al recuperar la conexión.',
                     style: textTheme.bodySmall?.copyWith(
-                      color: colores.tintaSuave,
+                      color: colores.tinta,
+                      fontWeight: FontWeight.w500,
                     ),
                   ),
                 ),
               ],
             ),
             for (final op in pendientes) ...<Widget>[
-              const SizedBox(height: 8),
+              const SizedBox(height: 6),
               Text(
                 op.titulo,
                 style: textTheme.bodyMedium?.copyWith(

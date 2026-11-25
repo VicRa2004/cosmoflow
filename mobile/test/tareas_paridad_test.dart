@@ -13,6 +13,7 @@ import 'package:cosmoflow_mobile/modules/tareas/widgets/tarea_form.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 /// PNG válido de 1×1 píxel transparente para probar renderizado de `Image.memory`.
 final Uint8List _png1x1 = Uint8List.fromList(
@@ -196,8 +197,8 @@ void main() {
       ),
     );
 
-    expect(find.byIcon(Icons.lock_outline_rounded), findsOneWidget);
-    expect(find.byIcon(Icons.repeat_rounded), findsOneWidget);
+    expect(find.byIcon(LucideIcons.lock), findsOneWidget);
+    expect(find.byIcon(LucideIcons.repeat), findsOneWidget);
 
     await tester.tap(find.byTooltip('Fijar tarea'));
     await tester.pump();

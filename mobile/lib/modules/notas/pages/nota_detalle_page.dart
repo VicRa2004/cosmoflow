@@ -1,17 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../core/auth/sesion_store.dart';
+import '../../../core/theme/colores_noche_indigo.dart';
 import '../../../core/widgets/avisos.dart';
 import '../../../core/widgets/confirmar.dart';
 import '../../../core/widgets/contenido_markdown.dart';
 import '../../../core/widgets/estados.dart';
+import '../../../core/widgets/tarjeta_seccion.dart';
 import '../api/notas_api.dart';
 import '../models/nota_model.dart';
 import 'nota_editor_page.dart';
 
-/// `/notas/:id`: lectura a pantalla completa, con Editar y Eliminar en la AppBar.
-/// Pinta al instante con la nota de `args` y la refresca por id.
+/// `/notas/:id`: lectura a pantalla completa agrupada en tarjeta limpia.
 class NotaDetallePage extends StatefulWidget {
   const NotaDetallePage({
     super.key,
@@ -24,8 +26,6 @@ class NotaDetallePage extends StatefulWidget {
   final int id;
   final SesionStore sesionStore;
   final NotasApi notasApi;
-
-  /// Nota ya conocida, tags y carpetas para el editor.
   final NotaEditorArgs args;
 
   @override
@@ -88,21 +88,26 @@ class _NotaDetallePageState extends State<NotaDetallePage> {
   Widget build(BuildContext context) {
     final nota = _nota;
     final store = widget.sesionStore;
+    final colores = context.colores;
     return Scaffold(
       appBar: AppBar(
         actions: <Widget>[
           if (nota != null && store.puede('notas:actualizar'))
             IconButton(
               tooltip: 'Editar',
-              icon: const Icon(Icons.edit_outlined),
+              icon: const Icon(LucideIcons.pencil),
               onPressed: () => _editar(nota),
             ),
           if (nota != null && store.puede('notas:eliminar'))
             PopupMenuButton<void>(
+              icon: const Icon(LucideIcons.ellipsisVertical),
               itemBuilder: (_) => <PopupMenuEntry<void>>[
                 PopupMenuItem<void>(
                   onTap: () => _eliminar(nota),
-                  child: const Text('Eliminar'),
+                  child: Text(
+                    'Eliminar',
+                    style: TextStyle(color: colores.rosePeligro),
+                  ),
                 ),
               ],
             ),
@@ -118,6 +123,7 @@ class _NotaDetallePageState extends State<NotaDetallePage> {
 
   Widget _contenido(NotaDto nota) {
     final textTheme = Theme.of(context).textTheme;
+    final colores = context.colores;
     final carpeta = widget.args.carpetas
         .where((c) => c.id == nota.carpetaId)
         .firstOrNull;
@@ -126,28 +132,36 @@ class _NotaDetallePageState extends State<NotaDetallePage> {
         .toList(growable: false);
 
     return ListView(
-      padding: const EdgeInsets.fromLTRB(16, 8, 16, 48),
+      padding: const EdgeInsets.only(top: 4, bottom: 48),
       children: <Widget>[
-        Text(nota.titulo, style: textTheme.headlineSmall),
-        if (carpeta != null || tags.isNotEmpty) ...<Widget>[
-          const SizedBox(height: 12),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: <Widget>[
-              if (carpeta != null)
-                Chip(
-                  avatar: const Icon(Icons.folder_outlined),
-                  label: Text(carpeta.nombre),
-                ),
-              for (final tag in tags) Chip(label: Text(tag.nombre)),
-            ],
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 4, 16, 12),
+          child: Text(nota.titulo, style: textTheme.headlineMedium),
+        ),
+        if (carpeta != null || tags.isNotEmpty)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+            child: Wrap(
+              spacing: 6,
+              runSpacing: 6,
+              children: <Widget>[
+                if (carpeta != null)
+                  InsigniaPill(
+                    texto: carpeta.nombre,
+                    icono: LucideIcons.folder,
+                    colorTexto: colores.indigoMarca,
+                    colorFondo: colores.indigoSuave,
+                  ),
+                for (final tag in tags)
+                  InsigniaPill(texto: tag.nombre, icono: LucideIcons.tag),
+              ],
+            ),
           ),
-        ],
-        const SizedBox(height: 16),
-        const Divider(),
-        const SizedBox(height: 16),
-        ContenidoMarkdown(texto: nota.contenido),
+        TarjetaSeccion(
+          mostrarDivisores: false,
+          paddingInterno: const EdgeInsets.all(18),
+          children: <Widget>[ContenidoMarkdown(texto: nota.contenido)],
+        ),
       ],
     );
   }

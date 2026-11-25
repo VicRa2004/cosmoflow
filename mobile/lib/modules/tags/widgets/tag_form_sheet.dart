@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../models/tag_model.dart';
 
@@ -121,12 +122,21 @@ class _TagFormSheetState extends State<TagFormSheet> {
                   IconButton(
                     tooltip: hex,
                     onPressed: () => setState(() => _colorSeleccionado = hex),
-                    icon: Icon(
-                      _colorSeleccionado == hex
-                          ? Icons.check_circle_rounded
-                          : Icons.circle,
-                      color: _hexAColor(hex),
-                      size: 32,
+                    icon: Container(
+                      width: 28,
+                      height: 28,
+                      decoration: BoxDecoration(
+                        color: _hexAColor(hex),
+                        shape: BoxShape.circle,
+                      ),
+                      alignment: Alignment.center,
+                      child: _colorSeleccionado == hex
+                          ? const Icon(
+                              LucideIcons.check,
+                              color: Colors.white,
+                              size: 16,
+                            )
+                          : null,
                     ),
                   ),
               ],

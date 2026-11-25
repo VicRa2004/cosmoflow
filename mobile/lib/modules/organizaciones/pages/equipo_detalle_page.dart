@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../core/auth/sesion_store.dart';
 import '../../../core/theme/colores_noche_indigo.dart';
@@ -195,10 +196,8 @@ class _EquipoDetallePageState extends State<EquipoDetallePage> {
                   Chip(
                     visualDensity: VisualDensity.compact,
                     avatar: Icon(
-                      i.esLider
-                          ? Icons.star_rounded
-                          : Icons.person_outline_rounded,
-                      size: 16,
+                      i.esLider ? LucideIcons.star : LucideIcons.user,
+                      size: 14,
                     ),
                     label: Text(
                       i.esLider
@@ -253,6 +252,7 @@ class _EquipoDetallePageState extends State<EquipoDetallePage> {
           actions: <Widget>[
             if (hayMenu)
               PopupMenuButton<String>(
+                icon: const Icon(LucideIcons.ellipsisVertical),
                 onSelected: (accion) {
                   if (accion == 'delegados') _gestionarDelegados(equipo);
                   if (accion == 'editar') _editarEquipo(equipo);

@@ -1,6 +1,7 @@
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../api/adjuntos_api.dart';
 import '../theme/colores_noche_indigo.dart';
@@ -111,8 +112,8 @@ class _AdjuntoImagenState extends State<AdjuntoImagen> {
               mainAxisSize: MainAxisSize.min,
               children: <Widget>[
                 Icon(
-                  Icons.broken_image_outlined,
-                  size: 20,
+                  LucideIcons.imageOff,
+                  size: 18,
                   color: colores.tintaTenue,
                 ),
                 const SizedBox(width: 8),

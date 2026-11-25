@@ -1,14 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../core/theme/colores_noche_indigo.dart';
 import '../../../core/widgets/avisos.dart';
 import '../../../core/widgets/estados.dart';
+import '../../../core/widgets/tarjeta_seccion.dart';
 import '../api/notificaciones_api.dart';
 import '../models/notificacion_models.dart';
 import '../preferencias_push_prompt.dart';
 
 /// Vista `/perfil/notificaciones`: elegir canal (en la app, correo, móvil, telegram)
-/// por tipo de aviso.
+/// por tipo de aviso dentro de tarjetas agrupadas.
 class NotificacionesPreferenciasPage extends StatefulWidget {
   const NotificacionesPreferenciasPage({
     super.key,
@@ -149,6 +151,20 @@ class _NotificacionesPreferenciasPageState
         movil.dispositivos > 0 &&
         debeOfrecerSoloMovil(_preferencias);
 
+    final bloques = <Widget>[
+      for (final entrada in etiquetasEventoNotificacion.entries)
+        if (visibles.any((p) => p.evento == entrada.key))
+          _BloqueEvento(
+            descripcion: entrada.value,
+            preferencias: visibles
+                .where((p) => p.evento == entrada.key)
+                .toList(growable: false),
+            guardando: _guardando,
+            estaBloqueado: _canalBloqueado,
+            onAlternar: _alternar,
+          ),
+    ];
+
     return Scaffold(
       appBar: AppBar(title: const Text('Notificaciones')),
       body: _cargando && _preferencias.isEmpty
@@ -158,59 +174,68 @@ class _NotificacionesPreferenciasPageState
           : RefreshIndicator(
               onRefresh: _cargar,
               child: ListView(
-                padding: const EdgeInsets.fromLTRB(16, 12, 16, 48),
+                padding: const EdgeInsets.only(top: 8, bottom: 48),
                 children: <Widget>[
-                  Text(
-                    'Nunca te avisamos de lo que haces tú.',
-                    style: textTheme.bodySmall?.copyWith(
-                      color: colores.tintaTenue,
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
+                    child: Text(
+                      'Nunca te avisamos de lo que haces tú.',
+                      style: textTheme.bodySmall?.copyWith(
+                        color: colores.tintaTenue,
+                      ),
                     ),
                   ),
                   if (movil != null && movil.disponible) ...<Widget>[
-                    const SizedBox(height: 12),
-                    Card(
-                      child: Padding(
-                        padding: const EdgeInsets.all(16),
-                        child: Column(
+                    TarjetaSeccion(
+                      mostrarDivisores: false,
+                      paddingInterno: const EdgeInsets.all(16),
+                      children: <Widget>[
+                        Row(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: <Widget>[
-                            Text(
-                              movil.dispositivos > 0
-                                  ? 'Notificaciones push activas en ${movil.dispositivos} ${movil.dispositivos == 1 ? 'dispositivo' : 'dispositivos'}.'
-                                  : 'Aún no hay dispositivos registrados para recibir notificaciones push.',
-                              style: textTheme.bodyMedium?.copyWith(
-                                color: colores.tintaSuave,
-                              ),
+                            IconoCaja(
+                              icono: LucideIcons.smartphone,
+                              color: movil.dispositivos > 0
+                                  ? colores.indigoMarca
+                                  : colores.tintaTenue,
+                              fondo: movil.dispositivos > 0
+                                  ? colores.indigoSuave
+                                  : colores.elevada,
                             ),
-                            if (mostrarBotonSoloMovil) ...<Widget>[
-                              const SizedBox(height: 12),
-                              SizedBox(
-                                width: double.infinity,
-                                child: OutlinedButton(
-                                  onPressed: _guardando
-                                      ? null
-                                      : _activarSoloMovil,
-                                  child: const Text(
-                                    'Recibir solo por móvil (desactivar correo)',
-                                  ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Text(
+                                movil.dispositivos > 0
+                                    ? 'Notificaciones push activas en ${movil.dispositivos} ${movil.dispositivos == 1 ? 'dispositivo' : 'dispositivos'}.'
+                                    : 'Aún no hay dispositivos registrados para recibir notificaciones push.',
+                                style: textTheme.bodyMedium?.copyWith(
+                                  color: colores.tintaSuave,
                                 ),
                               ),
-                            ],
+                            ),
                           ],
                         ),
-                      ),
+                        if (mostrarBotonSoloMovil) ...<Widget>[
+                          const SizedBox(height: 14),
+                          SizedBox(
+                            width: double.infinity,
+                            child: OutlinedButton(
+                              onPressed: _guardando ? null : _activarSoloMovil,
+                              child: const Text(
+                                'Recibir solo por móvil (desactivar correo)',
+                              ),
+                            ),
+                          ),
+                        ],
+                      ],
                     ),
+                    const SizedBox(height: 20),
                   ],
-                  const SizedBox(height: 16),
-                  for (final entrada in etiquetasEventoNotificacion.entries)
-                    _BloqueEvento(
-                      descripcion: entrada.value,
-                      preferencias: visibles
-                          .where((p) => p.evento == entrada.key)
-                          .toList(growable: false),
-                      guardando: _guardando,
-                      estaBloqueado: _canalBloqueado,
-                      onAlternar: _alternar,
+                  if (bloques.isNotEmpty)
+                    TarjetaSeccion(
+                      titulo: 'Canales por evento',
+                      divisorIndent: 16,
+                      children: bloques,
                     ),
                 ],
               ),
@@ -236,51 +261,43 @@ class _BloqueEvento extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (preferencias.isEmpty) return const SizedBox.shrink();
     final colores = context.colores;
     final textTheme = Theme.of(context).textTheme;
     final heredaOrg = preferencias.any((p) => p.personalizado == false);
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: <Widget>[
-        Padding(
-          padding: const EdgeInsets.symmetric(vertical: 12),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+    return Padding(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          Text(
+            descripcion,
+            style: textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w500),
+          ),
+          if (heredaOrg) ...<Widget>[
+            const SizedBox(height: 2),
+            Text(
+              'Sin elegir: en cada organización vale lo que ella decida.',
+              style: textTheme.bodySmall?.copyWith(color: colores.tintaTenue),
+            ),
+          ],
+          const SizedBox(height: 10),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
             children: <Widget>[
-              Text(descripcion, style: textTheme.bodyLarge),
-              if (heredaOrg) ...<Widget>[
-                const SizedBox(height: 2),
-                Text(
-                  'Sin elegir: en cada organización vale lo que ella decida.',
-                  style: textTheme.bodySmall?.copyWith(
-                    color: colores.tintaTenue,
-                  ),
+              for (final p in preferencias)
+                FilterChip(
+                  label: Text(etiquetasCanalNotificacion[p.canal] ?? p.canal),
+                  selected: p.activo,
+                  onSelected: (guardando || estaBloqueado(p.canal))
+                      ? null
+                      : (sel) => onAlternar(p, sel),
                 ),
-              ],
-              const SizedBox(height: 10),
-              Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: <Widget>[
-                  for (final p in preferencias)
-                    FilterChip(
-                      label: Text(
-                        etiquetasCanalNotificacion[p.canal] ?? p.canal,
-                      ),
-                      selected: p.activo,
-                      onSelected: (guardando || estaBloqueado(p.canal))
-                          ? null
-                          : (sel) => onAlternar(p, sel),
-                    ),
-                ],
-              ),
             ],
           ),
-        ),
-        const Divider(),
-      ],
+        ],
+      ),
     );
   }
 }

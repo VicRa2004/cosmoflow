@@ -1,13 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../core/theme/colores_noche_indigo.dart';
 import '../../../core/widgets/estados.dart';
+import '../../../core/widgets/tarjeta_seccion.dart';
 import '../api/organizaciones_api.dart';
 import '../models/organizacion_models.dart';
 import '../widgets/selector_color.dart';
 
-/// Vista `/organizaciones`: lista de organizaciones del usuario para entrar a una.
+/// Vista `/organizaciones`: lista de organizaciones del usuario en tarjeta agrupada.
 class OrganizacionesPage extends StatefulWidget {
   const OrganizacionesPage({
     super.key,
@@ -81,20 +83,23 @@ class _OrganizacionesPageState extends State<OrganizacionesPage> {
       floatingActionButton: FloatingActionButton(
         tooltip: 'Nueva organización',
         onPressed: _crear,
-        child: const Icon(Icons.add_rounded),
+        child: const Icon(LucideIcons.plus),
       ),
       body: RefreshIndicator(
         onRefresh: _cargar,
         child: ListView(
-          padding: const EdgeInsets.only(bottom: 88),
+          padding: const EdgeInsets.only(bottom: 104),
           children: <Widget>[
             Padding(
-              padding: const EdgeInsets.fromLTRB(16, 4, 16, 12),
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
               child: SearchBar(
                 controller: _busqueda,
                 hintText: 'Filtrar por nombre',
-                leading: const Icon(Icons.search_rounded),
-                elevation: const WidgetStatePropertyAll<double>(0),
+                leading: Icon(
+                  LucideIcons.search,
+                  size: 18,
+                  color: colores.tintaTenue,
+                ),
                 textInputAction: TextInputAction.search,
                 onSubmitted: (_) => _cargar(),
               ),
@@ -105,20 +110,24 @@ class _OrganizacionesPageState extends State<OrganizacionesPage> {
               EstadoError(mensaje: _mensajeError!, onReintentar: _cargar)
             else if (_organizaciones.isEmpty)
               const EstadoVacio(
-                icono: Icons.workspaces_outlined,
+                icono: LucideIcons.building2,
                 titulo: 'Sin organizaciones',
-                mensaje: 'Crea una organización o espera una invitación para colaborar.',
+                mensaje:
+                    'Crea una organización o espera una invitación para colaborar.',
               )
             else
-              for (final org in _organizaciones) ...<Widget>[
-                _OrganizacionFila(
-                  organizacion: org,
-                  colorAvatar: parsearColorHex(org.color),
-                  colores: colores,
-                  onTap: () => _abrir(org),
-                ),
-                const Divider(indent: 72),
-              ],
+              TarjetaSeccion(
+                divisorIndent: 68,
+                children: <Widget>[
+                  for (final org in _organizaciones)
+                    _OrganizacionFila(
+                      organizacion: org,
+                      colorAvatar: parsearColorHex(org.color),
+                      colores: colores,
+                      onTap: () => _abrir(org),
+                    ),
+                ],
+              ),
           ],
         ),
       ),
@@ -141,29 +150,86 @@ class _OrganizacionFila extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
     final inicial = organizacion.nombre.trim().isNotEmpty
         ? organizacion.nombre.trim()[0].toUpperCase()
         : 'O';
     final rol = organizacion.isAdmin ? 'Admin' : 'Miembro';
     final desc = organizacion.descripcion.trim();
-    final subtitulo = desc.isEmpty ? rol : '$rol · $desc';
 
-    return ListTile(
+    return InkWell(
       onTap: onTap,
-      leading: CircleAvatar(
-        backgroundColor: colorAvatar ?? colores.elevada,
-        foregroundColor: colorAvatar != null
-            ? Colors.white
-            : colores.tintaSuave,
-        child: Text(inicial),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        child: Row(
+          children: <Widget>[
+            Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                color: colorAvatar ?? colores.indigoSuave,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              alignment: Alignment.center,
+              child: Text(
+                inicial,
+                style: textTheme.titleMedium?.copyWith(
+                  color: colorAvatar != null
+                      ? Colors.white
+                      : colores.indigoMarca,
+                ),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Row(
+                    children: <Widget>[
+                      Flexible(
+                        child: Text(
+                          organizacion.nombre,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: textTheme.bodyLarge?.copyWith(
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      InsigniaPill(
+                        texto: rol,
+                        colorTexto: organizacion.isAdmin
+                            ? colores.indigoMarca
+                            : colores.tintaSuave,
+                        colorFondo: organizacion.isAdmin
+                            ? colores.indigoSuave
+                            : colores.elevada,
+                      ),
+                    ],
+                  ),
+                  if (desc.isNotEmpty) ...<Widget>[
+                    const SizedBox(height: 3),
+                    Text(
+                      desc,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: textTheme.bodySmall,
+                    ),
+                  ],
+                ],
+              ),
+            ),
+            const SizedBox(width: 8),
+            Icon(
+              LucideIcons.chevronRight,
+              size: 16,
+              color: colores.tintaTenue,
+            ),
+          ],
+        ),
       ),
-      title: Text(
-        organizacion.nombre,
-        maxLines: 1,
-        overflow: TextOverflow.ellipsis,
-      ),
-      subtitle: Text(subtitulo, maxLines: 1, overflow: TextOverflow.ellipsis),
-      trailing: const Icon(Icons.chevron_right_rounded),
     );
   }
 }

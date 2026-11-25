@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../core/theme/colores_noche_indigo.dart';
 import '../../../core/widgets/estados.dart';
@@ -126,7 +127,7 @@ class _EstadisticasDestinoTabState extends State<EstadisticasDestinoTab> {
             )
           else
             const EstadoVacio(
-              icono: Icons.bar_chart_rounded,
+              icono: LucideIcons.chartColumn,
               titulo: 'Sin estadísticas',
               mensaje: 'Desliza hacia abajo para actualizar los datos.',
             ),

@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../core/theme/colores_noche_indigo.dart';
 import '../../../core/widgets/avisos.dart';
 import '../../../core/widgets/confirmar.dart';
 import '../../../core/widgets/estados.dart';
+import '../../../core/widgets/tarjeta_seccion.dart';
 import '../api/organizaciones_api.dart';
 import '../models/organizacion_models.dart';
 import 'asignar_roles_sheet.dart';
@@ -74,7 +76,8 @@ class ListaMiembrosOrganizacion extends StatelessWidget {
     final ok = await confirmar(
       context,
       titulo: '¿Hacer administrador a ${miembro.nombre}?',
-      mensaje: 'Solo hay un administrador: tú pasarás a ser un miembro normal.',
+      mensaje:
+          'Solo hay un administrador: tú pasarás a ser un miembro normal.',
       accion: 'Delegar',
     );
     if (!ok || !context.mounted) return;
@@ -161,17 +164,17 @@ class ListaMiembrosOrganizacion extends StatelessWidget {
           ? FloatingActionButton(
               tooltip: 'Invitar miembro',
               onPressed: () => _invitar(context),
-              child: const Icon(Icons.person_add_outlined),
+              child: const Icon(LucideIcons.userPlus),
             )
           : null,
       body: RefreshIndicator(
         onRefresh: onRefresh,
         child: ListView(
-          padding: const EdgeInsets.only(bottom: 88),
+          padding: const EdgeInsets.only(top: 12, bottom: 104),
           children: <Widget>[
             if (organizacion.isAdmin)
               Padding(
-                padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+                padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
                 child: Text(
                   'Para salir, primero delega la administración en otro miembro.',
                   style: textTheme.bodySmall?.copyWith(
@@ -181,74 +184,90 @@ class ListaMiembrosOrganizacion extends StatelessWidget {
               ),
             if (miembros.isEmpty)
               const EstadoVacio(
-                icono: Icons.people_outline_rounded,
+                icono: LucideIcons.users,
                 titulo: 'Sin miembros',
                 mensaje: 'No hay miembros cargados en esta organización.',
               )
             else
-              for (final m in miembros) ...<Widget>[
-                _MiembroFila(
-                  miembro: m,
-                  soyYo: m.usuarioId == usuarioActualId,
-                  organizacionEsAdmin: organizacion.isAdmin,
-                  puedeAsignar: puedeAsignar,
-                  puedeExpulsar: puedeExpulsar,
-                  colores: colores,
-                  onSalir: () => _quitarMiembro(context, m, esSalir: true),
-                  onAsignarRoles: () => _asignarRoles(context, m),
-                  onDelegarAdmin: () => _delegarAdmin(context, m),
-                  onExpulsar: () => _quitarMiembro(context, m, esSalir: false),
-                ),
-                const Divider(indent: 72),
-              ],
-            if (puedeInvitar && invitaciones.isNotEmpty) ...<Widget>[
-              Padding(
-                padding: const EdgeInsets.fromLTRB(16, 24, 16, 8),
-                child: Text(
-                  'Invitaciones pendientes',
-                  style: textTheme.labelLarge?.copyWith(
-                    color: colores.tintaTenue,
-                  ),
-                ),
+              TarjetaSeccion(
+                titulo: 'Miembros',
+                contador: miembros.length,
+                divisorIndent: 68,
+                children: <Widget>[
+                  for (final m in miembros)
+                    _MiembroFila(
+                      miembro: m,
+                      soyYo: m.usuarioId == usuarioActualId,
+                      organizacionEsAdmin: organizacion.isAdmin,
+                      puedeAsignar: puedeAsignar,
+                      puedeExpulsar: puedeExpulsar,
+                      colores: colores,
+                      onSalir: () => _quitarMiembro(context, m, esSalir: true),
+                      onAsignarRoles: () => _asignarRoles(context, m),
+                      onDelegarAdmin: () => _delegarAdmin(context, m),
+                      onExpulsar: () =>
+                          _quitarMiembro(context, m, esSalir: false),
+                    ),
+                ],
               ),
-              for (final inv in invitaciones) ...<Widget>[
-                ListTile(
-                  leading: const Icon(Icons.mail_outline_rounded),
-                  title: Text(
-                    inv.email,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  subtitle: Text(
-                    inv.isCaducada
-                        ? 'Caducada'
-                        : 'Caduca: ${inv.expiraEn.split('T').first}',
-                    style: inv.isCaducada
-                        ? TextStyle(color: colores.rosePeligro)
-                        : null,
-                  ),
-                  trailing: PopupMenuButton<String>(
-                    onSelected: (accion) {
-                      if (accion == 'reenviar') _reenviar(context, inv);
-                      if (accion == 'cancelar') _cancelar(context, inv);
-                    },
-                    itemBuilder: (_) => <PopupMenuEntry<String>>[
-                      const PopupMenuItem<String>(
-                        value: 'reenviar',
-                        child: Text('Reenviar'),
+            if (puedeInvitar && invitaciones.isNotEmpty) ...<Widget>[
+              const SizedBox(height: 20),
+              TarjetaSeccion(
+                titulo: 'Invitaciones pendientes',
+                contador: invitaciones.length,
+                divisorIndent: 64,
+                children: <Widget>[
+                  for (final inv in invitaciones)
+                    ListTile(
+                      leading: IconoCaja(
+                        icono: LucideIcons.mail,
+                        color: inv.isCaducada
+                            ? colores.rosePeligro
+                            : colores.tintaSuave,
+                        fondo: inv.isCaducada
+                            ? colores.roseSuave
+                            : colores.elevada,
                       ),
-                      PopupMenuItem<String>(
-                        value: 'cancelar',
-                        child: Text(
-                          'Cancelar invitación',
-                          style: TextStyle(color: colores.rosePeligro),
+                      title: Text(
+                        inv.email,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      subtitle: Text(
+                        inv.isCaducada
+                            ? 'Caducada'
+                            : 'Caduca: ${inv.expiraEn.split('T').first}',
+                        style: inv.isCaducada
+                            ? TextStyle(color: colores.rosePeligro)
+                            : null,
+                      ),
+                      trailing: PopupMenuButton<String>(
+                        icon: Icon(
+                          LucideIcons.ellipsisVertical,
+                          size: 18,
+                          color: colores.tintaTenue,
                         ),
+                        onSelected: (accion) {
+                          if (accion == 'reenviar') _reenviar(context, inv);
+                          if (accion == 'cancelar') _cancelar(context, inv);
+                        },
+                        itemBuilder: (_) => <PopupMenuEntry<String>>[
+                          const PopupMenuItem<String>(
+                            value: 'reenviar',
+                            child: Text('Reenviar'),
+                          ),
+                          PopupMenuItem<String>(
+                            value: 'cancelar',
+                            child: Text(
+                              'Cancelar invitación',
+                              style: TextStyle(color: colores.rosePeligro),
+                            ),
+                          ),
+                        ],
                       ),
-                    ],
-                  ),
-                ),
-                const Divider(indent: 56),
-              ],
+                    ),
+                ],
+              ),
             ],
           ],
         ),
@@ -284,6 +303,7 @@ class _MiembroFila extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
     final inicial = miembro.nombre.trim().isNotEmpty
         ? miembro.nombre.trim()[0].toUpperCase()
         : 'U';
@@ -302,10 +322,20 @@ class _MiembroFila extends StatelessWidget {
     ].join(' · ');
 
     return ListTile(
-      leading: CircleAvatar(
-        backgroundColor: colores.elevada,
-        foregroundColor: colores.tintaSuave,
-        child: Text(inicial),
+      leading: Container(
+        width: 38,
+        height: 38,
+        decoration: BoxDecoration(
+          color: miembro.isAdmin ? colores.indigoSuave : colores.elevada,
+          borderRadius: BorderRadius.circular(11),
+        ),
+        alignment: Alignment.center,
+        child: Text(
+          inicial,
+          style: textTheme.titleSmall?.copyWith(
+            color: miembro.isAdmin ? colores.indigoMarca : colores.tintaSuave,
+          ),
+        ),
       ),
       title: Text(
         soyYo ? '${miembro.nombre} (tú)' : miembro.nombre,
@@ -315,6 +345,11 @@ class _MiembroFila extends StatelessWidget {
       subtitle: Text(subtitulo, maxLines: 1, overflow: TextOverflow.ellipsis),
       trailing: hayAcciones
           ? PopupMenuButton<String>(
+              icon: Icon(
+                LucideIcons.ellipsisVertical,
+                size: 18,
+                color: colores.tintaTenue,
+              ),
               onSelected: (accion) {
                 if (accion == 'salir') onSalir();
                 if (accion == 'roles') onAsignarRoles();

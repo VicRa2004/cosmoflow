@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 /// Campo de fecha `AAAA-MM-DD` que abre `showDatePicker`; nunca se teclea a mano.
 class CampoFecha extends StatelessWidget {
@@ -39,12 +40,12 @@ class CampoFecha extends StatelessWidget {
         decoration: InputDecoration(
           labelText: etiqueta,
           hintText: 'Sin fecha',
-          prefixIcon: const Icon(Icons.event_outlined),
+          prefixIcon: const Icon(LucideIcons.calendar, size: 18),
           suffixIcon: valor.text.isEmpty
               ? null
               : IconButton(
                   tooltip: 'Quitar fecha',
-                  icon: const Icon(Icons.close_rounded),
+                  icon: const Icon(LucideIcons.x, size: 18),
                   onPressed: controller.clear,
                 ),
         ),

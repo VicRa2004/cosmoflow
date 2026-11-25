@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 /// Colores de acento compartidos para organizaciones, equipos y proyectos.
 const List<String> coloresAcentoOrganizacion = <String>[
@@ -58,12 +59,21 @@ class SelectorColor extends StatelessWidget {
             for (final hex in coloresAcentoOrganizacion)
               IconButton(
                 onPressed: () => onChanged(hex),
-                icon: Icon(
-                  actual == hex.toLowerCase()
-                      ? Icons.check_circle_rounded
-                      : Icons.circle,
-                  color: parsearColorHex(hex),
-                  size: 32,
+                icon: Container(
+                  width: 28,
+                  height: 28,
+                  decoration: BoxDecoration(
+                    color: parsearColorHex(hex),
+                    shape: BoxShape.circle,
+                  ),
+                  alignment: Alignment.center,
+                  child: actual == hex.toLowerCase()
+                      ? const Icon(
+                          LucideIcons.check,
+                          color: Colors.white,
+                          size: 16,
+                        )
+                      : null,
                 ),
               ),
           ],

@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../core/theme/colores_noche_indigo.dart';
 import '../../../core/widgets/estados.dart';
+import '../../../core/widgets/tarjeta_seccion.dart';
 import '../../tags/models/tag_model.dart';
 import '../models/organizacion_models.dart';
 import 'selector_color.dart';
@@ -45,16 +47,16 @@ class _ListaProyectosOrganizacionState
           : FloatingActionButton(
               tooltip: 'Nuevo proyecto',
               onPressed: widget.onCrearProyecto,
-              child: const Icon(Icons.add_rounded),
+              child: const Icon(LucideIcons.plus),
             ),
       body: RefreshIndicator(
         onRefresh: widget.onRefresh,
         child: ListView(
-          padding: const EdgeInsets.only(bottom: 88),
+          padding: const EdgeInsets.only(bottom: 104),
           children: <Widget>[
             SingleChildScrollView(
               scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
               child: Row(
                 spacing: 8,
                 children: <Widget>[
@@ -75,19 +77,22 @@ class _ListaProyectosOrganizacionState
             ),
             if (filtrados.isEmpty)
               const EstadoVacio(
-                icono: Icons.folder_copy_outlined,
+                icono: LucideIcons.folderKanban,
                 titulo: 'Sin proyectos',
                 mensaje: 'No hay proyectos que coincidan con el filtro.',
               )
             else
-              for (final p in filtrados) ...<Widget>[
-                _ProyectoFila(
-                  proyecto: p,
-                  colores: colores,
-                  onTap: () => widget.onAbrirProyecto(p),
-                ),
-                const Divider(indent: 56),
-              ],
+              TarjetaSeccion(
+                divisorIndent: 64,
+                children: <Widget>[
+                  for (final p in filtrados)
+                    _ProyectoFila(
+                      proyecto: p,
+                      colores: colores,
+                      onTap: () => widget.onAbrirProyecto(p),
+                    ),
+                ],
+              ),
           ],
         ),
       ),
@@ -116,7 +121,13 @@ class _ProyectoFila extends StatelessWidget {
 
     return ListTile(
       onTap: onTap,
-      leading: Icon(Icons.folder_outlined, color: color),
+      leading: IconoCaja(
+        icono: LucideIcons.folder,
+        color: color,
+        fondo: color.withValues(alpha: 0.12),
+        dimension: 38,
+        tamanoIcono: 18,
+      ),
       title: Text(
         proyecto.nombre,
         maxLines: 1,
@@ -125,6 +136,7 @@ class _ProyectoFila extends StatelessWidget {
       subtitle: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
+          const SizedBox(height: 2),
           Text(
             <String>[
               proyecto.estado.etiqueta,
@@ -138,10 +150,10 @@ class _ProyectoFila extends StatelessWidget {
           if (porcentaje != null) ...<Widget>[
             const SizedBox(height: 6),
             ClipRRect(
-              borderRadius: BorderRadius.circular(4),
+              borderRadius: BorderRadius.circular(999),
               child: LinearProgressIndicator(
                 value: porcentaje,
-                minHeight: 4,
+                minHeight: 5,
                 backgroundColor: colores.elevada,
                 color: color,
               ),
@@ -149,7 +161,11 @@ class _ProyectoFila extends StatelessWidget {
           ],
         ],
       ),
-      trailing: const Icon(Icons.chevron_right_rounded),
+      trailing: Icon(
+        LucideIcons.chevronRight,
+        size: 16,
+        color: colores.tintaTenue,
+      ),
     );
   }
 }
@@ -196,17 +212,17 @@ class _ListaEquiposOrganizacionState extends State<ListaEquiposOrganizacion> {
           : FloatingActionButton(
               tooltip: 'Nuevo equipo',
               onPressed: widget.onCrearEquipo,
-              child: const Icon(Icons.add_rounded),
+              child: const Icon(LucideIcons.plus),
             ),
       body: RefreshIndicator(
         onRefresh: widget.onRefresh,
         child: ListView(
-          padding: const EdgeInsets.only(bottom: 88),
+          padding: const EdgeInsets.only(bottom: 104),
           children: <Widget>[
             if (widget.tags.isNotEmpty)
               SingleChildScrollView(
                 scrollDirection: Axis.horizontal,
-                padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+                padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
                 child: Row(
                   spacing: 8,
                   children: <Widget>[
@@ -226,23 +242,26 @@ class _ListaEquiposOrganizacionState extends State<ListaEquiposOrganizacion> {
                 ),
               )
             else
-              const SizedBox(height: 8),
+              const SizedBox(height: 12),
             if (filtrados.isEmpty)
               const EstadoVacio(
-                icono: Icons.groups_outlined,
+                icono: LucideIcons.users,
                 titulo: 'Sin equipos',
                 mensaje: 'No hay equipos en esta organización.',
               )
             else
-              for (final eq in filtrados) ...<Widget>[
-                _EquipoFila(
-                  equipo: eq,
-                  miembros: widget.miembros,
-                  colores: colores,
-                  onTap: () => widget.onAbrirEquipo(eq),
-                ),
-                const Divider(indent: 72),
-              ],
+              TarjetaSeccion(
+                divisorIndent: 68,
+                children: <Widget>[
+                  for (final eq in filtrados)
+                    _EquipoFila(
+                      equipo: eq,
+                      miembros: widget.miembros,
+                      colores: colores,
+                      onTap: () => widget.onAbrirEquipo(eq),
+                    ),
+                ],
+              ),
           ],
         ),
       ),
@@ -265,6 +284,7 @@ class _EquipoFila extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
     final colorAvatar = parsearColorHex(equipo.color);
     final inicial = equipo.nombre.trim().isNotEmpty
         ? equipo.nombre.trim()[0].toUpperCase()
@@ -281,16 +301,28 @@ class _EquipoFila extends StatelessWidget {
 
     return ListTile(
       onTap: onTap,
-      leading: CircleAvatar(
-        backgroundColor: colorAvatar ?? colores.elevada,
-        foregroundColor: colorAvatar != null
-            ? Colors.white
-            : colores.tintaSuave,
-        child: Text(inicial),
+      leading: Container(
+        width: 38,
+        height: 38,
+        decoration: BoxDecoration(
+          color: colorAvatar ?? colores.indigoSuave,
+          borderRadius: BorderRadius.circular(11),
+        ),
+        alignment: Alignment.center,
+        child: Text(
+          inicial,
+          style: textTheme.titleSmall?.copyWith(
+            color: colorAvatar != null ? Colors.white : colores.indigoMarca,
+          ),
+        ),
       ),
       title: Text(equipo.nombre, maxLines: 1, overflow: TextOverflow.ellipsis),
       subtitle: Text(subtitulo, maxLines: 1, overflow: TextOverflow.ellipsis),
-      trailing: const Icon(Icons.chevron_right_rounded),
+      trailing: Icon(
+        LucideIcons.chevronRight,
+        size: 16,
+        color: colores.tintaTenue,
+      ),
     );
   }
 }

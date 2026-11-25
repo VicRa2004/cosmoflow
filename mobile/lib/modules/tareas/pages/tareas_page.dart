@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../core/auth/sesion_store.dart';
 import '../../../core/offline/aviso_pendientes.dart';
+import '../../../core/theme/colores_noche_indigo.dart';
 import '../../../core/widgets/estados.dart';
+import '../../../core/widgets/tarjeta_seccion.dart';
 import '../../tags/models/tag_model.dart';
 import '../acciones_tarea.dart';
 import '../api/tareas_api.dart';
@@ -136,17 +139,15 @@ class _TareasPageState extends State<TareasPage> {
           if (!widget.mostrarAppBar)
             FilterChip(
               avatar: Icon(
-                _enTablero
-                    ? Icons.view_list_rounded
-                    : Icons.view_kanban_outlined,
-                size: 18,
+                _enTablero ? LucideIcons.list : LucideIcons.columns3,
+                size: 15,
               ),
               label: Text(_enTablero ? 'Lista' : 'Tablero'),
               selected: _enTablero,
               onSelected: (_) => _alternarVista(),
             ),
           FilterChip(
-            avatar: const Icon(Icons.push_pin_outlined, size: 18),
+            avatar: const Icon(LucideIcons.pin, size: 15),
             label: const Text('Fijadas'),
             selected: _soloFijadas,
             onSelected: (v) {
@@ -187,14 +188,17 @@ class _TareasPageState extends State<TareasPage> {
           child: SearchBar(
             controller: _busqueda,
             hintText: 'Buscar tarea',
-            leading: const Icon(Icons.search_rounded),
-            elevation: const WidgetStatePropertyAll<double>(0),
+            leading: Icon(
+              LucideIcons.search,
+              size: 18,
+              color: context.colores.tintaTenue,
+            ),
             textInputAction: TextInputAction.search,
             onSubmitted: (_) => _cargar(),
           ),
         ),
         _filtros(),
-        const SizedBox(height: 8),
+        const SizedBox(height: 12),
         avisoPendientes(
           cola: widget.tareasApi.cola,
           usuarioId: widget.sesionStore.usuario?.id,
@@ -203,6 +207,50 @@ class _TareasPageState extends State<TareasPage> {
         ),
       ],
     );
+  }
+
+  List<Widget> _listaAgrupada(bool puedeActualizar) {
+    final fijadas = _tareas.where((t) => t.isFijada).toList(growable: false);
+    final resto = _tareas.where((t) => !t.isFijada).toList(growable: false);
+
+    Widget fila(TareaDto tarea) => TareaFila(
+      tarea: tarea,
+      puedeActualizar: puedeActualizar,
+      onTap: () => _recargarSi(_acciones.abrirDetalle(context, tarea)),
+      onAlternarCompletada: () =>
+          _recargarSi(_acciones.alternarCompletada(context, tarea)),
+      onAlternarFijada: () =>
+          _recargarSi(_acciones.alternarFijada(context, tarea)),
+    );
+
+    if (fijadas.isEmpty || resto.isEmpty) {
+      return <Widget>[
+        TarjetaSeccion(
+          titulo: fijadas.isNotEmpty ? 'Fijadas' : null,
+          contador: fijadas.isNotEmpty ? fijadas.length : null,
+          colorTitulo: fijadas.isNotEmpty ? context.colores.indigoMarca : null,
+          divisorIndent: 56,
+          children: <Widget>[for (final t in _tareas) fila(t)],
+        ),
+      ];
+    }
+
+    return <Widget>[
+      TarjetaSeccion(
+        titulo: 'Fijadas',
+        contador: fijadas.length,
+        colorTitulo: context.colores.indigoMarca,
+        divisorIndent: 56,
+        children: <Widget>[for (final t in fijadas) fila(t)],
+      ),
+      const SizedBox(height: 18),
+      TarjetaSeccion(
+        titulo: 'Tareas',
+        contador: resto.length,
+        divisorIndent: 56,
+        children: <Widget>[for (final t in resto) fila(t)],
+      ),
+    ];
   }
 
   @override
@@ -221,15 +269,13 @@ class _TareasPageState extends State<TareasPage> {
                 IconButton(
                   tooltip: _enTablero ? 'Vista de lista' : 'Vista de tablero',
                   icon: Icon(
-                    _enTablero
-                        ? Icons.view_list_rounded
-                        : Icons.view_kanban_outlined,
+                    _enTablero ? LucideIcons.list : LucideIcons.columns3,
                   ),
                   onPressed: _alternarVista,
                 ),
                 IconButton(
                   tooltip: 'Calendario',
-                  icon: const Icon(Icons.calendar_month_outlined),
+                  icon: const Icon(LucideIcons.calendar),
                   onPressed: () => context.push('/calendario'),
                 ),
               ],
@@ -240,7 +286,7 @@ class _TareasPageState extends State<TareasPage> {
               heroTag: 'fab-tareas-$heroSuffix',
               tooltip: 'Nueva tarea',
               onPressed: () => _recargarSi(_acciones.crear(context)),
-              child: const Icon(Icons.add_rounded),
+              child: const Icon(LucideIcons.plus),
             )
           : null,
       body: _enTablero
@@ -275,7 +321,7 @@ class _TareasPageState extends State<TareasPage> {
           : RefreshIndicator(
               onRefresh: _cargar,
               child: ListView(
-                padding: const EdgeInsets.only(bottom: 96),
+                padding: const EdgeInsets.only(bottom: 104),
                 children: <Widget>[
                   _cabeceraControles(),
                   if (_isCargando)
@@ -284,26 +330,12 @@ class _TareasPageState extends State<TareasPage> {
                     EstadoError(mensaje: _mensajeError!, onReintentar: _cargar)
                   else if (_tareas.isEmpty)
                     const EstadoVacio(
-                      icono: Icons.task_alt_rounded,
+                      icono: LucideIcons.circleCheck,
                       titulo: 'Sin tareas',
                       mensaje: 'No hay tareas que coincidan con los filtros.',
                     )
                   else
-                    for (final tarea in _tareas) ...<Widget>[
-                      TareaFila(
-                        tarea: tarea,
-                        puedeActualizar: puedeActualizar,
-                        onTap: () =>
-                            _recargarSi(_acciones.abrirDetalle(context, tarea)),
-                        onAlternarCompletada: () => _recargarSi(
-                          _acciones.alternarCompletada(context, tarea),
-                        ),
-                        onAlternarFijada: () => _recargarSi(
-                          _acciones.alternarFijada(context, tarea),
-                        ),
-                      ),
-                      const Divider(indent: 56),
-                    ],
+                    ..._listaAgrupada(puedeActualizar),
                 ],
               ),
             ),

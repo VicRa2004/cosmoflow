@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../models/carpeta_model.dart';
 
-/// Desplegable con las carpetas en árbol (sangría, icono). `null` = [textoNinguna].
+/// Desplegable con las carpetas en árbol (sangría, icono Lucide). `null` = [textoNinguna].
 class SelectorCarpeta extends StatelessWidget {
   const SelectorCarpeta({
     super.key,
@@ -25,7 +26,7 @@ class SelectorCarpeta extends StatelessWidget {
       initialValue: valor,
       isExpanded: true,
       decoration: const InputDecoration(
-        prefixIcon: Icon(Icons.folder_outlined, size: 18),
+        prefixIcon: Icon(LucideIcons.folder, size: 18),
       ),
       items: <DropdownMenuItem<int?>>[
         DropdownMenuItem<int?>(child: Text(textoNinguna)),

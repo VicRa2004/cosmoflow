@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../core/theme/colores_noche_indigo.dart';
+import '../../../core/widgets/tarjeta_seccion.dart';
 import '../models/tarea_model.dart';
 
-/// Fila de lista: casilla de completar (48 dp), título, metadatos y acción de fijar.
+/// Fila de lista de tarea: casilla circular (48 dp), título Inter, pills de
+/// metadatos y acción de fijar con iconos Lucide.
 class TareaFila extends StatelessWidget {
   const TareaFila({
     super.key,
@@ -36,10 +40,11 @@ class TareaFila extends StatelessWidget {
     return InkWell(
       onTap: onTap,
       child: ConstrainedBox(
-        constraints: const BoxConstraints(minHeight: 64),
+        constraints: const BoxConstraints(minHeight: 62),
         child: Padding(
-          padding: EdgeInsets.fromLTRB(4, 8, puedeFijar ? 4 : 16, 8),
+          padding: EdgeInsets.fromLTRB(6, 10, puedeFijar ? 6 : 16, 10),
           child: Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: <Widget>[
               SizedBox.square(
                 dimension: 48,
@@ -48,16 +53,20 @@ class TareaFila extends StatelessWidget {
                         value: completada,
                         shape: const CircleBorder(),
                         semanticLabel: completada ? 'Reabrir' : 'Completar',
-                        onChanged: (_) => onAlternarCompletada!(),
+                        onChanged: (_) {
+                          HapticFeedback.selectionClick();
+                          onAlternarCompletada!();
+                        },
                       )
                     : Icon(
                         tarea.estado == EstadoTarea.cancelada
-                            ? Icons.block_rounded
-                            : Icons.radio_button_unchecked_rounded,
+                            ? LucideIcons.ban
+                            : LucideIcons.circle,
+                        size: 20,
                         color: colores.tintaTenue,
                       ),
               ),
-              const SizedBox(width: 4),
+              const SizedBox(width: 2),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -70,6 +79,7 @@ class TareaFila extends StatelessWidget {
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,
                             style: textTheme.bodyLarge?.copyWith(
+                              fontWeight: FontWeight.w500,
                               decoration: completada
                                   ? TextDecoration.lineThrough
                                   : null,
@@ -82,8 +92,8 @@ class TareaFila extends StatelessWidget {
                         if (tarea.bloqueada) ...<Widget>[
                           const SizedBox(width: 6),
                           Icon(
-                            Icons.lock_outline_rounded,
-                            size: 16,
+                            LucideIcons.lock,
+                            size: 14,
                             color: colores.amberAviso,
                             semanticLabel: 'Bloqueada',
                           ),
@@ -91,8 +101,8 @@ class TareaFila extends StatelessWidget {
                         if (tarea.recurrencia != null) ...<Widget>[
                           const SizedBox(width: 6),
                           Icon(
-                            Icons.repeat_rounded,
-                            size: 16,
+                            LucideIcons.repeat,
+                            size: 14,
                             color: colores.indigoMarca,
                             semanticLabel:
                                 'Se repite: ${tarea.recurrencia!.etiqueta}',
@@ -100,7 +110,7 @@ class TareaFila extends StatelessWidget {
                         ],
                       ],
                     ),
-                    const SizedBox(height: 2),
+                    const SizedBox(height: 5),
                     _Metadatos(tarea: tarea, mostrarEstado: mostrarEstado),
                   ],
                 ),
@@ -110,21 +120,19 @@ class TareaFila extends StatelessWidget {
                   tooltip: tarea.isFijada ? 'Desfijar tarea' : 'Fijar tarea',
                   onPressed: onAlternarFijada,
                   icon: Icon(
-                    tarea.isFijada
-                        ? Icons.push_pin_rounded
-                        : Icons.push_pin_outlined,
-                    size: 20,
+                    LucideIcons.pin,
+                    size: 17,
                     color: tarea.isFijada
                         ? colores.indigoMarca
-                        : colores.tintaTenue,
+                        : colores.tintaTenue.withValues(alpha: 0.65),
                   ),
                 )
               else if (tarea.isFijada)
                 Padding(
                   padding: const EdgeInsets.only(left: 8),
                   child: Icon(
-                    Icons.push_pin_rounded,
-                    size: 18,
+                    LucideIcons.pin,
+                    size: 16,
                     color: colores.indigoMarca,
                     semanticLabel: 'Fijada',
                   ),
@@ -146,49 +154,65 @@ class _Metadatos extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colores = context.colores;
-    final base = Theme.of(context).textTheme.bodySmall;
-    final (texto, color) = _vencimiento(colores);
-    final partes = <InlineSpan>[
-      if (tarea.prioridad == PrioridadTarea.alta)
-        TextSpan(
-          text: '● Alta  ',
-          style: TextStyle(color: colores.rosePeligro),
-        ),
-      if (tarea.bloqueada)
-        TextSpan(
-          text: 'Bloqueada · ',
-          style: TextStyle(color: colores.amberAviso),
-        ),
-      TextSpan(
-        text: texto,
-        style: TextStyle(color: color),
-      ),
-      if (mostrarEstado) TextSpan(text: ' · ${tarea.estado.etiqueta}'),
-      if (tarea.recurrencia != null)
-        TextSpan(text: ' · ${tarea.recurrencia!.etiqueta}'),
-      if (tarea.isCompartida) const TextSpan(text: ' · Compartida'),
-    ];
-    return Text.rich(
-      TextSpan(children: partes),
-      maxLines: 1,
-      overflow: TextOverflow.ellipsis,
-      style: base?.copyWith(color: colores.tintaTenue),
+    final (textoFecha, colorFecha, fondoFecha) = _vencimiento(colores);
+
+    return Wrap(
+      spacing: 6,
+      runSpacing: 4,
+      crossAxisAlignment: WrapCrossAlignment.center,
+      children: <Widget>[
+        if (tarea.prioridad == PrioridadTarea.alta)
+          InsigniaPill(
+            texto: 'Alta',
+            icono: LucideIcons.flag,
+            colorTexto: colores.rosePeligro,
+            colorFondo: colores.roseSuave,
+          ),
+        if (textoFecha != null)
+          InsigniaPill(
+            texto: textoFecha,
+            icono: LucideIcons.calendar,
+            colorTexto: colorFecha,
+            colorFondo: fondoFecha,
+          ),
+        if (tarea.bloqueada)
+          InsigniaPill(
+            texto: 'Bloqueada',
+            colorTexto: colores.amberAviso,
+            colorFondo: colores.amberSuave,
+          ),
+        if (mostrarEstado)
+          InsigniaPill(
+            texto: tarea.estado.etiqueta,
+            colorTexto: colores.tintaSuave,
+            colorFondo: colores.elevada,
+          ),
+        if (tarea.isCompartida)
+          InsigniaPill(
+            texto: 'Compartida',
+            icono: LucideIcons.users,
+            colorTexto: colores.indigoMarca,
+            colorFondo: colores.indigoSuave,
+          ),
+      ],
     );
   }
 
-  (String, Color) _vencimiento(ColoresNocheIndigo colores) {
+  (String?, Color, Color) _vencimiento(ColoresNocheIndigo colores) {
     final dia = tarea.fechaVencimiento;
-    if (dia == null || dia.isEmpty) return ('Sin fecha', colores.tintaTenue);
+    if (dia == null || dia.isEmpty) {
+      return (null, colores.tintaTenue, colores.elevada);
+    }
     final ahora = DateTime.now();
     final hoy = DateTime(ahora.year, ahora.month, ahora.day);
     final fecha = DateTime.tryParse(dia);
     if (fecha == null || !tarea.estado.isAbierta) {
-      return (dia, colores.tintaTenue);
+      return (dia, colores.tintaTenue, colores.elevada);
     }
     final dias = fecha.difference(hoy).inDays;
-    if (dias < 0) return ('Vencida · $dia', colores.rosePeligro);
-    if (dias == 0) return ('Hoy', colores.amberAviso);
-    if (dias == 1) return ('Mañana', colores.amberAviso);
-    return (dia, colores.tintaTenue);
+    if (dias < 0) return ('Vencida · $dia', colores.rosePeligro, colores.roseSuave);
+    if (dias == 0) return ('Hoy', colores.amberAviso, colores.amberSuave);
+    if (dias == 1) return ('Mañana', colores.amberAviso, colores.amberSuave);
+    return (dia, colores.tintaSuave, colores.elevada);
   }
 }

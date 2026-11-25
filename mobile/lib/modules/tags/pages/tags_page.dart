@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../core/auth/sesion_store.dart';
 import '../../../core/theme/colores_noche_indigo.dart';
-import '../api/tags_api.dart';
-import '../models/tag_model.dart';
 import '../../../core/widgets/avisos.dart';
 import '../../../core/widgets/confirmar.dart';
 import '../../../core/widgets/estados.dart';
+import '../../../core/widgets/tarjeta_seccion.dart';
+import '../api/tags_api.dart';
+import '../models/tag_model.dart';
 import '../widgets/tag_form_sheet.dart';
 
 /// Vista `/tags` (o pestaña de organización) para buscar, crear, editar y eliminar etiquetas.
@@ -75,23 +77,15 @@ class _TagsPageState extends State<TagsPage> {
         organizacionId: widget.organizacionId,
       );
       if (mounted) {
-        setState(() {
-          _tags = pagina.datos;
-        });
+        setState(() => _tags = pagina.datos);
         widget.onTagsCambiados?.call(pagina.datos);
       }
     } catch (_) {
       if (mounted) {
-        setState(() {
-          _mensajeError = 'No se pudieron cargar los tags.';
-        });
+        setState(() => _mensajeError = 'No se pudieron cargar los tags.');
       }
     } finally {
-      if (mounted) {
-        setState(() {
-          _isCargando = false;
-        });
-      }
+      if (mounted) setState(() => _isCargando = false);
     }
   }
 
@@ -173,21 +167,24 @@ class _TagsPageState extends State<TagsPage> {
                   : 'fab-tags-personal',
               tooltip: 'Nuevo tag',
               onPressed: _crearTag,
-              child: const Icon(Icons.add_rounded),
+              child: const Icon(LucideIcons.plus),
             )
           : null,
       body: RefreshIndicator(
         onRefresh: _cargarTags,
         child: ListView(
-          padding: const EdgeInsets.only(bottom: 96),
+          padding: const EdgeInsets.only(bottom: 104),
           children: <Widget>[
             Padding(
-              padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 14),
               child: SearchBar(
                 controller: _busquedaController,
                 hintText: 'Filtrar por nombre',
-                leading: const Icon(Icons.search_rounded),
-                elevation: const WidgetStatePropertyAll<double>(0),
+                leading: Icon(
+                  LucideIcons.search,
+                  size: 18,
+                  color: colores.tintaTenue,
+                ),
                 textInputAction: TextInputAction.search,
                 onSubmitted: (_) => _cargarTags(),
               ),
@@ -198,31 +195,47 @@ class _TagsPageState extends State<TagsPage> {
               EstadoError(mensaje: _mensajeError!, onReintentar: _cargarTags)
             else if (_tags.isEmpty)
               EstadoVacio(
-                icono: Icons.sell_outlined,
+                icono: LucideIcons.tag,
                 titulo: 'Sin etiquetas',
                 mensaje: widget.organizacionId != null
                     ? 'Aún no hay tags compartidos en la organización.'
                     : 'Crea etiquetas para organizar tus tareas y notas.',
               )
             else
-              for (final tag in _tags) ...<Widget>[
-                ListTile(
-                  onTap: puedeActualizar ? () => _editarTag(tag) : null,
-                  leading: Icon(
-                    Icons.sell_rounded,
-                    color: _parsearColorHex(tag.color) ?? colores.tintaTenue,
-                  ),
-                  title: Text(tag.nombre),
-                  trailing: puedeEliminar
-                      ? IconButton(
-                          tooltip: 'Eliminar tag',
-                          onPressed: () => _eliminarTag(tag),
-                          icon: const Icon(Icons.delete_outline_rounded),
-                        )
-                      : null,
-                ),
-                const Divider(indent: 56),
-              ],
+              TarjetaSeccion(
+                divisorIndent: 62,
+                children: <Widget>[
+                  for (final tag in _tags)
+                    ListTile(
+                      onTap: puedeActualizar ? () => _editarTag(tag) : null,
+                      leading: IconoCaja(
+                        icono: LucideIcons.tag,
+                        color:
+                            _parsearColorHex(tag.color) ?? colores.tintaSuave,
+                        fondo: (_parsearColorHex(tag.color) ?? colores.elevada)
+                            .withValues(
+                              alpha: _parsearColorHex(tag.color) != null
+                                  ? 0.14
+                                  : 1,
+                            ),
+                        dimension: 34,
+                        tamanoIcono: 16,
+                      ),
+                      title: Text(tag.nombre),
+                      trailing: puedeEliminar
+                          ? IconButton(
+                              tooltip: 'Eliminar tag',
+                              onPressed: () => _eliminarTag(tag),
+                              icon: Icon(
+                                LucideIcons.trash2,
+                                size: 18,
+                                color: colores.tintaTenue,
+                              ),
+                            )
+                          : null,
+                    ),
+                ],
+              ),
           ],
         ),
       ),

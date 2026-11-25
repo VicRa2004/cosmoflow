@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../api/auth_api.dart';
 import '../widgets/auth_layout.dart';
@@ -153,7 +154,7 @@ class _RegistroPageState extends State<RegistroPage>
                 autofillHints: const <String>[AutofillHints.name],
                 decoration: const InputDecoration(
                   labelText: 'Nombre',
-                  prefixIcon: Icon(Icons.person_outline_rounded),
+                  prefixIcon: Icon(LucideIcons.user, size: 18),
                 ),
                 validator: (v) => (v == null || v.trim().length < 2)
                     ? 'Ingresa tu nombre (mínimo 2 caracteres)'

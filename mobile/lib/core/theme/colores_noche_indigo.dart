@@ -1,15 +1,20 @@
 import 'package:flutter/material.dart';
 
-/// Tokens semánticos del sistema de diseño «Noche índigo» (`frontend/DESIGN.md`).
+/// Tokens semánticos del sistema de diseño «Noche índigo» adaptado a móvil
+/// con tarjetas agrupadas estilo iOS/Notion sobre lienzo tintado.
 @immutable
 class ColoresNocheIndigo extends ThemeExtension<ColoresNocheIndigo> {
   const ColoresNocheIndigo({
     required this.indigoMarca,
     required this.indigoMarcaHover,
     required this.indigoFoco,
+    required this.indigoSuave,
     required this.rosePeligro,
+    required this.roseSuave,
     required this.amberAviso,
+    required this.amberSuave,
     required this.emeraldExito,
+    required this.emeraldSuave,
     required this.fondo,
     required this.superficie,
     required this.elevada,
@@ -30,9 +35,13 @@ class ColoresNocheIndigo extends ThemeExtension<ColoresNocheIndigo> {
   final Color indigoMarca;
   final Color indigoMarcaHover;
   final Color indigoFoco;
+  final Color indigoSuave;
   final Color rosePeligro;
+  final Color roseSuave;
   final Color amberAviso;
+  final Color amberSuave;
   final Color emeraldExito;
+  final Color emeraldSuave;
   final Color fondo;
   final Color superficie;
   final Color elevada;
@@ -49,22 +58,26 @@ class ColoresNocheIndigo extends ThemeExtension<ColoresNocheIndigo> {
   final Color lateralTenue;
   final Color lateralAcento;
 
-  /// Paleta para el tema claro («El escritorio en calma»).
+  /// Paleta para el tema claro («El escritorio en calma» con tarjetas agrupadas).
   static const ColoresNocheIndigo claro = ColoresNocheIndigo(
     indigoMarca: Color(0xFF4F46E5),
     indigoMarcaHover: Color(0xFF4338CA),
     indigoFoco: Color(0xFF6366F1),
+    indigoSuave: Color(0xFFEEF0FF),
     rosePeligro: Color(0xFFE11D48),
+    roseSuave: Color(0xFFFFF1F2),
     amberAviso: Color(0xFFD97706),
+    amberSuave: Color(0xFFFEF3C7),
     emeraldExito: Color(0xFF059669),
-    fondo: Color(0xFFFCFCFD),
+    emeraldSuave: Color(0xFFECFDF5),
+    fondo: Color(0xFFF3F4F9),
     superficie: Color(0xFFFFFFFF),
-    elevada: Color(0xFFF3F4F8),
-    borde: Color(0xFFE4E6EE),
-    bordeFuerte: Color(0xFFD0D4E0),
-    tinta: Color(0xFF171926),
+    elevada: Color(0xFFECEEF6),
+    borde: Color(0xFFE3E6F0),
+    bordeFuerte: Color(0xFFCBD0E0),
+    tinta: Color(0xFF141726),
     tintaSuave: Color(0xFF3E4259),
-    tintaTenue: Color(0xFF676C85),
+    tintaTenue: Color(0xFF6B708A),
     lateral: Color(0xFF141830),
     lateralElevada: Color(0xFF212747),
     lateralBorde: Color(0xFF252B4A),
@@ -76,21 +89,25 @@ class ColoresNocheIndigo extends ThemeExtension<ColoresNocheIndigo> {
 
   /// Paleta para el tema oscuro («Noche índigo»).
   static const ColoresNocheIndigo oscuro = ColoresNocheIndigo(
-    indigoMarca: Color(0xFF4F46E5),
-    indigoMarcaHover: Color(0xFF4338CA),
-    indigoFoco: Color(0xFF6366F1),
-    rosePeligro: Color(0xFFE11D48),
-    amberAviso: Color(0xFFF59E0B),
-    emeraldExito: Color(0xFF10B981),
-    fondo: Color(0xFF0E101A),
-    superficie: Color(0xFF151824),
-    elevada: Color(0xFF1E2233),
-    borde: Color(0xFF24293D),
-    bordeFuerte: Color(0xFF333952),
-    tinta: Color(0xFFF2F3F8),
-    tintaSuave: Color(0xFFCACDE0),
-    tintaTenue: Color(0xFF969BB5),
-    lateral: Color(0xFF090B17),
+    indigoMarca: Color(0xFF6366F1),
+    indigoMarcaHover: Color(0xFF4F46E5),
+    indigoFoco: Color(0xFF818CF8),
+    indigoSuave: Color(0xFF1E2245),
+    rosePeligro: Color(0xFFFB7185),
+    roseSuave: Color(0xFF2D1620),
+    amberAviso: Color(0xFFFBBF24),
+    amberSuave: Color(0xFF2B2314),
+    emeraldExito: Color(0xFF34D399),
+    emeraldSuave: Color(0xFF122B23),
+    fondo: Color(0xFF0B0D16),
+    superficie: Color(0xFF141724),
+    elevada: Color(0xFF1C2032),
+    borde: Color(0xFF23283D),
+    bordeFuerte: Color(0xFF343B56),
+    tinta: Color(0xFFF3F4F9),
+    tintaSuave: Color(0xFFCBD0E3),
+    tintaTenue: Color(0xFF8F95B2),
+    lateral: Color(0xFF080A14),
     lateralElevada: Color(0xFF14182E),
     lateralBorde: Color(0xFF181C33),
     lateralTinta: Color(0xFFF4F5FA),
@@ -104,9 +121,13 @@ class ColoresNocheIndigo extends ThemeExtension<ColoresNocheIndigo> {
     Color? indigoMarca,
     Color? indigoMarcaHover,
     Color? indigoFoco,
+    Color? indigoSuave,
     Color? rosePeligro,
+    Color? roseSuave,
     Color? amberAviso,
+    Color? amberSuave,
     Color? emeraldExito,
+    Color? emeraldSuave,
     Color? fondo,
     Color? superficie,
     Color? elevada,
@@ -127,9 +148,13 @@ class ColoresNocheIndigo extends ThemeExtension<ColoresNocheIndigo> {
       indigoMarca: indigoMarca ?? this.indigoMarca,
       indigoMarcaHover: indigoMarcaHover ?? this.indigoMarcaHover,
       indigoFoco: indigoFoco ?? this.indigoFoco,
+      indigoSuave: indigoSuave ?? this.indigoSuave,
       rosePeligro: rosePeligro ?? this.rosePeligro,
+      roseSuave: roseSuave ?? this.roseSuave,
       amberAviso: amberAviso ?? this.amberAviso,
+      amberSuave: amberSuave ?? this.amberSuave,
       emeraldExito: emeraldExito ?? this.emeraldExito,
+      emeraldSuave: emeraldSuave ?? this.emeraldSuave,
       fondo: fondo ?? this.fondo,
       superficie: superficie ?? this.superficie,
       elevada: elevada ?? this.elevada,
@@ -159,9 +184,13 @@ class ColoresNocheIndigo extends ThemeExtension<ColoresNocheIndigo> {
         t,
       )!,
       indigoFoco: Color.lerp(indigoFoco, other.indigoFoco, t)!,
+      indigoSuave: Color.lerp(indigoSuave, other.indigoSuave, t)!,
       rosePeligro: Color.lerp(rosePeligro, other.rosePeligro, t)!,
+      roseSuave: Color.lerp(roseSuave, other.roseSuave, t)!,
       amberAviso: Color.lerp(amberAviso, other.amberAviso, t)!,
+      amberSuave: Color.lerp(amberSuave, other.amberSuave, t)!,
       emeraldExito: Color.lerp(emeraldExito, other.emeraldExito, t)!,
+      emeraldSuave: Color.lerp(emeraldSuave, other.emeraldSuave, t)!,
       fondo: Color.lerp(fondo, other.fondo, t)!,
       superficie: Color.lerp(superficie, other.superficie, t)!,
       elevada: Color.lerp(elevada, other.elevada, t)!,

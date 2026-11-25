@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../core/theme/colores_noche_indigo.dart';
+import '../../../core/widgets/tarjeta_seccion.dart';
 import '../models/carpeta_model.dart';
 import '../models/nota_model.dart';
 
-/// Fila de lista: título, carpeta (si se ven todas) y extracto de una línea.
+/// Fila de nota estilo iOS/Notion: icono en caja, título Inter, pill de carpeta
+/// (cuando se ven todas) y extracto limpio.
 class NotaFila extends StatelessWidget {
   const NotaFila({
     super.key,
@@ -20,24 +23,72 @@ class NotaFila extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colores = context.colores;
-    final extracto = nota.contenido.trim().replaceAll(RegExp(r'\s+'), ' ');
-    final meta = <String>[
-      if (carpeta != null) carpeta!.nombre,
-      if (extracto.isNotEmpty) extracto,
-    ].join(' · ');
-    return ListTile(
+    final textTheme = Theme.of(context).textTheme;
+    final extracto = nota.contenido
+        .trim()
+        .replaceAll(RegExp(r'[#*_`>\[\]]+'), '')
+        .replaceAll(RegExp(r'\s+'), ' ');
+
+    return InkWell(
       onTap: onTap,
-      leading: Icon(Icons.sticky_note_2_outlined, color: colores.tintaTenue),
-      title: Text(nota.titulo, maxLines: 1, overflow: TextOverflow.ellipsis),
-      subtitle: meta.isEmpty
-          ? null
-          : Text(
-              meta,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              style: Theme.of(context).textTheme.bodySmall
-                  ?.copyWith(color: colores.tintaTenue),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: <Widget>[
+            IconoCaja(
+              icono: LucideIcons.fileText,
+              color: colores.indigoMarca,
+              fondo: colores.indigoSuave,
+              dimension: 36,
+              tamanoIcono: 18,
             ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Text(
+                    nota.titulo,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: textTheme.bodyLarge?.copyWith(
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  if (extracto.isNotEmpty) ...<Widget>[
+                    const SizedBox(height: 3),
+                    Text(
+                      extracto,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: textTheme.bodySmall?.copyWith(
+                        color: colores.tintaTenue,
+                      ),
+                    ),
+                  ],
+                  if (carpeta != null) ...<Widget>[
+                    const SizedBox(height: 6),
+                    InsigniaPill(
+                      texto: carpeta!.nombre,
+                      icono: LucideIcons.folder,
+                    ),
+                  ],
+                ],
+              ),
+            ),
+            const SizedBox(width: 8),
+            Padding(
+              padding: const EdgeInsets.only(top: 8),
+              child: Icon(
+                LucideIcons.chevronRight,
+                size: 16,
+                color: colores.tintaTenue,
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
