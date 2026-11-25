@@ -1,0 +1,149 @@
+name: Desktop
+
+# En push a main o PR sobre desktop/** ejecuta fmt, clippy y tests.
+# En tags v* (o workflow_dispatch) compila y empaqueta para Linux, macOS y Windows;
+# en tags v* adjunta todos los instaladores al Release de GitHub.
+on:
+  push:
+    branches: [main]
+    tags: ["v*"]
+  pull_request:
+    paths: ["desktop/**", ".github/workflows/desktop.yml"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  cambios:
+    runs-on: ubuntu-24.04
+    outputs:
+      ejecutar: ${{ steps.filtro.outputs.ejecutar }}
+    steps:
+      - uses: actions/checkout@v7
+        if: github.event_name == 'push' && github.ref_type == 'branch'
+        with:
+          fetch-depth: 0
+      - id: filtro
+        run: |
+          if [ "${{ github.event_name }}" != "push" ] || [ "${{ github.ref_type }}" = "tag" ]; then
+            echo "ejecutar=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          ANTES="${{ github.event.before }}"
+          if [ -z "$ANTES" ] || [ "$ANTES" = "0000000000000000000000000000000000000000" ] || ! git cat-file -e "$ANTES^{commit}" 2>/dev/null; then
+            echo "ejecutar=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          if git diff --name-only "$ANTES" "${{ github.sha }}" -- desktop/ .github/workflows/desktop.yml | grep -q .; then
+            echo "ejecutar=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "ejecutar=false" >> "$GITHUB_OUTPUT"
+          fi
+
+  check:
+    needs: cambios
+    if: needs.cambios.outputs.ejecutar == 'true'
+    runs-on: ubuntu-24.04
+    defaults:
+      run:
+        working-directory: desktop
+    steps:
+      - uses: actions/checkout@v7
+      - name: Instalar dependencias de sistema (Linux)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            gcc g++ clang pkg-config \
+            libfontconfig-dev libwayland-dev libxkbcommon-x11-dev \
+            libx11-xcb-dev libssl-dev libzstd-dev libvulkan1
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: desktop
+      - run: cargo fmt --check
+      - run: cargo clippy --all-targets --locked -- -D warnings
+      - run: cargo test --locked
+
+  version:
+    if: github.ref_type == 'tag' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-24.04
+    outputs:
+      version: ${{ steps.validar.outputs.version }}
+    steps:
+      - uses: actions/checkout@v7
+      - name: Validar versión (tag = package.json = desktop/Cargo.toml)
+        id: validar
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          CARGO_VERSION=$(awk '
+            /^\[package\]/ { en_paquete = 1; next }
+            /^\[/ { en_paquete = 0 }
+            en_paquete && /^version[[:space:]]*=/ {
+              gsub(/.*=[[:space:]]*"|".*/, "")
+              print
+              exit
+            }
+          ' desktop/Cargo.toml)
+          [ "$VERSION" = "$CARGO_VERSION" ] || {
+            echo "package.json ($VERSION) ≠ desktop/Cargo.toml ($CARGO_VERSION)"
+            exit 1
+          }
+          if [ "$GITHUB_REF_TYPE" = tag ] && [ "$GITHUB_REF_NAME" != "v$CARGO_VERSION" ]; then
+            echo "El tag $GITHUB_REF_NAME no coincide con desktop/Cargo.toml ($CARGO_VERSION)"
+            exit 1
+          fi
+          echo "version=$CARGO_VERSION" >> "$GITHUB_OUTPUT"
+
+  empaquetar:
+    needs: [check, version]
+    if: github.ref_type == 'tag' || github.event_name == 'workflow_dispatch'
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-24.04
+            nombre: linux-x64
+          - os: macos-15
+            nombre: macos-arm64
+          - os: windows-2022
+            nombre: windows-x64
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v7
+      - name: Instalar dependencias de sistema (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            gcc g++ clang pkg-config \
+            libfontconfig-dev libwayland-dev libxkbcommon-x11-dev \
+            libx11-xcb-dev libssl-dev libzstd-dev libvulkan1
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: desktop
+      - name: Compilar y empaquetar
+        shell: bash
+        run: bash desktop/scripts/empaquetar.sh
+      - uses: actions/upload-artifact@v5
+        with:
+          name: cosmoflow-${{ needs.version.outputs.version }}-${{ matrix.nombre }}
+          path: desktop/dist/*
+
+  release:
+    needs: [version, empaquetar]
+    if: github.ref_type == 'tag'
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/download-artifact@v5
+        with:
+          path: artefactos
+          merge-multiple: true
+      - name: Release de GitHub
+        uses: softprops/action-gh-release@v2
+        with:
+          files: artefactos/*
+          generate_release_notes: true

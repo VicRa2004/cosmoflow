@@ -51,8 +51,14 @@ Un archivo (o carpeta) por **capacidad**, no carpetas globales `views/`/`models/
 
 ## Operación
 
-- **Requisitos (Linux):** Rust (rustup) y `sudo apt install gcc g++ clang libfontconfig-dev libwayland-dev libxkbcommon-x11-dev libx11-xcb-dev libssl-dev libzstd-dev libvulkan1` más un driver Vulkan (Mesa). macOS: Xcode. Windows: MSVC + Windows SDK.
+- **Requisitos (Linux):** Rust (rustup) y `sudo apt install gcc g++ clang libfontconfig-dev libwayland-dev libxkbcommon-x11-dev libx11-xcb-dev libssl-dev libzstd-dev libvulkan1` más un driver Vulkan (Mesa). macOS: Xcode. Windows: MSVC + Windows SDK (y opcionalmente Inno Setup 6 para el instalador `.exe`).
 - **Dependencias Rust:** `cargo add <crate>@=<versión>` dentro de `desktop/` (versión exacta). `gpui-kit` fija su GPUI; súbelo con cuidado y revisa su changelog.
-- **Comandos (desde la raíz):** `pnpm dev:desktop`, `pnpm build:desktop` (binario en `desktop/target/release/cosmoflow`), `pnpm --filter desktop check` (fmt + clippy `-D warnings` + tests).
+- **Comandos (desde la raíz):** `pnpm dev:desktop`, `pnpm build:desktop` (compila `--release --locked` y genera los paquetes en `desktop/dist/`), `pnpm --filter desktop check` (fmt + clippy `-D warnings` + tests).
+- **Empaquetado (`desktop/scripts/empaquetar.sh`):** se optó por un script nativo (siguiendo `gpui-kit.com/docs/packaging.md`) en lugar de `cargo-packager` para evitar dependencias extra y mantener control directo sobre cada formato:
+  - **Linux:** `.tar.gz` portable y `.deb` (con `.desktop` e iconos de `desktop/icons/`).
+  - **macOS:** `.app` (con `CFBundleIdentifier` `com.cosmoflow.desktop` e `icon.icns`) dentro de `.dmg`.
+  - **Windows:** `.zip` portable con `cosmoflow.exe` e instalador Inno Setup (`scripts/instalador.iss`, si `ISCC.exe` está disponible). `build.rs` embebe `icons/icon.ico` en el `.exe` usando `rc.exe` del Windows SDK sin crates adicionales.
+  - Acepta `--sin-compilar` si el binario ya existe en `target/release/`.
+- **CI y releases (`.github/workflows/desktop.yml`):** en `push`/`pull_request` sobre `desktop/**` ejecuta `cargo fmt --check`, `cargo clippy --all-targets --locked -- -D warnings` y `cargo test --locked` en Ubuntu. En tags `v*` valida que `package.json`, `desktop/Cargo.toml` y el tag coinciden, compila y empaqueta en matriz (`ubuntu-24.04`, `macos-15`, `windows-2022`) y adjunta los artefactos al Release de GitHub; también se puede lanzar a mano con `workflow_dispatch`.
 - **Versión:** `pnpm version:bump` actualiza también `Cargo.toml`.
 - La primera compilación tarda (GPUI es grande); las siguientes son incrementales.

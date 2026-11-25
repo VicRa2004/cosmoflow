@@ -36,6 +36,19 @@
 			"description": "Flutter: mismo PR para ci.yml y mobile.yml. Antes de fusionar, actualizar el SDK local y commitear lo que cambien dart format y pubspec.lock.",
 			"matchDatasources": ["flutter-version"],
 			"groupName": "flutter"
+		},
+		{
+			"description": "gpui-kit fija su propia versión de GPUI: revisar changelog y probar compilación en desktop/ antes de fusionar.",
+			"matchManagers": ["cargo"],
+			"matchPackageNames": ["gpui-kit"],
+			"groupName": "gpui-kit",
+			"automerge": false
+		},
+		{
+			"description": "Agrupa el resto de crates Rust de desktop/.",
+			"matchManagers": ["cargo"],
+			"matchPackageNames": ["!gpui-kit"],
+			"groupName": "desktop-cargo"
 		}
 	],
 	"customManagers": [
