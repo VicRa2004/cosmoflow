@@ -1,7 +1,7 @@
 [package]
 name = "cosmoflow"
 # `pnpm version:bump` la mantiene igual que la del package.json raíz.
-version = "0.7.1"
+version = "0.8.0"
 edition = "2024"
 publish = false
 
