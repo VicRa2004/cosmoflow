@@ -3,15 +3,14 @@ import 'package:flutter/material.dart';
 import '../../../core/theme/colores_noche_indigo.dart';
 import '../models/tarea_model.dart';
 
-const Color _ambar = Color(0xFFD97706);
-
-/// Fila de lista: casilla de completar (48 dp), título y una línea de metadatos.
+/// Fila de lista: casilla de completar (48 dp), título, metadatos y acción de fijar.
 class TareaFila extends StatelessWidget {
   const TareaFila({
     super.key,
     required this.tarea,
     required this.onTap,
     this.onAlternarCompletada,
+    this.onAlternarFijada,
     this.mostrarEstado = true,
     this.puedeActualizar = true,
   });
@@ -19,6 +18,7 @@ class TareaFila extends StatelessWidget {
   final TareaDto tarea;
   final VoidCallback onTap;
   final VoidCallback? onAlternarCompletada;
+  final VoidCallback? onAlternarFijada;
   final bool mostrarEstado;
   final bool puedeActualizar;
 
@@ -31,13 +31,14 @@ class TareaFila extends StatelessWidget {
         puedeActualizar &&
         tarea.estado != EstadoTarea.cancelada &&
         onAlternarCompletada != null;
+    final puedeFijar = puedeActualizar && onAlternarFijada != null;
 
     return InkWell(
       onTap: onTap,
       child: ConstrainedBox(
         constraints: const BoxConstraints(minHeight: 64),
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(4, 8, 16, 8),
+          padding: EdgeInsets.fromLTRB(4, 8, puedeFijar ? 4 : 16, 8),
           child: Row(
             children: <Widget>[
               SizedBox.square(
@@ -61,22 +62,73 @@ class TareaFila extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: <Widget>[
-                    Text(
-                      tarea.titulo,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: textTheme.bodyLarge?.copyWith(
-                        decoration: completada
-                            ? TextDecoration.lineThrough
-                            : null,
-                        color: completada ? colores.tintaTenue : colores.tinta,
-                      ),
+                    Row(
+                      children: <Widget>[
+                        Expanded(
+                          child: Text(
+                            tarea.titulo,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            style: textTheme.bodyLarge?.copyWith(
+                              decoration: completada
+                                  ? TextDecoration.lineThrough
+                                  : null,
+                              color: completada
+                                  ? colores.tintaTenue
+                                  : colores.tinta,
+                            ),
+                          ),
+                        ),
+                        if (tarea.bloqueada) ...<Widget>[
+                          const SizedBox(width: 6),
+                          Icon(
+                            Icons.lock_outline_rounded,
+                            size: 16,
+                            color: colores.amberAviso,
+                            semanticLabel: 'Bloqueada',
+                          ),
+                        ],
+                        if (tarea.recurrencia != null) ...<Widget>[
+                          const SizedBox(width: 6),
+                          Icon(
+                            Icons.repeat_rounded,
+                            size: 16,
+                            color: colores.indigoMarca,
+                            semanticLabel:
+                                'Se repite: ${tarea.recurrencia!.etiqueta}',
+                          ),
+                        ],
+                      ],
                     ),
                     const SizedBox(height: 2),
                     _Metadatos(tarea: tarea, mostrarEstado: mostrarEstado),
                   ],
                 ),
               ),
+              if (puedeFijar)
+                IconButton(
+                  tooltip: tarea.isFijada ? 'Desfijar tarea' : 'Fijar tarea',
+                  onPressed: onAlternarFijada,
+                  icon: Icon(
+                    tarea.isFijada
+                        ? Icons.push_pin_rounded
+                        : Icons.push_pin_outlined,
+                    size: 20,
+                    color: tarea.isFijada
+                        ? colores.indigoMarca
+                        : colores.tintaTenue,
+                  ),
+                )
+              else if (tarea.isFijada)
+                Padding(
+                  padding: const EdgeInsets.only(left: 8),
+                  child: Icon(
+                    Icons.push_pin_rounded,
+                    size: 18,
+                    color: colores.indigoMarca,
+                    semanticLabel: 'Fijada',
+                  ),
+                ),
             ],
           ),
         ),
@@ -102,11 +154,18 @@ class _Metadatos extends StatelessWidget {
           text: '● Alta  ',
           style: TextStyle(color: colores.rosePeligro),
         ),
+      if (tarea.bloqueada)
+        TextSpan(
+          text: 'Bloqueada · ',
+          style: TextStyle(color: colores.amberAviso),
+        ),
       TextSpan(
         text: texto,
         style: TextStyle(color: color),
       ),
       if (mostrarEstado) TextSpan(text: ' · ${tarea.estado.etiqueta}'),
+      if (tarea.recurrencia != null)
+        TextSpan(text: ' · ${tarea.recurrencia!.etiqueta}'),
       if (tarea.isCompartida) const TextSpan(text: ' · Compartida'),
     ];
     return Text.rich(
@@ -128,8 +187,8 @@ class _Metadatos extends StatelessWidget {
     }
     final dias = fecha.difference(hoy).inDays;
     if (dias < 0) return ('Vencida · $dia', colores.rosePeligro);
-    if (dias == 0) return ('Hoy', _ambar);
-    if (dias == 1) return ('Mañana', _ambar);
+    if (dias == 0) return ('Hoy', colores.amberAviso);
+    if (dias == 1) return ('Mañana', colores.amberAviso);
     return (dia, colores.tintaTenue);
   }
 }

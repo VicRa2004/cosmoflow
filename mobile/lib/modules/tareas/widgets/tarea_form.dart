@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../core/api/adjuntos_api.dart';
 import '../../../core/theme/colores_noche_indigo.dart';
 import '../../../core/widgets/campo_fecha.dart';
 import '../../../core/widgets/editor_markdown.dart';
@@ -7,7 +8,9 @@ import '../../organizaciones/widgets/selector_color.dart';
 import '../../plantillas/models/plantilla_model.dart';
 import '../../tags/models/tag_model.dart';
 import '../models/tarea_model.dart';
+import 'adjuntos_tarea_section.dart';
 import 'campo_subtareas.dart';
+import 'tarea_form_opciones.dart';
 
 /// Miembro elegible como responsable de una tarea compartida.
 typedef ResponsableCandidato = ({int id, String nombre});
@@ -22,6 +25,9 @@ class TareaFormValores {
     this.fechaInicio,
     this.fechaVencimiento,
     this.color,
+    this.isFijada = false,
+    this.dependeDeId,
+    this.recurrencia,
     this.tagIds = const <int>[],
     this.responsableIds = const <int>[],
     this.subtareas = const <SubtareaDto>[],
@@ -34,6 +40,9 @@ class TareaFormValores {
   final String? fechaInicio;
   final String? fechaVencimiento;
   final String? color;
+  final bool isFijada;
+  final int? dependeDeId;
+  final RecurrenciaTarea? recurrencia;
   final List<int> tagIds;
   final List<int> responsableIds;
   final List<SubtareaDto> subtareas;
@@ -48,6 +57,12 @@ class TareaForm extends StatefulWidget {
     this.encabezado,
     this.tagsDisponibles = const <TagDto>[],
     this.responsablesDisponibles = const <ResponsableCandidato>[],
+    this.tareasCandidatas = const <TareaDto>[],
+    this.adjuntosApi,
+    this.organizacionId,
+    this.equipoId,
+    this.proyectoId,
+    this.selectorArchivo,
     this.onCambio,
   });
 
@@ -56,6 +71,12 @@ class TareaForm extends StatefulWidget {
   final Widget? encabezado;
   final List<TagDto> tagsDisponibles;
   final List<ResponsableCandidato> responsablesDisponibles;
+  final List<TareaDto> tareasCandidatas;
+  final AdjuntosApi? adjuntosApi;
+  final int? organizacionId;
+  final int? equipoId;
+  final int? proyectoId;
+  final SelectorArchivoAdjunto? selectorArchivo;
   final VoidCallback? onCambio;
 
   @override
@@ -71,9 +92,15 @@ class TareaFormState extends State<TareaForm> {
   late EstadoTarea _estado;
   late PrioridadTarea _prioridad;
   String? _color;
+  late bool _isFijada;
+  late int? _dependeDeId;
+  late RecurrenciaTarea? _recurrencia;
   late final Set<int> _tags;
   late final Set<int> _responsables;
   late final List<SubtareaDto> _subtareas;
+  final List<({AdjuntoDto adjunto, String alt})> _adjuntosAgregados =
+      <({AdjuntoDto adjunto, String alt})>[];
+  final Set<String> _adjuntosEliminados = <String>{};
 
   @override
   void initState() {
@@ -96,6 +123,9 @@ class TareaFormState extends State<TareaForm> {
     _estado = t?.estado ?? EstadoTarea.pendiente;
     _prioridad = t?.prioridad ?? p?.prioridad ?? PrioridadTarea.media;
     _color = t != null ? t.color : p?.color;
+    _isFijada = t?.isFijada ?? false;
+    _dependeDeId = t?.dependeDeId;
+    _recurrencia = t?.recurrencia;
     // RN-60: los tags nunca vienen de la plantilla; se eligen en el destino.
     _tags = Set<int>.from(t?.tagIds ?? const <int>[]);
     _responsables = Set<int>.from(t?.responsableIds ?? const <int>[]);
@@ -107,6 +137,37 @@ class TareaFormState extends State<TareaForm> {
     for (final c in <TextEditingController>[_inicio, _vencimiento]) {
       c.addListener(() => widget.onCambio?.call());
     }
+  }
+
+  String _contenidoSincronizado() {
+    var texto = _contenido.text;
+    for (final url in _adjuntosEliminados) {
+      texto = quitarAdjuntoDeMarkdown(texto, url);
+    }
+    for (final item in _adjuntosAgregados) {
+      if (!texto.contains(item.adjunto.url)) {
+        texto = agregarAdjuntoAMarkdown(texto, item.adjunto, alt: item.alt);
+      }
+    }
+    return texto;
+  }
+
+  Future<void> _alSubirAdjunto(AdjuntoDto adjunto, String alt) async {
+    setState(() {
+      _adjuntosEliminados.remove(adjunto.url);
+      _adjuntosAgregados.add((adjunto: adjunto, alt: alt));
+      _contenido.text = _contenidoSincronizado();
+    });
+    widget.onCambio?.call();
+  }
+
+  Future<void> _alEliminarAdjunto(AdjuntoReferencia adjunto) async {
+    setState(() {
+      _adjuntosAgregados.removeWhere((e) => e.adjunto.url == adjunto.url);
+      _adjuntosEliminados.add(adjunto.url);
+      _contenido.text = _contenidoSincronizado();
+    });
+    widget.onCambio?.call();
   }
 
   @override
@@ -130,7 +191,7 @@ class TareaFormState extends State<TareaForm> {
     final colorLimpio = _color?.trim();
     return TareaFormValores(
       titulo: _titulo.text.trim(),
-      contenido: _contenido.text,
+      contenido: _contenidoSincronizado(),
       estado: _estado,
       prioridad: _prioridad,
       fechaInicio: fecha(_inicio),
@@ -138,6 +199,9 @@ class TareaFormState extends State<TareaForm> {
       color: (colorLimpio != null && colorLimpio.isNotEmpty)
           ? colorLimpio
           : null,
+      isFijada: _isFijada,
+      dependeDeId: _dependeDeId,
+      recurrencia: _recurrencia,
       tagIds: _tags.toList(growable: false),
       responsableIds: _responsables.toList(growable: false),
       subtareas: List<SubtareaDto>.unmodifiable(_subtareas),
@@ -242,6 +306,32 @@ class TareaFormState extends State<TareaForm> {
               setState(() => _subtareas.removeAt(indice));
               widget.onCambio?.call();
             },
+          ),
+          TareaFormOpciones(
+            recurrencia: _recurrencia,
+            onRecurrenciaChanged: (v) {
+              setState(() => _recurrencia = v);
+              widget.onCambio?.call();
+            },
+            dependeDeId: _dependeDeId,
+            tareasCandidatas: widget.tareasCandidatas,
+            onDependeDeChanged: (v) {
+              setState(() => _dependeDeId = v);
+              widget.onCambio?.call();
+            },
+            isFijada: _isFijada,
+            onFijadaChanged: (v) {
+              setState(() => _isFijada = v);
+              widget.onCambio?.call();
+            },
+            contenidoParaAdjuntos: _contenidoSincronizado(),
+            adjuntosApi: widget.adjuntosApi,
+            organizacionId: widget.organizacionId,
+            equipoId: widget.equipoId,
+            proyectoId: widget.proyectoId,
+            onAdjuntoSubido: _alSubirAdjunto,
+            onEliminarAdjunto: _alEliminarAdjunto,
+            selectorArchivo: widget.selectorArchivo,
           ),
           if (widget.responsablesDisponibles.isNotEmpty) ...<Widget>[
             const SizedBox(height: 24),

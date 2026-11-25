@@ -37,6 +37,7 @@ class TareasApi {
     String? busqueda,
     EstadoTarea? estado,
     bool asignadas = false,
+    bool? fijada,
     int? tagId,
     int? organizacionId,
     int? equipoId,
@@ -51,6 +52,9 @@ class TareasApi {
     }
     if (asignadas) {
       query['asignadas'] = true;
+    }
+    if (fijada == true) {
+      query['fijada'] = 'true';
     }
     if (tagId != null) {
       query['tagId'] = tagId;
@@ -80,6 +84,9 @@ class TareasApi {
     String? fechaInicio,
     String? fechaVencimiento,
     String? color,
+    bool isFijada = false,
+    int? dependeDeId,
+    RecurrenciaTarea? recurrencia,
     List<int> tagIds = const <int>[],
     List<int> responsableIds = const <int>[],
     List<SubtareaDto> subtareas = const <SubtareaDto>[],
@@ -100,6 +107,9 @@ class TareasApi {
           ? fechaVencimiento
           : null,
       'color': (color != null && color.isNotEmpty) ? color : null,
+      'isFijada': isFijada,
+      'dependeDeId': dependeDeId,
+      'recurrencia': recurrencia?.valorApi,
       'tagIds': tagIds,
       'responsableIds': responsableIds,
       'subtareas': subtareas.map((s) => s.toJson()).toList(growable: false),
@@ -165,6 +175,16 @@ class TareasApi {
     return actualizar(tarea.id, <String, dynamic>{
       'estado': nuevoEstado.valorApi,
     });
+  }
+
+  /// Cambia el estado de una tarea (por ejemplo al moverla en el tablero Kanban).
+  Future<TareaDto> cambiarEstado(int id, EstadoTarea estado) {
+    return actualizar(id, <String, dynamic>{'estado': estado.valorApi});
+  }
+
+  /// Alterna si la tarea está fijada arriba de los listados.
+  Future<TareaDto> alternarFijada(TareaDto tarea) {
+    return actualizar(tarea.id, <String, dynamic>{'isFijada': !tarea.isFijada});
   }
 
   /// Recuento de tareas por destino (`GET /api/tareas/estadisticas`).
