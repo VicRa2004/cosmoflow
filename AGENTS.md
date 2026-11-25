@@ -1,6 +1,6 @@
 # Reglas del Monorepo (Cosmoflow)
 
-Monorepo con `backend/`, `frontend/`, `mobile/` (Flutter) y `desktop/` (Tauri). Sin `apps/` ni `packages/`.
+Monorepo con `backend/`, `frontend/`, `mobile/` (Flutter) y `desktop/` (Rust + GPUI, nativo). Sin `apps/` ni `packages/`.
 
 ## Stack
 
@@ -38,8 +38,8 @@ pnpm dev                # corre frontend y backend concurrentemente en paralelo
 pnpm dev:backend        # corre el backend con Bun (se reinicia al guardar; `--watch`, no `--hot`: el WASM de Prisma se corrompe al recargar en caliente)
 pnpm dev:frontend       # corre el frontend con Vite (puerto 5173)
 pnpm build:frontend     # compila el frontend para producción
-pnpm dev:desktop        # app de escritorio Tauri contra el frontend local (requiere `pnpm dev`)
-pnpm build:desktop      # instalador de escritorio de la plataforma actual
+pnpm dev:desktop        # app de escritorio nativa (GPUI) contra producción; `COSMOFLOW_API_URL` para otro backend
+pnpm build:desktop      # binario release de escritorio de la plataforma actual
 pnpm build:editor-movil # empaqueta el editor Crepe para el WebView de mobile (mobile/assets/editor/); commitear el resultado
 pnpm test:backend       # tests del backend con Bun
 pnpm test:frontend      # tests del frontend con Vitest
@@ -67,9 +67,9 @@ Bun solo ejecuta el backend: `dev`, `test`, `start`, `scripts/*`, `prisma.seed`.
 
 ## Versiones y releases
 
-Una sola versión SemVer para todo el monorepo, empezando en `0.0.1`. Vive en `package.json` (raíz, `backend/`, `frontend/`) y en `mobile/pubspec.yaml` (`X.Y.Z+1`); la web la muestra en el menú de usuario y la app en Perfil.
+Una sola versión SemVer para todo el monorepo, empezando en `0.0.1`. Vive en `package.json` (raíz, `backend/`, `frontend/`), `mobile/pubspec.yaml` (`X.Y.Z+1`) y `desktop/Cargo.toml`; la web la muestra en el menú de usuario y la app en Perfil.
 
-Para publicar: `pnpm version:bump X.Y.Z` (actualiza los cuatro archivos), commit, y `git tag vX.Y.Z && git push --tags`. El workflow `APK Android` (`.github/workflows/mobile.yml`) comprueba que tag y archivos coinciden, compila el APK y lo adjunta a un Release de GitHub. También se puede lanzar a mano desde Actions (deja el APK como artefacto).
+Para publicar: `pnpm version:bump X.Y.Z` (actualiza todos), commit, y `git tag vX.Y.Z && git push --tags`. El workflow `APK Android` (`.github/workflows/mobile.yml`) comprueba que tag y archivos coinciden, compila el APK y lo adjunta a un Release de GitHub. También se puede lanzar a mano desde Actions (deja el APK como artefacto).
 
 ## Idioma del código
 
@@ -103,7 +103,7 @@ biome.json / package.json / pnpm-workspace.yaml  # raíz: lint + workspaces
 backend/   # Hono + Bun + Prisma (arquitectura hexagonal)
 frontend/  # Vite + React + TanStack Suite + Tailwind v4 (modular y core)
 mobile/    # Flutter (Android/iOS)
-desktop/   # Tauri 2: ventana nativa que carga la web de producción
+desktop/   # Rust + GPUI (gpui-kit): cliente nativo que habla con la API
 ```
 
 - `backend/` tiene sus reglas propias en `backend/AGENTS.md`. Leerlo antes de tocar `backend/`.

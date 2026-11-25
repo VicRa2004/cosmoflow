@@ -1,32 +1,57 @@
-# Reglas de Desktop — Tauri 2 (Cosmoflow)
+# Reglas de Desktop — Rust + GPUI (Cosmoflow)
 
 > Parte del monorepo Cosmoflow. Para reglas generales del monorepo y convenciones de idioma ver `../AGENTS.md`.
 
 ## Qué es
 
-Ventana nativa (Tauri 2) que carga la web de producción `https://cosmoflow.saasil.mx`. **No empaqueta el frontend**: la interfaz, la API y la sesión (cookie httpOnly del refresh token, mismo origen) son las de la web, así que la app se actualiza con cada deploy y necesita internet.
+Cliente de escritorio **nativo** en Rust con [GPUI Kit](https://gpui-kit.com) (`gpui-kit`: GPUI de Zed + componentes estilo shadcn, renderizado por GPU). No hay WebView: habla con la API REST del backend igual que la app móvil.
 
-- En desarrollo (`pnpm dev:desktop`) carga `http://localhost:5173`: levanta antes `pnpm dev`.
-- La web remota **no** tiene acceso a la IPC de Tauri (no hay capabilities `remote`). No añadirlas sin revisar el riesgo: cualquier XSS en la web pasaría a ejecutar comandos nativos.
-- Los enlaces que abren pestaña nueva (`target=_blank`) se abren en el navegador del sistema (`src-tauri/src/main.rs`).
+- **Backend:** por defecto `https://cosmoflow.saasil.mx/api`. Para desarrollo local: `COSMOFLOW_API_URL=http://localhost:3000/api pnpm dev:desktop`.
+- **Sesión:** cabecera `X-Client-Platform: mobile` (el backend devuelve el refresh token en el cuerpo). El refresh token va al llavero del sistema (`keyring`: Keychain, Credential Manager, Secret Service); el access token solo vive en memoria. Un 401 renueva una vez y reintenta (`src/api.rs`).
+- Registro, recuperar contraseña, Google y todo lo que aún no es nativo se abre en la web (comando "Abrir en la web").
+
+## Stack
+
+| Pieza | Crate | Por qué |
+| --- | --- | --- |
+| UI | `gpui-kit` (fijado con `=`) | Una sola dependencia: GPUI + componentes (Sidebar, Command, Input, Dialog, TextView markdown, listas virtuales) + iconos Lucide. |
+| HTTP | `ureq` (bloqueante, rustls) | Sin runtime tokio. Se llama siempre dentro de `cx.background_spawn`, nunca en el hilo de la UI. |
+| Secretos | `keyring` | Llavero nativo de cada sistema. |
+| Enlaces | `open` | Abrir la web en el navegador del sistema. |
 
 ## Estructura
 
 ```text
 desktop/
-├── package.json          # solo el CLI de Tauri (@tauri-apps/cli)
-└── src-tauri/
-    ├── Cargo.toml / Cargo.lock
-    ├── tauri.conf.json   # URL que se carga, identificador, targets del instalador
-    ├── icons/            # generados con `pnpm --filter desktop tauri icon ../frontend/public/favicon.svg`
-    └── src/main.rs       # ventana principal
+├── Cargo.toml / Cargo.lock
+├── icons/              # iconos para los instaladores
+├── .agents/skills/     # gpui-kit y gpui-kit-design-guides (oficiales de longbridge/gpui-kit)
+└── src/
+    ├── main.rs         # arranque, ventana, ApiGlobal
+    ├── api.rs          # cliente HTTP + sesión
+    ├── modelos.rs      # DTOs del backend (solo los campos usados)
+    ├── app.rs          # raíz: cargando → login → espacio
+    ├── login.rs        # login + verificación en dos pasos
+    ├── espacio.rs      # sidebar, atajos y paleta de comandos (Ctrl/Cmd+K)
+    └── <capacidad>.rs  # una vista por capacidad: tareas, notas, notificaciones
 ```
+
+Un archivo (o carpeta) por **capacidad**, no carpetas globales `views/`/`models/`. Si una capacidad crece mucho, pasa a `src/<capacidad>/`.
+
+## Reglas
+
+- **Lee las skills `gpui-kit` (Coding Guides) y `gpui-kit-design-guides` antes de tocar UI.** Nunca inventes una API: busca la firma real en `~/.cargo/registry/src/*/gpui-component-0.11.0/` o `gpui-base-*`.
+- Importa `use gpui_kit::component::*; use gpui_kit::*;`. Iconos: `gpui_kit::assets::IconName` (catálogo Lucide completo).
+- E/S siempre en `cx.background_spawn`; actualiza la entidad en `this.update(...)` y llama a `cx.notify()` una vez. Estados explícitos de carga, vacío y error en cada vista.
+- Errores de acciones → `window.push_notification(Notification::error(..))`; errores de carga → `Alert` en la vista.
+- IDs de elementos repetidos con el id de dominio (`("tarea", id)`), nunca con el índice.
+- Atajos: `Ctrl`/`Cmd` + `1/2/3` secciones, `K` paleta, `N` nueva tarea, `R` recargar (`espacio.rs`). Un comando nuevo va en la paleta y, si es frecuente, con atajo.
+- Textos de UI y código en español (ver `../AGENTS.md`).
 
 ## Operación
 
-- **Requisitos:** Rust (rustup) y, en Linux, `sudo apt install pkg-config libwebkit2gtk-4.1-dev libgtk-3-dev librsvg2-dev libayatana-appindicator3-dev libssl-dev build-essential`.
-- **Dependencias JS:** pnpm desde la raíz (`pnpm add -E -D <paquete> --filter desktop`). **Rust:** `cargo add` dentro de `src-tauri/`; plugins de Tauri en la misma versión mayor (2).
-- **Comandos (desde la raíz):** `pnpm dev:desktop`, `pnpm build:desktop` (instaladores en `src-tauri/target/release/bundle/`).
-- **Chequeo:** `cd desktop/src-tauri && cargo check && cargo clippy`.
-- **Versión:** sale del `package.json` raíz (`tauri.conf.json` → `"version": "../../package.json"`); `pnpm version:bump` no necesita tocar nada aquí.
-- Cada plataforma se compila en su propio sistema (Windows → `.exe` NSIS, macOS → `.app`/`.dmg`, Linux → AppImage/`.deb`).
+- **Requisitos (Linux):** Rust (rustup) y `sudo apt install gcc g++ clang libfontconfig-dev libwayland-dev libxkbcommon-x11-dev libx11-xcb-dev libssl-dev libzstd-dev libvulkan1` más un driver Vulkan (Mesa). macOS: Xcode. Windows: MSVC + Windows SDK.
+- **Dependencias Rust:** `cargo add <crate>@=<versión>` dentro de `desktop/` (versión exacta). `gpui-kit` fija su GPUI; súbelo con cuidado y revisa su changelog.
+- **Comandos (desde la raíz):** `pnpm dev:desktop`, `pnpm build:desktop` (binario en `desktop/target/release/cosmoflow`), `pnpm --filter desktop check` (fmt + clippy `-D warnings` + tests).
+- **Versión:** `pnpm version:bump` actualiza también `Cargo.toml`.
+- La primera compilación tarda (GPUI es grande); las siguientes son incrementales.

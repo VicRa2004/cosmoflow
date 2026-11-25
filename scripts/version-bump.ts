@@ -1,5 +1,5 @@
 /**
- * Sube la versión única del monorepo en los cuatro archivos que la guardan.
+ * Sube la versión única del monorepo en los archivos que la guardan.
  * Uso: `pnpm version:bump 0.6.0` desde la raíz. Luego: commit y `git tag v0.6.0`.
  */
 import { readFileSync, writeFileSync } from "node:fs";
@@ -16,6 +16,7 @@ const archivos: [string, RegExp, string][] = [
 	["backend/package.json", /"version": "[^"]+"/, `"version": "${version}"`],
 	["frontend/package.json", /"version": "[^"]+"/, `"version": "${version}"`],
 	["mobile/pubspec.yaml", /^version: .+$/m, `version: ${version}+1`],
+	["desktop/Cargo.toml", /^version = "[^"]+"/m, `version = "${version}"`],
 ];
 
 for (const [ruta, patron, reemplazo] of archivos) {
