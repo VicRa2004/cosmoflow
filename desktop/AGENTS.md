@@ -8,7 +8,8 @@ Cliente de escritorio **nativo** en Rust con [GPUI Kit](https://gpui-kit.com) (`
 
 - **Backend:** por defecto `https://cosmoflow.saasil.mx/api`. Para desarrollo local: `COSMOFLOW_API_URL=http://localhost:3000/api pnpm dev:desktop`.
 - **Sesión:** cabecera `X-Client-Platform: mobile` (el backend devuelve el refresh token en el cuerpo). El refresh token va al llavero del sistema (`keyring`: Keychain, Credential Manager, Secret Service); el access token solo vive en memoria. Un 401 renueva una vez y reintenta (`src/api.rs`).
-- Registro, recuperar contraseña, Google y todo lo que aún no es nativo se abre en la web (comando "Abrir en la web").
+- **Google:** redirección a loopback (RFC 8252, `src/google.rs`). La app escucha en `127.0.0.1:<puerto libre>/<nonce>`, abre `/api/auth/google?escritorio=<puerto>-<nonce>` en el navegador y el backend (`GoogleController`) redirige ahí con el refresh token. No hace falta registrar un esquema `cosmoflow://` en el sistema ni tocar la consola de Google.
+- Registro, recuperar contraseña y todo lo que aún no es nativo se abre en la web (comando "Abrir en la web").
 
 ## Stack
 

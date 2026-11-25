@@ -64,4 +64,43 @@ describe("GoogleController", () => {
 		const cookieRefresh = cookies.find((c) => c.startsWith("refresh_token="));
 		expect(cookieRefresh).toBeUndefined();
 	});
+
+	const nonce = "a".repeat(32);
+
+	it("en flujo de escritorio redirige al loopback de la app con el refresh token", async () => {
+		const app = crearApp("rt-escritorio-1");
+		const state = `estado123.escritorio-51234-${nonce}`;
+		const res = await app.request(
+			`/api/auth/google/callback?code=codigo&state=${state}`,
+			{ headers: { Cookie: `google_oauth=${state}.verifier456` } },
+		);
+
+		expect(res.status).toBe(302);
+		expect(res.headers.get("location")).toBe(
+			`http://127.0.0.1:51234/${nonce}?refreshToken=rt-escritorio-1`,
+		);
+		const cookies = res.headers.getSetCookie();
+		expect(cookies.some((c) => c.startsWith("refresh_token="))).toBe(false);
+	});
+
+	it("en flujo de escritorio con state inválido vuelve al loopback con error", async () => {
+		const app = crearApp();
+		const res = await app.request(
+			`/api/auth/google/callback?code=codigo&state=otro.escritorio-51234-${nonce}`,
+		);
+
+		expect(res.headers.get("location")).toBe(
+			`http://127.0.0.1:51234/${nonce}?error=google`,
+		);
+	});
+
+	it("ignora destinos de escritorio malformados o con puerto reservado", async () => {
+		const app = crearApp();
+		for (const sufijo of [`80-${nonce}`, "51234-corto", `51234-${nonce}x`]) {
+			const res = await app.request(
+				`/api/auth/google/callback?code=codigo&state=x.escritorio-${sufijo}`,
+			);
+			expect(res.headers.get("location") ?? "").not.toContain("127.0.0.1");
+		}
+	});
 });

@@ -113,6 +113,14 @@ impl Api {
         self.guardar_sesion(r)
     }
 
+    /// Login con Google: abre el navegador y espera la vuelta en un puerto local
+    /// (redirección a loopback, RFC 8252). Bloquea hasta 5 minutos.
+    pub fn login_google(&self) -> Resultado<Usuario> {
+        let refresh = crate::google::autenticar(&self.base)?;
+        llavero::guardar(&refresh);
+        self.renovar()
+    }
+
     /// Recupera la sesión guardada en el llavero al arrancar la app.
     pub fn restaurar(&self) -> Resultado<Usuario> {
         self.renovar()

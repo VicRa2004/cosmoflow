@@ -8,6 +8,7 @@ use gpui_kit::component::{
     button::{Button, ButtonVariants as _},
     input::{Input, InputEvent, InputState},
 };
+use gpui_kit::prelude::FluentBuilder as _;
 use gpui_kit::*;
 
 use crate::api::Login;
@@ -22,6 +23,7 @@ pub struct LoginView {
     /// Token intermedio cuando la cuenta pide el segundo paso.
     token_dos_pasos: Option<String>,
     enviando: bool,
+    esperando_google: bool,
     error: Option<SharedString>,
     _suscripciones: Vec<Subscription>,
 }
@@ -58,6 +60,7 @@ impl LoginView {
             codigo,
             token_dos_pasos: None,
             enviando: false,
+            esperando_google: false,
             error: None,
             _suscripciones,
         }
@@ -97,6 +100,33 @@ impl LoginView {
                     Ok(Login::DosPasos(t)) => {
                         this.token_dos_pasos = Some(t);
                         this.codigo.read(cx).focus_handle(cx).focus(window, cx);
+                    }
+                    Err(e) => this.error = Some(e.mensaje.into()),
+                }
+                cx.notify();
+            })
+            .ok();
+        })
+        .detach();
+    }
+
+    fn entrar_con_google(&mut self, window: &mut Window, cx: &mut Context<Self>) {
+        if self.enviando || self.esperando_google {
+            return;
+        }
+        self.esperando_google = true;
+        self.error = None;
+        cx.notify();
+        let api = crate::api(cx);
+        cx.spawn_in(window, async move |this, cx| {
+            let resultado = cx.background_spawn(async move { api.login_google() }).await;
+            this.update_in(cx, |this, window, cx| {
+                this.esperando_google = false;
+                match resultado {
+                    Ok(usuario) => {
+                        // El usuario viene del navegador: traer la app al frente.
+                        window.activate_window();
+                        cx.emit(Autenticado(usuario));
                     }
                     Err(e) => this.error = Some(e.mensaje.into()),
                 }
@@ -176,6 +206,23 @@ impl Render for LoginView {
                             .disabled(self.enviando)
                             .on_click(cx.listener(|this, _, window, cx| this.enviar(window, cx))),
                     )
+                    .when(!dos_pasos, |d| {
+                        d.child(
+                            Button::new("google")
+                                .outline()
+                                .w_full()
+                                .label(if self.esperando_google {
+                                    "Esperando a Google en el navegador…"
+                                } else {
+                                    "Continuar con Google"
+                                })
+                                .loading(self.esperando_google)
+                                .disabled(self.enviando || self.esperando_google)
+                                .on_click(cx.listener(|this, _, window, cx| {
+                                    this.entrar_con_google(window, cx)
+                                })),
+                        )
+                    })
                     .child(
                         Button::new("crear-cuenta")
                             .ghost()

@@ -1158,6 +1158,7 @@ dependencies = [
 name = "cosmoflow"
 version = "0.7.1"
 dependencies = [
+ "getrandom 0.4.3",
  "gpui-kit",
  "keyring",
  "open",

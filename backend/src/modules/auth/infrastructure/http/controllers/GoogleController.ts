@@ -10,6 +10,20 @@ import { setRefreshTokenCookie } from "../refreshTokenCookie";
 
 const COOKIE_OAUTH = "google_oauth";
 
+// App de escritorio: redirección a loopback (RFC 8252) con `?escritorio=<puerto>-<nonce>`.
+// El nonce es la ruta donde escucha la app: otra web no puede colarle una sesión ajena.
+const ESCRITORIO = /^(\d{4,5})-([a-f0-9]{32})$/;
+
+/** URL de vuelta a la app de escritorio si el state la pide, o `null`. */
+function vueltaEscritorio(state: string | undefined): string | null {
+	const sufijo = state?.split(".escritorio-")[1];
+	const m = sufijo ? ESCRITORIO.exec(sufijo) : null;
+	if (!m) return null;
+	const puerto = Number(m[1]);
+	if (puerto < 1024 || puerto > 65535) return null;
+	return `http://127.0.0.1:${puerto}/${m[2]}`;
+}
+
 // Lax (no Strict): el callback llega navegando desde Google y la cookie debe viajar.
 const opcionesCookie = {
 	httpOnly: true,
@@ -36,9 +50,17 @@ export class GoogleController extends BaseController {
 	iniciar = async (c: Context): Promise<Response> => {
 		const esMovil =
 			c.req.query("movil") === "1" || c.req.query("plataforma") === "mobile";
-		if (!this.deps) return this.volverConError(c, esMovil);
+		const escritorio = c.req.query("escritorio") ?? "";
+		const sufijo = ESCRITORIO.test(escritorio)
+			? `.escritorio-${escritorio}`
+			: esMovil
+				? ".movil"
+				: "";
+		if (!this.deps) {
+			return this.volverConError(c, esMovil, vueltaEscritorio(sufijo));
+		}
 
-		const state = `${randomBytes(16).toString("hex")}${esMovil ? ".movil" : ""}`;
+		const state = `${randomBytes(16).toString("hex")}${sufijo}`;
 		const codeVerifier = randomBytes(32).toString("base64url");
 		setCookie(c, COOKIE_OAUTH, `${state}.${codeVerifier}`, {
 			...opcionesCookie,
@@ -60,10 +82,11 @@ export class GoogleController extends BaseController {
 		const esMovil = Boolean(
 			state?.endsWith(".movil") || stateQuery?.endsWith(".movil"),
 		);
+		const escritorio = vueltaEscritorio(state || stateQuery);
 		// El state ata la respuesta a este navegador (CSRF en el login).
 		const valido = code && state && codeVerifier && stateQuery === state;
 		if (!this.deps || !valido) {
-			return this.volverConError(c, esMovil);
+			return this.volverConError(c, esMovil, escritorio);
 		}
 
 		try {
@@ -71,6 +94,11 @@ export class GoogleController extends BaseController {
 				code,
 				codeVerifier,
 			});
+			if (escritorio) {
+				return c.redirect(
+					`${escritorio}?refreshToken=${encodeURIComponent(refreshToken)}`,
+				);
+			}
 			if (esMovil) {
 				return this.responderMovil(
 					c,
@@ -84,11 +112,16 @@ export class GoogleController extends BaseController {
 			return c.redirect(`${env.APP_URL}/login/google`);
 		} catch (error) {
 			log.warn("Login con Google fallido", { error: String(error) });
-			return this.volverConError(c, esMovil);
+			return this.volverConError(c, esMovil, escritorio);
 		}
 	};
 
-	private volverConError(c: Context, esMovil = false): Response {
+	private volverConError(
+		c: Context,
+		esMovil = false,
+		escritorio: string | null = null,
+	): Response {
+		if (escritorio) return c.redirect(`${escritorio}?error=google`);
 		if (esMovil) {
 			return this.responderMovil(
 				c,

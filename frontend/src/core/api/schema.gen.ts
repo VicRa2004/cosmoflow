@@ -1288,7 +1288,7 @@ export interface paths {
         };
         /**
          * Iniciar sesión con Google
-         * @description Navegación del navegador (no fetch): redirige a Google. Sin `GOOGLE_CLIENT_ID`/`GOOGLE_CLIENT_SECRET` vuelve a `/login?error=google`.
+         * @description Navegación del navegador (no fetch): redirige a Google. Sin `GOOGLE_CLIENT_ID`/`GOOGLE_CLIENT_SECRET` vuelve a `/login?error=google`. App móvil: `?movil=1` (vuelve a `cosmoflow://login-callback`). App de escritorio: `?escritorio=<puerto>-<nonce de 32 hex>` (vuelve a `http://127.0.0.1:<puerto>/<nonce>?refreshToken=…`).
          */
         get: {
             parameters: {
