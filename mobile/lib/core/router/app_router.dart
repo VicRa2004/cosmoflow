@@ -23,6 +23,8 @@ import '../../modules/organizaciones/pages/organizaciones_page.dart';
 import '../../modules/organizaciones/pages/proyecto_detalle_page.dart';
 import '../../modules/organizaciones/pages/proyecto_editor_page.dart';
 import '../../modules/organizaciones/pages/rol_organizacion_editor_page.dart';
+import '../../modules/papelera/api/papelera_api.dart';
+import '../../modules/papelera/pages/papelera_page.dart';
 import '../../modules/perfil/pages/perfil_page.dart';
 import '../../modules/plantillas/api/plantillas_api.dart';
 import '../../modules/plantillas/pages/plantilla_editor_page.dart';
@@ -56,6 +58,7 @@ GoRouter crearAppRouter({
   required OrganizacionesApi organizacionesApi,
   PlantillasApi? plantillasApi,
   NotificacionesApi? notificacionesApi,
+  PapeleraApi? papeleraApi,
   PushService? push,
   RecordatoriosService? recordatorios,
   bool cargarDatosIniciales = true,
@@ -64,6 +67,7 @@ GoRouter crearAppRouter({
       plantillasApi ?? PlantillasApi(apiClient: authApi.apiClient);
   final notifApi =
       notificacionesApi ?? NotificacionesApi(apiClient: authApi.apiClient);
+  final papelera = papeleraApi ?? PapeleraApi(apiClient: authApi.apiClient);
   void resincronizarRecordatorios() {
     if (recordatorios != null) {
       unawaited(recordatorios.sincronizar(forzar: true));
@@ -227,6 +231,14 @@ GoRouter crearAppRouter({
         builder: (context, state) => TagsPage(
           sesionStore: sesionStore,
           tagsApi: tagsApi,
+          cargarAlIniciar: cargarDatosIniciales,
+        ),
+      ),
+      GoRoute(
+        path: '/papelera',
+        builder: (context, state) => PapeleraPage(
+          sesionStore: sesionStore,
+          papeleraApi: papelera,
           cargarAlIniciar: cargarDatosIniciales,
         ),
       ),
