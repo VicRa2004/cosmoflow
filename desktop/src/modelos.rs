@@ -173,6 +173,217 @@ pub struct BandejaNotificaciones {
     pub no_leidas: usize,
 }
 
+#[derive(Debug, Clone, Default, Deserialize)]
+#[serde(rename_all = "camelCase", default)]
+pub struct Organizacion {
+    pub id: i64,
+    pub nombre: String,
+    pub descripcion: String,
+    pub color: Option<String>,
+    pub avatar_url: Option<String>,
+    pub is_admin: bool,
+    pub permisos: Vec<String>,
+}
+
+impl Organizacion {
+    /// Comprueba si el usuario tiene un permiso dentro de esta organización.
+    pub fn puede(&self, permiso: &str) -> bool {
+        self.is_admin || self.permisos.iter().any(|p| p == permiso)
+    }
+}
+
+#[derive(Debug, Clone, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct RolResumen {
+    pub id: i64,
+    pub nombre: String,
+}
+
+#[derive(Debug, Clone, Default, Deserialize)]
+#[serde(rename_all = "camelCase", default)]
+pub struct MiembroOrganizacion {
+    pub usuario_id: i64,
+    pub nombre: String,
+    pub email: String,
+    pub avatar_url: Option<String>,
+    pub is_admin: bool,
+    pub roles: Vec<RolResumen>,
+}
+
+#[derive(Debug, Clone, Default, Deserialize)]
+#[serde(rename_all = "camelCase", default)]
+pub struct InvitacionOrganizacion {
+    pub id: i64,
+    pub email: String,
+    pub expira_en: String,
+    pub is_caducada: bool,
+}
+
+#[derive(Debug, Clone, Default, Deserialize)]
+#[serde(rename_all = "camelCase", default)]
+pub struct RolOrganizacion {
+    pub id: i64,
+    pub nombre: String,
+    pub permisos: Vec<String>,
+    pub total_miembros: i64,
+}
+
+#[derive(Debug, Clone, Default, Deserialize)]
+#[serde(rename_all = "camelCase", default)]
+pub struct PlantillaRol {
+    pub nombre: String,
+    pub permisos: Vec<String>,
+}
+
+#[derive(Debug, Clone, Default, Deserialize)]
+#[serde(rename_all = "camelCase", default)]
+pub struct CatalogoPermisosOrganizacion {
+    pub permisos: Vec<String>,
+    pub plantillas: Vec<PlantillaRol>,
+}
+
+#[derive(Debug, Clone, Default, Deserialize)]
+#[serde(rename_all = "camelCase", default)]
+pub struct MiembroEquipo {
+    pub usuario_id: i64,
+    pub puede_crear_tareas: bool,
+}
+
+#[derive(Debug, Clone, Default, Deserialize)]
+#[serde(rename_all = "camelCase", default)]
+pub struct Equipo {
+    pub id: i64,
+    pub nombre: String,
+    pub descripcion: String,
+    pub color: Option<String>,
+    pub avatar_url: Option<String>,
+    pub lider_id: Option<i64>,
+    pub miembros: Vec<MiembroEquipo>,
+    pub tag_ids: Vec<i64>,
+}
+
+impl Equipo {
+    /// RN-22: sin líder, cualquier miembro del equipo puede crear tareas;
+    /// con líder, solo el líder o quien tenga `puede_crear_tareas`.
+    pub fn puede_crear_tareas(&self, usuario_id: Option<i64>) -> bool {
+        let Some(uid) = usuario_id else {
+            return false;
+        };
+        let Some(miembro) = self.miembros.iter().find(|m| m.usuario_id == uid) else {
+            return false;
+        };
+        match self.lider_id {
+            None => true,
+            Some(lider) => lider == uid || miembro.puede_crear_tareas,
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum EstadoProyecto {
+    #[default]
+    Activo,
+    EnPausa,
+    Terminado,
+}
+
+impl EstadoProyecto {
+    pub const TODOS: [Self; 3] = [Self::Activo, Self::EnPausa, Self::Terminado];
+
+    pub fn api(self) -> &'static str {
+        match self {
+            Self::Activo => "activo",
+            Self::EnPausa => "en_pausa",
+            Self::Terminado => "terminado",
+        }
+    }
+
+    pub fn etiqueta(self) -> &'static str {
+        match self {
+            Self::Activo => "Activo",
+            Self::EnPausa => "En pausa",
+            Self::Terminado => "Terminado",
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy, Default, Deserialize)]
+#[serde(rename_all = "camelCase", default)]
+pub struct ProgresoProyecto {
+    pub tareas: i64,
+    pub completadas: i64,
+}
+
+#[derive(Debug, Clone, Default, Deserialize)]
+#[serde(rename_all = "camelCase", default)]
+pub struct Proyecto {
+    pub id: i64,
+    pub nombre: String,
+    pub descripcion: String,
+    pub estado: EstadoProyecto,
+    pub color: Option<String>,
+    pub fecha_inicio: Option<String>,
+    pub fecha_fin: Option<String>,
+    pub progreso: ProgresoProyecto,
+    pub equipo_ids: Vec<i64>,
+    pub integrante_ids: Vec<i64>,
+}
+
+#[derive(Debug, Clone, Copy, Default, Deserialize)]
+#[serde(default)]
+pub struct PorEstadoEstadisticas {
+    pub pendiente: i64,
+    pub en_progreso: i64,
+    pub completada: i64,
+    pub cancelada: i64,
+}
+
+#[derive(Debug, Clone, Copy, Default, Deserialize)]
+#[serde(default)]
+pub struct PorPrioridadEstadisticas {
+    pub baja: i64,
+    pub media: i64,
+    pub alta: i64,
+}
+
+#[derive(Debug, Clone, Copy, Default, Deserialize)]
+#[serde(rename_all = "camelCase", default)]
+pub struct ResponsableEstadistica {
+    pub usuario_id: i64,
+    pub abiertas: i64,
+    pub completadas: i64,
+}
+
+#[derive(Debug, Clone, Default, Deserialize)]
+#[serde(rename_all = "camelCase", default)]
+pub struct EstadisticasTareas {
+    pub total: i64,
+    pub por_estado: PorEstadoEstadisticas,
+    pub abiertas_por_prioridad: PorPrioridadEstadisticas,
+    pub vencidas: i64,
+    pub por_responsable: Vec<ResponsableEstadistica>,
+}
+
+impl EstadisticasTareas {
+    pub fn abiertas(&self) -> i64 {
+        self.por_estado.pendiente + self.por_estado.en_progreso
+    }
+
+    pub fn cerradas(&self) -> i64 {
+        self.por_estado.completada + self.por_estado.cancelada
+    }
+
+    pub fn porcentaje_avance(&self) -> i64 {
+        let cerradas = self.cerradas();
+        if cerradas == 0 {
+            0
+        } else {
+            ((self.por_estado.completada as f64 / cerradas as f64) * 100.0).round() as i64
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
