@@ -41,6 +41,7 @@ const PATRONES: { sistema: Sistema; etiqueta: string; patron: RegExp }[] = [
 		etiqueta: "Apple Silicon (.dmg)",
 		patron: /-macos-arm64\.dmg$/,
 	},
+	{ sistema: "linux", etiqueta: "AppImage", patron: /\.AppImage$/ },
 	{ sistema: "linux", etiqueta: "Debian / Ubuntu (.deb)", patron: /\.deb$/ },
 	{
 		sistema: "linux",

@@ -14,6 +14,7 @@ describe("clasificarAssets", () => {
 			asset("cosmoflow-0.8.0-windows-x64.zip"),
 			asset("cosmoflow-0.8.0-windows-x64-setup.exe"),
 			asset("Cosmoflow-0.8.0-macos-arm64.dmg"),
+			asset("Cosmoflow-0.8.0-x86_64.AppImage"),
 			asset("cosmoflow_0.8.0_amd64.deb"),
 			asset("cosmoflow-0.8.0-linux-x86_64.tar.gz"),
 		]);
@@ -21,6 +22,7 @@ describe("clasificarAssets", () => {
 			["windows", "Instalador (.exe)"],
 			["windows", "Portable (.zip)"],
 			["macos", "Apple Silicon (.dmg)"],
+			["linux", "AppImage"],
 			["linux", "Debian / Ubuntu (.deb)"],
 			["linux", "Portable (.tar.gz)"],
 			["android", "Android (.apk)"],
