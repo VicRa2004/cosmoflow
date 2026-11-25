@@ -1,6 +1,7 @@
 // Sin consola extra en Windows al abrir la app en release.
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
+mod actualizaciones;
 mod api;
 mod app;
 mod calendario;
@@ -10,6 +11,7 @@ mod google;
 mod inicio;
 mod login;
 mod modelos;
+mod monitoreo;
 mod notas;
 mod notificaciones;
 mod organizaciones;
@@ -50,6 +52,7 @@ fn aplicar_tema(cx: &mut App) {
 }
 
 fn main() {
+    let _monitoreo = monitoreo::iniciar();
     gpui_kit::application()
         .with_assets(gpui_kit::assets::Assets)
         .run(|cx| {
