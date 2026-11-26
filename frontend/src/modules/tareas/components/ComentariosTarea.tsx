@@ -10,13 +10,13 @@ import { Avatar } from "@/core/components/ui/Avatar";
 import { Button } from "@/core/components/ui/Button";
 import { ConfirmDialog } from "@/core/components/ui/ConfirmDialog";
 import { Spinner } from "@/core/components/ui/Spinner";
+import { ContenidoMarkdown } from "@/modules/adjuntos/components/ContenidoMarkdown";
 import type { ComentarioTareaDto } from "../api/comentariosApi";
 import type { TareaDto } from "../api/tareasApi";
 import {
 	useComentariosMutation,
 	useComentariosQuery,
 } from "../hooks/useComentarios";
-import { parsearMencionesTexto } from "../utils/mencionesComentario";
 import { EditorComentario } from "./EditorComentario";
 
 const fecha = (iso: string) =>
@@ -44,27 +44,6 @@ export function agruparHilos(comentarios: ComentarioTareaDto[]): {
 		}
 	}
 	return { raices, respuestasPorPadre };
-}
-
-/** Texto plano con saltos de línea y menciones `[@Nombre](mencion:ID)` resaltadas. */
-function TextoComentario({ contenido }: { contenido: string }) {
-	const segmentos = parsearMencionesTexto(contenido);
-	return (
-		<p className="whitespace-pre-wrap break-words text-sm leading-relaxed text-tinta-suave">
-			{segmentos.map((segmento) =>
-				segmento.tipo === "mencion" ? (
-					<span
-						key={`mencion-${segmento.inicio}`}
-						className="inline-flex items-center rounded bg-indigo-950/70 px-1.5 py-0.5 text-xs font-medium text-indigo-300"
-					>
-						@{segmento.nombre}
-					</span>
-				) : (
-					<span key={`texto-${segmento.inicio}`}>{segmento.valor}</span>
-				),
-			)}
-		</p>
-	);
 }
 
 function Comentario({
@@ -156,7 +135,9 @@ function Comentario({
 						}
 					/>
 				) : (
-					<TextoComentario contenido={comentario.contenido} />
+					<ContenidoMarkdown className="text-sm text-tinta-suave">
+						{comentario.contenido}
+					</ContenidoMarkdown>
 				)}
 			</div>
 		</div>

@@ -5,45 +5,7 @@ export interface MencionableComentario {
 	email?: string;
 }
 
-export type SegmentoComentario =
-	| { tipo: "texto"; inicio: number; valor: string }
-	| { tipo: "mencion"; inicio: number; id: number; nombre: string };
-
 const REGEX_MENCION_SERIALIZADA = /\[@([^\]]+)\]\(mencion:(\d+)\)/g;
-
-/** Divide un comentario guardado en trozos de texto plano y menciones `[@Nombre](mencion:ID)`. */
-export function parsearMencionesTexto(contenido: string): SegmentoComentario[] {
-	const segmentos: SegmentoComentario[] = [];
-	let ultimoIndice = 0;
-
-	for (const match of contenido.matchAll(REGEX_MENCION_SERIALIZADA)) {
-		const indice = match.index ?? 0;
-		if (indice > ultimoIndice) {
-			segmentos.push({
-				tipo: "texto",
-				inicio: ultimoIndice,
-				valor: contenido.slice(ultimoIndice, indice),
-			});
-		}
-		segmentos.push({
-			tipo: "mencion",
-			inicio: indice,
-			nombre: match[1] ?? "",
-			id: Number(match[2]),
-		});
-		ultimoIndice = indice + match[0].length;
-	}
-
-	if (ultimoIndice < contenido.length) {
-		segmentos.push({
-			tipo: "texto",
-			inicio: ultimoIndice,
-			valor: contenido.slice(ultimoIndice),
-		});
-	}
-
-	return segmentos;
-}
 
 /**
  * Convierte el formato persistido (`[@Ana](mencion:5)`) a texto limpio (`@Ana`)

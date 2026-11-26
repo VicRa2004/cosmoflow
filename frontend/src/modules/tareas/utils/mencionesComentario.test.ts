@@ -2,25 +2,10 @@ import { describe, expect, it } from "vitest";
 import {
 	deserializarParaEditor,
 	detectarConsultaMencion,
-	parsearMencionesTexto,
 	serializarMenciones,
 } from "./mencionesComentario";
 
 describe("mencionesComentario", () => {
-	it("parsea texto plano y menciones serializadas en orden", () => {
-		expect(
-			parsearMencionesTexto(
-				"Hola [@Ana María](mencion:7), revisa esto con [@Luis](mencion:3).",
-			),
-		).toEqual([
-			{ tipo: "texto", inicio: 0, valor: "Hola " },
-			{ tipo: "mencion", inicio: 5, id: 7, nombre: "Ana María" },
-			{ tipo: "texto", inicio: 28, valor: ", revisa esto con " },
-			{ tipo: "mencion", inicio: 46, id: 3, nombre: "Luis" },
-			{ tipo: "texto", inicio: 64, valor: "." },
-		]);
-	});
-
 	it("deserializa a texto limpio y vuelve a serializar sin perder IDs", () => {
 		const original = "Avísale a [@Ana María](mencion:7) y a [@Ana](mencion:2)!";
 		const { texto, menciones } = deserializarParaEditor(original);
