@@ -3,7 +3,7 @@
 use gpui_kit::assets::IconName;
 use gpui_kit::component::*;
 use gpui_kit::component::{
-    ActiveTheme, Theme, ThemeMode,
+    ActiveTheme,
     alert::Alert,
     avatar::Avatar,
     button::{Button, ButtonVariants as _},
@@ -86,13 +86,20 @@ pub struct PerfilView {
     revision: u64,
     enviando_verificacion: bool,
     cerrando_sesiones: bool,
+    /// La misma vista sirve «Perfil» (cuenta y seguridad) y «Configuración» (apariencia, avisos…).
+    configuracion: bool,
+    tamano_letra: f32,
 }
 
 impl PerfilView {
     pub fn new(window: &mut Window, cx: &mut Context<Self>) -> Self {
         let mut vista = Self {
             usuario: crate::api(cx).usuario(),
-            modo_tema: ModoTema::Sistema,
+            modo_tema: match crate::preferencias::tema(cx) {
+                None => ModoTema::Sistema,
+                Some(crate::preferencias::Tema::Claro) => ModoTema::Claro,
+                Some(crate::preferencias::Tema::Oscuro) => ModoTema::Oscuro,
+            },
             preferencias: Vec::new(),
             telegram: EstadoTelegram::default(),
             cargando_prefs: false,
@@ -101,6 +108,8 @@ impl PerfilView {
             revision: 0,
             enviando_verificacion: false,
             cerrando_sesiones: false,
+            configuracion: false,
+            tamano_letra: crate::preferencias::tamano_letra(cx),
         };
         vista.cargar(window, cx);
         vista
@@ -146,13 +155,25 @@ impl PerfilView {
         .detach();
     }
 
+    pub fn mostrar_configuracion(&mut self, configuracion: bool, cx: &mut Context<Self>) {
+        self.configuracion = configuracion;
+        cx.notify();
+    }
+
+    fn cambiar_tamano_letra(&mut self, tamano: f32, cx: &mut Context<Self>) {
+        self.tamano_letra = tamano;
+        crate::preferencias::cambiar_tamano_letra(tamano, cx);
+        cx.notify();
+    }
+
     fn cambiar_tema(&mut self, modo: ModoTema, window: &mut Window, cx: &mut Context<Self>) {
         self.modo_tema = modo;
-        match modo {
-            ModoTema::Sistema => Theme::sync_system_appearance(Some(window), cx),
-            ModoTema::Claro => Theme::change(ThemeMode::Light, Some(window), cx),
-            ModoTema::Oscuro => Theme::change(ThemeMode::Dark, Some(window), cx),
-        }
+        let tema = match modo {
+            ModoTema::Sistema => None,
+            ModoTema::Claro => Some(crate::preferencias::Tema::Claro),
+            ModoTema::Oscuro => Some(crate::preferencias::Tema::Oscuro),
+        };
+        crate::preferencias::cambiar_tema(tema, window, cx);
         cx.notify();
     }
 
@@ -413,7 +434,6 @@ impl PerfilView {
             .filter(|url| !url.trim().is_empty())
             .map(|url| crate::api(cx).url_recurso(url));
         let enviando_verificacion = self.enviando_verificacion;
-        let modo_indice = self.modo_tema.indice();
 
         let vista_verif = vista.clone();
         let grupo_cuenta = SettingGroup::new().title("Cuenta").item(
@@ -486,35 +506,76 @@ impl PerfilView {
             ]),
         );
 
-        let vista_tema = vista;
-        let grupo_apariencia = SettingGroup::new().title("Apariencia").item(
-            SettingItem::new(
-                "Tema",
-                SettingField::render(move |_, _, _| {
-                    let vista = vista_tema.clone();
-                    TabBar::new("perfil-tema")
-                        .segmented()
-                        .small()
-                        .selected_index(modo_indice)
-                        .children(ModoTema::TODOS.map(|m| m.etiqueta()))
-                        .on_click(move |i: &usize, window, cx| {
-                            if let Some(&modo) = ModoTema::TODOS.get(*i) {
-                                vista
-                                    .update(cx, |v, cx| v.cambiar_tema(modo, window, cx))
-                                    .ok();
-                            }
-                        })
-                }),
-            )
-            .description("Elige entre tema del sistema, claro u oscuro.")
-            .keywords(["tema", "apariencia", "claro", "oscuro", "sistema"]),
-        );
-
         SettingPage::new("Cuenta")
             .icon(IconName::User)
             .default_open(true)
             .resettable(false)
-            .groups(vec![grupo_cuenta, grupo_apariencia])
+            .group(grupo_cuenta)
+    }
+
+    fn pagina_apariencia(&self, cx: &mut Context<Self>) -> SettingPage {
+        let vista = cx.entity().downgrade();
+        let modo_indice = self.modo_tema.indice();
+        let letra_indice = crate::preferencias::TAMANOS_LETRA
+            .iter()
+            .position(|(_, t)| *t == self.tamano_letra)
+            .unwrap_or(1);
+        let vista_letra = vista.clone();
+        let vista_tema = vista.clone();
+        let grupo_apariencia = SettingGroup::new()
+            .title("Apariencia")
+            .item(
+                SettingItem::new(
+                    "Tema",
+                    SettingField::render(move |_, _, _| {
+                        let vista = vista_tema.clone();
+                        TabBar::new("perfil-tema")
+                            .segmented()
+                            .small()
+                            .selected_index(modo_indice)
+                            .children(ModoTema::TODOS.map(|m| m.etiqueta()))
+                            .on_click(move |i: &usize, window, cx| {
+                                if let Some(&modo) = ModoTema::TODOS.get(*i) {
+                                    vista
+                                        .update(cx, |v, cx| v.cambiar_tema(modo, window, cx))
+                                        .ok();
+                                }
+                            })
+                    }),
+                )
+                .description("Elige entre tema del sistema, claro u oscuro.")
+                .keywords(["tema", "apariencia", "claro", "oscuro", "sistema"]),
+            )
+            .item(
+                SettingItem::new(
+                    "Tamaño de letra",
+                    SettingField::render(move |_, _, _| {
+                        let vista = vista_letra.clone();
+                        TabBar::new("config-tamano-letra")
+                            .segmented()
+                            .small()
+                            .selected_index(letra_indice)
+                            .children(crate::preferencias::TAMANOS_LETRA.map(|(t, _)| t))
+                            .on_click(move |i: &usize, _, cx| {
+                                if let Some(&(_, tamano)) =
+                                    crate::preferencias::TAMANOS_LETRA.get(*i)
+                                {
+                                    vista
+                                        .update(cx, |v, cx| v.cambiar_tamano_letra(tamano, cx))
+                                        .ok();
+                                }
+                            })
+                    }),
+                )
+                .description("Se guarda en este equipo.")
+                .keywords(["letra", "fuente", "tamaño", "texto", "zoom"]),
+            );
+
+        SettingPage::new("Apariencia")
+            .icon(IconName::Palette)
+            .default_open(true)
+            .resettable(false)
+            .group(grupo_apariencia)
     }
 
     fn pagina_notificaciones(&self, cx: &mut Context<Self>) -> SettingPage {
@@ -794,15 +855,25 @@ impl PerfilView {
 
 impl Render for PerfilView {
     fn render(&mut self, _: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
-        div().size_full().child(
-            Settings::new("perfil-ajustes")
-                .with_group_variant(GroupBoxVariant::Outline)
-                .pages(vec![
-                    self.pagina_cuenta(cx),
+        let (id, paginas) = if self.configuracion {
+            (
+                "config-ajustes",
+                vec![
+                    self.pagina_apariencia(cx),
                     self.pagina_notificaciones(cx),
-                    self.pagina_seguridad(cx),
                     self.pagina_acerca(cx),
-                ]),
+                ],
+            )
+        } else {
+            (
+                "perfil-ajustes",
+                vec![self.pagina_cuenta(cx), self.pagina_seguridad(cx)],
+            )
+        };
+        div().size_full().child(
+            Settings::new(id)
+                .with_group_variant(GroupBoxVariant::Outline)
+                .pages(paginas),
         )
     }
 }

@@ -1007,11 +1007,7 @@ impl Render for NotasView {
             });
 
         let lista = v_flex()
-            .w(px(380.))
-            .h_full()
-            .flex_shrink_0()
-            .border_r_1()
-            .border_color(cx.theme().border)
+            .size_full()
             .child(cabecera)
             .child(
                 v_flex()
@@ -1064,31 +1060,40 @@ impl Render for NotasView {
             .on_action(cx.listener(|this, _: &CancelarEdicion, window, cx| {
                 this.cancelar_edicion(window, cx);
             }))
-            .child(lista)
-            .child(div().flex_1().min_w_0().h_full().map(|d| {
-                if self.modo != ModoEditor::Lectura {
-                    d.child(self.detalle_edicion(cx))
-                } else if let Some(n) = seleccionada {
-                    d.child(self.detalle_lectura(&n, cx))
-                } else {
-                    d.flex()
-                        .items_center()
-                        .justify_center()
-                        .text_color(cx.theme().muted_foreground)
-                        .child(
-                            v_flex()
+            .child(
+                h_resizable("notas-paneles")
+                    .on_resize(crate::preferencias::guardar_ancho_panel("notas-paneles", 0))
+                    .child(
+                        resizable_panel()
+                            .size(crate::preferencias::ancho_panel("notas-paneles", 380., cx))
+                            .size_range(px(260.)..px(720.))
+                            .child(lista),
+                    )
+                    .child(resizable_panel().child(div().size_full().map(|d| {
+                        if self.modo != ModoEditor::Lectura {
+                            d.child(self.detalle_edicion(cx))
+                        } else if let Some(n) = seleccionada {
+                            d.child(self.detalle_lectura(&n, cx))
+                        } else {
+                            d.flex()
                                 .items_center()
-                                .gap_2()
-                                .child("Selecciona una nota")
+                                .justify_center()
+                                .text_color(cx.theme().muted_foreground)
                                 .child(
-                                    Button::new("vacio-nueva-nota")
-                                        .label("Nueva nota")
-                                        .on_click(cx.listener(|this, _, window, cx| {
-                                            this.abrir_nueva(window, cx);
-                                        })),
-                                ),
-                        )
-                }
-            }))
+                                    v_flex()
+                                        .items_center()
+                                        .gap_2()
+                                        .child("Selecciona una nota")
+                                        .child(
+                                            Button::new("vacio-nueva-nota")
+                                                .label("Nueva nota")
+                                                .on_click(cx.listener(|this, _, window, cx| {
+                                                    this.abrir_nueva(window, cx);
+                                                })),
+                                        ),
+                                )
+                        }
+                    }))),
+            )
     }
 }

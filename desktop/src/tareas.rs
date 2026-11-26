@@ -547,11 +547,7 @@ impl Render for TareasView {
             .collect();
 
         let lista = v_flex()
-            .w(px(440.))
-            .h_full()
-            .flex_shrink_0()
-            .border_r_1()
-            .border_color(cx.theme().border)
+            .size_full()
             .child(
                 v_flex()
                     .p_3()
@@ -630,10 +626,18 @@ impl Render for TareasView {
                     .child(format!("{} tareas", self.total)),
             );
 
-        h_flex()
-            .size_full()
-            .child(lista)
-            .child(div().flex_1().min_w_0().h_full().map(|d| {
+        h_resizable("tareas-paneles")
+            .on_resize(crate::preferencias::guardar_ancho_panel(
+                "tareas-paneles",
+                0,
+            ))
+            .child(
+                resizable_panel()
+                    .size(crate::preferencias::ancho_panel("tareas-paneles", 440., cx))
+                    .size_range(px(300.)..px(760.))
+                    .child(lista),
+            )
+            .child(resizable_panel().child(div().size_full().map(|d| {
                 match seleccionada {
                     Some(t) => d.child(self.detalle(&t, cx)),
                     None => d
@@ -656,6 +660,6 @@ impl Render for TareasView {
                                 ),
                         ),
                 }
-            }))
+            })))
     }
 }

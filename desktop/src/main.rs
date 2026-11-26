@@ -17,6 +17,7 @@ mod notificaciones;
 mod organizaciones;
 mod perfil;
 mod plantillas;
+mod preferencias;
 mod recursos;
 mod sistema;
 mod tags;
@@ -63,7 +64,7 @@ fn main() {
             cx.set_app_identity("com.cosmoflow.desktop", "Cosmoflow");
             cx.set_global(ApiGlobal(api::Api::new()));
             aplicar_tema(cx);
-            Theme::sync_system_appearance(None, cx);
+            preferencias::iniciar(cx);
             espacio::registrar_atajos(cx);
             notas::registrar_atajos(cx);
             sistema::registrar(cx);

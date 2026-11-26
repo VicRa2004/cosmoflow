@@ -1,4 +1,4 @@
-//! Inicio (dashboard): pendientes agrupadas por vencimiento, resumen, accesos rápidos y detalle.
+//! Inicio (dashboard): pendientes agrupadas por vencimiento, resumen y detalle (paneles redimensionables).
 
 use gpui_kit::assets::IconName;
 use gpui_kit::component::*;
@@ -18,7 +18,6 @@ use serde_json::json;
 use crate::calendario::{
     FechaCivil, UrgenciaVencimiento, detalle_tarea_solo_lectura, etiqueta_vencimiento,
 };
-use crate::espacio::{IrACalendario, IrANotas, IrANotificaciones, IrAOrganizaciones, IrATareas};
 use crate::modelos::{EstadoTarea, Pagina, Prioridad, Tarea};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -362,64 +361,6 @@ impl InicioView {
             ))
     }
 
-    fn render_accesos_rapidos(&self, cx: &mut Context<Self>) -> impl IntoElement {
-        let acceso =
-            |id: &'static str, etiqueta: &'static str, icono: IconName, accion: Box<dyn Action>| {
-                Button::new(id)
-                    .small()
-                    .ghost()
-                    .icon(icono)
-                    .label(etiqueta)
-                    .on_click(move |_, window, cx| {
-                        window.dispatch_action(accion.boxed_clone(), cx);
-                    })
-            };
-
-        h_flex()
-            .gap_1p5()
-            .px_6()
-            .pb_3()
-            .border_b_1()
-            .border_color(cx.theme().border)
-            .child(
-                div()
-                    .text_xs()
-                    .text_color(cx.theme().muted_foreground)
-                    .pr_1()
-                    .child("Accesos:"),
-            )
-            .child(acceso(
-                "acceso-tareas",
-                "Tareas",
-                IconName::ListTodo,
-                Box::new(IrATareas),
-            ))
-            .child(acceso(
-                "acceso-calendario",
-                "Calendario",
-                IconName::CalendarDays,
-                Box::new(IrACalendario),
-            ))
-            .child(acceso(
-                "acceso-notas",
-                "Notas",
-                IconName::StickyNote,
-                Box::new(IrANotas),
-            ))
-            .child(acceso(
-                "acceso-organizaciones",
-                "Organizaciones",
-                IconName::Building2,
-                Box::new(IrAOrganizaciones),
-            ))
-            .child(acceso(
-                "acceso-notificaciones",
-                "Notificaciones",
-                IconName::Bell,
-                Box::new(IrANotificaciones),
-            ))
-    }
-
     fn fila_tarea(&self, t: &Tarea, hoy: FechaCivil, cx: &mut Context<Self>) -> impl IntoElement {
         let id = t.id;
         let seleccionada = self.seleccion == Some(id);
@@ -709,62 +650,56 @@ impl InicioView {
             .and_then(|id| self.tareas.iter().find(|t| t.id == id))
             .cloned();
 
-        v_flex()
-            .w(px(360.))
-            .flex_shrink_0()
-            .h_full()
-            .border_l_1()
-            .border_color(cx.theme().border)
-            .child(match seleccionada {
-                Some(t) => {
-                    let id = t.id;
-                    let abierta = t.estado.is_abierta();
-                    v_flex()
-                        .id("inicio-detalle")
-                        .size_full()
-                        .overflow_y_scroll()
-                        .p_5()
-                        .gap_4()
-                        .child(
-                            v_flex()
-                                .gap_2()
-                                .child(div().text_lg().font_semibold().child(t.titulo.clone()))
-                                .when(abierta, |v| {
-                                    v.child(
-                                        Button::new(("inicio-completar-detalle", id as u64))
-                                            .small()
-                                            .outline()
-                                            .icon(IconName::Check)
-                                            .label("Marcar como completada")
-                                            .on_click(cx.listener(move |this, _, window, cx| {
-                                                this.completar_tarea(id, window, cx)
-                                            })),
-                                    )
-                                }),
-                        )
-                        .child(detalle_tarea_solo_lectura(&t, hoy, cx))
-                        .into_any_element()
-                }
-                None => v_flex()
+        v_flex().size_full().child(match seleccionada {
+            Some(t) => {
+                let id = t.id;
+                let abierta = t.estado.is_abierta();
+                v_flex()
+                    .id("inicio-detalle")
                     .size_full()
-                    .items_center()
-                    .justify_center()
-                    .p_6()
-                    .text_center()
-                    .text_color(cx.theme().muted_foreground)
+                    .overflow_y_scroll()
+                    .p_5()
+                    .gap_4()
                     .child(
                         v_flex()
-                            .items_center()
                             .gap_2()
-                            .child(Icon::new(IconName::SquareCheck).size_6())
-                            .child(
-                                div()
-                                    .text_sm()
-                                    .child("Selecciona una tarea para ver su detalle"),
-                            ),
+                            .child(div().text_lg().font_semibold().child(t.titulo.clone()))
+                            .when(abierta, |v| {
+                                v.child(
+                                    Button::new(("inicio-completar-detalle", id as u64))
+                                        .small()
+                                        .outline()
+                                        .icon(IconName::Check)
+                                        .label("Marcar como completada")
+                                        .on_click(cx.listener(move |this, _, window, cx| {
+                                            this.completar_tarea(id, window, cx)
+                                        })),
+                                )
+                            }),
                     )
-                    .into_any_element(),
-            })
+                    .child(detalle_tarea_solo_lectura(&t, hoy, cx))
+                    .into_any_element()
+            }
+            None => v_flex()
+                .size_full()
+                .items_center()
+                .justify_center()
+                .p_6()
+                .text_center()
+                .text_color(cx.theme().muted_foreground)
+                .child(
+                    v_flex()
+                        .items_center()
+                        .gap_2()
+                        .child(Icon::new(IconName::SquareCheck).size_6())
+                        .child(
+                            div()
+                                .text_sm()
+                                .child("Selecciona una tarea para ver su detalle"),
+                        ),
+                )
+                .into_any_element(),
+        })
     }
 }
 
@@ -777,14 +712,30 @@ impl Render for InicioView {
             .size_full()
             .child(self.render_cabecera(&resumen, cx))
             .child(self.render_tarjetas_resumen(&resumen, cx))
-            .child(self.render_accesos_rapidos(cx))
             .child(
-                h_flex()
-                    .items_stretch()
+                div()
                     .flex_1()
                     .min_h_0()
-                    .child(self.render_lista(hoy, cx))
-                    .child(self.render_detalle(hoy, cx)),
+                    .border_t_1()
+                    .border_color(cx.theme().border)
+                    .child(
+                        h_resizable("inicio-paneles")
+                            .on_resize(crate::preferencias::guardar_ancho_panel(
+                                "inicio-paneles",
+                                1,
+                            ))
+                            .child(resizable_panel().child(self.render_lista(hoy, cx)))
+                            .child(
+                                resizable_panel()
+                                    .size(crate::preferencias::ancho_panel(
+                                        "inicio-paneles",
+                                        360.,
+                                        cx,
+                                    ))
+                                    .size_range(px(260.)..px(720.))
+                                    .child(self.render_detalle(hoy, cx)),
+                            ),
+                    ),
             )
     }
 }

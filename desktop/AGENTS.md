@@ -36,6 +36,7 @@ desktop/
     ├── login.rs        # login + verificación en dos pasos
     ├── espacio.rs      # sidebar, atajos y paleta de comandos (Ctrl/Cmd+K)
     ├── editor_tarea.rs # editor completo de tareas (panel lateral), reutilizado en Inicio y Organizaciones
+    ├── preferencias.rs # ajustes locales del equipo (tamaño de letra, tema, ancho de paneles) en <config del SO>/cosmoflow/preferencias.json
     ├── sistema.rs      # integración con el SO: avisos nativos con botones (Completar, Posponer un día) vía `show_system_notification`
     └── <capacidad>.rs  # una vista por capacidad (inicio, tareas, notas/, calendario, organizaciones/, notificaciones, tags, plantillas, perfil)
 ```
@@ -46,11 +47,12 @@ Un archivo (o carpeta) por **capacidad**, no carpetas globales `views/`/`models/
 
 - **Lee las skills `gpui-kit` (Coding Guides) y `gpui-kit-design-guides` antes de tocar UI.** Nunca inventes una API: busca la firma real en `~/.cargo/registry/src/*/gpui-component-0.11.0/` o `gpui-base-*`.
 - Importa `use gpui_kit::component::*; use gpui_kit::*;`. Iconos: `gpui_kit::assets::IconName` (catálogo Lucide completo).
+- Las vistas de sección se crean al visitarlas por primera vez (`Espacio::vista`); solo Inicio y Notificaciones (contador de la campana) arrancan con el espacio.
 - E/S siempre en `cx.background_spawn`; actualiza la entidad en `this.update(...)` y llama a `cx.notify()` una vez. Estados explícitos de carga, vacío y error en cada vista.
 - Errores de acciones → `window.push_notification(Notification::error(..))`; errores de carga → `Alert` en la vista.
 - IDs de elementos repetidos con el id de dominio (`("tarea", id)`), nunca con el índice.
 - Paridad con móvil: cada pantalla ofrece las mismas opciones que `mobile/lib/modules/<capacidad>` con diseño de escritorio (maestro-detalle, paneles, atajos).
-- Atajos: `Ctrl`/`Cmd` + `1`–`6` secciones, `,` perfil, `K` paleta, `N` nueva tarea, `R` recargar (`espacio.rs`). Un comando nuevo va en la paleta y, si es frecuente, con atajo.
+- Atajos: `Ctrl`/`Cmd` + `1`–`6` secciones, `,` configuración, `K` paleta, `N` nueva tarea, `R` recargar (`espacio.rs`). Un comando nuevo va en la paleta y, si es frecuente, con atajo.
 - Textos de UI y código en español (ver `../AGENTS.md`).
 
 ## Operación
