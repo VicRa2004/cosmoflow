@@ -155,10 +155,8 @@ class _CosmoflowMobileAppState extends State<CosmoflowMobileApp>
       recordatorios: widget.recordatorios,
       cargarDatosIniciales: widget.restaurarAlIniciar,
     );
-    widget.push?.vincularNavegador((ruta) => _router.push(ruta));
-    widget.notificacionesLocales?.vincularNavegador(
-      (ruta) => _router.push(ruta),
-    );
+    widget.push?.vincularNavegador(_abrirDesdeNotificacion);
+    widget.notificacionesLocales?.vincularNavegador(_abrirDesdeNotificacion);
     if (widget.restaurarAlIniciar) {
       widget.authApi.restaurarSesion().then(
         (_) => _sincronizar(forzarRecordatorios: true),
@@ -199,6 +197,17 @@ class _CosmoflowMobileAppState extends State<CosmoflowMobileApp>
     } finally {
       _sincronizando = false;
     }
+  }
+
+  /// Al abrir en frío desde una notificación, la sesión se restaura y el redirect
+  /// `/login → /dashboard` reemplaza la pila: empujar la ruta en el siguiente frame,
+  /// cuando ese redirect ya se aplicó, para que no se pierda.
+  void _abrirDesdeNotificacion(String ruta) {
+    WidgetsBinding.instance
+      ..addPostFrameCallback((_) {
+        if (mounted) _router.push(ruta);
+      })
+      ..scheduleFrame();
   }
 
   @override
