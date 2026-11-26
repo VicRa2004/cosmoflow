@@ -1,4 +1,5 @@
 import {
+	Building2,
 	CalendarClock,
 	CalendarPlus,
 	CircleDashed,
@@ -22,6 +23,7 @@ import {
 	ETIQUETAS_RECURRENCIA,
 } from "../schemas/tareaSchemas";
 import {
+	DondeTarea,
 	formatearDia,
 	IconoEstado,
 	IconoPrioridad,
@@ -123,6 +125,13 @@ export function DetallesTarea({ tarea }: { tarea: TareaDto }) {
 			{tarea.recurrencia && (
 				<Propiedad icono={Repeat} etiqueta="Repetición">
 					{ETIQUETAS_RECURRENCIA[tarea.recurrencia]}
+				</Propiedad>
+			)}
+			{tarea.organizacionId !== null && (
+				<Propiedad icono={Building2} etiqueta="Ubicación">
+					<DondeTarea
+						tarea={{ ...tarea, organizacionId: tarea.organizacionId }}
+					/>
 				</Propiedad>
 			)}
 			{tarea.organizacionId !== null && tarea.responsableIds.length > 0 && (
