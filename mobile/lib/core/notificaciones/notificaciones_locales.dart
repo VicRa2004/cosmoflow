@@ -228,7 +228,7 @@ class NotificacionesLocales {
     final ruta = _rutaPendiente;
     final navegar = _navegar;
     if (ruta == null || navegar == null) return;
-    if (!sesionStore.isAutenticado) return;
+    if (!sesionStore.isAutenticado || sesionStore.restaurando) return;
     _rutaPendiente = null;
     navegar(ruta);
   }

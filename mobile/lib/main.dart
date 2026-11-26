@@ -143,6 +143,8 @@ class _CosmoflowMobileAppState extends State<CosmoflowMobileApp>
     final plantillasApi =
         widget.plantillasApi ?? PlantillasApi(apiClient: apiClient);
 
+    // Antes de crear el router: arranca en `/cargando` y no muestra el login.
+    if (widget.restaurarAlIniciar) widget.sesionStore.restaurando = true;
     _router = crearAppRouter(
       sesionStore: widget.sesionStore,
       authApi: widget.authApi,
@@ -158,9 +160,10 @@ class _CosmoflowMobileAppState extends State<CosmoflowMobileApp>
     widget.push?.vincularNavegador(_abrirDesdeNotificacion);
     widget.notificacionesLocales?.vincularNavegador(_abrirDesdeNotificacion);
     if (widget.restaurarAlIniciar) {
-      widget.authApi.restaurarSesion().then(
-        (_) => _sincronizar(forzarRecordatorios: true),
-      );
+      widget.authApi
+          .restaurarSesion()
+          .whenComplete(() => widget.sesionStore.restaurando = false)
+          .then((_) => _sincronizar(forzarRecordatorios: true));
     }
     final cola = widget.cola;
     if (cola != null) {
@@ -199,9 +202,9 @@ class _CosmoflowMobileAppState extends State<CosmoflowMobileApp>
     }
   }
 
-  /// Al abrir en frío desde una notificación, la sesión se restaura y el redirect
-  /// `/login → /dashboard` reemplaza la pila: empujar la ruta en el siguiente frame,
-  /// cuando ese redirect ya se aplicó, para que no se pierda.
+  /// Al terminar de restaurar la sesión, el redirect `/cargando → /dashboard`
+  /// reemplaza la pila: empujar la ruta en el siguiente frame, cuando ese
+  /// redirect ya se aplicó, para que no se pierda.
   void _abrirDesdeNotificacion(String ruta) {
     WidgetsBinding.instance
       ..addPostFrameCallback((_) {

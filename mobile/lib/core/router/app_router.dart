@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../modules/auth/api/auth_api.dart';
@@ -83,7 +84,13 @@ GoRouter crearAppRouter({
     initialLocation: '/dashboard',
     refreshListenable: sesionStore,
     redirect: (context, state) {
+      if (sesionStore.restaurando) {
+        return state.matchedLocation == '/cargando' ? null : '/cargando';
+      }
       final isAutenticado = sesionStore.isAutenticado;
+      if (state.matchedLocation == '/cargando') {
+        return isAutenticado ? '/dashboard' : '/login';
+      }
       // Los deep links del esquema propio (`cosmoflow://login-callback?...`)
       // los procesa `OAuthGoogleService`; el router solo redirige a una ruta válida.
       if (state.uri.scheme == 'cosmoflow' || state.error != null) {
@@ -101,6 +108,11 @@ GoRouter crearAppRouter({
       return null;
     },
     routes: <RouteBase>[
+      GoRoute(
+        path: '/cargando',
+        builder: (context, state) =>
+            const Scaffold(body: Center(child: CircularProgressIndicator())),
+      ),
       GoRoute(
         path: '/login',
         builder: (context, state) => LoginPage(authApi: authApi),

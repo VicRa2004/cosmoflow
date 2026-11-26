@@ -18,6 +18,15 @@ class SesionStore extends ChangeNotifier {
   bool _todosLosPermisos = true;
   ThemeMode _modoTema = ThemeMode.system;
   bool _sinConexion = false;
+  bool _restaurando = false;
+
+  /// Restaurando la sesión al abrir la app: el router muestra `/cargando` en vez del login.
+  bool get restaurando => _restaurando;
+  set restaurando(bool valor) {
+    if (_restaurando == valor) return;
+    _restaurando = valor;
+    notifyListeners();
+  }
 
   String? get accessToken => _accessToken;
   UsuarioSesion? get usuario => _usuario;

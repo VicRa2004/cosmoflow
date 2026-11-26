@@ -187,6 +187,42 @@ void main() {
     },
   );
 
+  testWidgets('Mientras restaura la sesión muestra la carga, no el login', (
+    WidgetTester tester,
+  ) async {
+    final sesionStore = SesionStore(
+      almacenamientoSeguro: MemoriaAlmacenamientoSeguro(),
+    )..restaurando = true;
+    final authApi = AuthApi(apiClient: ApiClient(sesionStore: sesionStore));
+
+    await tester.pumpWidget(
+      CosmoflowMobileApp(
+        sesionStore: sesionStore,
+        authApi: authApi,
+        restaurarAlIniciar: false,
+      ),
+    );
+    await tester.pump();
+    expect(find.byType(CircularProgressIndicator), findsOneWidget);
+    expect(find.text('Iniciar sesión'), findsNothing);
+
+    sesionStore
+      ..establecerSesion(
+        accessToken: 'jwt-test',
+        usuario: const UsuarioSesion(
+          id: 1,
+          nombre: 'Ana',
+          email: 'ana@cosmoflow.com',
+          emailVerificado: true,
+        ),
+      )
+      ..restaurando = false;
+    await tester.pumpAndSettle();
+
+    expect(find.text('Iniciar sesión'), findsNothing);
+    expect(find.text('Nada pendiente'), findsOneWidget);
+  });
+
   testWidgets(
     'Deep link cosmoflow://login-callback redirige sin mostrar ErrorScreen',
     (WidgetTester tester) async {

@@ -299,7 +299,8 @@ class PushService {
     final ruta = _rutaPendiente;
     final navegar = _navegar;
     if (ruta == null || navegar == null) return;
-    if (!apiClient.sesionStore.isAutenticado) return;
+    final sesion = apiClient.sesionStore;
+    if (!sesion.isAutenticado || sesion.restaurando) return;
     _rutaPendiente = null;
     navegar(ruta);
   }
