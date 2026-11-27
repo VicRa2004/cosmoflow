@@ -71,6 +71,8 @@ export function AutorizarConexionPage({
 		const url = new URL(solicitud.redirectUri);
 		url.searchParams.set("error", "access_denied");
 		if (solicitud.state) url.searchParams.set("state", solicitud.state);
+		// RFC 9207: el backend anuncia `iss`, así que también va en los errores.
+		url.searchParams.set("iss", window.location.origin);
 		window.location.assign(url.href);
 	};
 

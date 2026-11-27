@@ -1,10 +1,12 @@
 /**
- * shortcut: solo Claude en la web y apps locales; el registro de OAuth es abierto, así que
+ * shortcut: solo Claude y ChatGPT en la web y apps locales; el registro de OAuth es abierto, así que
  * esta lista es lo que impide que una web ajena reciba un código. Otro cliente web: añadirlo aquí.
  */
 const CALLBACKS_WEB: Record<string, string> = {
 	"https://claude.ai/api/mcp/auth_callback": "Claude",
 	"https://claude.com/api/mcp/auth_callback": "Claude",
+	"https://chatgpt.com/connector_platform_oauth_redirect": "ChatGPT",
+	"https://platform.openai.com/apps-manage/oauth": "ChatGPT",
 };
 
 export interface DestinoConexion {

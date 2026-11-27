@@ -10,7 +10,10 @@ export const hashearCodigo = (codigo: string): string =>
 
 /** El usuario pulsó «Permitir»: emite el código y devuelve adónde mandarlo. */
 export class AutorizarConexionUseCase {
-	constructor(private readonly repo: CodigoOAuthRepository) {}
+	constructor(
+		private readonly repo: CodigoOAuthRepository,
+		private readonly issuer: string,
+	) {}
 
 	async ejecutar(
 		usuarioId: number,
@@ -38,6 +41,8 @@ export class AutorizarConexionUseCase {
 		const destino = new URL(dto.redirectUri);
 		destino.searchParams.set("code", codigo);
 		if (dto.state) destino.searchParams.set("state", dto.state);
+		// RFC 9207: el cliente comprueba que el código viene del servidor que esperaba.
+		destino.searchParams.set("iss", this.issuer);
 		return destino.href;
 	}
 }

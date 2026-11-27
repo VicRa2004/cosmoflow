@@ -41,7 +41,25 @@ const jsonLogger: MiddlewareHandler = async (c, next) => {
 
 // 1. Middlewares Nativos (Reemplazan a helmet, morgan y cors)
 app.use("*", secureHeaders());
-app.use("*", cors({ origin: env.CORS_ORIGIN }));
+// El conector MCP y su OAuth los usan clientes de cualquier dominio (MCP Inspector, apps web).
+// Van con Bearer, sin cookies, así que abrirlos no expone la sesión de la web.
+const RUTAS_ABIERTAS = [
+	"/mcp",
+	"/.well-known/",
+	"/api/oauth/registro",
+	"/api/oauth/token",
+];
+app.use(
+	"*",
+	cors({
+		origin: (origin, c) =>
+			RUTAS_ABIERTAS.some((ruta) => c.req.path.startsWith(ruta)) ||
+			env.CORS_ORIGIN.includes(origin)
+				? origin
+				: null,
+		exposeHeaders: ["WWW-Authenticate"],
+	}),
+);
 app.use("*", requestId());
 // Contexto de la petición (requestId, usuarioId) para logs, eventos y auditoría.
 app.use("*", (c, next) =>
@@ -162,6 +180,8 @@ if (
 		const reqPath = c.req.path;
 		if (
 			reqPath.startsWith("/api") ||
+			reqPath.startsWith("/.well-known") ||
+			reqPath.startsWith("/mcp") ||
 			reqPath.startsWith("/docs") ||
 			reqPath.startsWith("/openapi") ||
 			reqPath.startsWith("/api-docs")
