@@ -65,6 +65,9 @@ export class OAuthController extends BaseController {
 			code_challenge_methods_supported: ["S256"],
 			token_endpoint_auth_methods_supported: ["none"],
 			authorization_response_iss_parameter_supported: true,
+			// CIMD (spec MCP 2026-07-28): el client_id puede ser una URL. No se descarga el
+			// documento porque el registro tampoco se guarda: protege la lista de `destinoConexion`.
+			client_id_metadata_document_supported: true,
 		});
 
 	/** RFC 7591. No se guarda nada: lo que protege es la lista de `destinoConexion`. */
