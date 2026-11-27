@@ -1,5 +1,4 @@
-import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { WebStandardStreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/webStandardStreamableHttp.js";
+import { createMcpHandler, McpServer } from "@modelcontextprotocol/server";
 import type { Context } from "hono";
 import { type Api, registrarHerramientas } from "../../herramientas";
 
@@ -12,20 +11,20 @@ type Despachar = (
 export class McpController {
 	constructor(private readonly despachar: Despachar) {}
 
-	/** Sin sesión: cada POST crea su servidor, así no hay estado que perder entre peticiones. */
-	ejecutar = async (c: Context): Promise<Response> => {
+	/**
+	 * Sin estado: cada petición crea su servidor. Sirve la spec 2026-07-28 y,
+	 * para los clientes que aún hacen `initialize`, la 2025-11-25.
+	 */
+	private readonly handler = createMcpHandler(({ requestInfo }) => {
 		const servidor = new McpServer({ name: "cosmoflow", version: "1.0.0" });
 		registrarHerramientas(
 			servidor,
-			this.api(c.req.header("Authorization") ?? ""),
+			this.api(requestInfo?.headers.get("Authorization") ?? ""),
 		);
-		const transporte = new WebStandardStreamableHTTPServerTransport({
-			sessionIdGenerator: undefined,
-			enableJsonResponse: true,
-		});
-		await servidor.connect(transporte);
-		return transporte.handleRequest(c.req.raw);
-	};
+		return servidor;
+	});
+
+	ejecutar = (c: Context): Promise<Response> => this.handler.fetch(c.req.raw);
 
 	/** Sin SSE ni sesiones (spec MCP: un servidor sin stream responde 405 al GET). */
 	noAdmitido = (c: Context): Response => {

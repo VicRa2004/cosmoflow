@@ -12,30 +12,51 @@ const CHALLENGE = createHash("sha256").update(VERIFIER).digest("base64url");
 
 type ResultadoRpc = {
 	tools: { name: string }[];
-	serverInfo: { name: string };
+	supportedVersions: string[];
+	resultType: string;
+	_meta: Record<string, { name: string }>;
 	isError?: boolean;
 	content: { text: string }[];
 };
 
 let siguienteId = 0;
 
-const postMcp = (token: string | undefined, method: string, params = {}) =>
+const VERSION = "2026-07-28";
+const META = {
+	"io.modelcontextprotocol/protocolVersion": VERSION,
+	"io.modelcontextprotocol/clientInfo": { name: "e2e", version: "1.0.0" },
+	"io.modelcontextprotocol/clientCapabilities": {},
+};
+
+/** Petición de la spec 2026-07-28: sin `initialize`, versión y cliente en cada una. */
+const postMcp = (
+	token: string | undefined,
+	method: string,
+	params: { name?: string } = {},
+) =>
 	app.request("/mcp", {
 		method: "POST",
 		headers: {
 			"Content-Type": "application/json",
 			Accept: "application/json, text/event-stream",
+			"MCP-Protocol-Version": VERSION,
+			"Mcp-Method": method,
+			...(params.name ? { "Mcp-Name": params.name } : {}),
 			...(token ? { Authorization: `Bearer ${token}` } : {}),
 		},
 		body: JSON.stringify({
 			jsonrpc: "2.0",
 			id: ++siguienteId,
 			method,
-			params,
+			params: { ...params, _meta: META },
 		}),
 	});
 
-const rpc = async (token: string, method: string, params = {}) => {
+const rpc = async (
+	token: string,
+	method: string,
+	params: { name?: string; arguments?: unknown } = {},
+) => {
 	const res = await postMcp(token, method, params);
 	expect(res.status).toBe(200);
 	return ((await res.json()) as { result: ResultadoRpc }).result;
@@ -481,15 +502,40 @@ describe("Conector MCP (e2e)", () => {
 	});
 
 	describe("herramientas", () => {
-		it("debería inicializar y anunciar todas", async () => {
-			const { serverInfo } = await rpc(token, "initialize", {
-				protocolVersion: "2025-06-18",
-				capabilities: {},
-				clientInfo: { name: "e2e", version: "1.0.0" },
+		it("debería seguir atendiendo a los clientes 2025 (initialize, respuesta SSE)", async () => {
+			const res = await app.request("/mcp", {
+				method: "POST",
+				headers: {
+					"Content-Type": "application/json",
+					Accept: "application/json, text/event-stream",
+					Authorization: `Bearer ${token}`,
+				},
+				body: JSON.stringify({
+					jsonrpc: "2.0",
+					id: ++siguienteId,
+					method: "initialize",
+					params: {
+						protocolVersion: "2025-11-25",
+						capabilities: {},
+						clientInfo: { name: "e2e", version: "1.0.0" },
+					},
+				}),
 			});
+
+			expect(res.status).toBe(200);
+			const texto = await res.text();
+			expect(texto).toContain('"protocolVersion":"2025-11-25"');
+			expect(texto).toContain('"name":"cosmoflow"');
+		});
+
+		it("debería anunciarse con server/discover y listar todas", async () => {
+			const descubierto = await rpc(token, "server/discover");
 			const { tools } = await rpc(token, "tools/list");
 
-			expect(serverInfo.name).toBe("cosmoflow");
+			expect(descubierto.supportedVersions).toContain(VERSION);
+			expect(
+				descubierto._meta["io.modelcontextprotocol/serverInfo"]?.name,
+			).toBe("cosmoflow");
 			expect(tools.map((t) => t.name).sort()).toEqual([
 				"actualizar_nota",
 				"actualizar_tarea",
