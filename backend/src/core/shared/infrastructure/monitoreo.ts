@@ -27,14 +27,28 @@ export function limpiarEvento<T extends Sentry.ErrorEvent>(evento: T): T {
 	return evento;
 }
 
-/** Error no controlado de una petición, etiquetado con su `requestId` y el id del usuario. */
+/** El trace-id de una cabecera W3C `traceparent` válida; `undefined` si no lo es. */
+export function idDeTraza(traceparent: unknown): string | undefined {
+	if (typeof traceparent !== "string") return;
+	const [, id] =
+		/^[0-9a-f]{2}-([0-9a-f]{32})-[0-9a-f]{16}-[0-9a-f]{2}$/.exec(traceparent) ??
+		[];
+	return id && !/^0+$/.test(id) ? id : undefined;
+}
+
+/** Error no controlado de una petición, etiquetado con su `requestId`, su traza y el id del usuario. */
 export function reportarError(
 	error: unknown,
-	{ requestId, usuarioId }: { requestId?: string; usuarioId?: number },
+	{
+		requestId,
+		usuarioId,
+		traceId,
+	}: { requestId?: string; usuarioId?: number; traceId?: string },
 ) {
 	if (!env.SENTRY_DSN) return;
 	Sentry.withScope((scope) => {
 		if (requestId) scope.setTag("requestId", requestId);
+		if (traceId) scope.setTag("traceId", traceId);
 		if (usuarioId) scope.setUser({ id: String(usuarioId) });
 		Sentry.captureException(error);
 	});

@@ -19,6 +19,7 @@ import { container } from "@/core/shared/infrastructure/di/container";
 import { log } from "@/core/shared/infrastructure/logger";
 import { rateLimit } from "@/core/shared/infrastructure/http/rateLimit";
 import {
+	idDeTraza,
 	reportarError,
 	urlIngesta,
 } from "@/core/shared/infrastructure/monitoreo";
@@ -63,7 +64,13 @@ app.use(
 app.use("*", requestId());
 // Contexto de la petición (requestId, usuarioId) para logs, eventos y auditoría.
 app.use("*", (c, next) =>
-	contexto.ejecutar({ requestId: c.get("requestId") }, next),
+	contexto.ejecutar(
+		{
+			requestId: c.get("requestId"),
+			traceId: idDeTraza(c.req.header("traceparent")),
+		},
+		next,
+	),
 );
 app.use("*", isProd ? jsonLogger : logger());
 // Nota: express.json() desaparece. Hono procesa el JSON automáticamente
@@ -148,6 +155,7 @@ app.onError((err, c) => {
 		reportarError(err, {
 			requestId: id,
 			usuarioId: contexto.actual().usuarioId,
+			traceId: contexto.actual().traceId,
 		});
 
 	// En los 5xx no se expone el mensaje interno (ya queda en el log), sí el id para reportarlo.
