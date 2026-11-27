@@ -70,7 +70,7 @@ frontend/src/
 │   │   └── pages/                  # RolesPage.tsx
 │   │
 │   ├── adjuntos/                   # Imágenes y markdown: EditorMarkdown (WYSIWYG tipo Notion con Milkdown Crepe: menú «/», subir y pegar imágenes, `[[` para enlazar notas), ContenidoMarkdown y PaginaLectura (lectura de tareas y notas)
-│   ├── notas/                      # Notas personales y de proyecto: explorador de archivos a página completa (BovedaNotas en /notas, carpeta abierta en `?carpetaId=`, migas; PanelCarpetas/ExploradorCarpeta: icono Lucide y color, menú con clic derecho y arrastrar notas y carpetas a una carpeta o miga), búsqueda, filtros por tag y fechas; importar de Obsidian y descargar .md/.zip (utils/); lectura (NotaLecturaPage, /notas/$id) con «Editar» → /notas/$id/editar (NotaEditorPage); se guarda solo con el botón o Ctrl+S (NotaForm); wikilinks `[[…]]` → /notas/enlace (WikilinkPage)
+│   ├── notas/                      # Notas personales y de proyecto: explorador de archivos a página completa (BovedaNotas en /notas, carpeta abierta en `?carpetaId=`, migas; PanelCarpetas/ExploradorCarpeta: icono Lucide y color, menú con clic derecho y arrastrar notas y carpetas a una carpeta o miga), búsqueda, filtros por tag y fechas; importar de Obsidian y descargar .md/.zip (utils/); orden de notas y carpetas (nombre, creación o modificación) en la preferencia `ordenNotas`; /notas/$id abre la nota en el editor (NotaEditorPage) si hay `notas:actualizar` y, si no, en lectura (NotaLecturaPage); al editar se guarda sola tras 1 s sin escribir, con Ctrl+S y antes de salir (NotaForm; al crear, con el botón «Crear»); /notas/$id/editar redirige a /notas/$id; wikilinks `[[…]]` → /notas/enlace (WikilinkPage)
 │   ├── tareas/                     # Tareas (selector: personales, asignadas a mí, organización, equipo o proyecto) y PendientesPage (portada); lectura (TareaLecturaPage), alta y edición a página completa (TareaEditorPage); tablero kanban por estado (`/tareas?vista=tablero`, TableroTareas) y calendario mensual con todo lo que el usuario ve (CalendarioPage, `GET /api/tareas/calendario`)
 │   ├── conexiones/                 # Conector MCP: pasos para conectar Claude en el perfil (ConectarClaudeCard), pantalla de permiso OAuth (AutorizarConexionPage) y URL iCalendar de los pendientes (CalendarioCard, `/api/calendario`)
 │   ├── configuracion/              # /configuracion: preferencias de interfaz guardadas en la cuenta (Query; `aplicarPreferencias` las pone como `data-*` en <html> y guarda copia local para pintar sin parpadeo)
@@ -99,7 +99,7 @@ frontend/src/
 │       ├── dashboard.tsx           # Vista /dashboard: pendientes por vencimiento (RN-43)
 │       ├── usuarios.tsx               # Vista /usuarios
 │       ├── roles.tsx               # Vista /roles
-│       ├── notas/                  # /notas (explorador), /notas/nueva, /notas/$id (lectura) y /notas/$id/editar
+│       ├── notas/                  # /notas (explorador), /notas/nueva, /notas/$id (editor o lectura) y /notas/$id/editar (redirige)
 │       ├── tareas/                 # /tareas (index), /tareas/nueva, /tareas/$id (lectura) y /tareas/$id/editar
 │       ├── autorizar-conexion.tsx  # Permiso OAuth del conector MCP
 │       ├── calendario.tsx          # Vista /calendario (tareas personales y compartidas por día)

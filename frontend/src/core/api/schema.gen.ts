@@ -10388,6 +10388,8 @@ export interface paths {
                         markdownColor?: "suave" | "intenso";
                         pendientesNotas?: boolean;
                         pendientesOrganizaciones?: number | null;
+                        /** @enum {string} */
+                        ordenNotas?: "nombre" | "creada" | "modificada";
                     };
                 };
             };
@@ -11219,6 +11221,10 @@ export interface components {
             color: string | null;
             isFijada: boolean;
             carpetaId: number | null;
+            /** @example 2026-11-27T10:00:00.000Z */
+            createdAt: string;
+            /** @example 2026-11-27T10:00:00.000Z */
+            updatedAt: string;
         };
         CarpetaDto: {
             /** @example 1 */
@@ -11232,6 +11238,10 @@ export interface components {
             padreId: number | null;
             organizacionId: number | null;
             proyectoId: number | null;
+            /** @example 2026-11-27T10:00:00.000Z */
+            createdAt: string;
+            /** @example 2026-11-27T10:00:00.000Z */
+            updatedAt: string;
         };
         AdjuntoDto: {
             /** @example 12 */
@@ -11477,6 +11487,8 @@ export interface components {
             markdownColor: "suave" | "intenso";
             pendientesNotas: boolean;
             pendientesOrganizaciones: number | null;
+            /** @enum {string} */
+            ordenNotas: "nombre" | "creada" | "modificada";
         };
         DestinoConexion: {
             /** @example Claude */

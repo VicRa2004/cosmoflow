@@ -3,6 +3,8 @@ export const ESCALAS = ["pequeno", "normal", "grande"] as const;
 export const FUENTES_MARKDOWN = ["inter", "sistema", "serif", "mono"] as const;
 export const INTERLINEADOS = ["compacto", "normal", "amplio"] as const;
 export const COLORES_MARKDOWN = ["suave", "intenso"] as const;
+/** Fechas, de la más reciente a la más antigua; nombre, alfabético. */
+export const ORDENES_NOTAS = ["nombre", "creada", "modificada"] as const;
 
 export interface PreferenciasInterfaz {
 	/** Tamaño de toda la interfaz. */
@@ -15,6 +17,8 @@ export interface PreferenciasInterfaz {
 	pendientesNotas: boolean;
 	/** Organizaciones en «Nueva» de Pendientes; `null` = 20 sin notas, 10 con notas. */
 	pendientesOrganizaciones: number | null;
+	/** Orden de notas y carpetas en el explorador; las fijadas siempre arriba. */
+	ordenNotas: (typeof ORDENES_NOTAS)[number];
 }
 
 export const PREFERENCIAS_PREDETERMINADAS: PreferenciasInterfaz = {
@@ -25,4 +29,5 @@ export const PREFERENCIAS_PREDETERMINADAS: PreferenciasInterfaz = {
 	markdownColor: "suave",
 	pendientesNotas: false,
 	pendientesOrganizaciones: null,
+	ordenNotas: "nombre",
 };

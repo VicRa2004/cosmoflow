@@ -51,5 +51,7 @@ export const carpetaDtoSchema = z
 		padreId: z.number().int().nullable(),
 		organizacionId: z.number().int().nullable(),
 		proyectoId: z.number().int().nullable(),
+		createdAt: z.string().openapi({ example: "2026-11-27T10:00:00.000Z" }),
+		updatedAt: z.string().openapi({ example: "2026-11-27T10:00:00.000Z" }),
 	})
 	.openapi("CarpetaDto");

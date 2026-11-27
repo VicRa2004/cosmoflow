@@ -117,12 +117,16 @@ export class PrismaNotaRepository implements NotaRepository {
 				color: true,
 				carpetaId: true,
 				fijada: true,
+				createdAt: true,
+				updatedAt: true,
 			},
 			orderBy: orden,
 		});
-		return filas.map(({ fijada, ...resto }) => ({
+		return filas.map(({ fijada, createdAt, updatedAt, ...resto }) => ({
 			...resto,
 			isFijada: fijada,
+			createdAt: createdAt.toISOString(),
+			updatedAt: updatedAt.toISOString(),
 		}));
 	}
 

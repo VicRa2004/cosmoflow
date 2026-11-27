@@ -65,9 +65,11 @@ describe("Notas personales (e2e)", () => {
 		expect(Object.keys(indice[0]).sort()).toEqual([
 			"carpetaId",
 			"color",
+			"createdAt",
 			"id",
 			"isFijada",
 			"titulo",
+			"updatedAt",
 		]);
 
 		const porContenido = await (

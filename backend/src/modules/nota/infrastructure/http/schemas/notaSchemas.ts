@@ -114,6 +114,8 @@ export const notaIndiceDtoSchema = z
 		color: colorAcentoSchema,
 		isFijada: z.boolean(),
 		carpetaId: z.number().int().nullable(),
+		createdAt: z.string().openapi({ example: "2026-11-27T10:00:00.000Z" }),
+		updatedAt: z.string().openapi({ example: "2026-11-27T10:00:00.000Z" }),
 	})
 	.openapi("NotaIndiceDto");
 
