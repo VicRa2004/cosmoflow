@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../core/theme/colores_noche_indigo.dart';
+import '../../../core/theme/tema_app.dart';
 import '../../tareas/models/estadisticas_tareas_model.dart';
 
 /// Tarjeta con recuento de tareas por estado, prioridad y responsable.
@@ -97,7 +98,7 @@ class EstadisticasTareasCard extends StatelessWidget {
             if (total > 0) ...<Widget>[
               const SizedBox(height: 16),
               ClipRRect(
-                borderRadius: BorderRadius.circular(999),
+                borderRadius: BorderRadius.circular(TemaApp.radioCompleto),
                 child: SizedBox(
                   height: 9,
                   child: Row(
@@ -206,7 +207,7 @@ class _CifraBox extends StatelessWidget {
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: alerta ? colores.roseSuave : colores.fondo,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(TemaApp.radioControl),
         border: Border.all(
           color: alerta
               ? colores.rosePeligro.withValues(alpha: 0.3)

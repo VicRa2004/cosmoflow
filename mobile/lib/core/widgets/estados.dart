@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../theme/colores_noche_indigo.dart';
+import '../theme/tema_app.dart';
 import 'tarjeta_seccion.dart';
 
 /// Primera carga de una lista: skeleton agrupado con pulso sutil.
@@ -78,7 +79,9 @@ class _EstadoCargandoState extends State<EstadoCargando>
                                   height: 13,
                                   decoration: BoxDecoration(
                                     color: colores.elevada,
-                                    borderRadius: BorderRadius.circular(6),
+                                    borderRadius: BorderRadius.circular(
+                                      TemaApp.radioPequeno,
+                                    ),
                                   ),
                                 ),
                               ),
@@ -89,7 +92,9 @@ class _EstadoCargandoState extends State<EstadoCargando>
                                   height: 10,
                                   decoration: BoxDecoration(
                                     color: colores.elevada,
-                                    borderRadius: BorderRadius.circular(5),
+                                    borderRadius: BorderRadius.circular(
+                                      TemaApp.radioPequeno,
+                                    ),
                                   ),
                                 ),
                               ),
@@ -192,7 +197,7 @@ class _EstadoBase extends StatelessWidget {
             height: 60,
             decoration: BoxDecoration(
               color: fondoIcono ?? colores.superficie,
-              borderRadius: BorderRadius.circular(18),
+              borderRadius: BorderRadius.circular(TemaApp.radioTarjeta),
               border: Border.all(
                 color: fondoIcono == null
                     ? colores.borde

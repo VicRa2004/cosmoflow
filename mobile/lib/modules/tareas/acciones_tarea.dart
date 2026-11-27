@@ -5,10 +5,12 @@ import 'package:go_router/go_router.dart';
 import '../../core/auth/sesion_store.dart';
 import '../../core/widgets/avisos.dart';
 import '../../core/widgets/confirmar.dart';
+import '../organizaciones/services/contexto_organizacion_cache.dart';
 import '../tags/models/tag_model.dart';
 import 'api/tareas_api.dart';
 import 'models/tarea_model.dart';
 import 'pages/tarea_editor_page.dart';
+import 'widgets/selector_destino_tarea_sheet.dart';
 import 'widgets/tarea_form.dart';
 
 /// Acciones de tarea compartidas por Pendientes, Tareas y vistas de organización.
@@ -32,17 +34,34 @@ class AccionesTarea {
   final List<TagDto> tags;
   final List<ResponsableCandidato> responsables;
 
-  TareaEditorArgs _args([TareaDto? tarea]) => TareaEditorArgs(
-    tarea: tarea,
-    organizacionId: organizacionId ?? tarea?.organizacionId,
-    equipoId: equipoId ?? tarea?.equipoId,
-    proyectoId: proyectoId ?? tarea?.proyectoId,
-    tags: tags,
-    responsables: responsables,
-  );
+  TareaEditorArgs _args([TareaDto? tarea, UbicacionTarea? ubicacion]) =>
+      TareaEditorArgs(
+        tarea: tarea,
+        organizacionId: organizacionId ?? tarea?.organizacionId,
+        equipoId: equipoId ?? tarea?.equipoId,
+        proyectoId: proyectoId ?? tarea?.proyectoId,
+        ubicacion: ubicacion,
+        tags: tags,
+        responsables: responsables,
+      );
 
   Future<bool> crear(BuildContext context) async =>
       await context.push<bool>('/tareas/nueva', extra: _args()) ?? false;
+
+  Future<bool> crearEnDestino(
+    BuildContext context,
+    DestinoNuevaTarea destino,
+  ) async =>
+      await context.push<bool>(
+        '/tareas/nueva',
+        extra: TareaEditorArgs(
+          organizacionId: destino.organizacionId,
+          equipoId: destino.equipoId,
+          proyectoId: destino.proyectoId,
+          ubicacion: destino.ubicacion,
+        ),
+      ) ??
+      false;
 
   Future<bool> editar(BuildContext context, TareaDto tarea) async =>
       await context.push<bool>(
@@ -100,8 +119,15 @@ class AccionesTarea {
   }
 
   /// Abre `/tareas/:id`. Devuelve `true` siempre: dentro pudo editarse o eliminarse.
-  Future<bool> abrirDetalle(BuildContext context, TareaDto tarea) async {
-    await context.push<void>('/tareas/${tarea.id}', extra: _args(tarea));
+  Future<bool> abrirDetalle(
+    BuildContext context,
+    TareaDto tarea, {
+    UbicacionTarea? ubicacion,
+  }) async {
+    await context.push<void>(
+      '/tareas/${tarea.id}',
+      extra: _args(tarea, ubicacion),
+    );
     return true;
   }
 }

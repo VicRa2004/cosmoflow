@@ -51,12 +51,14 @@ class AuthLayout extends StatelessWidget {
                             height: 42,
                             decoration: BoxDecoration(
                               color: colores.indigoMarca,
-                              borderRadius: BorderRadius.circular(12),
+                              borderRadius: BorderRadius.circular(
+                                TemaApp.radioControl,
+                              ),
                             ),
                             alignment: Alignment.center,
-                            child: const Icon(
+                            child: Icon(
                               LucideIcons.sparkles,
-                              color: Colors.white,
+                              color: colores.sobreAcento,
                               size: 20,
                             ),
                           ),
@@ -85,7 +87,7 @@ class AuthLayout extends StatelessWidget {
                       color: colores.superficie,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(
-                          TemaApp.radioTarjeta + 4,
+                          TemaApp.radioDialogo,
                         ),
                         side: BorderSide(color: colores.borde, width: 1),
                       ),
@@ -144,7 +146,7 @@ class _Aviso extends StatelessWidget {
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: fondo,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(TemaApp.radioControl),
         border: Border.all(color: color.withValues(alpha: 0.25)),
       ),
       child: Row(
@@ -268,11 +270,11 @@ class BotonEnviar extends StatelessWidget {
     return FilledButton(
       onPressed: onPressed,
       child: cargando
-          ? const SizedBox.square(
+          ? SizedBox.square(
               dimension: 20,
               child: CircularProgressIndicator(
                 strokeWidth: 2,
-                color: Colors.white,
+                color: context.colores.sobreAcento,
               ),
             )
           : Text(texto),

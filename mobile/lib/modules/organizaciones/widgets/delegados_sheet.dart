@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../core/theme/colores_noche_indigo.dart';
+import '../../../core/widgets/avatar_usuario.dart';
 import '../models/organizacion_models.dart';
 
 /// Bottom sheet para elegir qué integrantes de un equipo con líder
@@ -84,6 +85,11 @@ class _DelegadosSheetState extends State<DelegadosSheet> {
                   return CheckboxListTile(
                     contentPadding: EdgeInsets.zero,
                     value: activo,
+                    secondary: AvatarUsuario(
+                      nombre: nombre,
+                      avatarUrl: miembro?.avatarUrl,
+                      tamano: 34,
+                    ),
                     title: Text(nombre),
                     subtitle: miembro != null ? Text(miembro.email) : null,
                     onChanged: (v) {

@@ -4,6 +4,7 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../core/theme/colores_noche_indigo.dart';
 import '../../../core/widgets/tarjeta_seccion.dart';
+import '../../organizaciones/services/contexto_organizacion_cache.dart';
 import '../models/tarea_model.dart';
 
 /// Fila de lista de tarea: casilla circular (48 dp), título Inter, pills de
@@ -17,6 +18,7 @@ class TareaFila extends StatelessWidget {
     this.onAlternarFijada,
     this.mostrarEstado = true,
     this.puedeActualizar = true,
+    this.ubicacion,
   });
 
   final TareaDto tarea;
@@ -25,6 +27,7 @@ class TareaFila extends StatelessWidget {
   final VoidCallback? onAlternarFijada;
   final bool mostrarEstado;
   final bool puedeActualizar;
+  final UbicacionTarea? ubicacion;
 
   @override
   Widget build(BuildContext context) {
@@ -111,7 +114,11 @@ class TareaFila extends StatelessWidget {
                       ],
                     ),
                     const SizedBox(height: 5),
-                    _Metadatos(tarea: tarea, mostrarEstado: mostrarEstado),
+                    _Metadatos(
+                      tarea: tarea,
+                      mostrarEstado: mostrarEstado,
+                      ubicacion: ubicacion,
+                    ),
                   ],
                 ),
               ),
@@ -146,15 +153,21 @@ class TareaFila extends StatelessWidget {
 }
 
 class _Metadatos extends StatelessWidget {
-  const _Metadatos({required this.tarea, required this.mostrarEstado});
+  const _Metadatos({
+    required this.tarea,
+    required this.mostrarEstado,
+    this.ubicacion,
+  });
 
   final TareaDto tarea;
   final bool mostrarEstado;
+  final UbicacionTarea? ubicacion;
 
   @override
   Widget build(BuildContext context) {
     final colores = context.colores;
     final (textoFecha, colorFecha, fondoFecha) = _vencimiento(colores);
+    final (textoUbicacion, iconoUbicacion) = _etiquetaUbicacion();
 
     return Wrap(
       spacing: 6,
@@ -187,15 +200,25 @@ class _Metadatos extends StatelessWidget {
             colorTexto: colores.tintaSuave,
             colorFondo: colores.elevada,
           ),
-        if (tarea.isCompartida)
+        if (textoUbicacion != null)
           InsigniaPill(
-            texto: 'Compartida',
-            icono: LucideIcons.users,
+            texto: textoUbicacion,
+            icono: iconoUbicacion,
             colorTexto: colores.indigoMarca,
             colorFondo: colores.indigoSuave,
           ),
       ],
     );
+  }
+
+  (String?, IconData?) _etiquetaUbicacion() {
+    if (ubicacion != null) {
+      return (ubicacion!.etiquetaCorta, ubicacion!.icono);
+    }
+    if (!tarea.isCompartida) return (null, null);
+    if (tarea.equipoId != null) return ('Equipo', LucideIcons.users);
+    if (tarea.proyectoId != null) return ('Proyecto', LucideIcons.folderKanban);
+    return ('Organización', LucideIcons.building2);
   }
 
   (String?, Color, Color) _vencimiento(ColoresNocheIndigo colores) {

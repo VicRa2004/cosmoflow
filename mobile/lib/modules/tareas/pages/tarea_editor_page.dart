@@ -1,12 +1,19 @@
 import 'package:flutter/material.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../core/api/adjuntos_api.dart';
 import '../../../core/offline/aviso_pendientes.dart';
+import '../../../core/theme/colores_noche_indigo.dart';
 import '../../../core/widgets/avisos.dart';
 import '../../../core/widgets/pagina_editor.dart';
+import '../../../core/widgets/tarjeta_seccion.dart';
+import '../../organizaciones/api/organizaciones_api.dart';
+import '../../organizaciones/models/organizacion_models.dart';
+import '../../organizaciones/services/contexto_organizacion_cache.dart';
 import '../../plantillas/api/plantillas_api.dart';
 import '../../plantillas/models/plantilla_model.dart';
 import '../../plantillas/widgets/selector_plantilla.dart';
+import '../../tags/api/tags_api.dart';
 import '../../tags/models/tag_model.dart';
 import '../api/tareas_api.dart';
 import '../models/tarea_model.dart';
@@ -21,6 +28,7 @@ class TareaEditorArgs {
     this.organizacionId,
     this.equipoId,
     this.proyectoId,
+    this.ubicacion,
     this.tags = const <TagDto>[],
     this.responsables = const <ResponsableCandidato>[],
   });
@@ -30,6 +38,7 @@ class TareaEditorArgs {
   final int? organizacionId;
   final int? equipoId;
   final int? proyectoId;
+  final UbicacionTarea? ubicacion;
   final List<TagDto> tags;
   final List<ResponsableCandidato> responsables;
 
@@ -46,6 +55,8 @@ class TareaEditorPage extends StatefulWidget {
     super.key,
     required this.tareasApi,
     this.plantillasApi,
+    this.organizacionesApi,
+    this.tagsApi,
     this.adjuntosApi,
     this.tarea,
     this.args = const TareaEditorArgs(),
@@ -55,6 +66,8 @@ class TareaEditorPage extends StatefulWidget {
 
   final TareasApi tareasApi;
   final PlantillasApi? plantillasApi;
+  final OrganizacionesApi? organizacionesApi;
+  final TagsApi? tagsApi;
   final AdjuntosApi? adjuntosApi;
 
   /// `null` = crear (también puede venir en `args.tarea`).
@@ -72,11 +85,17 @@ class _TareaEditorPageState extends State<TareaEditorPage> {
   late final AdjuntosApi _adjuntosApi =
       widget.adjuntosApi ?? AdjuntosApi(apiClient: widget.tareasApi.apiClient);
   late PlantillaTareaDto? _plantillaSeleccionada = widget.args.plantillaInicial;
+  late List<TagDto> _tags = widget.args.tags;
+  late List<ResponsableCandidato> _responsables = widget.args.responsables;
+  late UbicacionTarea? _ubicacion = widget.args.ubicacion;
   List<PlantillaTareaDto> _personales = const <PlantillaTareaDto>[];
   List<PlantillaTareaDto> _deOrganizacion = const <PlantillaTareaDto>[];
   List<TareaDto> _candidatas = const <TareaDto>[];
 
   TareaDto? get _tareaActual => widget.tarea ?? widget.args.tarea;
+  int? get _orgId => widget.args.organizacionId ?? _tareaActual?.organizacionId;
+  int? get _equipoId => widget.args.equipoId ?? _tareaActual?.equipoId;
+  int? get _proyectoId => widget.args.proyectoId ?? _tareaActual?.proyectoId;
 
   @override
   void initState() {
@@ -85,6 +104,66 @@ class _TareaEditorPageState extends State<TareaEditorPage> {
       _cargarPlantillasDisponibles();
     }
     _cargarCandidatas();
+    _cargarContextoDestino();
+  }
+
+  Future<void> _cargarContextoDestino() async {
+    final orgId = _orgId;
+    final tagsApi =
+        widget.tagsApi ?? TagsApi(apiClient: widget.tareasApi.apiClient);
+    final orgApi =
+        widget.organizacionesApi ??
+        OrganizacionesApi(apiClient: widget.tareasApi.apiClient);
+
+    if (_tags.isEmpty) {
+      try {
+        final pagina = await tagsApi.obtenerTodos(organizacionId: orgId);
+        if (mounted) setState(() => _tags = pagina.datos);
+      } catch (_) {}
+    }
+
+    if (orgId == null) return;
+
+    if (_responsables.isEmpty || _ubicacion == null) {
+      try {
+        final res = await Future.wait<dynamic>(<Future<dynamic>>[
+          orgApi.obtenerUna(orgId),
+          orgApi.obtenerMiembros(orgId),
+          orgApi.obtenerEquipos(orgId),
+          orgApi.obtenerProyectos(orgId),
+        ]);
+        if (!mounted) return;
+        final org = res[0] as OrganizacionDto;
+        final miembros = res[1] as List<MiembroDto>;
+        final equipos = res[2] as List<EquipoDto>;
+        final proyectos = res[3] as List<ProyectoDto>;
+        final equipo = _equipoId == null
+            ? null
+            : equipos.where((e) => e.id == _equipoId).firstOrNull;
+        final proyecto = _proyectoId == null
+            ? null
+            : proyectos.where((p) => p.id == _proyectoId).firstOrNull;
+        setState(() {
+          _ubicacion ??= UbicacionTarea(
+            organizacionId: orgId,
+            organizacionNombre: org.nombre,
+            equipoId: _equipoId,
+            equipoNombre: equipo?.nombre,
+            proyectoId: _proyectoId,
+            proyectoNombre: proyecto?.nombre,
+          );
+          if (_responsables.isEmpty) {
+            _responsables = filtrarMiembrosDestino(
+              miembros: miembros,
+              equipos: equipos,
+              proyectos: proyectos,
+              equipoId: _equipoId,
+              proyectoId: _proyectoId,
+            );
+          }
+        });
+      } catch (_) {}
+    }
   }
 
   Future<void> _cargarPlantillasDisponibles() async {
@@ -202,7 +281,54 @@ class _TareaEditorPageState extends State<TareaEditorPage> {
   @override
   Widget build(BuildContext context) {
     final tarea = _tareaActual;
-    final a = widget.args;
+    final colores = context.colores;
+    final ubicacion = _ubicacion;
+    final encabezado = Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: <Widget>[
+        if (_orgId != null) ...<Widget>[
+          Wrap(
+            spacing: 6,
+            runSpacing: 6,
+            children: <Widget>[
+              InsigniaPill(
+                texto: ubicacion?.organizacionNombre ?? 'Organización',
+                icono: LucideIcons.building2,
+                colorTexto: colores.indigoMarca,
+                colorFondo: colores.indigoSuave,
+              ),
+              if (_equipoId != null)
+                InsigniaPill(
+                  texto: ubicacion?.equipoNombre != null
+                      ? 'Equipo · ${ubicacion!.equipoNombre}'
+                      : 'Equipo',
+                  icono: LucideIcons.users,
+                  colorTexto: colores.indigoMarca,
+                  colorFondo: colores.indigoSuave,
+                ),
+              if (_proyectoId != null)
+                InsigniaPill(
+                  texto: ubicacion?.proyectoNombre != null
+                      ? 'Proyecto · ${ubicacion!.proyectoNombre}'
+                      : 'Proyecto',
+                  icono: LucideIcons.folderKanban,
+                  colorTexto: colores.indigoMarca,
+                  colorFondo: colores.indigoSuave,
+                ),
+            ],
+          ),
+          const SizedBox(height: 14),
+        ],
+        if (tarea == null)
+          SelectorPlantilla(
+            personales: _personales,
+            deOrganizacion: _deOrganizacion,
+            seleccionadaId: _plantillaSeleccionada?.id,
+            onElegir: _elegirPlantilla,
+          ),
+      ],
+    );
     return PaginaEditor(
       titulo: tarea == null ? 'Nueva tarea' : 'Editar tarea',
       onGuardar: _guardar,
@@ -210,21 +336,14 @@ class _TareaEditorPageState extends State<TareaEditorPage> {
         key: _form,
         tareaInicial: tarea,
         plantillaInicial: _plantillaSeleccionada,
-        encabezado: tarea == null
-            ? SelectorPlantilla(
-                personales: _personales,
-                deOrganizacion: _deOrganizacion,
-                seleccionadaId: _plantillaSeleccionada?.id,
-                onElegir: _elegirPlantilla,
-              )
-            : null,
-        tagsDisponibles: a.tags,
-        responsablesDisponibles: a.responsables,
+        encabezado: encabezado,
+        tagsDisponibles: _tags,
+        responsablesDisponibles: _responsables,
         tareasCandidatas: _candidatas,
         adjuntosApi: _adjuntosApi,
-        organizacionId: a.organizacionId ?? tarea?.organizacionId,
-        equipoId: a.equipoId ?? tarea?.equipoId,
-        proyectoId: a.proyectoId ?? tarea?.proyectoId,
+        organizacionId: _orgId,
+        equipoId: _equipoId,
+        proyectoId: _proyectoId,
         selectorArchivo: widget.selectorArchivo,
         onCambio: onCambio,
       ),

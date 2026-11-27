@@ -7,10 +7,13 @@ import '../../../core/offline/aviso_pendientes.dart';
 import '../../../core/theme/colores_noche_indigo.dart';
 import '../../../core/widgets/estados.dart';
 import '../../../core/widgets/tarjeta_seccion.dart';
+import '../../organizaciones/api/organizaciones_api.dart';
+import '../../organizaciones/services/contexto_organizacion_cache.dart';
 import '../../tags/models/tag_model.dart';
 import '../acciones_tarea.dart';
 import '../api/tareas_api.dart';
 import '../models/tarea_model.dart';
+import '../widgets/selector_destino_tarea_sheet.dart';
 import '../widgets/tablero_tareas.dart';
 import '../widgets/tarea_fila.dart';
 import '../widgets/tarea_form.dart';
@@ -21,6 +24,7 @@ class TareasPage extends StatefulWidget {
     super.key,
     required this.sesionStore,
     required this.tareasApi,
+    this.organizacionesApi,
     this.organizacionId,
     this.equipoId,
     this.proyectoId,
@@ -34,6 +38,7 @@ class TareasPage extends StatefulWidget {
 
   final SesionStore sesionStore;
   final TareasApi tareasApi;
+  final OrganizacionesApi? organizacionesApi;
   final int? organizacionId;
   final int? equipoId;
   final int? proyectoId;
@@ -52,7 +57,12 @@ class _TareasPageState extends State<TareasPage> {
   static const int _limiteTablero = 200;
 
   final _busqueda = TextEditingController();
+  late final ContextoOrganizacionCache? _contextoCache =
+      widget.organizacionesApi == null
+      ? null
+      : ContextoOrganizacionCache(organizacionesApi: widget.organizacionesApi!);
   List<TareaDto> _tareas = const <TareaDto>[];
+  Map<int, UbicacionTarea> _ubicaciones = const <int, UbicacionTarea>{};
   int _totalElementos = 0;
   EstadoTarea? _filtroEstado;
   bool _soloAsignadas = false;
@@ -111,6 +121,11 @@ class _TareasPageState extends State<TareasPage> {
           _totalElementos = pagina.totalElementos;
         });
       }
+      final cache = _contextoCache;
+      if (cache != null && widget.organizacionId == null) {
+        final mapa = await cache.resolverParaTareas(pagina.datos);
+        if (mounted) setState(() => _ubicaciones = mapa);
+      }
     } catch (_) {
       if (mounted) {
         setState(() => _mensajeError = 'No se pudieron cargar las tareas.');
@@ -122,6 +137,21 @@ class _TareasPageState extends State<TareasPage> {
 
   Future<void> _recargarSi(Future<bool> cambio) async {
     if (await cambio) await _cargar();
+  }
+
+  Future<void> _crearTarea() async {
+    final orgApi = widget.organizacionesApi;
+    if (widget.organizacionId != null || orgApi == null) {
+      await _recargarSi(_acciones.crear(context));
+      return;
+    }
+    final destino = await mostrarSelectorDestinoTarea(
+      context,
+      organizacionesApi: orgApi,
+      usuarioId: widget.sesionStore.usuario?.id,
+    );
+    if (destino == null || !mounted) return;
+    await _recargarSi(_acciones.crearEnDestino(context, destino));
   }
 
   void _alternarVista() {
@@ -215,8 +245,17 @@ class _TareasPageState extends State<TareasPage> {
 
     Widget fila(TareaDto tarea) => TareaFila(
       tarea: tarea,
+      ubicacion: widget.organizacionId == null ? _ubicaciones[tarea.id] : null,
       puedeActualizar: puedeActualizar,
-      onTap: () => _recargarSi(_acciones.abrirDetalle(context, tarea)),
+      onTap: () => _recargarSi(
+        _acciones.abrirDetalle(
+          context,
+          tarea,
+          ubicacion: widget.organizacionId == null
+              ? _ubicaciones[tarea.id]
+              : null,
+        ),
+      ),
       onAlternarCompletada: () =>
           _recargarSi(_acciones.alternarCompletada(context, tarea)),
       onAlternarFijada: () =>
@@ -285,7 +324,7 @@ class _TareasPageState extends State<TareasPage> {
           ? FloatingActionButton(
               heroTag: 'fab-tareas-$heroSuffix',
               tooltip: 'Nueva tarea',
-              onPressed: () => _recargarSi(_acciones.crear(context)),
+              onPressed: _crearTarea,
               child: const Icon(LucideIcons.plus),
             )
           : null,

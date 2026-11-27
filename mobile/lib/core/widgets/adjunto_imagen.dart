@@ -5,6 +5,7 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../api/adjuntos_api.dart';
 import '../theme/colores_noche_indigo.dart';
+import '../theme/tema_app.dart';
 
 /// Muestra una imagen privada de `/api/adjuntos/{id}` descargada con Bearer.
 /// Al tocarla abre una vista ampliable a pantalla completa.
@@ -88,7 +89,7 @@ class _AdjuntoImagenState extends State<AdjuntoImagen> {
             height: widget.alto ?? 120,
             decoration: BoxDecoration(
               color: colores.elevada,
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(TemaApp.radioControl),
               border: Border.all(color: colores.borde),
             ),
             child: const Center(
@@ -105,7 +106,7 @@ class _AdjuntoImagenState extends State<AdjuntoImagen> {
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
             decoration: BoxDecoration(
               color: colores.elevada,
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(TemaApp.radioControl),
               border: Border.all(color: colores.borde),
             ),
             child: Row(
@@ -132,7 +133,7 @@ class _AdjuntoImagenState extends State<AdjuntoImagen> {
         }
         final bytes = snapshot.data!;
         final imagen = ClipRRect(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(TemaApp.radioControl),
           child: Image.memory(
             bytes,
             width: widget.ancho,
@@ -143,7 +144,7 @@ class _AdjuntoImagenState extends State<AdjuntoImagen> {
         );
         if (!widget.permitirAmpliar) return imagen;
         return InkWell(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(TemaApp.radioControl),
           onTap: () => _abrirVisor(context, bytes),
           child: imagen,
         );

@@ -295,6 +295,7 @@ GoRouter crearAppRouter({
             tareasApi: tareasApi,
           ),
           tareasApi: tareasApi,
+          organizacionesApi: organizacionesApi,
         ),
       ),
       GoRoute(
@@ -302,6 +303,8 @@ GoRouter crearAppRouter({
         builder: (context, state) => TareaEditorPage(
           tareasApi: tareasApi,
           plantillasApi: plantillas,
+          organizacionesApi: organizacionesApi,
+          tagsApi: tagsApi,
           args: TareaEditorArgs.fromExtra(state.extra),
           cargarPlantillas: cargarDatosIniciales,
         ),
@@ -316,6 +319,7 @@ GoRouter crearAppRouter({
             args: args,
             plantillasApi: plantillas,
             organizacionesApi: organizacionesApi,
+            tagsApi: tagsApi,
             acciones: AccionesTarea(
               sesionStore: sesionStore,
               tareasApi: tareasApi,
@@ -335,6 +339,8 @@ GoRouter crearAppRouter({
           return TareaEditorPage(
             tareasApi: tareasApi,
             plantillasApi: plantillas,
+            organizacionesApi: organizacionesApi,
+            tagsApi: tagsApi,
             tarea: args.tarea,
             args: args,
             cargarPlantillas: cargarDatosIniciales,
@@ -380,6 +386,7 @@ GoRouter crearAppRouter({
             builder: (context, state) => DashboardPage(
               sesionStore: sesionStore,
               tareasApi: tareasApi,
+              organizacionesApi: organizacionesApi,
               notificacionesApi: notifApi,
               cargarAlIniciar: cargarDatosIniciales,
             ),
@@ -389,6 +396,7 @@ GoRouter crearAppRouter({
             builder: (context, state) => TareasPage(
               sesionStore: sesionStore,
               tareasApi: tareasApi,
+              organizacionesApi: organizacionesApi,
               cargarAlIniciar: cargarDatosIniciales,
             ),
           ),

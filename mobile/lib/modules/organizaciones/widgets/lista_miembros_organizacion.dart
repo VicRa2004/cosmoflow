@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../core/theme/colores_noche_indigo.dart';
+import '../../../core/widgets/avatar_usuario.dart';
 import '../../../core/widgets/avisos.dart';
 import '../../../core/widgets/confirmar.dart';
 import '../../../core/widgets/estados.dart';
@@ -303,10 +304,6 @@ class _MiembroFila extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final textTheme = Theme.of(context).textTheme;
-    final inicial = miembro.nombre.trim().isNotEmpty
-        ? miembro.nombre.trim()[0].toUpperCase()
-        : 'U';
     final puedeSalir = soyYo && !miembro.isAdmin;
     final mostrarAsignar = puedeAsignar && !miembro.isAdmin;
     final mostrarDelegar = organizacionEsAdmin && !soyYo;
@@ -322,20 +319,10 @@ class _MiembroFila extends StatelessWidget {
     ].join(' · ');
 
     return ListTile(
-      leading: Container(
-        width: 38,
-        height: 38,
-        decoration: BoxDecoration(
-          color: miembro.isAdmin ? colores.indigoSuave : colores.elevada,
-          borderRadius: BorderRadius.circular(11),
-        ),
-        alignment: Alignment.center,
-        child: Text(
-          inicial,
-          style: textTheme.titleSmall?.copyWith(
-            color: miembro.isAdmin ? colores.indigoMarca : colores.tintaSuave,
-          ),
-        ),
+      leading: AvatarUsuario(
+        nombre: miembro.nombre,
+        avatarUrl: miembro.avatarUrl,
+        tamano: 38,
       ),
       title: Text(
         soyYo ? '${miembro.nombre} (tú)' : miembro.nombre,

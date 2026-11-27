@@ -9,9 +9,22 @@ class TemaApp {
   TemaApp._();
 
   static const String fuente = 'Inter';
+
+  // Escala de radios centralizada (evita `BorderRadius.circular` mágicos en vistas).
+  static const double radioPequeno = 8.0;
+  static const double radioChip = 10.0;
   static const double radioControl = 12.0;
   static const double radioTarjeta = 16.0;
-  static const double radioChip = 10.0;
+  static const double radioDialogo = 20.0;
+  static const double radioSheet = 24.0;
+  static const double radioCompleto = 999.0;
+
+  // Escala de espaciado y medidas táctiles (móvil).
+  static const double margenPantalla = 16.0;
+  static const double espacioSeccion = 20.0;
+  static const double espacioCampo = 16.0;
+  static const double espacioGrupo = 8.0;
+  static const double altoBoton = 48.0;
 
   static ThemeData get claro => _construirTema(
     brightness: Brightness.light,
@@ -31,7 +44,7 @@ class TemaApp {
     final baseScheme = ColorScheme(
       brightness: brightness,
       primary: paleta.indigoMarca,
-      onPrimary: Colors.white,
+      onPrimary: paleta.sobreAcento,
       primaryContainer: paleta.indigoSuave,
       onPrimaryContainer: paleta.indigoMarca,
       secondary: paleta.elevada,
@@ -39,7 +52,7 @@ class TemaApp {
       secondaryContainer: paleta.elevada,
       onSecondaryContainer: paleta.tinta,
       error: paleta.rosePeligro,
-      onError: Colors.white,
+      onError: paleta.sobreAcento,
       surface: paleta.superficie,
       onSurface: paleta.tinta,
       onSurfaceVariant: paleta.tintaTenue,
@@ -180,7 +193,7 @@ class TemaApp {
         height: 66,
         indicatorColor: paleta.indigoSuave,
         indicatorShape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(radioControl),
         ),
         iconTheme: WidgetStateProperty.resolveWith<IconThemeData>((estados) {
           final activo = estados.contains(WidgetState.selected);
@@ -202,10 +215,12 @@ class TemaApp {
       ),
       floatingActionButtonTheme: FloatingActionButtonThemeData(
         backgroundColor: paleta.indigoMarca,
-        foregroundColor: Colors.white,
+        foregroundColor: paleta.sobreAcento,
         elevation: 2,
         highlightElevation: 4,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(radioTarjeta),
+        ),
         extendedTextStyle: const TextStyle(
           fontFamily: fuente,
           fontSize: 14,
@@ -360,7 +375,7 @@ class TemaApp {
         surfaceTintColor: Colors.transparent,
         elevation: 6,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(radioControl),
           side: BorderSide(color: paleta.borde, width: 1),
         ),
         textStyle: TextStyle(
@@ -376,7 +391,7 @@ class TemaApp {
         showDragHandle: true,
         dragHandleColor: paleta.bordeFuerte,
         shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+          borderRadius: BorderRadius.vertical(top: Radius.circular(radioSheet)),
         ),
       ),
       dialogTheme: DialogThemeData(
@@ -384,7 +399,7 @@ class TemaApp {
         surfaceTintColor: Colors.transparent,
         elevation: 8,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(radioDialogo),
           side: BorderSide(color: paleta.borde, width: 1),
         ),
         titleTextStyle: TextStyle(
@@ -411,7 +426,7 @@ class TemaApp {
           fontWeight: FontWeight.w500,
         ),
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(radioControl),
         ),
       ),
       dividerTheme: DividerThemeData(
@@ -477,8 +492,8 @@ class TemaApp {
       filledButtonTheme: FilledButtonThemeData(
         style: FilledButton.styleFrom(
           backgroundColor: paleta.indigoMarca,
-          foregroundColor: Colors.white,
-          minimumSize: const Size(64, 48),
+          foregroundColor: paleta.sobreAcento,
+          minimumSize: const Size(64, altoBoton),
           padding: const EdgeInsets.symmetric(horizontal: 20),
           elevation: 0,
           textStyle: const TextStyle(
@@ -496,7 +511,7 @@ class TemaApp {
         style: OutlinedButton.styleFrom(
           backgroundColor: paleta.superficie,
           foregroundColor: paleta.tinta,
-          minimumSize: const Size(64, 48),
+          minimumSize: const Size(64, altoBoton),
           padding: const EdgeInsets.symmetric(horizontal: 20),
           side: BorderSide(color: paleta.borde, width: 1),
           textStyle: const TextStyle(
@@ -520,7 +535,7 @@ class TemaApp {
             letterSpacing: -0.1,
           ),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(10),
+            borderRadius: BorderRadius.circular(radioChip),
           ),
         ),
       ),

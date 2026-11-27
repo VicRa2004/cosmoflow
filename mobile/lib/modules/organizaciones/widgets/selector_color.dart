@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
+import '../../../core/theme/colores_noche_indigo.dart';
+
 /// Colores de acento compartidos para organizaciones, equipos y proyectos.
 const List<String> coloresAcentoOrganizacion = <String>[
   '#6366f1',
@@ -68,9 +70,9 @@ class SelectorColor extends StatelessWidget {
                   ),
                   alignment: Alignment.center,
                   child: actual == hex.toLowerCase()
-                      ? const Icon(
+                      ? Icon(
                           LucideIcons.check,
-                          color: Colors.white,
+                          color: context.colores.sobreAcento,
                           size: 16,
                         )
                       : null,

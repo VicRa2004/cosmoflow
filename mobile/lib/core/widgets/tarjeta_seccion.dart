@@ -63,7 +63,9 @@ class TarjetaSeccion extends StatelessWidget {
                         color: (colorTitulo ?? colores.tintaTenue).withValues(
                           alpha: 0.12,
                         ),
-                        borderRadius: BorderRadius.circular(999),
+                        borderRadius: BorderRadius.circular(
+                          TemaApp.radioCompleto,
+                        ),
                       ),
                       child: Text(
                         '$contador',
@@ -168,7 +170,7 @@ class InsigniaPill extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2.5),
       decoration: BoxDecoration(
         color: fondo,
-        borderRadius: BorderRadius.circular(7),
+        borderRadius: BorderRadius.circular(TemaApp.radioPequeno),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,

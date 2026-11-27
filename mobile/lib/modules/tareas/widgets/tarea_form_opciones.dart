@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../core/api/adjuntos_api.dart';
+import '../../../core/theme/tema_app.dart';
 import '../../../core/theme/colores_noche_indigo.dart';
 import '../models/tarea_model.dart';
 import 'adjuntos_tarea_section.dart';
@@ -102,7 +103,7 @@ class TareaFormOpciones extends StatelessWidget {
         ),
         const SizedBox(height: 16),
         InkWell(
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.circular(TemaApp.radioPequeno),
           onTap: () => _elegirDependencia(context),
           child: InputDecorator(
             decoration: InputDecoration(

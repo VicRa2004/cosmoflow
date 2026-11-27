@@ -4,6 +4,7 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../core/auth/sesion_store.dart';
 import '../../../core/theme/colores_noche_indigo.dart';
+import '../../../core/widgets/avatar_usuario.dart';
 import '../../../core/widgets/avisos.dart';
 import '../../../core/widgets/confirmar.dart';
 import '../../../core/widgets/estados.dart';
@@ -171,7 +172,12 @@ class _EquipoDetallePageState extends State<EquipoDetallePage> {
           final esLider = equipo.liderId == me.usuarioId;
           final esDelegado =
               !esLider && equipo.liderId != null && me.puedeCrearTareas;
-          return (nombre: nombre, esLider: esLider, esDelegado: esDelegado);
+          return (
+            nombre: nombre,
+            avatarUrl: m?.avatarUrl,
+            esLider: esLider,
+            esDelegado: esDelegado,
+          );
         })
         .toList(growable: false);
 
@@ -195,9 +201,10 @@ class _EquipoDetallePageState extends State<EquipoDetallePage> {
                 for (final i in integrantes)
                   Chip(
                     visualDensity: VisualDensity.compact,
-                    avatar: Icon(
-                      i.esLider ? LucideIcons.star : LucideIcons.user,
-                      size: 14,
+                    avatar: AvatarUsuario(
+                      nombre: i.nombre,
+                      avatarUrl: i.avatarUrl,
+                      tamano: 22,
                     ),
                     label: Text(
                       i.esLider

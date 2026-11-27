@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../core/theme/colores_noche_indigo.dart';
+import '../../../core/theme/tema_app.dart';
+import '../../../core/widgets/avatar_usuario.dart';
 import '../../../core/widgets/estados.dart';
 import '../../../core/widgets/tarjeta_seccion.dart';
 import '../../tags/models/tag_model.dart';
@@ -150,7 +152,7 @@ class _ProyectoFila extends StatelessWidget {
           if (porcentaje != null) ...<Widget>[
             const SizedBox(height: 6),
             ClipRRect(
-              borderRadius: BorderRadius.circular(999),
+              borderRadius: BorderRadius.circular(TemaApp.radioCompleto),
               child: LinearProgressIndicator(
                 value: porcentaje,
                 minHeight: 5,
@@ -284,11 +286,7 @@ class _EquipoFila extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final textTheme = Theme.of(context).textTheme;
     final colorAvatar = parsearColorHex(equipo.color);
-    final inicial = equipo.nombre.trim().isNotEmpty
-        ? equipo.nombre.trim()[0].toUpperCase()
-        : 'E';
     final lider = equipo.liderId == null
         ? null
         : miembros.where((m) => m.usuarioId == equipo.liderId).firstOrNull;
@@ -301,20 +299,15 @@ class _EquipoFila extends StatelessWidget {
 
     return ListTile(
       onTap: onTap,
-      leading: Container(
-        width: 38,
-        height: 38,
-        decoration: BoxDecoration(
-          color: colorAvatar ?? colores.indigoSuave,
-          borderRadius: BorderRadius.circular(11),
-        ),
-        alignment: Alignment.center,
-        child: Text(
-          inicial,
-          style: textTheme.titleSmall?.copyWith(
-            color: colorAvatar != null ? Colors.white : colores.indigoMarca,
-          ),
-        ),
+      leading: AvatarUsuario(
+        nombre: equipo.nombre,
+        avatarUrl: equipo.avatarUrl,
+        tamano: 38,
+        radio: TemaApp.radioChip,
+        colorFondo: colorAvatar ?? colores.indigoSuave,
+        colorTexto: colorAvatar != null
+            ? colores.sobreAcento
+            : colores.indigoMarca,
       ),
       title: Text(equipo.nombre, maxLines: 1, overflow: TextOverflow.ellipsis),
       subtitle: Text(subtitulo, maxLines: 1, overflow: TextOverflow.ellipsis),
