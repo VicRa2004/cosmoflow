@@ -1,4 +1,8 @@
-import type { CallToolResult, McpServer } from "@modelcontextprotocol/server";
+import {
+	type CallToolResult,
+	type McpServer,
+	ResourceTemplate,
+} from "@modelcontextprotocol/server";
 import { z } from "zod";
 
 export type Api = (
@@ -98,12 +102,17 @@ async function resultado(
 		const datos = await llamada();
 		return {
 			content: [{ type: "text", text: JSON.stringify(datos, null, 2) }],
+			// Los clientes que lo leen se ahorran parsear el texto; solo objetos (spec MCP).
+			...(esObjeto(datos) && { structuredContent: datos }),
 		};
 	} catch (error) {
 		const text = error instanceof Error ? error.message : String(error);
 		return { content: [{ type: "text", text }], isError: true };
 	}
 }
+
+const esObjeto = (valor: unknown): valor is Record<string, unknown> =>
+	typeof valor === "object" && valor !== null && !Array.isArray(valor);
 
 /** Los opcionales ausentes no viajan: la API validaría `undefined` como texto. */
 const consulta = (valores: Record<string, string | number | undefined>) => {
@@ -116,6 +125,10 @@ const consulta = (valores: Record<string, string | number | undefined>) => {
 
 /** Todo pasa por la API REST con el token del usuario: mismos permisos y validaciones, nunca más. */
 export function registrarHerramientas(servidor: McpServer, api: Api): void {
+	registrarExtras(servidor, api);
+	registrarPrompts(servidor);
+	registrarRecursos(servidor, api);
+
 	servidor.registerTool(
 		"listar_pendientes",
 		{
@@ -539,4 +552,187 @@ export function registrarHerramientas(servidor: McpServer, api: Api): void {
 				),
 			),
 	);
+}
+
+const rutaTags = (organizacionId?: number) =>
+	`${organizacionId ? `/api/organizaciones/${organizacionId}` : "/api"}/tags`;
+
+function registrarExtras(servidor: McpServer, api: Api): void {
+	servidor.registerTool(
+		"listar_tareas_por_fechas",
+		{
+			description:
+				"Tareas visibles con inicio o vencimiento entre dos días (ambos incluidos), como el calendario.",
+			inputSchema: {
+				desde: z.iso.date().describe("AAAA-MM-DD"),
+				hasta: z.iso.date().describe("AAAA-MM-DD"),
+			},
+			annotations: { readOnlyHint: true },
+		},
+		(args) =>
+			resultado(() => api("GET", `/api/tareas/calendario?${consulta(args)}`)),
+	);
+
+	servidor.registerTool(
+		"marcar_subtarea",
+		{
+			description:
+				"Marca o desmarca una subtarea (ids de obtener_tarea) sin tocar las demás.",
+			inputSchema: { id, subtareaId: id, completada: z.boolean() },
+			annotations: { idempotentHint: true },
+		},
+		({ id, subtareaId, completada }) =>
+			resultado(async () => {
+				const tarea = (await api("GET", `/api/tareas/${id}`)) as {
+					subtareas: { id: number; titulo: string; completada: boolean }[];
+				};
+				if (!tarea.subtareas.some((s) => s.id === subtareaId)) {
+					throw new Error(`La tarea ${id} no tiene la subtarea ${subtareaId}`);
+				}
+				return api("PUT", `/api/tareas/${id}`, {
+					subtareas: tarea.subtareas.map((s) =>
+						s.id === subtareaId ? { ...s, completada } : s,
+					),
+				});
+			}),
+	);
+
+	servidor.registerTool(
+		"actualizar_tag",
+		{
+			description:
+				"Cambia el nombre o el color de un tag personal o, con organizacionId, de la organización.",
+			inputSchema: {
+				id,
+				organizacionId: id.optional(),
+				nombre: z.string().min(1).max(64).optional(),
+				color: color.optional(),
+			},
+			annotations: { idempotentHint: true },
+		},
+		({ id, organizacionId, ...cambios }) =>
+			resultado(() => api("PUT", `${rutaTags(organizacionId)}/${id}`, cambios)),
+	);
+
+	servidor.registerTool(
+		"eliminar_tag",
+		{
+			description:
+				"Elimina un tag personal o, con organizacionId, de la organización; se quita de sus tareas y notas.",
+			inputSchema: { id, organizacionId: id.optional() },
+			annotations: { destructiveHint: true },
+		},
+		({ id, organizacionId }) =>
+			resultado(() => api("DELETE", `${rutaTags(organizacionId)}/${id}`)),
+	);
+
+	servidor.registerTool(
+		"actualizar_proyecto",
+		{
+			description:
+				"Cambia las propiedades indicadas de un proyecto; las omitidas no se tocan. equipoIds e integranteIds reemplazan la lista.",
+			inputSchema: {
+				organizacionId: id,
+				id,
+				nombre: z.string().min(1).max(100).optional(),
+				descripcion: z.string().max(500).optional(),
+				estado: z.enum(["activo", "en_pausa", "terminado"]).optional(),
+				color: color.optional(),
+				fechaInicio: dia,
+				fechaFin: dia,
+				equipoIds: z.array(id).max(500).optional(),
+				integranteIds: z.array(id).max(500).optional(),
+			},
+			annotations: { idempotentHint: true },
+		},
+		({ organizacionId, id, ...cambios }) =>
+			resultado(() =>
+				api(
+					"PUT",
+					`/api/organizaciones/${organizacionId}/proyectos/${id}`,
+					cambios,
+				),
+			),
+	);
+}
+
+const pedir = (text: string) => ({
+	messages: [
+		{ role: "user" as const, content: { type: "text" as const, text } },
+	],
+});
+
+/** Plantillas de conversación: solo dicen qué herramientas usar, los datos los traen ellas. */
+function registrarPrompts(servidor: McpServer): void {
+	servidor.registerPrompt(
+		"resumen_del_dia",
+		{
+			title: "Resumen del día",
+			description: "Qué tengo hoy: vencidas, para hoy, en progreso y avisos.",
+		},
+		() =>
+			pedir(
+				"Hazme un resumen de mi día en Cosmoflow. Usa listar_pendientes y listar_notificaciones (solo no leídas). Agrupa en: vencidas, vencen hoy, en progreso y avisos sin leer. Sé breve y termina con las 3 cosas que harías primero.",
+			),
+	);
+
+	servidor.registerPrompt(
+		"planear_semana",
+		{
+			title: "Planear la semana",
+			description:
+				"Reparte las tareas pendientes en los próximos 7 días y propone fechas.",
+		},
+		() =>
+			pedir(
+				"Ayúdame a planear la semana. Usa listar_pendientes y listar_tareas_por_fechas desde hoy hasta dentro de 7 días. Propón qué hacer cada día según prioridad y vencimiento, señala lo que no cabe y pregúntame antes de cambiar fechas con actualizar_tarea.",
+			),
+	);
+
+	servidor.registerPrompt(
+		"standup_equipo",
+		{
+			title: "Standup del equipo",
+			description:
+				"Qué hizo, qué hará y qué bloquea a cada miembro de un equipo.",
+			argsSchema: z.object({
+				equipo: z.string().describe("Nombre o id del equipo"),
+			}),
+		},
+		({ equipo }) =>
+			pedir(
+				`Prepara el standup del equipo «${equipo}» de Cosmoflow. Si no es un id, búscalo con listar_organizaciones y listar_equipos. Luego usa listar_tareas con su equipoId (completadas, en progreso y pendientes) y agrupa por responsable: qué terminó, en qué está y qué tiene bloqueado o vencido.`,
+			),
+	);
+}
+
+/** Tareas y notas por URI, para clientes que adjuntan recursos a la conversación. */
+function registrarRecursos(servidor: McpServer, api: Api): void {
+	for (const [que, recurso] of [
+		["tarea", "tareas"],
+		["nota", "notas"],
+	] as const) {
+		servidor.registerResource(
+			que,
+			new ResourceTemplate(`cosmoflow://${que}/{id}`, { list: undefined }),
+			{
+				title: que === "tarea" ? "Tarea" : "Nota",
+				description: `Una ${que} de Cosmoflow por id, con su contenido completo.`,
+				mimeType: "application/json",
+			},
+			async (uri, { id }) => ({
+				contents: [
+					{
+						uri: uri.href,
+						mimeType: "application/json",
+						text: JSON.stringify(
+							await api("GET", `/api/${recurso}/${Number(id)}`),
+							null,
+							2,
+						),
+					},
+				],
+			}),
+		);
+	}
 }
