@@ -3,6 +3,7 @@ import {
 	type McpServer,
 	ResourceTemplate,
 } from "@modelcontextprotocol/server";
+import { MIME_VISTA, uriVista, type Vista, vistaHtml } from "./vistas";
 import { z } from "zod";
 
 export type Api = (
@@ -128,6 +129,7 @@ export function registrarHerramientas(servidor: McpServer, api: Api): void {
 	registrarExtras(servidor, api);
 	registrarPrompts(servidor);
 	registrarRecursos(servidor, api);
+	registrarVistas(servidor, api);
 
 	servidor.registerTool(
 		"listar_pendientes",
@@ -735,4 +737,71 @@ function registrarRecursos(servidor: McpServer, api: Api): void {
 			}),
 		);
 	}
+}
+
+/** `_meta` de una tool con vista (MCP Apps); la clave plana es la antigua, aún leída por algunos hosts. */
+const conVista = (vista: Vista) => ({
+	ui: { resourceUri: uriVista(vista) },
+	"ui/resourceUri": uriVista(vista),
+});
+
+/**
+ * MCP Apps: tools que el cliente pinta con una vista interactiva. Sin soporte de la
+ * extensión devuelven el JSON como cualquier otra, así que se registran siempre.
+ */
+function registrarVistas(servidor: McpServer, api: Api): void {
+	for (const vista of ["tarea", "tablero"] as const) {
+		servidor.registerResource(
+			`vista_${vista}`,
+			uriVista(vista),
+			{
+				title: vista === "tarea" ? "Vista de tarea" : "Tablero",
+				mimeType: MIME_VISTA,
+				_meta: { ui: { prefersBorder: true } },
+			},
+			async (uri) => ({
+				contents: [
+					{
+						uri: uri.href,
+						mimeType: MIME_VISTA,
+						text: vistaHtml(vista),
+						_meta: { ui: { prefersBorder: true } },
+					},
+				],
+			}),
+		);
+	}
+
+	servidor.registerTool(
+		"mostrar_tarea",
+		{
+			description:
+				"Muestra una tarea al usuario como tarjeta interactiva (estado y checklist) si el cliente admite vistas; si no, devuelve sus datos. Para solo leerla usa obtener_tarea.",
+			inputSchema: { id },
+			annotations: { readOnlyHint: true },
+			_meta: conVista("tarea"),
+		},
+		({ id }) => resultado(() => api("GET", `/api/tareas/${id}`)),
+	);
+
+	servidor.registerTool(
+		"mostrar_tablero",
+		{
+			description:
+				"Muestra al usuario el tablero kanban (pendiente, en progreso, completada) de un proyecto o de un equipo (exactamente uno); se pueden arrastrar tareas entre columnas. Hasta 100 tareas.",
+			inputSchema: { proyectoId: id.optional(), equipoId: id.optional() },
+			annotations: { readOnlyHint: true },
+			_meta: conVista("tablero"),
+		},
+		({ proyectoId, equipoId }) =>
+			resultado(async () => {
+				if ((proyectoId === undefined) === (equipoId === undefined)) {
+					throw new Error("Indica proyectoId o equipoId (solo uno)");
+				}
+				return api(
+					"GET",
+					`/api/tareas?${consulta({ proyectoId, equipoId, limite: 100 })}`,
+				);
+			}),
+	);
 }
