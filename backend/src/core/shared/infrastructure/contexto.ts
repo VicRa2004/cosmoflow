@@ -5,6 +5,8 @@ export interface ContextoPeticion {
 	requestId?: string;
 	/** Lo añade `authMiddleware` al verificar el token. */
 	usuarioId?: number;
+	/** De la cabecera W3C `traceparent`: une un error con la traza del cliente (p. ej. un MCP). */
+	traceId?: string;
 }
 
 const almacen = new AsyncLocalStorage<ContextoPeticion>();

@@ -13,6 +13,7 @@ const CHALLENGE = createHash("sha256").update(VERIFIER).digest("base64url");
 type ResultadoRpc = {
 	tools: { name: string }[];
 	supportedVersions: string[];
+	instructions?: string;
 	resultType: string;
 	_meta: Record<string, { name: string }>;
 	isError?: boolean;
@@ -523,7 +524,7 @@ describe("Conector MCP (e2e)", () => {
 					params: {
 						protocolVersion: "2025-11-25",
 						capabilities: {},
-						clientInfo: { name: "e2e", version: "1.0.0" },
+						clientInfo: { name: "ChatGPT", version: "1.0.0" },
 					},
 				}),
 			});
@@ -532,6 +533,9 @@ describe("Conector MCP (e2e)", () => {
 			const texto = await res.text();
 			expect(texto).toContain('"protocolVersion":"2025-11-25"');
 			expect(texto).toContain('"name":"cosmoflow"');
+			// Instrucciones con el añadido propio de ChatGPT.
+			expect(texto).toContain("Cosmoflow gestiona tareas");
+			expect(texto).toContain("plan de ChatGPT");
 		});
 
 		it("debería anunciarse con server/discover y listar todas", async () => {
@@ -539,6 +543,8 @@ describe("Conector MCP (e2e)", () => {
 			const { tools } = await rpc(token, "tools/list");
 
 			expect(descubierto.supportedVersions).toContain(VERSION);
+			expect(descubierto.instructions).toContain("Cosmoflow gestiona tareas");
+			expect(descubierto.instructions).not.toContain("ChatGPT");
 			expect(
 				descubierto._meta["io.modelcontextprotocol/serverInfo"]?.name,
 			).toBe("cosmoflow");
