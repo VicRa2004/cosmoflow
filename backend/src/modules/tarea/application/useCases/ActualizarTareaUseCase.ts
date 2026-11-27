@@ -39,6 +39,7 @@ export class ActualizarTareaUseCase {
 			...campos,
 			...(subtareas !== undefined && {
 				subtareas: subtareas.map((sub) => ({
+					id: sub.id,
 					titulo: sub.titulo,
 					completada: sub.completada ?? false,
 				})),

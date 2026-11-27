@@ -21,6 +21,7 @@ export function ChecklistSubtareas({ tarea }: { tarea: TareaDto }) {
 			id: tarea.id,
 			datos: {
 				subtareas: tarea.subtareas.map((sub) => ({
+					id: sub.id,
 					titulo: sub.titulo,
 					completada: sub.id === id ? !sub.completada : sub.completada,
 				})),

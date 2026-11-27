@@ -278,4 +278,61 @@ describe("Tareas personales (e2e)", () => {
 			],
 		});
 	});
+
+	it("actualizar no recrea las subtareas: conservan id, estado y orden (#215)", async () => {
+		type Sub = { id: number; titulo: string; completada: boolean };
+		const actualizar = async (id: number, body: unknown) => {
+			const res = await api(`/api/tareas/${id}`, {
+				method: "PUT",
+				token: ana,
+				body,
+			});
+			expect(res.status).toBe(200);
+			return ((await res.json()) as { subtareas: Sub[] }).subtareas;
+		};
+		const res = await post(ana, "/api/tareas", {
+			titulo: "Checklist estable",
+			subtareas: [
+				{ titulo: "Uno", completada: true },
+				{ titulo: "Dos" },
+				{ titulo: "Tres" },
+			],
+		});
+		const { id, subtareas } = (await res.json()) as {
+			id: number;
+			subtareas: Sub[];
+		};
+		const [uno, dos, tres] = subtareas as [Sub, Sub, Sub];
+
+		// Otro campo: la checklist no se toca.
+		expect(await actualizar(id, { fechaVencimiento: "2026-12-01" })).toEqual(
+			subtareas,
+		);
+
+		// Lista entera sin ids (móvil, escritorio): se emparejan por título.
+		expect(
+			await actualizar(id, {
+				subtareas: [
+					{ titulo: "Uno", completada: true },
+					{ titulo: "Dos", completada: true },
+					{ titulo: "Tres" },
+				],
+			}),
+		).toEqual([uno, { ...dos, completada: true }, tres]);
+
+		// Con ids: renombrar, reordenar, quitar y añadir.
+		const final = await actualizar(id, {
+			subtareas: [
+				{ id: tres.id, titulo: "Tres bis" },
+				{ id: uno.id, titulo: "Uno", completada: true },
+				{ titulo: "Cuatro" },
+			],
+		});
+		expect(final.slice(0, 2)).toEqual([
+			{ id: tres.id, titulo: "Tres bis", completada: false },
+			uno,
+		]);
+		expect(final[2]).toMatchObject({ titulo: "Cuatro", completada: false });
+		expect(await prisma.subtarea.count({ where: { id: dos.id } })).toBe(0);
+	});
 });

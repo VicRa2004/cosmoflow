@@ -398,20 +398,33 @@ export class PrismaTareaRepository implements TareaRepository {
 						data: data.getMencionIds().map((usuarioId) => ({ usuarioId })),
 					},
 				},
-				subtareas: {
-					deleteMany: {},
-					createMany: {
-						data: datos.subtareas.map((sub, orden) => ({
-							titulo: sub.titulo,
-							completada: sub.completada,
-							orden,
-						})),
-					},
-				},
+				subtareas: this.sincronizarSubtareas(datos.subtareas),
 			},
 			include,
 		});
 		return this.toDomain(registro);
+	}
+
+	/** Actualiza las que conservan id, borra las que ya no están y crea las nuevas. */
+	private sincronizarSubtareas(subtareas: DatosTarea["subtareas"]) {
+		const conOrden = subtareas.map((sub, orden) => ({ ...sub, orden }));
+		const existentes = conOrden.filter((sub) => sub.id !== undefined);
+		return {
+			deleteMany: { id: { notIn: existentes.map((sub) => sub.id as number) } },
+			updateMany: existentes.map(({ id, titulo, completada, orden }) => ({
+				where: { id },
+				data: { titulo, completada, orden },
+			})),
+			createMany: {
+				data: conOrden
+					.filter((sub) => sub.id === undefined)
+					.map(({ titulo, completada, orden }) => ({
+						titulo,
+						completada,
+						orden,
+					})),
+			},
+		} satisfies Prisma.SubtareaUpdateManyWithoutTareaNestedInput;
 	}
 
 	async buscarPapelera(

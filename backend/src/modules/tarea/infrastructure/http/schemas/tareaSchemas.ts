@@ -12,6 +12,8 @@ const dia = z.iso
 	.openapi({ example: "2026-11-15" });
 
 const subtareaEntradaSchema = z.object({
+	/** Al actualizar, la subtarea que se edita; sin él se busca por título o se crea. */
+	id: z.number().int().positive().optional(),
 	titulo: z
 		.string()
 		.trim()

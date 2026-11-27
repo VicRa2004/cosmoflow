@@ -357,7 +357,13 @@ export class Tarea extends Entity {
 	public actualizar(cambios: Partial<DatosTarea>): void {
 		const previos = this.datos;
 		const anterior = this.datos.estado;
-		this.datos = Tarea.validar({ ...this.datos, ...sinIndefinidos(cambios) });
+		this.datos = Tarea.validar({
+			...this.datos,
+			...sinIndefinidos(cambios),
+			...(cambios.subtareas && {
+				subtareas: conservarIds(previos.subtareas, cambios.subtareas),
+			}),
+		});
 		const campos = CAMPOS_HISTORIAL.filter(
 			(campo) => previos[campo] !== this.datos[campo],
 		);
@@ -434,6 +440,36 @@ const CAMPOS_HISTORIAL: CampoHistorial[] = [
 	"fechaInicio",
 	"fechaVencimiento",
 ];
+
+/**
+ * Cada subtarea entrante conserva el id de una existente: el suyo si es de esta
+ * tarea o, si no trae, el de la primera libre con el mismo título (los clientes
+ * que no mandan ids no las recrean). Las que no casan son nuevas.
+ */
+function conservarIds(
+	existentes: SubtareaTarea[],
+	entrantes: SubtareaTarea[],
+): SubtareaTarea[] {
+	const libres = new Set(
+		existentes.flatMap((s) => (s.id === undefined ? [] : [s.id])),
+	);
+	const conId = entrantes.map((s) =>
+		s.id !== undefined && libres.delete(s.id) ? s.id : undefined,
+	);
+	return entrantes.map(({ id: _, ...sub }, i) => {
+		const id =
+			conId[i] ??
+			existentes.find(
+				(e) =>
+					e.id !== undefined &&
+					libres.has(e.id) &&
+					e.titulo === sub.titulo.trim(),
+			)?.id;
+		if (id === undefined) return sub;
+		libres.delete(id);
+		return { id, ...sub };
+	});
+}
 
 function sinIndefinidos<T extends object>(objeto: T): Partial<T> {
 	return Object.fromEntries(

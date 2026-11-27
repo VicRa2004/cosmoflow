@@ -5,6 +5,8 @@ import { Input } from "@/core/components/ui/Input";
 import { cn } from "@/core/utils/cn";
 
 export interface SubtareaEditable {
+	/** Sin id es nueva; con id, el backend la edita en lugar de recrearla. */
+	id?: number;
 	titulo: string;
 	completada: boolean;
 }
