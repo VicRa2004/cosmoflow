@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../../../core/theme/colores_noche_indigo.dart';
+import '../../../core/theme/tema_app.dart';
 import '../models/tarea_model.dart';
 
 /// Checklist interactiva de subtareas en la vista de detalle de una tarea.
@@ -56,7 +57,7 @@ class ChecklistSubtareas extends StatelessWidget {
         Padding(
           padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
           child: ClipRRect(
-            borderRadius: BorderRadius.circular(4),
+            borderRadius: BorderRadius.circular(TemaApp.radioPequeno),
             child: LinearProgressIndicator(
               value: fraccion,
               minHeight: 6,

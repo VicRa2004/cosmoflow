@@ -4,6 +4,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../api/adjuntos_api.dart';
 import '../theme/colores_noche_indigo.dart';
+import '../theme/tema_app.dart';
 import 'adjunto_imagen.dart';
 
 /// Contenido Markdown de tareas y notas con la tipografía del tema.
@@ -33,7 +34,7 @@ class ContenidoMarkdown extends StatelessWidget {
       ),
       codeblockDecoration: BoxDecoration(
         color: colores.elevada,
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(TemaApp.radioPequeno),
       ),
       blockquoteDecoration: BoxDecoration(
         border: Border(left: BorderSide(color: colores.bordeFuerte, width: 3)),

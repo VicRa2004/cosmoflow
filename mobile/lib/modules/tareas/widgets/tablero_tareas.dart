@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../core/theme/colores_noche_indigo.dart';
+import '../../../core/theme/tema_app.dart';
 import '../../../core/widgets/tarjeta_seccion.dart';
 import '../models/tarea_model.dart';
 
@@ -121,7 +122,7 @@ class _ColumnaKanban extends StatelessWidget {
             color: encima
                 ? colores.indigoSuave.withValues(alpha: 0.65)
                 : colores.elevada.withValues(alpha: 0.6),
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(TemaApp.radioTarjeta),
             border: Border.all(
               color: encima ? colores.indigoMarca : colores.borde,
               width: encima ? 1.5 : 1,
@@ -156,7 +157,9 @@ class _ColumnaKanban extends StatelessWidget {
                       ),
                       decoration: BoxDecoration(
                         color: colores.superficie,
-                        borderRadius: BorderRadius.circular(999),
+                        borderRadius: BorderRadius.circular(
+                          TemaApp.radioCompleto,
+                        ),
                         border: Border.all(color: colores.borde),
                       ),
                       child: Text(
@@ -294,11 +297,11 @@ class _TarjetaKanban extends StatelessWidget {
     return Material(
       color: colores.superficie,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(TemaApp.radioControl),
         side: BorderSide(color: colores.borde),
       ),
       child: InkWell(
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(TemaApp.radioControl),
         onTap: onAbrir,
         child: Padding(
           padding: const EdgeInsets.fromLTRB(12, 10, 4, 10),

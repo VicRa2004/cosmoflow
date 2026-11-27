@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
+import '../../../core/theme/colores_noche_indigo.dart';
+
 import '../models/tag_model.dart';
 
 /// Valores devueltos por el formulario de crear o editar tag.
@@ -131,9 +133,9 @@ class _TagFormSheetState extends State<TagFormSheet> {
                       ),
                       alignment: Alignment.center,
                       child: _colorSeleccionado == hex
-                          ? const Icon(
+                          ? Icon(
                               LucideIcons.check,
-                              color: Colors.white,
+                              color: context.colores.sobreAcento,
                               size: 16,
                             )
                           : null,

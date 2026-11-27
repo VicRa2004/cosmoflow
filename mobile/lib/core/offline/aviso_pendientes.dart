@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../theme/colores_noche_indigo.dart';
+import '../theme/tema_app.dart';
 import 'cola_sin_conexion.dart';
 
 /// Lista lo creado sin conexión que aún no llegó al servidor. Al vaciarse
@@ -60,7 +61,7 @@ class _AvisoPendientesState extends State<AvisoPendientes> {
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
           color: colores.amberSuave,
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(TemaApp.radioControl),
           border: Border.all(color: colores.amberAviso.withValues(alpha: 0.35)),
         ),
         child: Column(
