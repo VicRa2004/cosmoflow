@@ -9,9 +9,12 @@ import '../../../core/widgets/estados.dart';
 import '../../../core/widgets/tarjeta_seccion.dart';
 import '../../notificaciones/api/notificaciones_api.dart';
 import '../../notificaciones/widgets/boton_notificaciones.dart';
+import '../../organizaciones/api/organizaciones_api.dart';
+import '../../organizaciones/services/contexto_organizacion_cache.dart';
 import '../../tareas/acciones_tarea.dart';
 import '../../tareas/api/tareas_api.dart';
 import '../../tareas/models/tarea_model.dart';
+import '../../tareas/widgets/selector_destino_tarea_sheet.dart';
 import '../../tareas/widgets/tarea_fila.dart';
 
 /// Portada `/dashboard` («Pendientes»): tareas abiertas agrupadas en tarjetas
@@ -21,12 +24,14 @@ class DashboardPage extends StatefulWidget {
     super.key,
     required this.sesionStore,
     required this.tareasApi,
+    this.organizacionesApi,
     this.notificacionesApi,
     this.cargarAlIniciar = true,
   });
 
   final SesionStore sesionStore;
   final TareasApi tareasApi;
+  final OrganizacionesApi? organizacionesApi;
   final NotificacionesApi? notificacionesApi;
   final bool cargarAlIniciar;
 
@@ -39,7 +44,12 @@ class _DashboardPageState extends State<DashboardPage> {
     sesionStore: widget.sesionStore,
     tareasApi: widget.tareasApi,
   );
+  late final ContextoOrganizacionCache? _contextoCache =
+      widget.organizacionesApi == null
+      ? null
+      : ContextoOrganizacionCache(organizacionesApi: widget.organizacionesApi!);
   List<TareaDto> _pendientes = const <TareaDto>[];
+  Map<int, UbicacionTarea> _ubicaciones = const <int, UbicacionTarea>{};
   int _total = 0;
   bool _isCargando = false;
   String? _mensajeError;
@@ -63,6 +73,11 @@ class _DashboardPageState extends State<DashboardPage> {
           _total = pagina.totalElementos;
         });
       }
+      final cache = _contextoCache;
+      if (cache != null) {
+        final mapa = await cache.resolverParaTareas(pagina.datos);
+        if (mounted) setState(() => _ubicaciones = mapa);
+      }
     } catch (_) {
       if (mounted) {
         setState(
@@ -72,6 +87,21 @@ class _DashboardPageState extends State<DashboardPage> {
     } finally {
       if (mounted) setState(() => _isCargando = false);
     }
+  }
+
+  Future<void> _crearTarea() async {
+    final orgApi = widget.organizacionesApi;
+    if (orgApi == null) {
+      await _recargarSi(_acciones.crear(context));
+      return;
+    }
+    final destino = await mostrarSelectorDestinoTarea(
+      context,
+      organizacionesApi: orgApi,
+      usuarioId: widget.sesionStore.usuario?.id,
+    );
+    if (destino == null || !mounted) return;
+    await _recargarSi(_acciones.crearEnDestino(context, destino));
   }
 
   Future<void> _recargarSi(Future<bool> cambio) async {
@@ -181,7 +211,7 @@ class _DashboardPageState extends State<DashboardPage> {
       ),
       floatingActionButton: widget.sesionStore.puede('tareas:crear')
           ? FloatingActionButton.extended(
-              onPressed: () => _recargarSi(_acciones.crear(context)),
+              onPressed: _crearTarea,
               icon: const Icon(LucideIcons.plus, size: 20),
               label: const Text('Nueva tarea'),
             )
@@ -219,10 +249,15 @@ class _DashboardPageState extends State<DashboardPage> {
                     for (final tarea in grupo.tareas)
                       TareaFila(
                         tarea: tarea,
+                        ubicacion: _ubicaciones[tarea.id],
                         mostrarEstado: false,
                         puedeActualizar: puedeActualizar,
                         onTap: () => _recargarSi(
-                          _acciones.abrirDetalle(context, tarea),
+                          _acciones.abrirDetalle(
+                            context,
+                            tarea,
+                            ubicacion: _ubicaciones[tarea.id],
+                          ),
                         ),
                         onAlternarCompletada: () => _recargarSi(
                           _acciones.alternarCompletada(context, tarea),

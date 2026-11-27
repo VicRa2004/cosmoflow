@@ -4,13 +4,19 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../core/api/adjuntos_api.dart';
 import '../../../core/theme/colores_noche_indigo.dart';
+import '../../../core/theme/tema_app.dart';
+import '../../../core/widgets/avatar_usuario.dart';
 import '../../../core/widgets/avisos.dart';
 import '../../../core/widgets/contenido_markdown.dart';
 import '../../../core/widgets/estados.dart';
 import '../../../core/widgets/tarjeta_seccion.dart';
 import '../../organizaciones/api/organizaciones_api.dart';
+import '../../organizaciones/models/organizacion_models.dart';
+import '../../organizaciones/services/contexto_organizacion_cache.dart';
 import '../../plantillas/api/plantillas_api.dart';
 import '../../plantillas/widgets/guardar_plantilla_sheet.dart';
+import '../../tags/api/tags_api.dart';
+import '../../tags/models/tag_model.dart';
 import '../acciones_tarea.dart';
 import '../api/comentarios_api.dart';
 import '../models/tarea_model.dart';
@@ -28,6 +34,7 @@ class TareaDetallePage extends StatefulWidget {
     required this.acciones,
     this.plantillasApi,
     this.organizacionesApi,
+    this.tagsApi,
     this.adjuntosApi,
     this.comentariosApi,
     this.tarea,
@@ -40,6 +47,7 @@ class TareaDetallePage extends StatefulWidget {
   final AccionesTarea acciones;
   final PlantillasApi? plantillasApi;
   final OrganizacionesApi? organizacionesApi;
+  final TagsApi? tagsApi;
   final AdjuntosApi? adjuntosApi;
   final ComentariosApi? comentariosApi;
   final TareaDto? tarea;
@@ -59,7 +67,16 @@ class _TareaDetallePageState extends State<TareaDetallePage> {
   late final ComentariosApi _comentariosApi =
       widget.comentariosApi ??
       ComentariosApi(apiClient: widget.acciones.tareasApi.apiClient);
+  late final ContextoOrganizacionCache _contextoCache =
+      ContextoOrganizacionCache(
+        organizacionesApi:
+            widget.organizacionesApi ??
+            OrganizacionesApi(apiClient: widget.acciones.tareasApi.apiClient),
+      );
   late List<ResponsableCandidato> _miembros = widget.args.responsables;
+  List<MiembroDto> _miembrosDto = const <MiembroDto>[];
+  late List<TagDto> _tags = widget.args.tags;
+  late UbicacionTarea? _ubicacion = widget.args.ubicacion;
   TareaDto? _tareaPrincipal;
   bool _guardandoSubtareas = false;
   String? _mensajeError;
@@ -70,8 +87,8 @@ class _TareaDetallePageState extends State<TareaDetallePage> {
     organizacionId: widget.args.organizacionId ?? _tarea?.organizacionId,
     equipoId: widget.args.equipoId ?? _tarea?.equipoId,
     proyectoId: widget.args.proyectoId ?? _tarea?.proyectoId,
-    tags: widget.args.tags,
-    responsables: widget.args.responsables,
+    tags: _tags,
+    responsables: _miembros,
   );
 
   @override
@@ -97,8 +114,11 @@ class _TareaDetallePageState extends State<TareaDetallePage> {
           _tareaPrincipal = principal;
         });
       }
-      if (tarea.organizacionId != null && _miembros.isEmpty) {
-        _cargarMiembros(tarea.organizacionId!);
+      if (tarea.organizacionId != null) {
+        _cargarContextoOrganizacion(tarea);
+      }
+      if (tarea.tagIds.isNotEmpty && _tags.isEmpty) {
+        _cargarTags(tarea.organizacionId);
       }
     } catch (_) {
       if (mounted && _tarea == null) {
@@ -107,22 +127,41 @@ class _TareaDetallePageState extends State<TareaDetallePage> {
     }
   }
 
-  Future<void> _cargarMiembros(int organizacionId) async {
-    final orgApi =
-        widget.organizacionesApi ??
-        OrganizacionesApi(apiClient: widget.acciones.tareasApi.apiClient);
+  Future<void> _cargarContextoOrganizacion(TareaDto tarea) async {
+    final orgId = tarea.organizacionId;
+    if (orgId == null) return;
     try {
-      final lista = await orgApi.obtenerMiembros(organizacionId);
+      final ubicacion = await _contextoCache.resolverUbicacion(
+        organizacionId: orgId,
+        equipoId: tarea.equipoId,
+        proyectoId: tarea.proyectoId,
+      );
+      final lista = await _contextoCache.obtenerMiembros(orgId);
       if (mounted) {
         setState(() {
-          _miembros = lista
-              .map((m) => (id: m.usuarioId, nombre: m.nombre))
-              .toList(growable: false);
+          if (ubicacion != null) _ubicacion = ubicacion;
+          if (lista.isNotEmpty) {
+            _miembrosDto = lista;
+            if (_miembros.isEmpty) {
+              _miembros = lista
+                  .map((m) => (id: m.usuarioId, nombre: m.nombre))
+                  .toList(growable: false);
+            }
+          }
         });
       }
     } catch (_) {
-      // Sin acceso a miembros: los comentarios siguen funcionando sin autocompletado.
+      // Sin acceso a la organización: el resto del detalle sigue funcionando.
     }
+  }
+
+  Future<void> _cargarTags(int? organizacionId) async {
+    final tagsApi =
+        widget.tagsApi ?? TagsApi(apiClient: widget.acciones.tareasApi.apiClient);
+    try {
+      final pagina = await tagsApi.obtenerTodos(organizacionId: organizacionId);
+      if (mounted) setState(() => _tags = pagina.datos);
+    } catch (_) {}
   }
 
   Future<void> _alternarSubtarea(TareaDto tarea, int indice) async {
@@ -303,23 +342,30 @@ class _TareaDetallePageState extends State<TareaDetallePage> {
     final puedeActualizar = store.puede('tareas:actualizar');
     final puedeMarcar =
         puedeActualizar && tarea.estado != EstadoTarea.cancelada;
-    final nombresResponsables = tarea.responsableIds
+    final responsables = tarea.responsableIds
         .map((id) {
-          final m = widget.args.responsables
-              .where((r) => r.id == id)
-              .firstOrNull;
-          return m?.nombre ?? 'Usuario #$id';
+          final dto = _miembrosDto.where((m) => m.usuarioId == id).firstOrNull;
+          if (dto != null) {
+            return (nombre: dto.nombre, avatarUrl: dto.avatarUrl);
+          }
+          final m = _miembros.where((r) => r.id == id).firstOrNull;
+          return (nombre: m?.nombre ?? 'Usuario #$id', avatarUrl: null);
         })
         .toList(growable: false);
-    final tagsTarea = widget.args.tags
+    final tagsTarea = _tags
         .where((t) => tarea.tagIds.contains(t.id))
         .toList(growable: false);
+    final ubicacion = _ubicacion;
 
     return ListView(
       padding: const EdgeInsets.only(top: 4, bottom: 48),
       children: <Widget>[
         Padding(
-          padding: const EdgeInsets.fromLTRB(16, 4, 16, 14),
+          padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
+          child: _InsigniasUbicacion(tarea: tarea, ubicacion: ubicacion),
+        ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 0, 16, 14),
           child: Text(
             tarea.titulo,
             style: textTheme.headlineMedium?.copyWith(
@@ -400,18 +446,28 @@ class _TareaDetallePageState extends State<TareaDetallePage> {
                 ),
                 onTap: () => context.push('/tareas/${tarea.dependeDeId}'),
               ),
-            if (nombresResponsables.isNotEmpty)
-              _Dato(
-                icono: LucideIcons.users,
-                etiqueta: 'Responsables',
-                valor: nombresResponsables.join(', '),
-              ),
             if (tarea.isCompartida)
-              const _Dato(
-                icono: LucideIcons.share2,
-                etiqueta: 'Ámbito',
-                valor: 'Compartida',
+              _Dato(
+                icono:
+                    ubicacion?.icono ??
+                    (tarea.equipoId != null
+                        ? LucideIcons.users
+                        : tarea.proyectoId != null
+                        ? LucideIcons.folderKanban
+                        : LucideIcons.building2),
+                colorIcono: colores.indigoMarca,
+                fondoIcono: colores.indigoSuave,
+                etiqueta: 'Ubicación',
+                valor: ubicacion != null
+                    ? ubicacion.etiquetaCorta
+                    : tarea.equipoId != null
+                    ? 'Equipo'
+                    : tarea.proyectoId != null
+                    ? 'Proyecto'
+                    : 'Organización',
               ),
+            if (responsables.isNotEmpty)
+              _DatoResponsables(responsables: responsables),
             if (tagsTarea.isNotEmpty)
               Padding(
                 padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
@@ -495,6 +551,105 @@ class _TareaDetallePageState extends State<TareaDetallePage> {
   }
 }
 
+class _InsigniasUbicacion extends StatelessWidget {
+  const _InsigniasUbicacion({required this.tarea, this.ubicacion});
+
+  final TareaDto tarea;
+  final UbicacionTarea? ubicacion;
+
+  @override
+  Widget build(BuildContext context) {
+    final colores = context.colores;
+    if (!tarea.isCompartida) {
+      return const Wrap(
+        spacing: 6,
+        runSpacing: 6,
+        children: <Widget>[
+          InsigniaPill(texto: 'Personal', icono: LucideIcons.user),
+        ],
+      );
+    }
+
+    return Wrap(
+      spacing: 6,
+      runSpacing: 6,
+      children: <Widget>[
+        InsigniaPill(
+          texto: ubicacion?.organizacionNombre ?? 'Organización',
+          icono: LucideIcons.building2,
+          colorTexto: colores.indigoMarca,
+          colorFondo: colores.indigoSuave,
+        ),
+        if (tarea.equipoId != null)
+          InsigniaPill(
+            texto: ubicacion?.equipoNombre != null
+                ? 'Equipo · ${ubicacion!.equipoNombre}'
+                : 'Equipo',
+            icono: LucideIcons.users,
+            colorTexto: colores.indigoMarca,
+            colorFondo: colores.indigoSuave,
+          ),
+        if (tarea.proyectoId != null)
+          InsigniaPill(
+            texto: ubicacion?.proyectoNombre != null
+                ? 'Proyecto · ${ubicacion!.proyectoNombre}'
+                : 'Proyecto',
+            icono: LucideIcons.folderKanban,
+            colorTexto: colores.indigoMarca,
+            colorFondo: colores.indigoSuave,
+          ),
+      ],
+    );
+  }
+}
+
+class _DatoResponsables extends StatelessWidget {
+  const _DatoResponsables({required this.responsables});
+
+  final List<({String nombre, String? avatarUrl})> responsables;
+
+  @override
+  Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
+    return ListTile(
+      dense: true,
+      leading: const IconoCaja(
+        icono: LucideIcons.users,
+        dimension: 32,
+        tamanoIcono: 16,
+      ),
+      title: Text('Responsables', style: textTheme.bodySmall),
+      subtitle: Padding(
+        padding: const EdgeInsets.only(top: 6),
+        child: Wrap(
+          spacing: 10,
+          runSpacing: 6,
+          children: <Widget>[
+            for (final r in responsables)
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: <Widget>[
+                  AvatarUsuario(
+                    nombre: r.nombre,
+                    avatarUrl: r.avatarUrl,
+                    tamano: 22,
+                  ),
+                  const SizedBox(width: 6),
+                  Text(
+                    r.nombre,
+                    style: textTheme.bodyMedium?.copyWith(
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ],
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 class _AvisoBloqueada extends StatelessWidget {
   const _AvisoBloqueada({this.tituloPrincipal});
 
@@ -510,7 +665,7 @@ class _AvisoBloqueada extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       decoration: BoxDecoration(
         color: colores.amberSuave,
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(TemaApp.radioControl),
         border: Border.all(color: colores.amberAviso.withValues(alpha: 0.35)),
       ),
       child: Row(

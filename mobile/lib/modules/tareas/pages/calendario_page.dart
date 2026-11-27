@@ -2,8 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../core/theme/colores_noche_indigo.dart';
+import '../../../core/theme/tema_app.dart';
 import '../../../core/widgets/estados.dart';
 import '../../../core/widgets/tarjeta_seccion.dart';
+import '../../organizaciones/api/organizaciones_api.dart';
+import '../../organizaciones/services/contexto_organizacion_cache.dart';
 import '../acciones_tarea.dart';
 import '../api/tareas_api.dart';
 import '../models/tarea_model.dart';
@@ -46,10 +49,12 @@ class CalendarioPage extends StatefulWidget {
     super.key,
     required this.tareasApi,
     required this.acciones,
+    this.organizacionesApi,
   });
 
   final TareasApi tareasApi;
   final AccionesTarea acciones;
+  final OrganizacionesApi? organizacionesApi;
 
   @override
   State<CalendarioPage> createState() => _CalendarioPageState();
@@ -58,7 +63,12 @@ class CalendarioPage extends StatefulWidget {
 class _CalendarioPageState extends State<CalendarioPage> {
   late DateTime _mes;
   late String _seleccionado;
+  late final ContextoOrganizacionCache? _contextoCache =
+      widget.organizacionesApi == null
+      ? null
+      : ContextoOrganizacionCache(organizacionesApi: widget.organizacionesApi!);
   Map<String, List<TareaDto>> _porDia = const {};
+  Map<int, UbicacionTarea> _ubicaciones = const <int, UbicacionTarea>{};
   bool _isCargando = false;
   String? _mensajeError;
 
@@ -89,6 +99,11 @@ class _CalendarioPageState extends State<CalendarioPage> {
         (porDia[dia] ??= <TareaDto>[]).add(t);
       }
       if (mounted) setState(() => _porDia = porDia);
+      final cache = _contextoCache;
+      if (cache != null) {
+        final mapa = await cache.resolverParaTareas(tareas);
+        if (mounted) setState(() => _ubicaciones = mapa);
+      }
     } catch (_) {
       if (mounted) {
         setState(() => _mensajeError = 'No se pudo cargar el calendario.');
@@ -135,7 +150,7 @@ class _CalendarioPageState extends State<CalendarioPage> {
               Padding(
                 padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
                 child: ClipRRect(
-                  borderRadius: BorderRadius.circular(999),
+                  borderRadius: BorderRadius.circular(TemaApp.radioCompleto),
                   child: const LinearProgressIndicator(minHeight: 3),
                 ),
               ),
@@ -191,9 +206,14 @@ class _CalendarioPageState extends State<CalendarioPage> {
                   for (final t in tareasDia)
                     TareaFila(
                       tarea: t,
+                      ubicacion: _ubicaciones[t.id],
                       mostrarEstado: false,
                       onTap: () async {
-                        await widget.acciones.abrirDetalle(context, t);
+                        await widget.acciones.abrirDetalle(
+                          context,
+                          t,
+                          ubicacion: _ubicaciones[t.id],
+                        );
                         _cargar();
                       },
                     ),
@@ -231,7 +251,7 @@ class _Dia extends StatelessWidget {
     final textTheme = Theme.of(context).textTheme;
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(12),
+      borderRadius: BorderRadius.circular(TemaApp.radioControl),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: <Widget>[
@@ -240,7 +260,7 @@ class _Dia extends StatelessWidget {
             height: 32,
             alignment: Alignment.center,
             decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(10),
+              borderRadius: BorderRadius.circular(TemaApp.radioChip),
               color: esHoy
                   ? colores.indigoMarca
                   : seleccionado
@@ -259,7 +279,7 @@ class _Dia extends StatelessWidget {
                     ? FontWeight.w600
                     : FontWeight.w500,
                 color: esHoy
-                    ? Colors.white
+                    ? colores.sobreAcento
                     : seleccionado
                     ? colores.indigoMarca
                     : delMes

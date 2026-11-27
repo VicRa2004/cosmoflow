@@ -197,6 +197,7 @@ void main() {
     expect(find.text('1/2 (50%)'), findsOneWidget);
 
     // Marcar la segunda subtarea «Publicar».
+    await tester.ensureVisible(find.text('Publicar'));
     await tester.tap(find.text('Publicar'));
     await tester.pumpAndSettle();
 
