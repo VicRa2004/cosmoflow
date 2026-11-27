@@ -1,6 +1,6 @@
 import { describe, expect, it } from "bun:test";
 import type { ErrorEvent } from "@sentry/bun";
-import { limpiarEvento, urlIngesta } from "./monitoreo";
+import { idDeTraza, limpiarEvento, urlIngesta } from "./monitoreo";
 
 describe("limpiarEvento", () => {
 	it("debería quitar cuerpo, cookies, cabeceras, query y datos del usuario salvo el id", () => {
@@ -44,5 +44,27 @@ describe("urlIngesta", () => {
 		).toBeUndefined();
 		expect(urlIngesta("no es json", dsn)).toBeUndefined();
 		expect(urlIngesta(sobre(dsn), undefined)).toBeUndefined();
+	});
+});
+
+describe("idDeTraza", () => {
+	it("debería sacar el trace-id de un traceparent W3C válido", () => {
+		expect(
+			idDeTraza("00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-01"),
+		).toBe("4bf92f3577b34da6a3ce929d0e0e4736");
+	});
+
+	it("debería ignorar lo que no es un traceparent válido", () => {
+		for (const valor of [
+			undefined,
+			42,
+			"",
+			"basura",
+			"00-00000000000000000000000000000000-00f067aa0ba902b7-01",
+			"00-4BF92F3577B34DA6A3CE929D0E0E4736-00f067aa0ba902b7-01",
+			"00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-01\r\nX: y",
+		]) {
+			expect(idDeTraza(valor)).toBeUndefined();
+		}
 	});
 });
