@@ -167,7 +167,45 @@ describe("Conector MCP (e2e)", () => {
 				registration_endpoint: `${env.APP_URL}/api/oauth/registro`,
 				code_challenge_methods_supported: ["S256"],
 				token_endpoint_auth_methods_supported: ["none"],
+				authorization_response_iss_parameter_supported: true,
 			});
+		});
+
+		it.each([
+			"/.well-known/oauth-authorization-server",
+			"/api/oauth/token",
+			"/mcp",
+		])("%s debería admitir CORS de cualquier origen", async (ruta) => {
+			const res = await app.request(ruta, {
+				method: "OPTIONS",
+				headers: {
+					Origin: "http://localhost:6274",
+					"Access-Control-Request-Method": "POST",
+				},
+			});
+
+			expect(res.headers.get("Access-Control-Allow-Origin")).toBe(
+				"http://localhost:6274",
+			);
+		});
+
+		it("la API de la web no debería abrir CORS a otros orígenes", async () => {
+			const res = await app.request("/api/tareas", {
+				headers: { Origin: "https://evil.com" },
+			});
+
+			expect(res.headers.get("Access-Control-Allow-Origin")).toBeNull();
+		});
+
+		it("el 401 debería exponer WWW-Authenticate a los clientes web", async () => {
+			const res = await app.request("/mcp", {
+				method: "POST",
+				headers: { Origin: "http://localhost:6274" },
+			});
+
+			expect(res.headers.get("Access-Control-Expose-Headers")).toContain(
+				"WWW-Authenticate",
+			);
 		});
 	});
 
@@ -177,6 +215,7 @@ describe("Conector MCP (e2e)", () => {
 
 			expect(`${url.origin}${url.pathname}`).toBe(CALLBACK);
 			expect(url.searchParams.get("state")).toBe("estado-1");
+			expect(url.searchParams.get("iss")).toBe(env.APP_URL);
 			expect(url.searchParams.get("code")).toMatch(/^[a-f0-9]{64}$/);
 		});
 
@@ -398,6 +437,25 @@ describe("Conector MCP (e2e)", () => {
 			const res = await canjear({ code, client_id: clientId });
 
 			expect(await res.json()).toMatchObject({ error: "invalid_grant" });
+		});
+
+		it("el registro debería responder con errores de RFC 7591", async () => {
+			const destino = await api("/api/oauth/registro", {
+				method: "POST",
+				body: { redirect_uris: ["https://evil.com/callback"] },
+			});
+			const incompleto = await api("/api/oauth/registro", {
+				method: "POST",
+				body: {},
+			});
+
+			expect(destino.status).toBe(400);
+			expect(await destino.json()).toMatchObject({
+				error: "invalid_redirect_uri",
+			});
+			expect(await incompleto.json()).toMatchObject({
+				error: "invalid_client_metadata",
+			});
 		});
 
 		it("debería responder con errores OAuth, sin caché", async () => {

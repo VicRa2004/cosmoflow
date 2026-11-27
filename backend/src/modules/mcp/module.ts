@@ -21,7 +21,7 @@ export const mcpModule: AppModule = {
 		const auth = container.get(AUTH_TOKENS.AuthMiddleware);
 		const appUrl = env.APP_URL;
 		const oauth = new OAuthController(appUrl, {
-			autorizar: new AutorizarConexionUseCase(repo),
+			autorizar: new AutorizarConexionUseCase(repo, appUrl),
 			canjear: new CanjearCodigoUseCase(
 				repo,
 				container.get(AUTH_TOKENS.EmitirTokensConexion),

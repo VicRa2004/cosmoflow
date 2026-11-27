@@ -5,6 +5,11 @@ describe("resolverDestino", () => {
 	it.each([
 		["https://claude.ai/api/mcp/auth_callback", "claude.ai", false],
 		["https://claude.com/api/mcp/auth_callback", "claude.com", false],
+		[
+			"https://chatgpt.com/connector_platform_oauth_redirect",
+			"chatgpt.com",
+			false,
+		],
 		["http://localhost:3118/callback", "localhost", true],
 		["http://127.0.0.1:51000/callback", "127.0.0.1", true],
 	])("debería permitir %s", (uri, host, esLocal) => {

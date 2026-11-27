@@ -18,6 +18,10 @@ import {
 	tokenOAuthSchema,
 } from "../schemas/oauthSchemas";
 
+/** RFC 6749/7591: los clientes OAuth leen `error`, no el formato de la API. */
+const errorOAuth = (c: Context, error: string, descripcion: string) =>
+	c.json({ error, error_description: descripcion }, 400);
+
 const datosInvalidos = () =>
 	new ErrorOAuth("invalid_request", "Faltan datos o no son válidos");
 
@@ -60,27 +64,38 @@ export class OAuthController extends BaseController {
 			grant_types_supported: ["authorization_code", "refresh_token"],
 			code_challenge_methods_supported: ["S256"],
 			token_endpoint_auth_methods_supported: ["none"],
+			authorization_response_iss_parameter_supported: true,
 		});
 
 	/** RFC 7591. No se guarda nada: lo que protege es la lista de `destinoConexion`. */
-	registrar = (c: Context): Promise<Response> =>
-		this.executeSafely(c, async () => {
-			const { redirect_uris, client_name } = validate(
-				registroClienteSchema,
-				await c.req.json(),
+	registrar = async (c: Context): Promise<Response> => {
+		const datos = registroClienteSchema.safeParse(
+			await c.req.json().catch(() => null),
+		);
+		if (!datos.success) {
+			return errorOAuth(
+				c,
+				"invalid_client_metadata",
+				"Faltan datos o no son válidos",
 			);
-			if (!redirect_uris.every(resolverDestino)) {
-				throw new ErrorOAuth("invalid_redirect_uri", "Destino no permitido");
-			}
-			return this.created(c, {
+		}
+		const { redirect_uris, client_name } = datos.data;
+		if (!redirect_uris.every(resolverDestino)) {
+			return errorOAuth(c, "invalid_redirect_uri", "Destino no permitido");
+		}
+		return c.json(
+			{
 				client_id: randomUUID(),
+				client_id_issued_at: Math.floor(Date.now() / 1000),
 				client_name,
 				redirect_uris,
 				grant_types: ["authorization_code", "refresh_token"],
 				response_types: ["code"],
 				token_endpoint_auth_method: "none",
-			});
-		});
+			},
+			201,
+		);
+	};
 
 	obtenerDestino = (c: Context<AuthEnv>): Promise<Response> =>
 		this.executeSafely(c, async () => {
@@ -124,10 +139,7 @@ export class OAuthController extends BaseController {
 			});
 		} catch (error) {
 			if (error instanceof ErrorOAuth) {
-				return c.json(
-					{ error: error.codigo, error_description: error.message },
-					400,
-				);
+				return errorOAuth(c, error.codigo, error.message);
 			}
 			throw error;
 		}
