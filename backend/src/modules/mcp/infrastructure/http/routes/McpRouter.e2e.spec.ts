@@ -17,6 +17,10 @@ type ResultadoRpc = {
 	_meta: Record<string, { name: string }>;
 	isError?: boolean;
 	content: { text: string }[];
+	structuredContent?: unknown;
+	prompts: { name: string }[];
+	messages: { content: { text: string } }[];
+	contents: { uri: string; text: string }[];
 };
 
 let siguienteId = 0;
@@ -32,7 +36,7 @@ const META = {
 const postMcp = (
 	token: string | undefined,
 	method: string,
-	params: { name?: string } = {},
+	params: { name?: string; uri?: string } = {},
 ) =>
 	app.request("/mcp", {
 		method: "POST",
@@ -41,7 +45,9 @@ const postMcp = (
 			Accept: "application/json, text/event-stream",
 			"MCP-Protocol-Version": VERSION,
 			"Mcp-Method": method,
-			...(params.name ? { "Mcp-Name": params.name } : {}),
+			...((params.name ?? params.uri)
+				? { "Mcp-Name": params.name ?? params.uri }
+				: {}),
 			...(token ? { Authorization: `Bearer ${token}` } : {}),
 		},
 		body: JSON.stringify({
@@ -55,7 +61,7 @@ const postMcp = (
 const rpc = async (
 	token: string,
 	method: string,
-	params: { name?: string; arguments?: unknown } = {},
+	params: { name?: string; uri?: string; arguments?: unknown } = {},
 ) => {
 	const res = await postMcp(token, method, params);
 	expect(res.status).toBe(200);
@@ -538,6 +544,8 @@ describe("Conector MCP (e2e)", () => {
 			).toBe("cosmoflow");
 			expect(tools.map((t) => t.name).sort()).toEqual([
 				"actualizar_nota",
+				"actualizar_proyecto",
+				"actualizar_tag",
 				"actualizar_tarea",
 				"buscar_notas",
 				"comentar_tarea",
@@ -549,6 +557,7 @@ describe("Conector MCP (e2e)", () => {
 				"crear_tag",
 				"crear_tarea",
 				"eliminar_nota",
+				"eliminar_tag",
 				"eliminar_tarea",
 				"listar_carpetas",
 				"listar_comentarios",
@@ -561,7 +570,9 @@ describe("Conector MCP (e2e)", () => {
 				"listar_proyectos",
 				"listar_tags",
 				"listar_tareas",
+				"listar_tareas_por_fechas",
 				"marcar_notificaciones_leidas",
+				"marcar_subtarea",
 				"mover_tarea",
 				"obtener_nota",
 				"obtener_tarea",
@@ -781,6 +792,98 @@ describe("Conector MCP (e2e)", () => {
 			expect(proyecto).toMatchObject({ nombre: "Motores" });
 			expect(tag).toMatchObject({ nombre: "urgente" });
 			expect(personal).toMatchObject({ nombre: "casa" });
+
+			expect(
+				await datos(token, "actualizar_proyecto", {
+					organizacionId: org.id,
+					id: proyecto.id,
+					estado: "en_pausa",
+				}),
+			).toMatchObject({ nombre: "Motores", estado: "en_pausa" });
+			expect(
+				await datos(token, "actualizar_tag", {
+					organizacionId: org.id,
+					id: tag.id,
+					nombre: "muy urgente",
+				}),
+			).toMatchObject({ nombre: "muy urgente" });
+			expect(
+				await datos(token, "actualizar_tag", { id: personal.id, color: null }),
+			).toMatchObject({ nombre: "casa", color: null });
+
+			await datos(token, "eliminar_tag", { id: personal.id });
+			const tags = await datos(token, "listar_tags");
+			expect(tags.datos.map((t: { id: number }) => t.id)).not.toContain(
+				personal.id,
+			);
+		});
+
+		it("debería marcar una subtarea suelta y filtrar por fechas", async () => {
+			const tarea = await datos(token, "crear_tarea", {
+				titulo: "Con checklist",
+				fechaVencimiento: "2031-03-10",
+				subtareas: [{ titulo: "Uno" }, { titulo: "Dos" }],
+			});
+			const [uno, dos] = tarea.subtareas;
+
+			const marcada = await datos(token, "marcar_subtarea", {
+				id: tarea.id,
+				subtareaId: dos.id,
+				completada: true,
+			});
+			expect(marcada.subtareas).toEqual([uno, { ...dos, completada: true }]);
+			expect(
+				(
+					await herramienta(token, "marcar_subtarea", {
+						id: tarea.id,
+						subtareaId: 999_999,
+						completada: true,
+					})
+				).isError,
+			).toBe(true);
+
+			const enRango = await datos(token, "listar_tareas_por_fechas", {
+				desde: "2031-03-01",
+				hasta: "2031-03-31",
+			});
+			expect(enRango.map((t: { id: number }) => t.id)).toEqual([tarea.id]);
+			expect(
+				await datos(token, "listar_tareas_por_fechas", {
+					desde: "2031-04-01",
+					hasta: "2031-04-30",
+				}),
+			).toEqual([]);
+		});
+
+		it("debería devolver structuredContent con los objetos", async () => {
+			const { structuredContent } = await rpc(token, "tools/call", {
+				name: "listar_pendientes",
+				arguments: {},
+			});
+			expect(structuredContent).toMatchObject({ pagina: 1 });
+		});
+
+		it("debería ofrecer prompts y leer tareas y notas como recursos", async () => {
+			const { prompts } = await rpc(token, "prompts/list");
+			expect(prompts.map((p) => p.name).sort()).toEqual([
+				"planear_semana",
+				"resumen_del_dia",
+				"standup_equipo",
+			]);
+			const { messages } = await rpc(token, "prompts/get", {
+				name: "standup_equipo",
+				arguments: { equipo: "Motores" },
+			});
+			expect(messages[0]?.content.text).toContain("«Motores»");
+
+			const tarea = await datos(token, "crear_tarea", { titulo: "Recurso" });
+			const uri = `cosmoflow://tarea/${tarea.id}`;
+			const { contents } = await rpc(token, "resources/read", { uri });
+			expect(contents[0]?.uri).toBe(uri);
+			expect(JSON.parse(contents[0]?.text ?? "")).toMatchObject({
+				id: tarea.id,
+				titulo: "Recurso",
+			});
 		});
 
 		it("una conexión limitada solo debería hacer lo que permiten sus alcances", async () => {
