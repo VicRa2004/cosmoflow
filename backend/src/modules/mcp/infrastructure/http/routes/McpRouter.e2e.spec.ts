@@ -11,7 +11,7 @@ const VERIFIER = "v".repeat(43);
 const CHALLENGE = createHash("sha256").update(VERIFIER).digest("base64url");
 
 type ResultadoRpc = {
-	tools: { name: string }[];
+	tools: { name: string; _meta?: { ui?: { resourceUri?: string } } }[];
 	supportedVersions: string[];
 	instructions?: string;
 	resultType: string;
@@ -21,7 +21,7 @@ type ResultadoRpc = {
 	structuredContent?: unknown;
 	prompts: { name: string }[];
 	messages: { content: { text: string } }[];
-	contents: { uri: string; text: string }[];
+	contents: { uri: string; text: string; mimeType?: string }[];
 };
 
 let siguienteId = 0;
@@ -579,6 +579,8 @@ describe("Conector MCP (e2e)", () => {
 				"listar_tareas_por_fechas",
 				"marcar_notificaciones_leidas",
 				"marcar_subtarea",
+				"mostrar_tablero",
+				"mostrar_tarea",
 				"mover_tarea",
 				"obtener_nota",
 				"obtener_tarea",
@@ -681,6 +683,10 @@ describe("Conector MCP (e2e)", () => {
 			expect(await datos(token, "obtener_tarea", { id: tarea.id })).toEqual(
 				asignada,
 			);
+			const tablero = await datos(token, "mostrar_tablero", {
+				proyectoId: proyecto.id,
+			});
+			expect(tablero.datos).toEqual([asignada]);
 		});
 
 		it("debería comentar una tarea y leer sus comentarios", async () => {
@@ -867,6 +873,43 @@ describe("Conector MCP (e2e)", () => {
 				arguments: {},
 			});
 			expect(structuredContent).toMatchObject({ pagina: 1 });
+		});
+
+		it("debería enlazar las tools de vista con su HTML de MCP Apps", async () => {
+			const { tools } = await rpc(token, "tools/list");
+			const vistas = Object.fromEntries(
+				tools.map((t) => [t.name, t._meta?.ui?.resourceUri]),
+			);
+			expect(vistas.mostrar_tarea).toBe("ui://cosmoflow/tarea");
+			expect(vistas.mostrar_tablero).toBe("ui://cosmoflow/tablero");
+			expect(vistas.obtener_tarea).toBeUndefined();
+
+			for (const uri of ["ui://cosmoflow/tarea", "ui://cosmoflow/tablero"]) {
+				const { contents } = await rpc(token, "resources/read", { uri });
+				expect(contents[0]?.mimeType).toBe("text/html;profile=mcp-app");
+				expect(contents[0]?.text).toStartWith("<!doctype html>");
+				// Sin red: el CSP por defecto del host no deja cargar nada externo.
+				expect(contents[0]?.text).not.toMatch(/(src|href)=["']https?:/);
+			}
+		});
+
+		it("mostrar_tarea y mostrar_tablero deberían devolver los datos que pinta la vista", async () => {
+			const tarea = await datos(token, "crear_tarea", {
+				titulo: "Para la tarjeta",
+				subtareas: [{ titulo: "Paso" }],
+			});
+			expect(
+				await datos(token, "mostrar_tarea", { id: tarea.id }),
+			).toMatchObject({
+				id: tarea.id,
+				subtareas: [{ titulo: "Paso", completada: false }],
+			});
+
+			for (const args of [{}, { proyectoId: 1, equipoId: 1 }]) {
+				expect(
+					(await herramienta(token, "mostrar_tablero", args)).isError,
+				).toBe(true);
+			}
 		});
 
 		it("debería ofrecer prompts y leer tareas y notas como recursos", async () => {
