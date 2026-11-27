@@ -99,13 +99,14 @@ export const tareaFormSchema = z
 		subtareas: z
 			.array(
 				z.object({
+					id: z.number().optional(),
 					titulo: z.string(),
 					completada: z.boolean(),
 				}),
 			)
 			.transform((lista) =>
 				lista
-					.map((s) => ({ titulo: s.titulo.trim(), completada: s.completada }))
+					.map((s) => ({ ...s, titulo: s.titulo.trim() }))
 					.filter((s) => s.titulo.length > 0),
 			),
 	})
@@ -158,6 +159,7 @@ export const tareaAFormValues = (dto: TareaDto): TareaFormValues => ({
 	dependeDeId: dto.dependeDeId ? String(dto.dependeDeId) : "",
 	recurrencia: dto.recurrencia ?? "",
 	subtareas: dto.subtareas.map((s) => ({
+		id: s.id,
 		titulo: s.titulo,
 		completada: s.completada,
 	})),

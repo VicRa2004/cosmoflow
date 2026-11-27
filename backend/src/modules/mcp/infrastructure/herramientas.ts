@@ -76,13 +76,18 @@ const camposTarea = {
 	subtareas: z
 		.array(
 			z.object({
+				id: id
+					.optional()
+					.describe("Subtarea existente que se edita (conserva su id)"),
 				titulo: z.string().min(1).max(255),
 				completada: z.boolean().optional(),
 			}),
 		)
 		.max(100)
 		.optional()
-		.describe("Reemplaza la checklist de subtareas en orden"),
+		.describe(
+			"Reemplaza la checklist en orden: manda todas, con su id las que ya existen; las que falten se borran",
+		),
 };
 
 /** Un fallo de la API se devuelve como resultado: así la IA lo lee y puede corregirlo. */

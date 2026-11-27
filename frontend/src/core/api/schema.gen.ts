@@ -4101,6 +4101,7 @@ export interface paths {
                         /** @enum {string|null} */
                         recurrencia?: "diaria" | "semanal" | "mensual" | null;
                         subtareas?: {
+                            id?: number;
                             titulo: string;
                             completada?: boolean;
                         }[];
@@ -4863,6 +4864,7 @@ export interface paths {
                         /** @enum {string|null} */
                         recurrencia?: "diaria" | "semanal" | "mensual" | null;
                         subtareas?: {
+                            id?: number;
                             titulo: string;
                             completada?: boolean;
                         }[];

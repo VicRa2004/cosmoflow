@@ -172,6 +172,53 @@ describe("Tarea", () => {
 		expect(siguiente?.getResponsableIds()).toEqual([7, 8]);
 	});
 
+	describe("al actualizar las subtareas (#215)", () => {
+		const conSubtareas = () =>
+			Tarea.reconstituir(
+				10,
+				7,
+				{
+					...Tarea.crear(7, { titulo: "Demo" }).getDatos(),
+					subtareas: [
+						{ id: 1, titulo: "A", completada: true },
+						{ id: 2, titulo: "B", completada: false },
+						{ id: 3, titulo: "B", completada: false },
+					],
+				},
+				{ organizacionId: null, equipoId: null, proyectoId: null },
+				[],
+				[],
+				false,
+				{},
+			);
+
+		it("conserva los ids si no cambian las subtareas", () => {
+			const tarea = conSubtareas();
+			tarea.actualizar({ fechaVencimiento: "2026-12-01" });
+			expect(tarea.getDatos().subtareas.map((s) => s.id)).toEqual([1, 2, 3]);
+		});
+
+		it("empareja por id y, sin id, por título; lo demás es nuevo", () => {
+			const tarea = conSubtareas();
+			tarea.actualizar({
+				subtareas: [
+					{ titulo: "B", completada: true },
+					{ id: 1, titulo: "A renombrada", completada: false },
+					{ titulo: "B", completada: false },
+					{ titulo: "B", completada: false },
+					{ id: 99, titulo: "Ajena", completada: false },
+				],
+			});
+			expect(tarea.getDatos().subtareas).toEqual([
+				{ id: 2, titulo: "B", completada: true },
+				{ id: 1, titulo: "A renombrada", completada: false },
+				{ id: 3, titulo: "B", completada: false },
+				{ titulo: "B", completada: false },
+				{ titulo: "Ajena", completada: false },
+			]);
+		});
+	});
+
 	it("rechaza una subtarea con título vacío", () => {
 		expect(() =>
 			Tarea.crear(7, {

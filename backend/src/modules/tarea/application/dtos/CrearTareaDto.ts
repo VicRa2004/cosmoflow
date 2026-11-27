@@ -5,6 +5,8 @@ import type {
 } from "../../domain/Tarea";
 
 export interface SubtareaInputDto {
+	/** Al actualizar: la subtarea existente que se edita (conserva su id). */
+	id?: number;
 	titulo: string;
 	completada?: boolean;
 }
