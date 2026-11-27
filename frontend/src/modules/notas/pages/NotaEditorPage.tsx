@@ -4,7 +4,7 @@ import { NotaForm } from "../components/NotaForm";
 import { useNotaQuery } from "../hooks/useNotasQuery";
 import type { ContextoNotaSearch } from "../schemas/notaSchemas";
 
-/** Alta (sin `id`, en `contexto` si viene) o edición de una nota a página completa. */
+/** Alta (sin `id`, en `contexto` si viene) o edición de una nota a página completa; abrir una nota editable es entrar aquí. */
 export function NotaEditorPage({
 	id,
 	contexto,
@@ -16,13 +16,20 @@ export function NotaEditorPage({
 	const navigate = useNavigate();
 	const puedeVolver = useCanGoBack();
 	const { data, error } = useNotaQuery(id);
-	// Vuelve a donde se abrió; si se entró por URL, a su lectura (o a la carpeta si es nueva).
+	// Vuelve a donde se abrió; si se entró por URL, a la carpeta de la nota.
 	const volver = () =>
 		puedeVolver
 			? router.history.back()
-			: id === undefined
-				? navigate({ to: "/notas", search: contexto ?? {} })
-				: navigate({ to: "/notas/$id", params: { id: String(id) } });
+			: navigate({
+					to: "/notas",
+					search: data
+						? {
+								organizacionId: data.organizacionId ?? undefined,
+								proyectoId: data.proyectoId ?? undefined,
+								carpetaId: data.carpetaId ?? undefined,
+							}
+						: (contexto ?? {}),
+				});
 
 	if (error) throw error;
 	if (id !== undefined && !data) {
@@ -39,18 +46,17 @@ export function NotaEditorPage({
 			inicial={data}
 			contexto={contexto}
 			onVolver={volver}
+			// Recién creada, se sigue escribiendo en ella (ya con guardado automático).
 			onGuardada={(nota) =>
-				id !== undefined
-					? volver()
-					: navigate({
-							to: "/notas/$id",
-							params: { id: String(nota.id) },
-							search: {
-								organizacionId: nota.organizacionId ?? undefined,
-								proyectoId: nota.proyectoId ?? undefined,
-							},
-							replace: true,
-						})
+				navigate({
+					to: "/notas/$id",
+					params: { id: String(nota.id) },
+					search: {
+						organizacionId: nota.organizacionId ?? undefined,
+						proyectoId: nota.proyectoId ?? undefined,
+					},
+					replace: true,
+				})
 			}
 		/>
 	);

@@ -38,6 +38,9 @@ describe("Carpetas de notas (e2e)", () => {
 				padreId: viajes.id,
 			})
 		).json();
+		// Con sus fechas, para ordenar el explorador por creación o modificación.
+		expect(Date.parse(viajes.createdAt)).not.toBeNaN();
+		expect(Date.parse(viajes.updatedAt)).not.toBeNaN();
 		expect(europa).toMatchObject({ padreId: viajes.id, icono: null });
 
 		const lisboa = await (

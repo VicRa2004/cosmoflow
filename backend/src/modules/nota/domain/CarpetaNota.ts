@@ -12,6 +12,12 @@ export interface DatosCarpeta {
 	padreId: number | null;
 }
 
+/** Alta y última modificación; `null` hasta que se guarda. */
+export interface FechasCarpeta {
+	createdAt: Date;
+	updatedAt: Date;
+}
+
 /** Ordena notas; mismo ámbito que ellas: personal o de un proyecto (RN-33, RN-50). */
 export class CarpetaNota extends Entity {
 	private constructor(
@@ -19,6 +25,7 @@ export class CarpetaNota extends Entity {
 		private readonly usuarioId: number,
 		private datos: DatosCarpeta,
 		private readonly proyecto: ProyectoNota | null,
+		private readonly fechas: FechasCarpeta | null = null,
 	) {
 		super(id);
 	}
@@ -51,8 +58,15 @@ export class CarpetaNota extends Entity {
 		usuarioId: number,
 		datos: DatosCarpeta,
 		proyecto: ProyectoNota | null = null,
+		fechas: FechasCarpeta | null = null,
 	): CarpetaNota {
-		return new CarpetaNota(new EntityId(id), usuarioId, datos, proyecto);
+		return new CarpetaNota(
+			new EntityId(id),
+			usuarioId,
+			datos,
+			proyecto,
+			fechas,
+		);
 	}
 
 	esNueva() {
@@ -66,6 +80,10 @@ export class CarpetaNota extends Entity {
 
 	getProyecto(): ProyectoNota | null {
 		return this.proyecto && { ...this.proyecto };
+	}
+
+	getFechas(): FechasCarpeta | null {
+		return this.fechas && { ...this.fechas };
 	}
 
 	getDatos(): DatosCarpeta {

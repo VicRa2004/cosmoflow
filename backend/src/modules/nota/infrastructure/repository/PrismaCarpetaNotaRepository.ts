@@ -17,6 +17,7 @@ const toDomain = (raw: PrismaCarpeta) =>
 		raw.organizacionId && raw.proyectoId
 			? { organizacionId: raw.organizacionId, proyectoId: raw.proyectoId }
 			: null,
+		{ createdAt: raw.createdAt, updatedAt: raw.updatedAt },
 	);
 
 export class PrismaCarpetaNotaRepository implements CarpetaNotaRepository {

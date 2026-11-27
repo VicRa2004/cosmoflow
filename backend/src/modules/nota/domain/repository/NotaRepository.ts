@@ -30,6 +30,9 @@ export interface NotaIndice {
 	color: string | null;
 	carpetaId: number | null;
 	isFijada: boolean;
+	/** ISO; para ordenar el explorador. */
+	createdAt: string;
+	updatedAt: string;
 }
 
 /** Las personales de un usuario o las de un proyecto. */

@@ -20,6 +20,7 @@ describe("Preferencias de interfaz (e2e)", () => {
 			markdownFuente: "inter",
 			pendientesNotas: false,
 			pendientesOrganizaciones: null,
+			ordenNotas: "nombre",
 		});
 	});
 
@@ -27,7 +28,11 @@ describe("Preferencias de interfaz (e2e)", () => {
 		const put = await api(ruta, {
 			method: "PUT",
 			token: t.ana,
-			body: { markdownFuente: "serif", pendientesOrganizaciones: 30 },
+			body: {
+				markdownFuente: "serif",
+				pendientesOrganizaciones: 30,
+				ordenNotas: "modificada",
+			},
 		});
 		expect(put.status).toBe(200);
 
@@ -35,6 +40,7 @@ describe("Preferencias de interfaz (e2e)", () => {
 			markdownFuente: "serif",
 			markdownTamano: "normal",
 			pendientesOrganizaciones: 30,
+			ordenNotas: "modificada",
 		});
 		expect(await (await api(ruta, { token: t.beto })).json()).toMatchObject({
 			markdownFuente: "inter",

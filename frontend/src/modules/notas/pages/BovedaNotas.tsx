@@ -6,6 +6,10 @@ import { Button } from "@/core/components/ui/Button";
 import { EncabezadoPagina } from "@/core/components/ui/EncabezadoPagina";
 import { Input } from "@/core/components/ui/Input";
 import { Select } from "@/core/components/ui/Select";
+import {
+	useCambiarPreferenciasMutation,
+	usePreferenciasQuery,
+} from "@/modules/configuracion/hooks/usePreferencias";
 import { useProyectosQuery } from "@/modules/proyectos/hooks/useProyectos";
 import { useTagsDisponibles } from "@/modules/tags/hooks/useTagsDisponibles";
 import { FilaNota } from "../components/ExploradorCarpeta";
@@ -23,7 +27,13 @@ import {
 } from "../hooks/useNotasMutation";
 import { useExploradorNotas } from "../hooks/useNotasQuery";
 import type { ContextoNotaSearch } from "../schemas/notaSchemas";
-import { rutaDe } from "../utils/arbolCarpetas";
+import { type OrdenNotas, ordenarNotas, rutaDe } from "../utils/arbolCarpetas";
+
+const ORDENES: [OrdenNotas, string][] = [
+	["nombre", "Nombre"],
+	["modificada", "Última modificación"],
+	["creada", "Fecha de creación"],
+];
 
 /** «Notas · Lanzamiento»: nombre del proyecto de la bóveda. */
 function TituloProyecto({
@@ -66,6 +76,8 @@ export function BovedaNotas({ contexto }: { contexto: ContextoNotaSearch }) {
 	const { tags, aviso: avisoTags } = useTagsDisponibles(
 		deProyecto ? organizacionId : undefined,
 	);
+	const orden = usePreferenciasQuery().data?.ordenNotas ?? "nombre";
+	const cambiarPreferencias = useCambiarPreferenciasMutation();
 	const filtrosFecha = Object.values(rangos).filter(Boolean).length;
 	const texto = busqueda.trim();
 	const filtrando = !!texto || !!tagId || soloFijadas || filtrosFecha > 0;
@@ -102,6 +114,23 @@ export function BovedaNotas({ contexto }: { contexto: ContextoNotaSearch }) {
 					<Search className="pointer-events-none absolute top-2.5 left-3 h-4 w-4 text-tinta-tenue" />
 				</div>
 				<div className="flex items-center gap-1">
+					<Select
+						aria-label="Ordenar notas y carpetas"
+						title="Ordenar"
+						value={orden}
+						onChange={(e) =>
+							cambiarPreferencias.mutate({
+								ordenNotas: e.target.value as OrdenNotas,
+							})
+						}
+						className="w-auto"
+					>
+						{ORDENES.map(([valor, texto]) => (
+							<option key={valor} value={valor}>
+								{texto}
+							</option>
+						))}
+					</Select>
 					<Button
 						variant={soloFijadas ? "secondary" : "ghost"}
 						aria-label="Fijadas"
@@ -178,7 +207,7 @@ export function BovedaNotas({ contexto }: { contexto: ContextoNotaSearch }) {
 					aria-label="Resultados"
 					className="divide-y divide-borde overflow-hidden rounded-lg border border-borde bg-superficie"
 				>
-					{notas.map((n) => (
+					{ordenarNotas(notas, orden).map((n) => (
 						<FilaNota
 							key={n.id}
 							nota={n}

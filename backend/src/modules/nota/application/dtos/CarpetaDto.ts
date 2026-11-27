@@ -5,6 +5,9 @@ export interface CarpetaDto extends DatosCarpeta {
 	/** Las personales, `null`. */
 	organizacionId: number | null;
 	proyectoId: number | null;
+	/** ISO; para ordenar el explorador. */
+	createdAt: string;
+	updatedAt: string;
 }
 
 /** Sin `proyectoId`, personal. */

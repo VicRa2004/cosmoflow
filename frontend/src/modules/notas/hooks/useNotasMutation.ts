@@ -28,10 +28,8 @@ export function useActualizarNotaMutation() {
 	return useMutation({
 		mutationFn: ({ id, datos }: { id: number; datos: ActualizarNotaInput }) =>
 			notasApi.actualizar(id, datos),
-		onSuccess: () => {
-			toast.success("Nota guardada");
-			return invalidar();
-		},
+		// Sin aviso: se guarda sola mientras se escribe y el editor ya muestra «Guardado».
+		onSuccess: () => invalidar(),
 		onError,
 	});
 }

@@ -4,11 +4,14 @@ import type { CarpetaDto } from "../dtos/CarpetaDto";
 export const CarpetaMapper = {
 	toDto(carpeta: CarpetaNota): CarpetaDto {
 		const proyecto = carpeta.getProyecto();
+		const fechas = carpeta.getFechas();
 		return {
 			id: carpeta.getId(),
 			...carpeta.getDatos(),
 			organizacionId: proyecto?.organizacionId ?? null,
 			proyectoId: proyecto?.proyectoId ?? null,
+			createdAt: fechas?.createdAt.toISOString() ?? "",
+			updatedAt: fechas?.updatedAt.toISOString() ?? "",
 		};
 	},
 };

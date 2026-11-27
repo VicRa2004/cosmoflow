@@ -1,7 +1,13 @@
 import { strFromU8 } from "fflate";
 import { describe, expect, it } from "vitest";
 import type { CarpetaDto, NotaDto } from "../api/notasApi";
-import { contenidoDe, ordenEnArbol, rutaDe, subarbol } from "./arbolCarpetas";
+import {
+	contenidoDe,
+	ordenarNotas,
+	ordenEnArbol,
+	rutaDe,
+	subarbol,
+} from "./arbolCarpetas";
 import { archivosZip } from "./exportar";
 import { enLotes, leerArchivosObsidian } from "./obsidian";
 
@@ -126,5 +132,32 @@ describe("contenidoDe", () => {
 			],
 		);
 		expect(c.notas.map((n) => n.titulo)).toEqual(["Beta", "Zeta", "Alfa"]);
+	});
+
+	it("ordena carpetas y notas por fecha, de la más reciente, con las fijadas arriba", () => {
+		const fechas = (dia: number) => ({
+			createdAt: `2026-11-${dia}T00:00:00.000Z`,
+			updatedAt: `2026-11-${30 - dia}T00:00:00.000Z`,
+		});
+		const c = contenidoDe(
+			null,
+			[
+				{ id: 1, nombre: "Vieja", padreId: null, ...fechas(10) },
+				{ id: 2, nombre: "Nueva", padreId: null, ...fechas(20) },
+			],
+			[
+				{ titulo: "A", carpetaId: null, ...fechas(10) },
+				{ titulo: "B", carpetaId: null, ...fechas(20) },
+				{ titulo: "C", carpetaId: null, isFijada: true, ...fechas(11) },
+			],
+			"creada",
+		);
+		expect(c.carpetas.map((x) => x.nombre)).toEqual(["Nueva", "Vieja"]);
+		expect(c.notas.map((n) => n.titulo)).toEqual(["C", "B", "A"]);
+		expect(ordenarNotas(c.notas, "modificada").map((n) => n.titulo)).toEqual([
+			"C",
+			"A",
+			"B",
+		]);
 	});
 });

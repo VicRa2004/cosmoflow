@@ -21,6 +21,7 @@ import { PuntoColor } from "@/core/components/ui/PuntoColor";
 import { cn } from "@/core/utils/cn";
 import type { CarpetaDto, NotaIndiceDto } from "../api/notasApi";
 import type { ContextoNotaSearch } from "../schemas/notaSchemas";
+import { usePreferenciasQuery } from "@/modules/configuracion/hooks/usePreferencias";
 import { cadenaDe, contenidoDe, subarbol } from "../utils/arbolCarpetas";
 import { IconoCarpeta } from "./IconoCarpeta";
 import {
@@ -185,7 +186,8 @@ export function ExploradorCarpeta({
 	const [destino, setDestino] = useState<number | "raiz">();
 	const migas = cadenaDe(seleccionada ?? null, carpetas);
 	const actual = migas.at(-1) ?? null;
-	const contenido = contenidoDe(actual?.id ?? null, carpetas, notas);
+	const orden = usePreferenciasQuery().data?.ordenNotas;
+	const contenido = contenidoDe(actual?.id ?? null, carpetas, notas, orden);
 
 	const abrirMenuNota = (nota: NotaIndiceDto) => (e: MouseEvent) => {
 		if (!onFijarNota && !onDuplicarNota) return;

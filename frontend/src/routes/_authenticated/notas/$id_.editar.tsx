@@ -1,9 +1,8 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { NotaEditorPage } from "@/modules/notas/pages/NotaEditorPage";
+import { createFileRoute, redirect } from "@tanstack/react-router";
 
+/** Enlaces antiguos: la nota ya se abre en edición en `/notas/$id`. */
 export const Route = createFileRoute("/_authenticated/notas/$id_/editar")({
-	component: function EditarNota() {
-		const { id } = Route.useParams();
-		return <NotaEditorPage id={Number(id)} />;
+	beforeLoad: ({ params }) => {
+		throw redirect({ to: "/notas/$id", params, replace: true });
 	},
 });
