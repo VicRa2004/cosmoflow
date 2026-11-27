@@ -4,6 +4,7 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../core/auth/sesion_store.dart';
 import '../../../core/theme/colores_noche_indigo.dart';
+import '../../../core/widgets/avatar_usuario.dart';
 import '../../../core/widgets/confirmar.dart';
 import '../../../core/widgets/tarjeta_seccion.dart';
 import '../../auth/api/auth_api.dart';
@@ -84,9 +85,6 @@ class _PerfilPageState extends State<PerfilPage> {
     final textTheme = Theme.of(context).textTheme;
     final store = widget.sesionStore;
     final usuario = store.usuario;
-    final inicial = (usuario != null && usuario.nombre.trim().isNotEmpty)
-        ? usuario.nombre.trim()[0].toUpperCase()
-        : 'U';
     final verificado = usuario?.emailVerificado ?? false;
 
     return Scaffold(
@@ -102,20 +100,10 @@ class _PerfilPageState extends State<PerfilPage> {
                 padding: const EdgeInsets.all(16),
                 child: Row(
                   children: <Widget>[
-                    Container(
-                      width: 52,
-                      height: 52,
-                      decoration: BoxDecoration(
-                        color: colores.indigoSuave,
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                      alignment: Alignment.center,
-                      child: Text(
-                        inicial,
-                        style: textTheme.headlineSmall?.copyWith(
-                          color: colores.indigoMarca,
-                        ),
-                      ),
+                    AvatarUsuario(
+                      nombre: usuario?.nombre ?? 'Usuario',
+                      avatarUrl: usuario?.avatarUrl,
+                      tamano: 52,
                     ),
                     const SizedBox(width: 14),
                     Expanded(

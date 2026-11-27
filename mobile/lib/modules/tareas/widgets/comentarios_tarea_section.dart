@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../core/theme/colores_noche_indigo.dart';
+import '../../../core/widgets/avatar_usuario.dart';
 import '../../../core/widgets/avisos.dart';
 import '../../../core/widgets/confirmar.dart';
 import '../../../core/widgets/contenido_markdown.dart';
@@ -385,18 +386,14 @@ class _ItemComentario extends StatelessWidget {
   Widget build(BuildContext context) {
     final colores = context.colores;
     final textTheme = Theme.of(context).textTheme;
-    final inicial = comentario.autorNombre.trim().isNotEmpty
-        ? comentario.autorNombre.trim()[0].toUpperCase()
-        : 'U';
 
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
-        CircleAvatar(
-          radius: esRespuesta ? 13 : 16,
-          backgroundColor: colores.elevada,
-          foregroundColor: colores.tintaSuave,
-          child: Text(inicial, style: textTheme.labelMedium),
+        AvatarUsuario(
+          nombre: comentario.autorNombre,
+          avatarUrl: comentario.autorAvatarUrl,
+          tamano: esRespuesta ? 26 : 32,
         ),
         const SizedBox(width: 10),
         Expanded(

@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../core/theme/colores_noche_indigo.dart';
+import '../../../core/theme/tema_app.dart';
+import '../../../core/widgets/avatar_usuario.dart';
 import '../../../core/widgets/tarjeta_seccion.dart';
 import '../models/organizacion_models.dart';
 import 'selector_color.dart';
@@ -25,9 +27,6 @@ class AjustesOrganizacionTab extends StatelessWidget {
     final textTheme = Theme.of(context).textTheme;
     final puedeEditar = organizacion.puede('organizacion:editar');
     final colorAvatar = parsearColorHex(organizacion.color);
-    final inicial = organizacion.nombre.trim().isNotEmpty
-        ? organizacion.nombre.trim()[0].toUpperCase()
-        : 'O';
 
     return ListView(
       padding: const EdgeInsets.only(top: 16, bottom: 48),
@@ -40,22 +39,15 @@ class AjustesOrganizacionTab extends StatelessWidget {
             children: <Widget>[
               Row(
                 children: <Widget>[
-                  Container(
-                    width: 46,
-                    height: 46,
-                    decoration: BoxDecoration(
-                      color: colorAvatar ?? colores.indigoSuave,
-                      borderRadius: BorderRadius.circular(14),
-                    ),
-                    alignment: Alignment.center,
-                    child: Text(
-                      inicial,
-                      style: textTheme.titleLarge?.copyWith(
-                        color: colorAvatar != null
-                            ? Colors.white
-                            : colores.indigoMarca,
-                      ),
-                    ),
+                  AvatarUsuario(
+                    nombre: organizacion.nombre,
+                    avatarUrl: organizacion.avatarUrl,
+                    tamano: 46,
+                    radio: TemaApp.radioControl,
+                    colorFondo: colorAvatar ?? colores.indigoSuave,
+                    colorTexto: colorAvatar != null
+                        ? colores.sobreAcento
+                        : colores.indigoMarca,
                   ),
                   const SizedBox(width: 14),
                   Expanded(
@@ -111,10 +103,12 @@ class AjustesOrganizacionTab extends StatelessWidget {
               const SizedBox(height: 16),
               SizedBox(
                 width: double.infinity,
-                child: FilledButton.icon(
-                  style: FilledButton.styleFrom(
-                    backgroundColor: colores.rosePeligro,
-                    foregroundColor: Colors.white,
+                child: OutlinedButton.icon(
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: colores.rosePeligro,
+                    side: BorderSide(
+                      color: colores.rosePeligro.withValues(alpha: 0.45),
+                    ),
                   ),
                   onPressed: onEliminar,
                   icon: const Icon(LucideIcons.trash2, size: 16),

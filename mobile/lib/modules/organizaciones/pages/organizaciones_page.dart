@@ -3,6 +3,8 @@ import 'package:go_router/go_router.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../core/theme/colores_noche_indigo.dart';
+import '../../../core/theme/tema_app.dart';
+import '../../../core/widgets/avatar_usuario.dart';
 import '../../../core/widgets/estados.dart';
 import '../../../core/widgets/tarjeta_seccion.dart';
 import '../api/organizaciones_api.dart';
@@ -151,9 +153,6 @@ class _OrganizacionFila extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
-    final inicial = organizacion.nombre.trim().isNotEmpty
-        ? organizacion.nombre.trim()[0].toUpperCase()
-        : 'O';
     final rol = organizacion.isAdmin ? 'Admin' : 'Miembro';
     final desc = organizacion.descripcion.trim();
 
@@ -163,22 +162,15 @@ class _OrganizacionFila extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
         child: Row(
           children: <Widget>[
-            Container(
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(
-                color: colorAvatar ?? colores.indigoSuave,
-                borderRadius: BorderRadius.circular(12),
-              ),
-              alignment: Alignment.center,
-              child: Text(
-                inicial,
-                style: textTheme.titleMedium?.copyWith(
-                  color: colorAvatar != null
-                      ? Colors.white
-                      : colores.indigoMarca,
-                ),
-              ),
+            AvatarUsuario(
+              nombre: organizacion.nombre,
+              avatarUrl: organizacion.avatarUrl,
+              tamano: 40,
+              radio: TemaApp.radioControl,
+              colorFondo: colorAvatar ?? colores.indigoSuave,
+              colorTexto: colorAvatar != null
+                  ? colores.sobreAcento
+                  : colores.indigoMarca,
             ),
             const SizedBox(width: 12),
             Expanded(
