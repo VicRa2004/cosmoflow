@@ -1,5 +1,12 @@
 import { useNavigate } from "@tanstack/react-router";
-import { FilePlus, Pin, Search, SlidersHorizontal, Upload } from "lucide-react";
+import {
+	FilePlus,
+	FolderPlus,
+	Pin,
+	Search,
+	SlidersHorizontal,
+	Upload,
+} from "lucide-react";
 import { useState } from "react";
 import { usePermisos } from "@/core/auth/usePermisos";
 import { Button } from "@/core/components/ui/Button";
@@ -12,6 +19,10 @@ import {
 } from "@/modules/configuracion/hooks/usePreferencias";
 import { useProyectosQuery } from "@/modules/proyectos/hooks/useProyectos";
 import { useTagsDisponibles } from "@/modules/tags/hooks/useTagsDisponibles";
+import {
+	CarpetaDialog,
+	type EstadoCarpetaDialog,
+} from "../components/CarpetaDialog";
 import {
 	FiltrosFecha,
 	rangosAParams,
@@ -64,6 +75,7 @@ export function BovedaNotas({ contexto }: { contexto: ContextoNotaSearch }) {
 	const [verFiltros, setVerFiltros] = useState(false);
 	const [rangos, setRangos] = useState(sinRangos);
 	const [importando, setImportando] = useState(false);
+	const [dialogoCarpeta, setDialogoCarpeta] = useState<EstadoCarpetaDialog>();
 	const { data: carpetas = [] } = useCarpetasQuery(
 		deProyecto ? proyectoId : undefined,
 	);
@@ -107,7 +119,7 @@ export function BovedaNotas({ contexto }: { contexto: ContextoNotaSearch }) {
 					/>
 					<Search className="pointer-events-none absolute top-2.5 left-3 h-4 w-4 text-tinta-tenue" />
 				</div>
-				<div className="flex flex-wrap items-center gap-1">
+				<div className="flex flex-wrap items-center gap-1.5">
 					<Select
 						aria-label="Ordenar notas y carpetas"
 						title="Ordenar"
@@ -154,6 +166,15 @@ export function BovedaNotas({ contexto }: { contexto: ContextoNotaSearch }) {
 								onClick={() => setImportando(true)}
 							>
 								<Upload className="h-4 w-4" />
+							</Button>
+							<Button
+								variant="outline"
+								onClick={() =>
+									setDialogoCarpeta({ padreId: carpetaId ?? null })
+								}
+							>
+								<FolderPlus className="h-4 w-4" />
+								Crear carpeta
 							</Button>
 							<Button
 								onClick={() =>
@@ -219,11 +240,18 @@ export function BovedaNotas({ contexto }: { contexto: ContextoNotaSearch }) {
 					proyectoId={deProyecto ? proyectoId : undefined}
 					seleccionada={carpetaId}
 					onSeleccionar={abrir}
+					onAbrirCarpetaDialog={setDialogoCarpeta}
 				/>
 			)}
 			<p className="text-xs text-tinta-tenue">
 				{notas.length} {notas.length === 1 ? "nota" : "notas"}
 			</p>
+			<CarpetaDialog
+				estado={dialogoCarpeta}
+				carpetas={carpetas}
+				proyectoId={deProyecto ? proyectoId : undefined}
+				onCerrar={() => setDialogoCarpeta(undefined)}
+			/>
 			<ImportarObsidianDialog
 				abierto={importando}
 				onCerrar={() => setImportando(false)}

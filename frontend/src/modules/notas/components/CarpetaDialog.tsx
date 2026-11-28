@@ -13,9 +13,14 @@ import {
 import { ICONOS_CARPETA } from "./IconoCarpeta";
 import { ordenEnArbol, subarbol } from "../utils/arbolCarpetas";
 
+/** `undefined`: cerrado. Con `carpeta`, edita; sin ella, crea dentro de `padreId`. */
+export interface EstadoCarpetaDialog {
+	carpeta?: CarpetaDto;
+	padreId: number | null;
+}
+
 interface CarpetaDialogProps {
-	/** `undefined`: cerrado. Con `carpeta`, edita; sin ella, crea dentro de `padreId`. */
-	estado?: { carpeta?: CarpetaDto; padreId: number | null };
+	estado?: EstadoCarpetaDialog;
 	carpetas: CarpetaDto[];
 	proyectoId?: number;
 	onCerrar: () => void;
