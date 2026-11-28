@@ -49,6 +49,10 @@ export function CalendarioPage() {
 		const dia = diaDe(tarea);
 		if (dia) porDia.set(dia, [...(porDia.get(dia) ?? []), tarea]);
 	}
+	// Agenda de móvil: solo los días del mes visible que tienen tareas.
+	const diasAgenda = dias.filter(
+		(dia) => new Date(`${dia}T00:00`).getMonth() === mes && porDia.has(dia),
+	);
 	const titulo = new Date(anio, mes).toLocaleDateString("es-ES", {
 		month: "long",
 		year: "numeric",
@@ -97,68 +101,84 @@ export function CalendarioPage() {
 					{getErrorMessage(error)}
 				</p>
 			) : (
-				// shortcut: en móvil la cuadrícula se desplaza en horizontal, pasar a vista de agenda si se usa mucho ahí
-				<div className="overflow-x-auto rounded-lg border border-borde">
-					<div className="grid min-w-[44rem] grid-cols-7 bg-superficie">
-						{DIAS_SEMANA.map((nombre) => (
-							<div
-								key={nombre}
-								className="border-b border-borde px-2 py-1.5 text-xs font-medium text-tinta-tenue"
-							>
-								{nombre}
-							</div>
-						))}
-						{dias.map((dia) => {
-							const fecha = new Date(`${dia}T00:00`);
-							const tareas = porDia.get(dia) ?? [];
-							return (
-								<section
-									key={dia}
-									aria-label={fecha.toLocaleDateString("es-ES", {
-										weekday: "long",
-										day: "numeric",
-										month: "long",
-									})}
+				<>
+					{/* En móvil, agenda: solo los días del mes con tareas. */}
+					<div className="space-y-3 sm:hidden">
+						{diasAgenda.map((dia) => (
+							<section key={dia} className="space-y-1">
+								<h2
 									className={cn(
-										"min-h-24 min-w-0 space-y-1 border-r border-b border-borde p-1.5 [&:nth-child(7n)]:border-r-0",
-										fecha.getMonth() !== mes && "bg-fondo",
+										"text-sm font-medium capitalize text-tinta-suave",
+										dia === hoy && "text-indigo-400",
 									)}
 								>
-									<span
+									{new Date(`${dia}T00:00`).toLocaleDateString("es-ES", {
+										weekday: "long",
+										day: "numeric",
+									})}
+								</h2>
+								{porDia.get(dia)?.map((tarea) => (
+									<ChipTarea
+										key={tarea.id}
+										tarea={tarea}
+										vencida={dia < hoy}
+										className="py-2 text-sm"
+									/>
+								))}
+							</section>
+						))}
+						{diasAgenda.length === 0 && (
+							<p className="text-sm text-tinta-tenue">Sin tareas este mes.</p>
+						)}
+					</div>
+					<div className="hidden rounded-lg border border-borde sm:block">
+						<div className="grid grid-cols-7 bg-superficie">
+							{DIAS_SEMANA.map((nombre) => (
+								<div
+									key={nombre}
+									className="border-b border-borde px-2 py-1.5 text-xs font-medium text-tinta-tenue"
+								>
+									{nombre}
+								</div>
+							))}
+							{dias.map((dia) => {
+								const fecha = new Date(`${dia}T00:00`);
+								const tareas = porDia.get(dia) ?? [];
+								return (
+									<section
+										key={dia}
+										aria-label={fecha.toLocaleDateString("es-ES", {
+											weekday: "long",
+											day: "numeric",
+											month: "long",
+										})}
 										className={cn(
-											"inline-flex h-6 min-w-6 items-center justify-center rounded-full px-1 text-xs text-tinta-suave",
-											fecha.getMonth() !== mes && "text-tinta-tenue",
-											dia === hoy && "bg-indigo-600 font-semibold text-white",
+											"min-h-24 min-w-0 space-y-1 border-r border-b border-borde p-1.5 [&:nth-child(7n)]:border-r-0",
+											fecha.getMonth() !== mes && "bg-fondo",
 										)}
 									>
-										{fecha.getDate()}
-									</span>
-									{tareas.map((tarea) => (
-										<Link
-											key={tarea.id}
-											to="/tareas/$id"
-											params={{ id: String(tarea.id) }}
-											title={tarea.titulo}
+										<span
 											className={cn(
-												"flex items-center gap-1 rounded bg-elevada px-1.5 py-0.5 text-xs text-tinta hover:bg-borde",
-												dia < hoy && "text-rose-400",
+												"inline-flex h-6 min-w-6 items-center justify-center rounded-full px-1 text-xs text-tinta-suave",
+												fecha.getMonth() !== mes && "text-tinta-tenue",
+												dia === hoy && "bg-indigo-600 font-semibold text-white",
 											)}
 										>
-											<PuntoColor color={tarea.color} className="h-2 w-2" />
-											<span className="truncate">{tarea.titulo}</span>
-											{esCompartida(tarea) && (
-												<Users
-													aria-label="Compartida"
-													className="ml-auto h-3 w-3 shrink-0 text-tinta-tenue"
-												/>
-											)}
-										</Link>
-									))}
-								</section>
-							);
-						})}
+											{fecha.getDate()}
+										</span>
+										{tareas.map((tarea) => (
+											<ChipTarea
+												key={tarea.id}
+												tarea={tarea}
+												vencida={dia < hoy}
+											/>
+										))}
+									</section>
+								);
+							})}
+						</div>
 					</div>
-				</div>
+				</>
 			)}
 			<AvisoListaRecortada
 				aviso={textoListaRecortada({
@@ -169,5 +189,37 @@ export function CalendarioPage() {
 				})}
 			/>
 		</div>
+	);
+}
+
+function ChipTarea({
+	tarea,
+	vencida,
+	className,
+}: {
+	tarea: TareaDto;
+	vencida: boolean;
+	className?: string;
+}) {
+	return (
+		<Link
+			to="/tareas/$id"
+			params={{ id: String(tarea.id) }}
+			title={tarea.titulo}
+			className={cn(
+				"flex items-center gap-1 rounded bg-elevada px-1.5 py-0.5 text-xs text-tinta hover:bg-borde",
+				vencida && "text-rose-400",
+				className,
+			)}
+		>
+			<PuntoColor color={tarea.color} className="h-2 w-2" />
+			<span className="truncate">{tarea.titulo}</span>
+			{esCompartida(tarea) && (
+				<Users
+					aria-label="Compartida"
+					className="ml-auto h-3 w-3 shrink-0 text-tinta-tenue"
+				/>
+			)}
+		</Link>
 	);
 }

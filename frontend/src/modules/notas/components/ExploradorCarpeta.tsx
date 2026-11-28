@@ -379,7 +379,8 @@ export function ExploradorCarpeta({
 				))}
 				{contenido.carpetas.length + contenido.notas.length === 0 && (
 					<p className="p-4 text-sm text-tinta-tenue">
-						Carpeta vacía.{editable && " Clic derecho para crear."}
+						Carpeta vacía.
+						{editable && " Clic derecho o mantén pulsado para crear."}
 					</p>
 				)}
 			</div>
