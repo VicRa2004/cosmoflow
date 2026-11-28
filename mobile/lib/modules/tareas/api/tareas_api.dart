@@ -3,6 +3,7 @@ import 'dart:async';
 import '../../../core/api/api_client.dart';
 import '../../../core/notificaciones/recordatorios_service.dart';
 import '../../../core/offline/cola_sin_conexion.dart';
+import '../models/actividad_tarea_model.dart';
 import '../models/estadisticas_tareas_model.dart';
 import '../models/tarea_model.dart';
 
@@ -208,6 +209,70 @@ class TareasApi {
     return EstadisticasTareasDto.fromJson(
       response.data ?? const <String, dynamic>{},
     );
+  }
+
+  /// Duplica una tarea (`POST /api/tareas/{id}/duplicar`).
+  Future<TareaDto> duplicar(int id) async {
+    final response = await apiClient.dio.post<Map<String, dynamic>>(
+      '/tareas/$id/duplicar',
+    );
+    return TareaDto.fromJson(response.data!);
+  }
+
+  /// Historial de actividad de una tarea (`GET /api/tareas/{id}/actividad`).
+  Future<PaginaActividadTarea> obtenerActividad(
+    int id, {
+    int? antesDe,
+    int limite = 30,
+  }) async {
+    final response = await apiClient.dio.get<Map<String, dynamic>>(
+      '/tareas/$id/actividad',
+      queryParameters: <String, dynamic>{'limite': limite, 'antesDe': ?antesDe},
+    );
+    return PaginaActividadTarea.fromJson(
+      response.data ?? const <String, dynamic>{},
+    );
+  }
+
+  /// Cambia el estado de varias tareas en lote (`POST /api/tareas/lote`).
+  Future<int> aplicarLoteEstado(List<int> ids, EstadoTarea estado) async {
+    final response = await apiClient.dio.post<Map<String, dynamic>>(
+      '/tareas/lote',
+      data: <String, dynamic>{
+        'ids': ids,
+        'accion': 'estado',
+        'estado': estado.valorApi,
+      },
+    );
+    return (response.data?['afectadas'] as num?)?.toInt() ?? ids.length;
+  }
+
+  /// Cambia la prioridad de varias tareas en lote (`POST /api/tareas/lote`).
+  Future<int> aplicarLotePrioridad(
+    List<int> ids,
+    PrioridadTarea prioridad,
+  ) async {
+    final response = await apiClient.dio.post<Map<String, dynamic>>(
+      '/tareas/lote',
+      data: <String, dynamic>{
+        'ids': ids,
+        'accion': 'prioridad',
+        'prioridad': prioridad.valorApi,
+      },
+    );
+    return (response.data?['afectadas'] as num?)?.toInt() ?? ids.length;
+  }
+
+  /// Elimina varias tareas en lote (`POST /api/tareas/lote/eliminar`).
+  Future<int> eliminarLote(List<int> ids) async {
+    final response = await apiClient.dio.post<Map<String, dynamic>>(
+      '/tareas/lote/eliminar',
+      data: <String, dynamic>{'ids': ids},
+    );
+    for (final id in ids) {
+      if (recordatorios != null) unawaited(recordatorios!.cancelarTarea(id));
+    }
+    return (response.data?['afectadas'] as num?)?.toInt() ?? ids.length;
   }
 
   /// Elimina una tarea (`DELETE /api/tareas/{id}`).

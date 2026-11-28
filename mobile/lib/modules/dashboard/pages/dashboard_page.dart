@@ -108,6 +108,57 @@ class _DashboardPageState extends State<DashboardPage> {
     if (await cambio) await _cargar();
   }
 
+  Future<void> _completarConDeshacer(TareaDto tarea) async {
+    final previas = _pendientes;
+    final totalPrevio = _total;
+    final estadoPrevio = tarea.estado;
+
+    setState(() {
+      _pendientes = _pendientes
+          .where((t) => t.id != tarea.id)
+          .toList(growable: false);
+      if (_total > 0) _total -= 1;
+    });
+
+    try {
+      await widget.tareasApi.alternarCompletada(tarea);
+      if (!mounted) return;
+      final messenger = ScaffoldMessenger.of(context);
+      messenger.hideCurrentSnackBar();
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text('«${tarea.titulo}» completada'),
+          action: SnackBarAction(
+            label: 'Deshacer',
+            onPressed: () async {
+              try {
+                await widget.tareasApi.cambiarEstado(tarea.id, estadoPrevio);
+                if (mounted) await _cargar();
+              } catch (_) {
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('No se pudo deshacer el cambio.'),
+                    ),
+                  );
+                }
+              }
+            },
+          ),
+        ),
+      );
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _pendientes = previas;
+        _total = totalPrevio;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('No se pudo completar la tarea.')),
+      );
+    }
+  }
+
   List<_GrupoPendientes> _agruparPorVencimiento(ColoresNocheIndigo colores) {
     final ahora = DateTime.now();
     final hoy = DateTime(ahora.year, ahora.month, ahora.day);
@@ -201,9 +252,8 @@ class _DashboardPageState extends State<DashboardPage> {
               alignment: Alignment.centerLeft,
               child: Text(
                 resumen,
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: colores.tintaTenue,
-                ),
+                style: Theme.of(context).textTheme.bodySmall
+                    ?.copyWith(color: colores.tintaTenue),
               ),
             ),
           ),
@@ -235,8 +285,7 @@ class _DashboardPageState extends State<DashboardPage> {
               const EstadoVacio(
                 icono: LucideIcons.circleCheck,
                 titulo: 'Nada pendiente',
-                mensaje:
-                    'Crea una tarea y aparecerá aquí, ordenada por vencimiento.',
+                mensaje: 'Crea una tarea y aparecerá aquí, ordenada por vencimiento.',
               )
             else
               for (final grupo in grupos) ...<Widget>[
@@ -248,10 +297,12 @@ class _DashboardPageState extends State<DashboardPage> {
                   children: <Widget>[
                     for (final tarea in grupo.tareas)
                       TareaFila(
+                        key: ValueKey<int>(tarea.id),
                         tarea: tarea,
                         ubicacion: _ubicaciones[tarea.id],
                         mostrarEstado: false,
                         puedeActualizar: puedeActualizar,
+                        animarSalida: true,
                         onTap: () => _recargarSi(
                           _acciones.abrirDetalle(
                             context,
@@ -259,9 +310,8 @@ class _DashboardPageState extends State<DashboardPage> {
                             ubicacion: _ubicaciones[tarea.id],
                           ),
                         ),
-                        onAlternarCompletada: () => _recargarSi(
-                          _acciones.alternarCompletada(context, tarea),
-                        ),
+                        onAlternarCompletada: () =>
+                            _completarConDeshacer(tarea),
                         onAlternarFijada: () => _recargarSi(
                           _acciones.alternarFijada(context, tarea),
                         ),

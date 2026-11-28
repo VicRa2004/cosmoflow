@@ -113,7 +113,7 @@ void main() {
     );
 
     expect(find.bySemanticsLabel('Completar'), findsOneWidget);
-    await tester.tap(find.byType(Checkbox));
+    await tester.tap(find.bySemanticsLabel('Completar'));
     expect(alternado, isTrue);
   });
 

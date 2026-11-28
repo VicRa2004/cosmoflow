@@ -4,8 +4,6 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../core/api/adjuntos_api.dart';
 import '../../../core/theme/colores_noche_indigo.dart';
-import '../../../core/theme/tema_app.dart';
-import '../../../core/widgets/avatar_usuario.dart';
 import '../../../core/widgets/avisos.dart';
 import '../../../core/widgets/contenido_markdown.dart';
 import '../../../core/widgets/estados.dart';
@@ -20,13 +18,16 @@ import '../../tags/models/tag_model.dart';
 import '../acciones_tarea.dart';
 import '../api/comentarios_api.dart';
 import '../models/tarea_model.dart';
+import '../widgets/actividad_tarea_section.dart';
 import '../widgets/adjuntos_tarea_section.dart';
 import '../widgets/checklist_subtareas.dart';
 import '../widgets/comentarios_tarea_section.dart';
+import '../widgets/tarea_detalle_resumen.dart';
 import '../widgets/tarea_form.dart';
 import 'tarea_editor_page.dart';
 
-/// `/tareas/:id`: lectura a pantalla completa agrupada en tarjetas limpias.
+/// `/tareas/:id`: detalle limpio con título + check animado, pills interactivas,
+/// tarjeta compacta de fechas/propiedades y foco en subtareas y descripción.
 class TareaDetallePage extends StatefulWidget {
   const TareaDetallePage({
     super.key,
@@ -150,14 +151,13 @@ class _TareaDetallePageState extends State<TareaDetallePage> {
           }
         });
       }
-    } catch (_) {
-      // Sin acceso a la organización: el resto del detalle sigue funcionando.
-    }
+    } catch (_) {}
   }
 
   Future<void> _cargarTags(int? organizacionId) async {
     final tagsApi =
-        widget.tagsApi ?? TagsApi(apiClient: widget.acciones.tareasApi.apiClient);
+        widget.tagsApi ??
+        TagsApi(apiClient: widget.acciones.tareasApi.apiClient);
     try {
       final pagina = await tagsApi.obtenerTodos(organizacionId: organizacionId);
       if (mounted) setState(() => _tags = pagina.datos);
@@ -217,6 +217,23 @@ class _TareaDetallePageState extends State<TareaDetallePage> {
 
   Future<void> _tras(Future<bool> cambio) async {
     if (await cambio) await _cargar();
+  }
+
+  Future<void> _duplicar(TareaDto tarea) async {
+    TareaDto? copia;
+    final ok = await ejecutarConAviso(
+      context,
+      () async => copia = await widget.acciones.tareasApi.duplicar(tarea.id),
+      error: 'No se pudo duplicar la tarea.',
+      exito: 'Tarea duplicada.',
+    );
+    if (ok && copia != null && mounted) {
+      await _accionesConContexto.abrirDetalle(
+        context,
+        copia!,
+        ubicacion: _ubicacion,
+      );
+    }
   }
 
   Future<void> _eliminar(TareaDto tarea) async {
@@ -305,10 +322,16 @@ class _TareaDetallePageState extends State<TareaDetallePage> {
             PopupMenuButton<String>(
               icon: const Icon(LucideIcons.ellipsisVertical),
               onSelected: (accion) {
+                if (accion == 'duplicar') _duplicar(tarea);
                 if (accion == 'plantilla') _guardarComoPlantilla(tarea);
                 if (accion == 'eliminar') _eliminar(tarea);
               },
               itemBuilder: (_) => <PopupMenuEntry<String>>[
+                if (puedePlantilla)
+                  const PopupMenuItem<String>(
+                    value: 'duplicar',
+                    child: Text('Duplicar'),
+                  ),
                 if (puedePlantilla)
                   const PopupMenuItem<String>(
                     value: 'plantilla',
@@ -355,33 +378,40 @@ class _TareaDetallePageState extends State<TareaDetallePage> {
     final tagsTarea = _tags
         .where((t) => tarea.tagIds.contains(t.id))
         .toList(growable: false);
-    final ubicacion = _ubicacion;
 
     return ListView(
       padding: const EdgeInsets.only(top: 4, bottom: 48),
       children: <Widget>[
         Padding(
-          padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
-          child: _InsigniasUbicacion(tarea: tarea, ubicacion: ubicacion),
+          padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+          child: InsigniasUbicacionTarea(tarea: tarea, ubicacion: _ubicacion),
         ),
         Padding(
-          padding: const EdgeInsets.fromLTRB(16, 0, 16, 14),
+          padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
           child: Text(
             tarea.titulo,
-            style: textTheme.headlineMedium?.copyWith(
+            style: textTheme.headlineSmall?.copyWith(
+              fontWeight: FontWeight.w700,
               decoration: completada ? TextDecoration.lineThrough : null,
               color: completada ? colores.tintaTenue : null,
             ),
           ),
         ),
-        if (tarea.bloqueada)
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 0, 16, 14),
-            child: _AvisoBloqueada(tituloPrincipal: _tareaPrincipal?.titulo),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 0, 16, 14),
+          child: ChipsEstadoPrioridadTarea(
+            tarea: tarea,
+            tags: tagsTarea,
+            onCambiarEstado: puedeActualizar
+                ? (estado) => _tras(
+                    _accionesConContexto.cambiarEstado(context, tarea, estado),
+                  )
+                : null,
           ),
+        ),
         if (puedeMarcar)
           Padding(
-            padding: const EdgeInsets.fromLTRB(16, 0, 16, 18),
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 14),
             child: FilledButton.icon(
               style: completada
                   ? FilledButton.styleFrom(
@@ -400,93 +430,24 @@ class _TareaDetallePageState extends State<TareaDetallePage> {
               label: Text(completada ? 'Reabrir' : 'Marcar como completada'),
             ),
           ),
-        TarjetaSeccion(
-          titulo: 'Detalles',
-          divisorIndent: 62,
-          children: <Widget>[
-            _Dato(
-              icono: LucideIcons.flag,
-              etiqueta: 'Estado',
-              valor: tarea.estado.etiqueta,
+        if (tarea.bloqueada)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 14),
+            child: AvisoTareaBloqueada(
+              tituloPrincipal: _tareaPrincipal?.titulo,
             ),
-            _Dato(
-              icono: LucideIcons.circleAlert,
-              colorIcono: tarea.prioridad == PrioridadTarea.alta
-                  ? colores.rosePeligro
-                  : null,
-              fondoIcono: tarea.prioridad == PrioridadTarea.alta
-                  ? colores.roseSuave
-                  : null,
-              etiqueta: 'Prioridad',
-              valor: tarea.prioridad.etiqueta,
-            ),
-            _Dato(
-              icono: LucideIcons.calendar,
-              etiqueta: 'Fechas',
-              valor:
-                  '${tarea.fechaInicio ?? 'Sin inicio'} → ${tarea.fechaVencimiento ?? 'Sin vencimiento'}',
-            ),
-            if (tarea.recurrencia != null)
-              _Dato(
-                icono: LucideIcons.repeat,
-                colorIcono: colores.indigoMarca,
-                fondoIcono: colores.indigoSuave,
-                etiqueta: 'Repetición',
-                valor: tarea.recurrencia!.etiqueta,
-              ),
-            if (tarea.dependeDeId != null)
-              _Dato(
-                icono: LucideIcons.link,
-                etiqueta: 'Depende de',
-                valor: _tareaPrincipal?.titulo ?? 'Tarea #${tarea.dependeDeId}',
-                trailing: Icon(
-                  LucideIcons.chevronRight,
-                  size: 18,
-                  color: colores.tintaTenue,
-                ),
-                onTap: () => context.push('/tareas/${tarea.dependeDeId}'),
-              ),
-            if (tarea.isCompartida)
-              _Dato(
-                icono:
-                    ubicacion?.icono ??
-                    (tarea.equipoId != null
-                        ? LucideIcons.users
-                        : tarea.proyectoId != null
-                        ? LucideIcons.folderKanban
-                        : LucideIcons.building2),
-                colorIcono: colores.indigoMarca,
-                fondoIcono: colores.indigoSuave,
-                etiqueta: 'Ubicación',
-                valor: ubicacion != null
-                    ? ubicacion.etiquetaCorta
-                    : tarea.equipoId != null
-                    ? 'Equipo'
-                    : tarea.proyectoId != null
-                    ? 'Proyecto'
-                    : 'Organización',
-              ),
-            if (responsables.isNotEmpty)
-              _DatoResponsables(responsables: responsables),
-            if (tagsTarea.isNotEmpty)
-              Padding(
-                padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
-                child: Wrap(
-                  spacing: 6,
-                  runSpacing: 6,
-                  children: <Widget>[
-                    for (final tag in tagsTarea)
-                      InsigniaPill(
-                        texto: tag.nombre,
-                        icono: LucideIcons.tag,
-                      ),
-                  ],
-                ),
-              ),
-          ],
+          ),
+        ResumenPropiedadesTarea(
+          tarea: tarea,
+          responsables: responsables,
+          ubicacion: _ubicacion,
+          tareaPrincipal: _tareaPrincipal,
+          onAbrirPrincipal: tarea.dependeDeId != null
+              ? () => context.push('/tareas/${tarea.dependeDeId}')
+              : null,
         ),
         if (tarea.subtareas.isNotEmpty) ...<Widget>[
-          const SizedBox(height: 18),
+          const SizedBox(height: 14),
           TarjetaSeccion(
             mostrarDivisores: false,
             paddingInterno: const EdgeInsets.symmetric(vertical: 8),
@@ -500,7 +461,7 @@ class _TareaDetallePageState extends State<TareaDetallePage> {
             ],
           ),
         ],
-        const SizedBox(height: 18),
+        const SizedBox(height: 14),
         TarjetaSeccion(
           titulo: 'Descripción',
           mostrarDivisores: false,
@@ -512,7 +473,7 @@ class _TareaDetallePageState extends State<TareaDetallePage> {
             ),
           ],
         ),
-        const SizedBox(height: 18),
+        const SizedBox(height: 14),
         TarjetaSeccion(
           mostrarDivisores: false,
           paddingInterno: const EdgeInsets.all(16),
@@ -532,7 +493,7 @@ class _TareaDetallePageState extends State<TareaDetallePage> {
             ),
           ],
         ),
-        const SizedBox(height: 18),
+        const SizedBox(height: 14),
         TarjetaSeccion(
           mostrarDivisores: false,
           paddingInterno: const EdgeInsets.symmetric(vertical: 8),
@@ -546,186 +507,17 @@ class _TareaDetallePageState extends State<TareaDetallePage> {
             ),
           ],
         ),
-      ],
-    );
-  }
-}
-
-class _InsigniasUbicacion extends StatelessWidget {
-  const _InsigniasUbicacion({required this.tarea, this.ubicacion});
-
-  final TareaDto tarea;
-  final UbicacionTarea? ubicacion;
-
-  @override
-  Widget build(BuildContext context) {
-    final colores = context.colores;
-    if (!tarea.isCompartida) {
-      return const Wrap(
-        spacing: 6,
-        runSpacing: 6,
-        children: <Widget>[
-          InsigniaPill(texto: 'Personal', icono: LucideIcons.user),
-        ],
-      );
-    }
-
-    return Wrap(
-      spacing: 6,
-      runSpacing: 6,
-      children: <Widget>[
-        InsigniaPill(
-          texto: ubicacion?.organizacionNombre ?? 'Organización',
-          icono: LucideIcons.building2,
-          colorTexto: colores.indigoMarca,
-          colorFondo: colores.indigoSuave,
-        ),
-        if (tarea.equipoId != null)
-          InsigniaPill(
-            texto: ubicacion?.equipoNombre != null
-                ? 'Equipo · ${ubicacion!.equipoNombre}'
-                : 'Equipo',
-            icono: LucideIcons.users,
-            colorTexto: colores.indigoMarca,
-            colorFondo: colores.indigoSuave,
-          ),
-        if (tarea.proyectoId != null)
-          InsigniaPill(
-            texto: ubicacion?.proyectoNombre != null
-                ? 'Proyecto · ${ubicacion!.proyectoNombre}'
-                : 'Proyecto',
-            icono: LucideIcons.folderKanban,
-            colorTexto: colores.indigoMarca,
-            colorFondo: colores.indigoSuave,
-          ),
-      ],
-    );
-  }
-}
-
-class _DatoResponsables extends StatelessWidget {
-  const _DatoResponsables({required this.responsables});
-
-  final List<({String nombre, String? avatarUrl})> responsables;
-
-  @override
-  Widget build(BuildContext context) {
-    final textTheme = Theme.of(context).textTheme;
-    return ListTile(
-      dense: true,
-      leading: const IconoCaja(
-        icono: LucideIcons.users,
-        dimension: 32,
-        tamanoIcono: 16,
-      ),
-      title: Text('Responsables', style: textTheme.bodySmall),
-      subtitle: Padding(
-        padding: const EdgeInsets.only(top: 6),
-        child: Wrap(
-          spacing: 10,
-          runSpacing: 6,
+        const SizedBox(height: 14),
+        TarjetaSeccion(
+          mostrarDivisores: false,
           children: <Widget>[
-            for (final r in responsables)
-              Row(
-                mainAxisSize: MainAxisSize.min,
-                children: <Widget>[
-                  AvatarUsuario(
-                    nombre: r.nombre,
-                    avatarUrl: r.avatarUrl,
-                    tamano: 22,
-                  ),
-                  const SizedBox(width: 6),
-                  Text(
-                    r.nombre,
-                    style: textTheme.bodyMedium?.copyWith(
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ],
-              ),
+            ActividadTareaSection(
+              tareaId: tarea.id,
+              tareasApi: widget.acciones.tareasApi,
+            ),
           ],
         ),
-      ),
-    );
-  }
-}
-
-class _AvisoBloqueada extends StatelessWidget {
-  const _AvisoBloqueada({this.tituloPrincipal});
-
-  final String? tituloPrincipal;
-
-  @override
-  Widget build(BuildContext context) {
-    final colores = context.colores;
-    final texto = tituloPrincipal != null
-        ? 'Bloqueada: primero hay que completar «$tituloPrincipal».'
-        : 'Bloqueada: depende de una tarea sin completar.';
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-      decoration: BoxDecoration(
-        color: colores.amberSuave,
-        borderRadius: BorderRadius.circular(TemaApp.radioControl),
-        border: Border.all(color: colores.amberAviso.withValues(alpha: 0.35)),
-      ),
-      child: Row(
-        children: <Widget>[
-          Icon(LucideIcons.lock, size: 18, color: colores.amberAviso),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Text(
-              texto,
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: colores.tinta,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _Dato extends StatelessWidget {
-  const _Dato({
-    required this.icono,
-    required this.etiqueta,
-    required this.valor,
-    this.colorIcono,
-    this.fondoIcono,
-    this.trailing,
-    this.onTap,
-  });
-
-  final IconData icono;
-  final String etiqueta;
-  final String valor;
-  final Color? colorIcono;
-  final Color? fondoIcono;
-  final Widget? trailing;
-  final VoidCallback? onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return ListTile(
-      dense: true,
-      leading: IconoCaja(
-        icono: icono,
-        color: colorIcono,
-        fondo: fondoIcono,
-        dimension: 32,
-        tamanoIcono: 16,
-      ),
-      title: Text(etiqueta, style: Theme.of(context).textTheme.bodySmall),
-      subtitle: Text(
-        valor,
-        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-          fontWeight: FontWeight.w500,
-        ),
-      ),
-      trailing: trailing,
-      onTap: onTap,
+      ],
     );
   }
 }

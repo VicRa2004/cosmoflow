@@ -279,6 +279,7 @@ class TareaFormState extends State<TareaForm> {
           CampoFecha(
             etiqueta: 'Vence',
             controller: _vencimiento,
+            mostrarAtajos: true,
             validator: (v) {
               final ini = _inicio.text.trim();
               final ven = v?.trim() ?? '';
