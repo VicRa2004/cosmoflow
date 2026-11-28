@@ -51,7 +51,7 @@ export class CanjearCodigoUseCase {
 
 		const destino = resolverDestino(codigo.redirectUri);
 		const nombre = destino?.esLocal
-			? "Conexión local (Claude Code u otra app)"
+			? "Conexión local (terminal o app de escritorio)"
 			: `${destino?.nombre} (${destino?.host})`;
 		return this.tokens.ejecutar({
 			usuarioId: codigo.usuarioId,
