@@ -46,7 +46,7 @@ function TokenRecienCreado({
 	);
 }
 
-/** Tokens para clientes de la API; las conexiones con Claude también aparecen aquí. */
+/** Tokens para clientes de la API; las conexiones de asistentes (MCP) también aparecen aquí. */
 export function TokensPersonalesCard() {
 	const { data: tokens, error } = useTokensPersonalesQuery();
 	const crear = useCrearTokenPersonalMutation();
@@ -68,10 +68,10 @@ export function TokensPersonalesCard() {
 			<CardHeader className="pb-0">
 				<CardTitle className="text-lg">Tokens personales</CardTitle>
 				<CardDescription>
-					Dan acceso a tu cuenta con tus mismos permisos y no caducan; en
-					«Permisos» puedes limitarlos, por ejemplo a solo leer tareas. Aquí
-					también aparecen las conexiones con Claude: se renuevan solas y se
-					revocan tras 90 días sin uso; revoca antes las que ya no uses.
+					Cada asistente conectado y cada token de la API aparece aquí, con tus
+					mismos permisos salvo que los limites en «Permisos» (p. ej. solo
+					leer). Las conexiones de asistentes se renuevan solas y se revocan
+					tras 90 días sin uso; los tokens creados a mano no caducan.
 				</CardDescription>
 			</CardHeader>
 
