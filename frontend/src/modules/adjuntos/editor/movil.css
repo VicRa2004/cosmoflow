@@ -31,9 +31,12 @@ body {
 	--crepe-font-code: ui-monospace, monospace;
 	caret-color: var(--indigo);
 }
-/* Hueco izquierdo para el asa de bloque y abajo para que quepan los menús. */
+/* Alineado con el título (sin sangría izquierda); espacio abajo para menús. */
 .milkdown .ProseMirror {
-	padding: 4px 0 96px 40px;
+	padding: 4px 0 96px 0;
+}
+.milkdown .milkdown-block-handle {
+	display: none;
 }
 .milkdown a[data-mencion] {
 	border-radius: 4px;

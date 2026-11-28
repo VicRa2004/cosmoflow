@@ -278,7 +278,9 @@ class TemaApp {
         side: WidgetStateBorderSide.resolveWith((estados) {
           final sel = estados.contains(WidgetState.selected);
           return BorderSide(
-            color: sel ? paleta.indigoMarca.withValues(alpha: 0.4) : paleta.borde,
+            color: sel
+                ? paleta.indigoMarca.withValues(alpha: 0.4)
+                : paleta.borde,
             width: 1,
           );
         }),
@@ -428,6 +430,23 @@ class TemaApp {
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(radioControl),
         ),
+      ),
+      tooltipTheme: TooltipThemeData(
+        decoration: BoxDecoration(
+          color: paleta.lateral,
+          borderRadius: BorderRadius.circular(radioPequeno),
+        ),
+        textStyle: TextStyle(
+          fontFamily: fuente,
+          color: paleta.lateralTinta,
+          fontSize: 12,
+          fontWeight: FontWeight.w500,
+        ),
+      ),
+      progressIndicatorTheme: ProgressIndicatorThemeData(
+        color: paleta.indigoMarca,
+        linearTrackColor: paleta.elevada,
+        circularTrackColor: paleta.elevada,
       ),
       dividerTheme: DividerThemeData(
         color: paleta.borde,

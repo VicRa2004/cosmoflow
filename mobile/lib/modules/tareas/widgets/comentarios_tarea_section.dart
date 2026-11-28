@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../core/theme/colores_noche_indigo.dart';
+import '../../../core/theme/tema_app.dart';
 import '../../../core/widgets/avatar_usuario.dart';
 import '../../../core/widgets/avisos.dart';
 import '../../../core/widgets/confirmar.dart';
 import '../../../core/widgets/contenido_markdown.dart';
+import '../../../core/widgets/tarjeta_seccion.dart';
 import '../api/comentarios_api.dart';
 import '../models/tarea_model.dart';
 import 'tarea_form.dart';
@@ -201,18 +204,19 @@ class _ComentariosTareaSectionState extends State<ComentariosTareaSection> {
               .toList(growable: false);
 
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
+      padding: const EdgeInsets.fromLTRB(16, 6, 16, 8),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
           Row(
             children: <Widget>[
-              Icon(
-                Icons.chat_bubble_outline_rounded,
-                size: 18,
-                color: colores.tintaTenue,
+              const IconoCaja(
+                icono: LucideIcons.messageSquare,
+                dimension: 28,
+                tamanoIcono: 15,
+                radio: TemaApp.radioPequeno,
               ),
-              const SizedBox(width: 8),
+              const SizedBox(width: 10),
               Text(
                 _comentarios.isEmpty
                     ? 'Comentarios'
@@ -221,77 +225,113 @@ class _ComentariosTareaSectionState extends State<ComentariosTareaSection> {
               ),
             ],
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 14),
           if (_cargando)
             const Padding(
               padding: EdgeInsets.symmetric(vertical: 16),
               child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
             )
           else if (_error != null)
-            TextButton(onPressed: _cargar, child: Text('$_error Reintentar'))
+            TextButton.icon(
+              onPressed: _cargar,
+              icon: const Icon(LucideIcons.refreshCw, size: 15),
+              label: Text('$_error Reintentar'),
+            )
           else if (_comentarios.isEmpty)
             Text(
               'Aún no hay comentarios. Escribe el primero abajo.',
               style: textTheme.bodySmall?.copyWith(color: colores.tintaTenue),
             )
           else
-            for (final raiz in hilos.raices) ...<Widget>[
+            for (var i = 0; i < hilos.raices.length; i++) ...<Widget>[
               _ItemComentario(
-                comentario: raiz,
-                propio: raiz.autorId == widget.yoId,
-                onResponder: () => _iniciarRespuesta(raiz.id, raiz),
-                onEditar: () => _iniciarEdicion(raiz),
+                comentario: hilos.raices[i],
+                propio: hilos.raices[i].autorId == widget.yoId,
+                onResponder: () =>
+                    _iniciarRespuesta(hilos.raices[i].id, hilos.raices[i]),
+                onEditar: () => _iniciarEdicion(hilos.raices[i]),
                 onEliminar: () => _eliminar(
-                  raiz,
-                  hilos.respuestasPorPadre[raiz.id]?.length ?? 0,
+                  hilos.raices[i],
+                  hilos.respuestasPorPadre[hilos.raices[i].id]?.length ?? 0,
                 ),
               ),
-              if (hilos.respuestasPorPadre[raiz.id] case final resps?)
+              if (hilos.respuestasPorPadre[hilos.raices[i].id]
+                  case final resps?)
                 Container(
-                  margin: const EdgeInsets.only(left: 16, top: 8, bottom: 8),
+                  margin: const EdgeInsets.only(left: 16, top: 10, bottom: 4),
                   padding: const EdgeInsets.only(left: 12),
                   decoration: BoxDecoration(
-                    border: Border(left: BorderSide(color: colores.borde)),
+                    border: Border(
+                      left: BorderSide(color: colores.bordeFuerte, width: 2),
+                    ),
                   ),
                   child: Column(
                     children: <Widget>[
-                      for (final resp in resps) ...<Widget>[
+                      for (var j = 0; j < resps.length; j++) ...<Widget>[
                         _ItemComentario(
-                          comentario: resp,
-                          propio: resp.autorId == widget.yoId,
+                          comentario: resps[j],
+                          propio: resps[j].autorId == widget.yoId,
                           esRespuesta: true,
-                          onResponder: () => _iniciarRespuesta(raiz.id, resp),
-                          onEditar: () => _iniciarEdicion(resp),
-                          onEliminar: () => _eliminar(resp, 0),
+                          onResponder: () =>
+                              _iniciarRespuesta(hilos.raices[i].id, resps[j]),
+                          onEditar: () => _iniciarEdicion(resps[j]),
+                          onEliminar: () => _eliminar(resps[j], 0),
                         ),
-                        const SizedBox(height: 8),
+                        if (j < resps.length - 1) const SizedBox(height: 10),
                       ],
                     ],
                   ),
                 ),
-              const Divider(height: 20),
+              if (i < hilos.raices.length - 1)
+                const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 12),
+                  child: Divider(),
+                ),
             ],
-          const SizedBox(height: 8),
+          const SizedBox(height: 14),
           if (_editandoId != null || _respondiendoNombre != null)
             Padding(
-              padding: const EdgeInsets.only(bottom: 6),
-              child: Row(
-                children: <Widget>[
-                  Expanded(
-                    child: Text(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: Container(
+                padding: const EdgeInsets.fromLTRB(12, 6, 4, 6),
+                decoration: BoxDecoration(
+                  color: colores.indigoSuave,
+                  borderRadius: BorderRadius.circular(TemaApp.radioChip),
+                  border: Border.all(
+                    color: colores.indigoMarca.withValues(alpha: 0.25),
+                  ),
+                ),
+                child: Row(
+                  children: <Widget>[
+                    Icon(
                       _editandoId != null
-                          ? 'Editando comentario'
-                          : 'Respondiendo a $_respondiendoNombre',
-                      style: textTheme.labelMedium?.copyWith(
-                        color: colores.indigoMarca,
+                          ? LucideIcons.pencil
+                          : LucideIcons.reply,
+                      size: 14,
+                      color: colores.indigoMarca,
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        _editandoId != null
+                            ? 'Editando comentario'
+                            : 'Respondiendo a $_respondiendoNombre',
+                        style: textTheme.labelMedium?.copyWith(
+                          color: colores.indigoMarca,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                     ),
-                  ),
-                  TextButton(
-                    onPressed: _cancelarModo,
-                    child: const Text('Cancelar'),
-                  ),
-                ],
+                    IconButton(
+                      tooltip: 'Cancelar',
+                      visualDensity: VisualDensity.compact,
+                      iconSize: 16,
+                      color: colores.indigoMarca,
+                      onPressed: _cancelarModo,
+                      icon: const Icon(LucideIcons.x),
+                    ),
+                  ],
+                ),
               ),
             ),
           if (sugerencias.isNotEmpty)
@@ -304,10 +344,7 @@ class _ComentariosTareaSectionState extends State<ComentariosTareaSection> {
                   children: <Widget>[
                     for (final m in sugerencias)
                       ActionChip(
-                        avatar: const Icon(
-                          Icons.alternate_email_rounded,
-                          size: 16,
-                        ),
+                        avatar: const Icon(LucideIcons.atSign, size: 15),
                         label: Text(m.nombre),
                         onPressed: () => _seleccionarMencion(m),
                       ),
@@ -333,21 +370,36 @@ class _ComentariosTareaSectionState extends State<ComentariosTareaSection> {
                 ),
               ),
               const SizedBox(width: 8),
-              IconButton.filled(
-                tooltip: _editandoId != null
-                    ? 'Guardar comentario'
-                    : 'Enviar comentario',
-                onPressed: _enviando ? null : _enviar,
-                icon: _enviando
-                    ? const SizedBox.square(
-                        dimension: 18,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : Icon(
-                        _editandoId != null
-                            ? Icons.check_rounded
-                            : Icons.send_rounded,
-                      ),
+              SizedBox(
+                width: TemaApp.altoBoton,
+                height: TemaApp.altoBoton,
+                child: IconButton.filled(
+                  style: IconButton.styleFrom(
+                    backgroundColor: colores.indigoMarca,
+                    foregroundColor: colores.sobreAcento,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(TemaApp.radioControl),
+                    ),
+                  ),
+                  tooltip: _editandoId != null
+                      ? 'Guardar comentario'
+                      : 'Enviar comentario',
+                  onPressed: _enviando ? null : _enviar,
+                  icon: _enviando
+                      ? SizedBox.square(
+                          dimension: 18,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: colores.sobreAcento,
+                          ),
+                        )
+                      : Icon(
+                          _editandoId != null
+                              ? LucideIcons.check
+                              : LucideIcons.send,
+                          size: 18,
+                        ),
+                ),
               ),
             ],
           ),
@@ -419,14 +471,19 @@ class _ItemComentario extends StatelessWidget {
                       height: 36,
                     ),
                     padding: EdgeInsets.zero,
-                    iconSize: 18,
+                    iconSize: 16,
+                    color: colores.tintaTenue,
                     onPressed: onResponder,
-                    icon: const Icon(Icons.reply_rounded),
+                    icon: const Icon(LucideIcons.reply),
                   ),
                   if (propio)
                     PopupMenuButton<String>(
                       padding: EdgeInsets.zero,
-                      iconSize: 18,
+                      icon: Icon(
+                        LucideIcons.ellipsisVertical,
+                        size: 16,
+                        color: colores.tintaTenue,
+                      ),
                       onSelected: (accion) {
                         if (accion == 'editar') onEditar();
                         if (accion == 'eliminar') onEliminar();

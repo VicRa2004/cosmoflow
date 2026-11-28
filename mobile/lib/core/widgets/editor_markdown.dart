@@ -19,11 +19,13 @@ class EditorMarkdown extends StatefulWidget {
     required this.controller,
     required this.hint,
     this.onCambio,
+    this.alturaMinima = 160,
   });
 
   final TextEditingController controller;
   final String hint;
   final VoidCallback? onCambio;
+  final double alturaMinima;
 
   @override
   State<EditorMarkdown> createState() => _EditorMarkdownState();
@@ -31,7 +33,7 @@ class EditorMarkdown extends StatefulWidget {
 
 class _EditorMarkdownState extends State<EditorMarkdown> {
   WebViewController? _web;
-  double _altura = 160;
+  late double _altura = widget.alturaMinima;
 
   /// Borde inferior del cursor dentro del editor, o `null` si no tiene el foco.
   double? _cursor;
@@ -93,7 +95,14 @@ class _EditorMarkdownState extends State<EditorMarkdown> {
         '--peligro': _hex(c.rosePeligro),
       },
     });
-    _web?.runJavaScript('window.iniciarEditor($opciones)');
+    _web?.runJavaScript('''
+      window.iniciarEditor($opciones);
+      (() => {
+        const s = document.createElement('style');
+        s.textContent = '.milkdown .ProseMirror { padding: 4px 0 96px 0 !important; } .milkdown .milkdown-block-handle { display: none !important; }';
+        document.head.appendChild(s);
+      })();
+    ''');
   }
 
   void _recibir(JavaScriptMessage mensaje) {
@@ -104,7 +113,9 @@ class _EditorMarkdownState extends State<EditorMarkdown> {
       widget.onCambio?.call();
     }
     if (datos['altura'] case final num altura) {
-      setState(() => _altura = math.max(altura.toDouble(), 160));
+      setState(
+        () => _altura = math.max(altura.toDouble(), widget.alturaMinima),
+      );
     }
     if (datos.containsKey('cursor')) {
       _cursor = (datos['cursor'] as num?)?.toDouble();

@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../core/auth/sesion_store.dart';
 import '../../../core/theme/colores_noche_indigo.dart';
+import '../../../core/theme/tema_app.dart';
 import '../../../core/widgets/avisos.dart';
 import '../../../core/widgets/confirmar.dart';
 import '../../../core/widgets/estados.dart';
+import '../../../core/widgets/tarjeta_seccion.dart';
 import '../api/papelera_api.dart';
 
 /// `/papelera`: tareas y notas borradas con restaurar o borrado definitivo.
@@ -169,6 +172,9 @@ class _ListaPapeleraState extends State<_ListaPapelera>
     super.build(context);
     final colores = context.colores;
     final textTheme = Theme.of(context).textTheme;
+    final iconoTipo = widget.tipo == TipoPapelera.tareas
+        ? LucideIcons.squareCheck
+        : LucideIcons.fileText;
 
     if (_cargando) return const EstadoCargando();
     if (_error != null) {
@@ -179,11 +185,9 @@ class _ListaPapeleraState extends State<_ListaPapelera>
         onRefresh: _cargar,
         child: ListView(
           children: <Widget>[
-            const SizedBox(height: 64),
+            const SizedBox(height: 32),
             EstadoVacio(
-              icono: widget.tipo == TipoPapelera.tareas
-                  ? Icons.task_alt_rounded
-                  : Icons.sticky_note_2_outlined,
+              icono: LucideIcons.trash2,
               titulo: 'No hay ${widget.tipo.segmento} en la papelera',
               mensaje: 'Lo que elimines queda aquí 30 días antes de borrarse para siempre.',
             ),
@@ -195,69 +199,84 @@ class _ListaPapeleraState extends State<_ListaPapelera>
     final tieneMas = _pagina < _totalPaginas;
     return RefreshIndicator(
       onRefresh: _cargar,
-      child: ListView.separated(
-        padding: const EdgeInsets.only(bottom: 32),
-        itemCount: _datos.length + 1 + (tieneMas ? 1 : 0),
-        separatorBuilder: (_, index) => index == 0
-            ? const Divider(height: 1)
-            : const Divider(height: 1, indent: 56),
-        itemBuilder: (context, index) {
-          if (index == 0) {
-            return Padding(
-              padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
-              child: Text(
-                'Se borran definitivamente a los 30 días.',
-                style: textTheme.bodySmall?.copyWith(color: colores.tintaTenue),
+      child: ListView(
+        padding: const EdgeInsets.fromLTRB(0, 12, 0, 32),
+        children: <Widget>[
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 14),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              decoration: BoxDecoration(
+                color: colores.elevada,
+                borderRadius: BorderRadius.circular(TemaApp.radioControl),
+                border: Border.all(color: colores.borde),
               ),
-            );
-          }
-          final itemIndex = index - 1;
-          if (itemIndex >= _datos.length) {
-            return Padding(
-              padding: const EdgeInsets.all(16),
-              child: Center(
-                child: OutlinedButton(
-                  onPressed: _cargandoMas
-                      ? null
-                      : () => _cargar(pagina: _pagina + 1, anexar: true),
-                  child: Text(_cargandoMas ? 'Cargando…' : 'Cargar más'),
+              child: Row(
+                children: <Widget>[
+                  Icon(LucideIcons.clock, size: 16, color: colores.tintaTenue),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      'Se borran definitivamente a los 30 días.',
+                      style: textTheme.bodySmall?.copyWith(
+                        color: colores.tintaSuave,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          TarjetaSeccion(
+            divisorIndent: 62,
+            children: <Widget>[
+              for (final elemento in _datos)
+                ListTile(
+                  leading: IconoCaja(
+                    icono: iconoTipo,
+                    color: colores.tintaTenue,
+                    fondo: colores.elevada,
+                    dimension: 34,
+                    tamanoIcono: 17,
+                  ),
+                  title: Text(
+                    elemento.titulo,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  trailing: widget.puedeGestionar
+                      ? Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: <Widget>[
+                            IconButton(
+                              tooltip: 'Restaurar',
+                              color: colores.indigoMarca,
+                              onPressed: () => _restaurar(elemento),
+                              icon: const Icon(LucideIcons.rotateCcw, size: 19),
+                            ),
+                            IconButton(
+                              tooltip: 'Borrar definitivamente',
+                              color: colores.rosePeligro,
+                              onPressed: () => _eliminarDefinitivo(elemento),
+                              icon: const Icon(LucideIcons.trash2, size: 19),
+                            ),
+                          ],
+                        )
+                      : null,
                 ),
+            ],
+          ),
+          if (tieneMas)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+              child: OutlinedButton(
+                onPressed: _cargandoMas
+                    ? null
+                    : () => _cargar(pagina: _pagina + 1, anexar: true),
+                child: Text(_cargandoMas ? 'Cargando…' : 'Cargar más'),
               ),
-            );
-          }
-          final elemento = _datos[itemIndex];
-          return ListTile(
-            leading: Icon(
-              widget.tipo == TipoPapelera.tareas
-                  ? Icons.task_alt_rounded
-                  : Icons.sticky_note_2_outlined,
-              color: colores.tintaTenue,
             ),
-            title: Text(
-              elemento.titulo,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-            ),
-            trailing: widget.puedeGestionar
-                ? Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: <Widget>[
-                      IconButton(
-                        tooltip: 'Restaurar',
-                        onPressed: () => _restaurar(elemento),
-                        icon: const Icon(Icons.restore_rounded),
-                      ),
-                      IconButton(
-                        tooltip: 'Borrar definitivamente',
-                        color: colores.rosePeligro,
-                        onPressed: () => _eliminarDefinitivo(elemento),
-                        icon: const Icon(Icons.delete_forever_outlined),
-                      ),
-                    ],
-                  )
-                : null,
-          );
-        },
+        ],
       ),
     );
   }

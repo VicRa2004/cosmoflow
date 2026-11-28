@@ -136,11 +136,11 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(consultas, <String>['beta']);
-    expect(find.text('Tareas (1)'), findsOneWidget);
+    expect(find.text('Tareas'), findsOneWidget);
     expect(find.text('Lanzar beta'), findsOneWidget);
-    expect(find.text('Notas (1)'), findsOneWidget);
-    expect(find.text('Proyectos (1)'), findsOneWidget);
-    expect(find.text('Equipos (0)'), findsNothing);
+    expect(find.text('Notas'), findsOneWidget);
+    expect(find.text('Proyectos'), findsOneWidget);
+    expect(find.text('Equipos'), findsNothing);
 
     await tester.tap(find.text('Lanzar beta'));
     await tester.pumpAndSettle();

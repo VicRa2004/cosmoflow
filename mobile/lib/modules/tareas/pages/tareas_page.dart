@@ -5,6 +5,8 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '../../../core/auth/sesion_store.dart';
 import '../../../core/offline/aviso_pendientes.dart';
 import '../../../core/theme/colores_noche_indigo.dart';
+import '../../../core/widgets/avisos.dart';
+import '../../../core/widgets/confirmar.dart';
 import '../../../core/widgets/estados.dart';
 import '../../../core/widgets/tarjeta_seccion.dart';
 import '../../organizaciones/api/organizaciones_api.dart';
@@ -13,6 +15,7 @@ import '../../tags/models/tag_model.dart';
 import '../acciones_tarea.dart';
 import '../api/tareas_api.dart';
 import '../models/tarea_model.dart';
+import '../widgets/barra_lote_tareas.dart';
 import '../widgets/selector_destino_tarea_sheet.dart';
 import '../widgets/tablero_tareas.dart';
 import '../widgets/tarea_fila.dart';
@@ -69,7 +72,11 @@ class _TareasPageState extends State<TareasPage> {
   bool _soloFijadas = false;
   bool _enTablero = false;
   bool _isCargando = false;
+  bool _aplicandoLote = false;
+  final Set<int> _seleccionadas = <int>{};
   String? _mensajeError;
+
+  bool get _enModoSeleccion => _seleccionadas.isNotEmpty;
 
   AccionesTarea get _acciones => AccionesTarea(
     sesionStore: widget.sesionStore,
@@ -155,8 +162,75 @@ class _TareasPageState extends State<TareasPage> {
   }
 
   void _alternarVista() {
-    setState(() => _enTablero = !_enTablero);
+    setState(() {
+      _enTablero = !_enTablero;
+      _seleccionadas.clear();
+    });
     _cargar();
+  }
+
+  void _alternarSeleccion(int id) {
+    setState(() {
+      if (!_seleccionadas.remove(id)) _seleccionadas.add(id);
+    });
+  }
+
+  Future<void> _loteEstado(EstadoTarea estado) async {
+    final ids = _seleccionadas.toList(growable: false);
+    setState(() => _aplicandoLote = true);
+    final ok = await ejecutarConAviso(
+      context,
+      () => widget.tareasApi.aplicarLoteEstado(ids, estado),
+      error: 'No se pudieron actualizar las tareas.',
+      exito: 'Estado actualizado en ${ids.length} tareas.',
+    );
+    if (!mounted) return;
+    setState(() {
+      _aplicandoLote = false;
+      if (ok) _seleccionadas.clear();
+    });
+    if (ok) await _cargar();
+  }
+
+  Future<void> _lotePrioridad(PrioridadTarea prioridad) async {
+    final ids = _seleccionadas.toList(growable: false);
+    setState(() => _aplicandoLote = true);
+    final ok = await ejecutarConAviso(
+      context,
+      () => widget.tareasApi.aplicarLotePrioridad(ids, prioridad),
+      error: 'No se pudo cambiar la prioridad.',
+      exito: 'Prioridad actualizada en ${ids.length} tareas.',
+    );
+    if (!mounted) return;
+    setState(() {
+      _aplicandoLote = false;
+      if (ok) _seleccionadas.clear();
+    });
+    if (ok) await _cargar();
+  }
+
+  Future<void> _loteEliminar() async {
+    final ids = _seleccionadas.toList(growable: false);
+    final confirmarOk = await confirmar(
+      context,
+      titulo: '¿Eliminar ${ids.length} tareas?',
+      mensaje: 'Las tareas seleccionadas se enviarán a la papelera.',
+      accion: 'Eliminar',
+    );
+    if (!confirmarOk || !mounted) return;
+    setState(() => _aplicandoLote = true);
+    final ok = await ejecutarConAviso(
+      context,
+      () => widget.tareasApi.eliminarLote(ids),
+      error: 'No se pudieron eliminar las tareas.',
+      exito: '${ids.length} tareas eliminadas.',
+    );
+    if (!mounted) return;
+    setState(() {
+      _aplicandoLote = false;
+      if (ok) _seleccionadas.clear();
+    });
+    if (ok) await _cargar();
   }
 
   Widget _filtros() {
@@ -243,19 +317,33 @@ class _TareasPageState extends State<TareasPage> {
     final fijadas = _tareas.where((t) => t.isFijada).toList(growable: false);
     final resto = _tareas.where((t) => !t.isFijada).toList(growable: false);
 
+    final saleAlCompletar =
+        _filtroEstado == EstadoTarea.pendiente ||
+        _filtroEstado == EstadoTarea.enProgreso;
+
     Widget fila(TareaDto tarea) => TareaFila(
+      key: ValueKey<int>(tarea.id),
       tarea: tarea,
       ubicacion: widget.organizacionId == null ? _ubicaciones[tarea.id] : null,
       puedeActualizar: puedeActualizar,
-      onTap: () => _recargarSi(
-        _acciones.abrirDetalle(
-          context,
-          tarea,
-          ubicacion: widget.organizacionId == null
-              ? _ubicaciones[tarea.id]
-              : null,
-        ),
-      ),
+      modoSeleccion: _enModoSeleccion,
+      seleccionada: _seleccionadas.contains(tarea.id),
+      animarSalida: saleAlCompletar,
+      onLongPress:
+          (puedeActualizar || widget.sesionStore.puede('tareas:eliminar'))
+          ? () => _alternarSeleccion(tarea.id)
+          : null,
+      onTap: _enModoSeleccion
+          ? () => _alternarSeleccion(tarea.id)
+          : () => _recargarSi(
+              _acciones.abrirDetalle(
+                context,
+                tarea,
+                ubicacion: widget.organizacionId == null
+                    ? _ubicaciones[tarea.id]
+                    : null,
+              ),
+            ),
       onAlternarCompletada: () =>
           _recargarSi(_acciones.alternarCompletada(context, tarea)),
       onAlternarFijada: () =>
@@ -320,12 +408,24 @@ class _TareasPageState extends State<TareasPage> {
               ],
             )
           : null,
-      floatingActionButton: permiteCrear
+      floatingActionButton: permiteCrear && !_enModoSeleccion
           ? FloatingActionButton(
               heroTag: 'fab-tareas-$heroSuffix',
               tooltip: 'Nueva tarea',
               onPressed: _crearTarea,
               child: const Icon(LucideIcons.plus),
+            )
+          : null,
+      bottomNavigationBar: _enModoSeleccion
+          ? BarraLoteTareas(
+              cantidad: _seleccionadas.length,
+              ocupado: _aplicandoLote,
+              puedeActualizar: puedeActualizar,
+              puedeEliminar: widget.sesionStore.puede('tareas:eliminar'),
+              onCambiarEstado: _loteEstado,
+              onCambiarPrioridad: _lotePrioridad,
+              onEliminar: _loteEliminar,
+              onCancelar: () => setState(() => _seleccionadas.clear()),
             )
           : null,
       body: _enTablero

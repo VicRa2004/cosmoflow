@@ -2,9 +2,12 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../core/theme/colores_noche_indigo.dart';
+import '../../../core/theme/tema_app.dart';
 import '../../../core/widgets/estados.dart';
+import '../../../core/widgets/tarjeta_seccion.dart';
 import '../api/busqueda_api.dart';
 import '../models/busqueda_models.dart';
 
@@ -97,6 +100,7 @@ class _BusquedaPageState extends State<BusquedaPage> {
           autofocus: true,
           maxLength: 100,
           textInputAction: TextInputAction.search,
+          style: Theme.of(context).textTheme.bodyLarge,
           decoration: const InputDecoration(
             hintText: 'Buscar tareas, notas, proyectos, equipos…',
             border: InputBorder.none,
@@ -104,6 +108,7 @@ class _BusquedaPageState extends State<BusquedaPage> {
             focusedBorder: InputBorder.none,
             filled: false,
             counterText: '',
+            contentPadding: EdgeInsets.symmetric(vertical: 12),
           ),
           onChanged: _alCambiarTexto,
           onSubmitted: (v) {
@@ -118,7 +123,7 @@ class _BusquedaPageState extends State<BusquedaPage> {
           if (texto.isNotEmpty)
             IconButton(
               tooltip: 'Limpiar búsqueda',
-              icon: const Icon(Icons.close_rounded),
+              icon: const Icon(LucideIcons.x),
               onPressed: _limpiar,
             ),
         ],
@@ -130,7 +135,7 @@ class _BusquedaPageState extends State<BusquedaPage> {
   Widget _cuerpo(String consulta) {
     if (consulta.length < 2) {
       return const EstadoVacio(
-        icono: Icons.search_rounded,
+        icono: LucideIcons.search,
         titulo: 'Búsqueda global',
         mensaje: 'Escribe al menos 2 caracteres para buscar en tareas, notas, proyectos y equipos.',
       );
@@ -147,91 +152,129 @@ class _BusquedaPageState extends State<BusquedaPage> {
     final res = _resultados;
     if (res == null || res.isEmpty) {
       return EstadoVacio(
-        icono: Icons.search_off_rounded,
+        icono: LucideIcons.searchX,
         titulo: 'Sin resultados',
         mensaje: 'No encontramos coincidencias para «$consulta».',
       );
     }
 
-    final bloques = <Widget>[
-      if (_cargando) const LinearProgressIndicator(minHeight: 2),
-      if (res.tareas.isNotEmpty) ...<Widget>[
-        _CabeceraSeccion(titulo: 'Tareas', cantidad: res.tareas.length),
-        for (final t in res.tareas) ...<Widget>[
-          ListTile(
-            leading: const Icon(Icons.task_alt_rounded),
-            title: Text(t.titulo, maxLines: 2, overflow: TextOverflow.ellipsis),
-            trailing: const Icon(Icons.chevron_right_rounded),
-            onTap: () => context.push('/tareas/${t.id}'),
+    final colores = context.colores;
+    final secciones = <Widget>[
+      if (_cargando)
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(TemaApp.radioCompleto),
+            child: const LinearProgressIndicator(minHeight: 3),
           ),
-          const Divider(height: 1, indent: 56),
-        ],
-      ],
-      if (res.notas.isNotEmpty) ...<Widget>[
-        _CabeceraSeccion(titulo: 'Notas', cantidad: res.notas.length),
-        for (final n in res.notas) ...<Widget>[
-          ListTile(
-            leading: const Icon(Icons.description_outlined),
-            title: Text(n.titulo, maxLines: 2, overflow: TextOverflow.ellipsis),
-            trailing: const Icon(Icons.chevron_right_rounded),
-            onTap: () => context.push('/notas/${n.id}'),
-          ),
-          const Divider(height: 1, indent: 56),
-        ],
-      ],
-      if (res.proyectos.isNotEmpty) ...<Widget>[
-        _CabeceraSeccion(titulo: 'Proyectos', cantidad: res.proyectos.length),
-        for (final p in res.proyectos) ...<Widget>[
-          ListTile(
-            leading: const Icon(Icons.folder_outlined),
-            title: Text(p.nombre, maxLines: 2, overflow: TextOverflow.ellipsis),
-            trailing: const Icon(Icons.chevron_right_rounded),
-            onTap: () => context.push(
-              '/organizaciones/${p.organizacionId}/proyectos/${p.id}',
-            ),
-          ),
-          const Divider(height: 1, indent: 56),
-        ],
-      ],
-      if (res.equipos.isNotEmpty) ...<Widget>[
-        _CabeceraSeccion(titulo: 'Equipos', cantidad: res.equipos.length),
-        for (final e in res.equipos) ...<Widget>[
-          ListTile(
-            leading: const Icon(Icons.groups_outlined),
-            title: Text(e.nombre, maxLines: 2, overflow: TextOverflow.ellipsis),
-            trailing: const Icon(Icons.chevron_right_rounded),
-            onTap: () => context.push(
-              '/organizaciones/${e.organizacionId}/equipos/${e.id}',
-            ),
-          ),
-          const Divider(height: 1, indent: 56),
-        ],
-      ],
+        ),
+      if (res.tareas.isNotEmpty)
+        TarjetaSeccion(
+          titulo: 'Tareas',
+          contador: res.tareas.length,
+          divisorIndent: 62,
+          children: <Widget>[
+            for (final t in res.tareas)
+              _FilaResultado(
+                icono: LucideIcons.squareCheck,
+                colorIcono: colores.indigoMarca,
+                fondoIcono: colores.indigoSuave,
+                titulo: t.titulo,
+                onTap: () => context.push('/tareas/${t.id}'),
+              ),
+          ],
+        ),
+      if (res.notas.isNotEmpty)
+        TarjetaSeccion(
+          titulo: 'Notas',
+          contador: res.notas.length,
+          divisorIndent: 62,
+          children: <Widget>[
+            for (final n in res.notas)
+              _FilaResultado(
+                icono: LucideIcons.fileText,
+                titulo: n.titulo,
+                onTap: () => context.push('/notas/${n.id}'),
+              ),
+          ],
+        ),
+      if (res.proyectos.isNotEmpty)
+        TarjetaSeccion(
+          titulo: 'Proyectos',
+          contador: res.proyectos.length,
+          divisorIndent: 62,
+          children: <Widget>[
+            for (final p in res.proyectos)
+              _FilaResultado(
+                icono: LucideIcons.folderKanban,
+                titulo: p.nombre,
+                onTap: () => context.push(
+                  '/organizaciones/${p.organizacionId}/proyectos/${p.id}',
+                ),
+              ),
+          ],
+        ),
+      if (res.equipos.isNotEmpty)
+        TarjetaSeccion(
+          titulo: 'Equipos',
+          contador: res.equipos.length,
+          divisorIndent: 62,
+          children: <Widget>[
+            for (final e in res.equipos)
+              _FilaResultado(
+                icono: LucideIcons.users,
+                titulo: e.nombre,
+                onTap: () => context.push(
+                  '/organizaciones/${e.organizacionId}/equipos/${e.id}',
+                ),
+              ),
+          ],
+        ),
     ];
 
-    return ListView(
-      padding: const EdgeInsets.only(bottom: 32),
-      children: bloques,
+    return ListView.separated(
+      padding: const EdgeInsets.fromLTRB(0, 8, 0, 32),
+      itemCount: secciones.length,
+      separatorBuilder: (_, _) =>
+          const SizedBox(height: TemaApp.espacioSeccion),
+      itemBuilder: (_, index) => secciones[index],
     );
   }
 }
 
-class _CabeceraSeccion extends StatelessWidget {
-  const _CabeceraSeccion({required this.titulo, required this.cantidad});
+class _FilaResultado extends StatelessWidget {
+  const _FilaResultado({
+    required this.icono,
+    required this.titulo,
+    required this.onTap,
+    this.colorIcono,
+    this.fondoIcono,
+  });
 
+  final IconData icono;
   final String titulo;
-  final int cantidad;
+  final VoidCallback onTap;
+  final Color? colorIcono;
+  final Color? fondoIcono;
 
   @override
   Widget build(BuildContext context) {
     final colores = context.colores;
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 4),
-      child: Text(
-        '$titulo ($cantidad)',
-        style: Theme.of(context).textTheme.labelLarge
-            ?.copyWith(color: colores.tintaTenue),
+    return ListTile(
+      leading: IconoCaja(
+        icono: icono,
+        color: colorIcono,
+        fondo: fondoIcono,
+        dimension: 34,
+        tamanoIcono: 17,
       ),
+      title: Text(titulo, maxLines: 2, overflow: TextOverflow.ellipsis),
+      trailing: Icon(
+        LucideIcons.chevronRight,
+        size: 18,
+        color: colores.tintaTenue,
+      ),
+      onTap: onTap,
     );
   }
 }

@@ -80,6 +80,13 @@ class SesionStore extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Actualiza los datos del usuario en sesión (p. ej. tras cambiar el avatar).
+  void actualizarUsuario(UsuarioSesion nuevoUsuario) {
+    _usuario = nuevoUsuario;
+    _almacenamiento.guardarUsuario(jsonEncode(nuevoUsuario.toJson()));
+    notifyListeners();
+  }
+
   /// Limpia la sesión en memoria y borra el `refresh_token` del llavero seguro.
   Future<void> limpiarSesion() async {
     _accessToken = null;

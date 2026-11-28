@@ -3,10 +3,12 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../core/auth/sesion_store.dart';
 import '../../../core/widgets/avisos.dart';
 import '../../../core/widgets/estados.dart';
+import '../../../core/widgets/tarjeta_seccion.dart';
 import '../api/notificaciones_api.dart';
 import '../models/bandeja_notificacion_models.dart';
 import '../widgets/notificacion_fila.dart';
@@ -145,12 +147,12 @@ class _NotificacionesPageState extends State<NotificacionesPage> {
             IconButton(
               tooltip: 'Marcar todas como leídas',
               onPressed: _marcandoTodas ? null : _marcarTodas,
-              icon: const Icon(Icons.done_all_rounded),
+              icon: const Icon(LucideIcons.checkCheck),
             ),
           IconButton(
             tooltip: 'Preferencias de notificación',
             onPressed: () => context.push('/perfil/notificaciones'),
-            icon: const Icon(Icons.tune_rounded),
+            icon: const Icon(LucideIcons.slidersHorizontal),
           ),
         ],
       ),
@@ -158,10 +160,11 @@ class _NotificacionesPageState extends State<NotificacionesPage> {
         child: RefreshIndicator(
           onRefresh: () => _cargar(),
           child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: <Widget>[
               SingleChildScrollView(
                 scrollDirection: Axis.horizontal,
-                padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+                padding: const EdgeInsets.fromLTRB(16, 4, 16, 12),
                 child: Row(
                   spacing: 8,
                   children: <Widget>[
@@ -188,7 +191,6 @@ class _NotificacionesPageState extends State<NotificacionesPage> {
                   ],
                 ),
               ),
-              const Divider(height: 1),
               Expanded(child: _lista(yoId)),
             ],
           ),
@@ -205,9 +207,9 @@ class _NotificacionesPageState extends State<NotificacionesPage> {
     if (_datos.isEmpty) {
       return ListView(
         children: <Widget>[
-          const SizedBox(height: 64),
+          const SizedBox(height: 32),
           EstadoVacio(
-            icono: Icons.notifications_none_rounded,
+            icono: _soloNoLeidas ? LucideIcons.checkCheck : LucideIcons.bellOff,
             titulo: _soloNoLeidas ? 'Todo al día' : 'Sin notificaciones',
             mensaje: _soloNoLeidas
                 ? 'No tienes notificaciones pendientes por leer.'
@@ -216,32 +218,33 @@ class _NotificacionesPageState extends State<NotificacionesPage> {
         ],
       );
     }
+
     final tieneMas = _pagina < _totalPaginas;
-    return ListView.separated(
-      padding: const EdgeInsets.only(bottom: 32),
-      itemCount: _datos.length + (tieneMas ? 1 : 0),
-      separatorBuilder: (_, _) => const Divider(height: 1, indent: 64),
-      itemBuilder: (context, index) {
-        if (index >= _datos.length) {
-          return Padding(
-            padding: const EdgeInsets.all(16),
-            child: Center(
-              child: OutlinedButton(
-                onPressed: _cargandoMas
-                    ? null
-                    : () => _cargar(pagina: _pagina + 1, anexar: true),
-                child: Text(_cargandoMas ? 'Cargando…' : 'Cargar más'),
+    return ListView(
+      padding: const EdgeInsets.only(top: 4, bottom: 32),
+      children: <Widget>[
+        TarjetaSeccion(
+          divisorIndent: 62,
+          children: <Widget>[
+            for (final item in _datos)
+              NotificacionFila(
+                notificacion: item,
+                yoId: yoId,
+                onTap: () => _abrir(item),
               ),
+          ],
+        ),
+        if (tieneMas)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+            child: OutlinedButton(
+              onPressed: _cargandoMas
+                  ? null
+                  : () => _cargar(pagina: _pagina + 1, anexar: true),
+              child: Text(_cargandoMas ? 'Cargando…' : 'Cargar más'),
             ),
-          );
-        }
-        final item = _datos[index];
-        return NotificacionFila(
-          notificacion: item,
-          yoId: yoId,
-          onTap: () => _abrir(item),
-        );
-      },
+          ),
+      ],
     );
   }
 }

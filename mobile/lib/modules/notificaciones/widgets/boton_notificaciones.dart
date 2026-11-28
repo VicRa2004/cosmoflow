@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
+import '../../../core/theme/colores_noche_indigo.dart';
 import '../api/notificaciones_api.dart';
 
 /// Campana en la AppBar con contador de notificaciones sin leer.
@@ -44,6 +46,7 @@ class _BotonNotificacionesState extends State<BotonNotificaciones> {
 
   @override
   Widget build(BuildContext context) {
+    final colores = context.colores;
     final etiqueta = _noLeidas > 99 ? '99+' : '$_noLeidas';
     return IconButton(
       tooltip: _noLeidas > 0
@@ -52,8 +55,10 @@ class _BotonNotificacionesState extends State<BotonNotificaciones> {
       onPressed: _abrirBandeja,
       icon: Badge(
         isLabelVisible: _noLeidas > 0,
+        backgroundColor: colores.rosePeligro,
+        textColor: colores.sobreAcento,
         label: Text(etiqueta),
-        child: const Icon(Icons.notifications_outlined),
+        child: const Icon(LucideIcons.bell),
       ),
     );
   }
