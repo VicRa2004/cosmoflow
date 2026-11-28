@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../core/auth/sesion_store.dart';
+import '../../../core/theme/colores_noche_indigo.dart';
+import '../../../core/theme/tema_app.dart';
 import '../../../core/widgets/avisos.dart';
 import '../../../core/widgets/confirmar.dart';
 import '../../../core/widgets/estados.dart';
@@ -19,13 +22,16 @@ import '../widgets/estadisticas_organizacion_tab.dart';
 import '../widgets/lista_miembros_organizacion.dart';
 import '../widgets/lista_roles_organizacion.dart';
 import '../widgets/listas_organizacion.dart';
+import '../widgets/organizacion_card.dart';
+import '../widgets/selector_color.dart';
 import 'equipo_detalle_page.dart';
 import 'equipo_editor_page.dart';
 import 'proyecto_detalle_page.dart';
 import 'proyecto_editor_page.dart';
 
-/// Vista `/organizaciones/:id` con pestañas de Proyectos, Equipos, Miembros,
-/// Tareas, Estadísticas, Tags, Plantillas y (según permisos) Roles y Ajustes.
+/// Vista `/organizaciones/:id` con cabecera de marca, pestañas en píldora y
+/// tarjetas modernas de Proyectos, Equipos, Miembros, Tareas, Estadísticas,
+/// Tags, Plantillas y (según permisos) Roles y Ajustes.
 class OrganizacionDetallePage extends StatefulWidget {
   const OrganizacionDetallePage({
     super.key,
@@ -196,9 +202,24 @@ class _OrganizacionDetallePageState extends State<OrganizacionDetallePage> {
     if (guardado == true && mounted) await _cargar();
   }
 
+  String _resumenOrg() {
+    final partes = <String>[
+      if (_miembros.isNotEmpty)
+        '${_miembros.length} ${_miembros.length == 1 ? 'miembro' : 'miembros'}',
+      if (_proyectos.isNotEmpty)
+        '${_proyectos.length} ${_proyectos.length == 1 ? 'proyecto' : 'proyectos'}',
+      if (_equipos.isNotEmpty)
+        '${_equipos.length} ${_equipos.length == 1 ? 'equipo' : 'equipos'}',
+    ];
+    return partes.join(' · ');
+  }
+
   @override
   Widget build(BuildContext context) {
     final org = _organizacion;
+    final colores = context.colores;
+    final textTheme = Theme.of(context).textTheme;
+
     if (org == null) {
       return Scaffold(
         appBar: AppBar(title: const Text('Organización')),
@@ -211,6 +232,7 @@ class _OrganizacionDetallePageState extends State<OrganizacionDetallePage> {
       );
     }
 
+    final colorBase = parsearColorHex(org.color) ?? colores.indigoMarca;
     final mostrarRoles = org.puede('roles:gestionar');
     final mostrarAjustes = org.puede('organizacion:editar') || org.isAdmin;
     final totalPestanas = 7 + (mostrarRoles ? 1 : 0) + (mostrarAjustes ? 1 : 0);
@@ -218,27 +240,139 @@ class _OrganizacionDetallePageState extends State<OrganizacionDetallePage> {
     final plantillasApi =
         widget.plantillasApi ??
         PlantillasApi(apiClient: widget.organizacionesApi.apiClient);
+    final resumen = _resumenOrg();
 
     return DefaultTabController(
       key: ValueKey<String>('tabs-$mostrarRoles-$mostrarAjustes'),
       length: totalPestanas,
       child: Scaffold(
         appBar: AppBar(
-          title: Text(org.nombre),
-          bottom: TabBar(
-            isScrollable: true,
-            tabAlignment: TabAlignment.start,
-            tabs: <Widget>[
-              const Tab(text: 'Proyectos'),
-              const Tab(text: 'Equipos'),
-              const Tab(text: 'Miembros'),
-              const Tab(text: 'Tareas'),
-              const Tab(text: 'Estadísticas'),
-              const Tab(text: 'Tags'),
-              const Tab(text: 'Plantillas'),
-              if (mostrarRoles) const Tab(text: 'Roles'),
-              if (mostrarAjustes) const Tab(text: 'Ajustes'),
+          leadingWidth: 58,
+          leading: Padding(
+            padding: const EdgeInsets.only(left: 12),
+            child: Center(
+              child: Material(
+                color: colores.superficie,
+                shape: CircleBorder(
+                  side: BorderSide(color: colores.borde, width: 1),
+                ),
+                clipBehavior: Clip.antiAlias,
+                child: IconButton(
+                  tooltip: 'Volver',
+                  visualDensity: VisualDensity.compact,
+                  onPressed: () => Navigator.of(context).maybePop(),
+                  icon: Icon(
+                    LucideIcons.chevronLeft,
+                    size: 20,
+                    color: colores.tinta,
+                  ),
+                ),
+              ),
+            ),
+          ),
+          titleSpacing: 8,
+          title: Row(
+            children: <Widget>[
+              AvatarDegradadoCirculo(
+                nombre: org.nombre,
+                avatarUrl: org.avatarUrl,
+                colorBase: colorBase,
+                tamano: 36,
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: <Widget>[
+                    Text(
+                      org.nombre,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    if (resumen.isNotEmpty)
+                      Text(
+                        resumen,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: textTheme.labelSmall?.copyWith(
+                          color: colores.tintaTenue,
+                        ),
+                      ),
+                  ],
+                ),
+              ),
             ],
+          ),
+          actions: <Widget>[
+            if (org.puede('organizacion:editar') || org.isAdmin)
+              Padding(
+                padding: const EdgeInsets.only(right: 12),
+                child: Material(
+                  color: colores.superficie,
+                  shape: CircleBorder(
+                    side: BorderSide(color: colores.borde, width: 1),
+                  ),
+                  clipBehavior: Clip.antiAlias,
+                  child: IconButton(
+                    tooltip: 'Editar organización',
+                    visualDensity: VisualDensity.compact,
+                    onPressed: () => _editarOrganizacion(org),
+                    icon: Icon(
+                      LucideIcons.settings,
+                      size: 18,
+                      color: colores.tintaSuave,
+                    ),
+                  ),
+                ),
+              ),
+          ],
+          bottom: PreferredSize(
+            preferredSize: const Size.fromHeight(50),
+            child: Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: TabBar(
+                isScrollable: true,
+                tabAlignment: TabAlignment.start,
+                padding: const EdgeInsets.symmetric(horizontal: 12),
+                dividerColor: colores.borde,
+                splashBorderRadius: BorderRadius.circular(
+                  TemaApp.radioCompleto,
+                ),
+                overlayColor: WidgetStatePropertyAll<Color>(
+                  colores.indigoMarca.withValues(alpha: 0.08),
+                ),
+                indicatorSize: TabBarIndicatorSize.tab,
+                indicatorPadding: const EdgeInsets.symmetric(
+                  horizontal: 2,
+                  vertical: 4,
+                ),
+                indicator: BoxDecoration(
+                  color: colores.indigoSuave,
+                  borderRadius: BorderRadius.circular(TemaApp.radioCompleto),
+                  border: Border.all(
+                    color: colores.indigoMarca.withValues(alpha: 0.25),
+                    width: 1,
+                  ),
+                ),
+                labelColor: colores.indigoMarca,
+                unselectedLabelColor: colores.tintaTenue,
+                tabs: <Widget>[
+                  const Tab(height: 38, text: 'Proyectos'),
+                  const Tab(height: 38, text: 'Equipos'),
+                  const Tab(height: 38, text: 'Miembros'),
+                  const Tab(height: 38, text: 'Tareas'),
+                  const Tab(height: 38, text: 'Estadísticas'),
+                  const Tab(height: 38, text: 'Tags'),
+                  const Tab(height: 38, text: 'Plantillas'),
+                  if (mostrarRoles) const Tab(height: 38, text: 'Roles'),
+                  if (mostrarAjustes) const Tab(height: 38, text: 'Ajustes'),
+                ],
+              ),
+            ),
           ),
         ),
         body: _isCargando && _proyectos.isEmpty && _equipos.isEmpty

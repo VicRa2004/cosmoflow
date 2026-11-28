@@ -3,14 +3,14 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../core/theme/colores_noche_indigo.dart';
 import '../../../core/theme/tema_app.dart';
-import '../../../core/widgets/avatar_usuario.dart';
 import '../../../core/widgets/estados.dart';
 import '../../../core/widgets/tarjeta_seccion.dart';
 import '../../tags/models/tag_model.dart';
 import '../models/organizacion_models.dart';
+import 'organizacion_card.dart';
 import 'selector_color.dart';
 
-/// Pestaña de proyectos de una organización con filtro por estado.
+/// Pestaña de proyectos de una organización en tarjetas modernas con barra de avance.
 class ListaProyectosOrganizacion extends StatefulWidget {
   const ListaProyectosOrganizacion({
     super.key,
@@ -46,10 +46,11 @@ class _ListaProyectosOrganizacionState
     return Scaffold(
       floatingActionButton: widget.onCrearProyecto == null
           ? null
-          : FloatingActionButton(
-              tooltip: 'Nuevo proyecto',
+          : FloatingActionButton.extended(
+              heroTag: 'fab-proyectos-org',
               onPressed: widget.onCrearProyecto,
-              child: const Icon(LucideIcons.plus),
+              icon: const Icon(LucideIcons.plus, size: 20),
+              label: const Text('Nuevo proyecto'),
             ),
       body: RefreshIndicator(
         onRefresh: widget.onRefresh,
@@ -58,7 +59,7 @@ class _ListaProyectosOrganizacionState
           children: <Widget>[
             SingleChildScrollView(
               scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 14),
               child: Row(
                 spacing: 8,
                 children: <Widget>[
@@ -84,17 +85,14 @@ class _ListaProyectosOrganizacionState
                 mensaje: 'No hay proyectos que coincidan con el filtro.',
               )
             else
-              TarjetaSeccion(
-                divisorIndent: 64,
-                children: <Widget>[
-                  for (final p in filtrados)
-                    _ProyectoFila(
-                      proyecto: p,
-                      colores: colores,
-                      onTap: () => widget.onAbrirProyecto(p),
-                    ),
-                ],
-              ),
+              for (final p in filtrados) ...<Widget>[
+                _ProyectoCard(
+                  proyecto: p,
+                  colores: colores,
+                  onTap: () => widget.onAbrirProyecto(p),
+                ),
+                const SizedBox(height: 12),
+              ],
           ],
         ),
       ),
@@ -102,8 +100,8 @@ class _ListaProyectosOrganizacionState
   }
 }
 
-class _ProyectoFila extends StatelessWidget {
-  const _ProyectoFila({
+class _ProyectoCard extends StatelessWidget {
+  const _ProyectoCard({
     required this.proyecto,
     required this.colores,
     required this.onTap,
@@ -115,64 +113,134 @@ class _ProyectoFila extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
+    final esOscuro = Theme.of(context).brightness == Brightness.dark;
     final color = parsearColorHex(proyecto.color) ?? colores.indigoMarca;
     final progreso = proyecto.progreso;
     final porcentaje = progreso.tareas > 0
         ? progreso.completadas / progreso.tareas
         : null;
+    final desc = proyecto.descripcion.trim();
+    final (colorEstado, fondoEstado) = switch (proyecto.estado) {
+      EstadoProyecto.activo => (colores.emeraldExito, colores.emeraldSuave),
+      EstadoProyecto.enPausa => (colores.amberAviso, colores.amberSuave),
+      EstadoProyecto.terminado => (colores.indigoMarca, colores.indigoSuave),
+    };
 
-    return ListTile(
-      onTap: onTap,
-      leading: IconoCaja(
-        icono: LucideIcons.folder,
-        color: color,
-        fondo: color.withValues(alpha: 0.12),
-        dimension: 38,
-        tamanoIcono: 18,
-      ),
-      title: Text(
-        proyecto.nombre,
-        maxLines: 1,
-        overflow: TextOverflow.ellipsis,
-      ),
-      subtitle: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: <Widget>[
-          const SizedBox(height: 2),
-          Text(
-            <String>[
-              proyecto.estado.etiqueta,
-              '${progreso.completadas}/${progreso.tareas} tareas',
-              if (proyecto.descripcion.trim().isNotEmpty)
-                proyecto.descripcion.trim(),
-            ].join(' · '),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-          ),
-          if (porcentaje != null) ...<Widget>[
-            const SizedBox(height: 6),
-            ClipRRect(
-              borderRadius: BorderRadius.circular(TemaApp.radioCompleto),
-              child: LinearProgressIndicator(
-                value: porcentaje,
-                minHeight: 5,
-                backgroundColor: colores.elevada,
-                color: color,
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: TemaApp.margenPantalla),
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          color: colores.superficie,
+          borderRadius: BorderRadius.circular(TemaApp.radioDialogo),
+          border: Border.all(color: colores.borde, width: 1),
+          boxShadow: esOscuro
+              ? null
+              : <BoxShadow>[
+                  BoxShadow(
+                    color: colores.indigoMarca.withValues(alpha: 0.05),
+                    blurRadius: 16,
+                    offset: const Offset(0, 6),
+                  ),
+                ],
+        ),
+        child: Material(
+          color: Colors.transparent,
+          borderRadius: BorderRadius.circular(TemaApp.radioDialogo),
+          clipBehavior: Clip.antiAlias,
+          child: InkWell(
+            onTap: onTap,
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Row(
+                    children: <Widget>[
+                      AvatarDegradadoCirculo(
+                        nombre: proyecto.nombre,
+                        colorBase: color,
+                        tamano: 44,
+                        icono: LucideIcons.folderKanban,
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: <Widget>[
+                            Text(
+                              proyecto.nombre,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: textTheme.titleMedium?.copyWith(
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                            if (desc.isNotEmpty) ...<Widget>[
+                              const SizedBox(height: 2),
+                              Text(
+                                desc,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: textTheme.bodySmall,
+                              ),
+                            ],
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      InsigniaPill(
+                        texto: proyecto.estado.etiqueta,
+                        colorTexto: colorEstado,
+                        colorFondo: fondoEstado,
+                      ),
+                    ],
+                  ),
+                  if (porcentaje != null) ...<Widget>[
+                    const SizedBox(height: 14),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: <Widget>[
+                        Text(
+                          '${progreso.completadas} de ${progreso.tareas} tareas',
+                          style: textTheme.bodySmall?.copyWith(
+                            color: colores.tintaTenue,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                        Text(
+                          '${(porcentaje * 100).round()} %',
+                          style: textTheme.labelMedium?.copyWith(
+                            color: color,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 6),
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(
+                        TemaApp.radioCompleto,
+                      ),
+                      child: LinearProgressIndicator(
+                        value: porcentaje,
+                        minHeight: 6,
+                        backgroundColor: colores.elevada,
+                        color: color,
+                      ),
+                    ),
+                  ],
+                ],
               ),
             ),
-          ],
-        ],
-      ),
-      trailing: Icon(
-        LucideIcons.chevronRight,
-        size: 16,
-        color: colores.tintaTenue,
+          ),
+        ),
       ),
     );
   }
 }
 
-/// Pestaña de equipos de una organización con filtro por tag.
+/// Pestaña de equipos de una organización en tarjetas modernas con avatares apilados.
 class ListaEquiposOrganizacion extends StatefulWidget {
   const ListaEquiposOrganizacion({
     super.key,
@@ -211,10 +279,11 @@ class _ListaEquiposOrganizacionState extends State<ListaEquiposOrganizacion> {
     return Scaffold(
       floatingActionButton: widget.onCrearEquipo == null
           ? null
-          : FloatingActionButton(
-              tooltip: 'Nuevo equipo',
+          : FloatingActionButton.extended(
+              heroTag: 'fab-equipos-org',
               onPressed: widget.onCrearEquipo,
-              child: const Icon(LucideIcons.plus),
+              icon: const Icon(LucideIcons.plus, size: 20),
+              label: const Text('Nuevo equipo'),
             ),
       body: RefreshIndicator(
         onRefresh: widget.onRefresh,
@@ -224,7 +293,7 @@ class _ListaEquiposOrganizacionState extends State<ListaEquiposOrganizacion> {
             if (widget.tags.isNotEmpty)
               SingleChildScrollView(
                 scrollDirection: Axis.horizontal,
-                padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+                padding: const EdgeInsets.fromLTRB(16, 12, 16, 14),
                 child: Row(
                   spacing: 8,
                   children: <Widget>[
@@ -235,7 +304,7 @@ class _ListaEquiposOrganizacionState extends State<ListaEquiposOrganizacion> {
                     ),
                     for (final tag in widget.tags)
                       ChoiceChip(
-                        label: Text(tag.nombre),
+                        label: Text('#${tag.nombre}'),
                         selected: _tagId == tag.id,
                         onSelected: (sel) =>
                             setState(() => _tagId = sel ? tag.id : null),
@@ -252,18 +321,15 @@ class _ListaEquiposOrganizacionState extends State<ListaEquiposOrganizacion> {
                 mensaje: 'No hay equipos en esta organización.',
               )
             else
-              TarjetaSeccion(
-                divisorIndent: 68,
-                children: <Widget>[
-                  for (final eq in filtrados)
-                    _EquipoFila(
-                      equipo: eq,
-                      miembros: widget.miembros,
-                      colores: colores,
-                      onTap: () => widget.onAbrirEquipo(eq),
-                    ),
-                ],
-              ),
+              for (final eq in filtrados) ...<Widget>[
+                _EquipoCard(
+                  equipo: eq,
+                  miembrosOrg: widget.miembros,
+                  colores: colores,
+                  onTap: () => widget.onAbrirEquipo(eq),
+                ),
+                const SizedBox(height: 12),
+              ],
           ],
         ),
       ),
@@ -271,50 +337,135 @@ class _ListaEquiposOrganizacionState extends State<ListaEquiposOrganizacion> {
   }
 }
 
-class _EquipoFila extends StatelessWidget {
-  const _EquipoFila({
+class _EquipoCard extends StatelessWidget {
+  const _EquipoCard({
     required this.equipo,
-    required this.miembros,
+    required this.miembrosOrg,
     required this.colores,
     required this.onTap,
   });
 
   final EquipoDto equipo;
-  final List<MiembroDto> miembros;
+  final List<MiembroDto> miembrosOrg;
   final ColoresNocheIndigo colores;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    final colorAvatar = parsearColorHex(equipo.color);
+    final textTheme = Theme.of(context).textTheme;
+    final esOscuro = Theme.of(context).brightness == Brightness.dark;
+    final colorBase = parsearColorHex(equipo.color) ?? colores.indigoMarca;
+    final desc = equipo.descripcion.trim();
+    final idsEquipo = equipo.miembros.map((m) => m.usuarioId).toSet();
+    final miembrosEquipo = miembrosOrg
+        .where((m) => idsEquipo.contains(m.usuarioId))
+        .toList(growable: false);
     final lider = equipo.liderId == null
         ? null
-        : miembros.where((m) => m.usuarioId == equipo.liderId).firstOrNull;
-    final n = equipo.miembros.length;
-    final subtitulo = <String>[
-      '$n ${n == 1 ? 'integrante' : 'integrantes'}',
-      if (lider != null) 'Líder: ${lider.nombre}',
-      if (equipo.descripcion.trim().isNotEmpty) equipo.descripcion.trim(),
-    ].join(' · ');
+        : miembrosOrg.where((m) => m.usuarioId == equipo.liderId).firstOrNull;
+    final total = equipo.miembros.length;
 
-    return ListTile(
-      onTap: onTap,
-      leading: AvatarUsuario(
-        nombre: equipo.nombre,
-        avatarUrl: equipo.avatarUrl,
-        tamano: 38,
-        radio: TemaApp.radioChip,
-        colorFondo: colorAvatar ?? colores.indigoSuave,
-        colorTexto: colorAvatar != null
-            ? colores.sobreAcento
-            : colores.indigoMarca,
-      ),
-      title: Text(equipo.nombre, maxLines: 1, overflow: TextOverflow.ellipsis),
-      subtitle: Text(subtitulo, maxLines: 1, overflow: TextOverflow.ellipsis),
-      trailing: Icon(
-        LucideIcons.chevronRight,
-        size: 16,
-        color: colores.tintaTenue,
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: TemaApp.margenPantalla),
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          color: colores.superficie,
+          borderRadius: BorderRadius.circular(TemaApp.radioDialogo),
+          border: Border.all(color: colores.borde, width: 1),
+          boxShadow: esOscuro
+              ? null
+              : <BoxShadow>[
+                  BoxShadow(
+                    color: colores.indigoMarca.withValues(alpha: 0.05),
+                    blurRadius: 16,
+                    offset: const Offset(0, 6),
+                  ),
+                ],
+        ),
+        child: Material(
+          color: Colors.transparent,
+          borderRadius: BorderRadius.circular(TemaApp.radioDialogo),
+          clipBehavior: Clip.antiAlias,
+          child: InkWell(
+            onTap: onTap,
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Row(
+                    children: <Widget>[
+                      AvatarDegradadoCirculo(
+                        nombre: equipo.nombre,
+                        avatarUrl: equipo.avatarUrl,
+                        colorBase: colorBase,
+                        tamano: 44,
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: <Widget>[
+                            Text(
+                              equipo.nombre,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: textTheme.titleMedium?.copyWith(
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                            if (desc.isNotEmpty) ...<Widget>[
+                              const SizedBox(height: 2),
+                              Text(
+                                desc,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: textTheme.bodySmall,
+                              ),
+                            ],
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Icon(
+                        LucideIcons.chevronRight,
+                        size: 18,
+                        color: colores.tintaTenue,
+                      ),
+                    ],
+                  ),
+                  if (total > 0 || lider != null) ...<Widget>[
+                    const SizedBox(height: 14),
+                    Row(
+                      children: <Widget>[
+                        if (miembrosEquipo.isNotEmpty) ...<Widget>[
+                          AvataresApiladosMiembros(miembros: miembrosEquipo),
+                          const SizedBox(width: 10),
+                        ],
+                        Expanded(
+                          child: Text(
+                            '$total ${total == 1 ? 'integrante' : 'integrantes'}',
+                            style: textTheme.bodySmall?.copyWith(
+                              color: colores.tintaTenue,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ),
+                        if (lider != null)
+                          InsigniaPill(
+                            texto: lider.nombre,
+                            icono: LucideIcons.crown,
+                            colorTexto: colores.indigoMarca,
+                            colorFondo: colores.indigoSuave,
+                          ),
+                      ],
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          ),
+        ),
       ),
     );
   }
