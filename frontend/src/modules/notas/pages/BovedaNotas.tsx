@@ -12,7 +12,6 @@ import {
 } from "@/modules/configuracion/hooks/usePreferencias";
 import { useProyectosQuery } from "@/modules/proyectos/hooks/useProyectos";
 import { useTagsDisponibles } from "@/modules/tags/hooks/useTagsDisponibles";
-import { FilaNota } from "../components/ExploradorCarpeta";
 import {
 	FiltrosFecha,
 	rangosAParams,
@@ -20,14 +19,11 @@ import {
 } from "../components/FiltrosFecha";
 import { ImportarObsidianDialog } from "../components/ImportarObsidianDialog";
 import { PanelCarpetas } from "../components/PanelCarpetas";
+import { ResultadosAgrupados } from "../components/ResultadosAgrupados";
 import { useCarpetasQuery } from "../hooks/useCarpetas";
-import {
-	useDuplicarNotaMutation,
-	useFijarNotaMutation,
-} from "../hooks/useNotasMutation";
 import { useExploradorNotas } from "../hooks/useNotasQuery";
 import type { ContextoNotaSearch } from "../schemas/notaSchemas";
-import { type OrdenNotas, ordenarNotas, rutaDe } from "../utils/arbolCarpetas";
+import { type OrdenNotas, rutaDe } from "../utils/arbolCarpetas";
 
 const ORDENES: [OrdenNotas, string][] = [
 	["nombre", "Nombre"],
@@ -68,8 +64,6 @@ export function BovedaNotas({ contexto }: { contexto: ContextoNotaSearch }) {
 	const [verFiltros, setVerFiltros] = useState(false);
 	const [rangos, setRangos] = useState(sinRangos);
 	const [importando, setImportando] = useState(false);
-	const duplicarNota = useDuplicarNotaMutation();
-	const fijarNota = useFijarNotaMutation();
 	const { data: carpetas = [] } = useCarpetasQuery(
 		deProyecto ? proyectoId : undefined,
 	);
@@ -203,36 +197,20 @@ export function BovedaNotas({ contexto }: { contexto: ContextoNotaSearch }) {
 				</div>
 			)}
 			{filtrando ? (
-				<nav
-					aria-label="Resultados"
-					className="divide-y divide-borde overflow-hidden rounded-lg border border-borde bg-superficie"
-				>
-					{ordenarNotas(notas, orden).map((n) => (
-						<FilaNota
-							key={n.id}
-							nota={n}
-							search={ambito}
-							ruta={rutaDe(n.carpetaId, carpetas).join(" › ")}
-							onDuplicar={
-								puede("notas:crear")
-									? (nota) => duplicarNota.mutate(nota.id)
-									: undefined
-							}
-							onFijar={
-								puede("notas:actualizar")
-									? (nota) =>
-											fijarNota.mutate({
-												id: nota.id,
-												isFijada: !nota.isFijada,
-											})
-									: undefined
-							}
-						/>
-					))}
-					{!isLoading && notas.length === 0 && (
-						<p className="p-4 text-sm text-tinta-tenue">Sin resultados.</p>
-					)}
-				</nav>
+				<ResultadosAgrupados
+					notas={notas}
+					carpetas={carpetas}
+					orden={orden}
+					search={ambito}
+					cargando={isLoading}
+					onAbrirCarpeta={(id) => {
+						setBusqueda("");
+						setTagId("");
+						setSoloFijadas(false);
+						setRangos(sinRangos);
+						abrir(id);
+					}}
+				/>
 			) : (
 				<PanelCarpetas
 					carpetas={carpetas}

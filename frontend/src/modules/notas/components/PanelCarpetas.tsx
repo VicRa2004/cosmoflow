@@ -14,8 +14,9 @@ import {
 	useMoverNotaMutation,
 } from "../hooks/useNotasMutation";
 import { useDescargarCarpeta } from "../hooks/useDescargarCarpeta";
-import { ExploradorCarpeta } from "./ExploradorCarpeta";
+import { type Arrastrado, ExploradorCarpeta } from "./ExploradorCarpeta";
 import { CarpetaDialog } from "./CarpetaDialog";
+import { type Moviendo, MoverDialog } from "./MoverDialog";
 
 interface PanelCarpetasProps {
 	carpetas: CarpetaDto[];
@@ -42,6 +43,7 @@ export function PanelCarpetas({
 		padreId: number | null;
 	}>();
 	const [eliminando, setEliminando] = useState<CarpetaDto | null>(null);
+	const [moviendo, setMoviendo] = useState<Moviendo>();
 	const eliminar = useEliminarCarpetaMutation();
 	const descargar = useDescargarCarpeta(carpetas, proyectoId);
 	const moverNota = useMoverNotaMutation();
@@ -49,6 +51,17 @@ export function PanelCarpetas({
 	const fijarNota = useFijarNotaMutation();
 	const moverCarpeta = useActualizarCarpetaMutation();
 	const navigate = useNavigate();
+	const mover = ({ tipo, id }: Arrastrado, destino: number | null) => {
+		if (tipo === "nota") {
+			const nota = notas.find((n) => n.id === id);
+			if (nota && nota.carpetaId !== destino)
+				moverNota.mutate({ id, carpetaId: destino });
+			return;
+		}
+		const carpeta = carpetas.find((c) => c.id === id);
+		if (carpeta && carpeta.padreId !== destino)
+			moverCarpeta.mutate({ id, datos: { padreId: destino } });
+	};
 
 	return (
 		<>
@@ -71,17 +84,8 @@ export function PanelCarpetas({
 				}
 				onEliminar={setEliminando}
 				onDescargar={(carpeta) => descargar.mutate(carpeta)}
-				onMover={({ tipo, id }, destino) => {
-					if (tipo === "nota") {
-						const nota = notas.find((n) => n.id === id);
-						if (nota && nota.carpetaId !== destino)
-							moverNota.mutate({ id, carpetaId: destino });
-						return;
-					}
-					const carpeta = carpetas.find((c) => c.id === id);
-					if (carpeta && carpeta.padreId !== destino)
-						moverCarpeta.mutate({ id, datos: { padreId: destino } });
-				}}
+				onMover={mover}
+				onMoverA={setMoviendo}
 				onDuplicarNota={
 					puede("notas:crear")
 						? (nota) => duplicarNota.mutate(nota.id)
@@ -99,6 +103,12 @@ export function PanelCarpetas({
 				carpetas={carpetas}
 				proyectoId={proyectoId}
 				onCerrar={() => setDialogo(undefined)}
+			/>
+			<MoverDialog
+				moviendo={moviendo}
+				carpetas={carpetas}
+				onMover={mover}
+				onCerrar={() => setMoviendo(undefined)}
 			/>
 			<ConfirmDialog
 				abierto={eliminando !== null}

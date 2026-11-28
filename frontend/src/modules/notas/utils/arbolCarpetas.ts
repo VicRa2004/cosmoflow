@@ -124,3 +124,25 @@ export function ordenEnArbol<T extends Carpetas[number]>(
 	visitar(null, 0);
 	return salida;
 }
+
+/**
+ * Notas agrupadas por su carpeta, como la búsqueda de Obsidian: la raíz primero y
+ * luego en el orden del árbol; sin grupos vacíos. Conserva el orden de `notas`.
+ */
+export function agruparPorCarpeta<
+	C extends Carpetas[number],
+	N extends { carpetaId: number | null },
+>(notas: N[], carpetas: C[]): { carpeta: C | null; notas: N[] }[] {
+	const conocidas = new Set(carpetas.map((c) => c.id));
+	const grupos = [
+		null,
+		...ordenEnArbol(carpetas).map(({ carpeta }) => carpeta),
+	].map((carpeta) => ({ carpeta, notas: [] as N[] }));
+	const porId = new Map(grupos.map((g) => [g.carpeta?.id ?? null, g]));
+	for (const n of notas) {
+		const id =
+			n.carpetaId !== null && conocidas.has(n.carpetaId) ? n.carpetaId : null;
+		porId.get(id)?.notas.push(n);
+	}
+	return grupos.filter((g) => g.notas.length > 0);
+}

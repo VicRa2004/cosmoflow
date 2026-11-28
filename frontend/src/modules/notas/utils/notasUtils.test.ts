@@ -2,6 +2,7 @@ import { strFromU8 } from "fflate";
 import { describe, expect, it } from "vitest";
 import type { CarpetaDto, NotaDto } from "../api/notasApi";
 import {
+	agruparPorCarpeta,
 	contenidoDe,
 	ordenarNotas,
 	ordenEnArbol,
@@ -114,6 +115,20 @@ describe("contenidoDe", () => {
 			...c.notas.map((x) => x.titulo),
 		];
 	};
+
+	it("agrupa por carpeta: raíz primero, luego en orden de árbol, sin vacías", () => {
+		const grupos = agruparPorCarpeta([...notas].reverse(), carpetas);
+		expect(
+			grupos.map((g) => [
+				g.carpeta?.nombre ?? "Raíz",
+				g.notas.map((n) => n.titulo),
+			]),
+		).toEqual([
+			["Raíz", ["huérfana", "zeta"]],
+			["A", ["en A"]],
+			["B", ["en B"]],
+		]);
+	});
 
 	it("solo lo que cuelga directamente de la carpeta, por nombre", () => {
 		expect(nombres(null)).toEqual(["A/", "C/", "huérfana", "zeta"]);

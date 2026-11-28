@@ -5,6 +5,7 @@ import {
 	Download,
 	FilePlus,
 	FileText,
+	FolderInput,
 	FolderPlus,
 	Pencil,
 	Pin,
@@ -24,6 +25,7 @@ import type { ContextoNotaSearch } from "../schemas/notaSchemas";
 import { usePreferenciasQuery } from "@/modules/configuracion/hooks/usePreferencias";
 import { cadenaDe, contenidoDe, subarbol } from "../utils/arbolCarpetas";
 import { IconoCarpeta } from "./IconoCarpeta";
+import type { Moviendo } from "./MoverDialog";
 import {
 	type MenuAbierto,
 	MenuContextual,
@@ -53,6 +55,8 @@ interface ExploradorCarpetaProps {
 	onDescargar: (carpeta: CarpetaDto | null) => void;
 	/** Soltar en `destino` (`null`: la raíz). */
 	onMover: (arrastrado: Arrastrado, destino: number | null) => void;
+	/** «Mover a…» del menú: abre el selector de carpeta. */
+	onMoverA: (moviendo: Moviendo) => void;
 	onDuplicarNota?: (nota: NotaIndiceDto) => void;
 	onFijarNota?: (nota: NotaIndiceDto) => void;
 }
@@ -73,7 +77,6 @@ const arrastrar = (arrastrado: Arrastrado) => (e: DragEvent) => {
 export function FilaNota({
 	nota,
 	search,
-	ruta,
 	arrastrable = false,
 	onDuplicar,
 	onFijar,
@@ -81,8 +84,6 @@ export function FilaNota({
 }: {
 	nota: NotaIndiceDto;
 	search: ContextoNotaSearch;
-	/** Carpeta de la nota, en los resultados de búsqueda. */
-	ruta?: string;
 	arrastrable?: boolean;
 	onDuplicar?: (nota: NotaIndiceDto) => void;
 	onFijar?: (nota: NotaIndiceDto) => void;
@@ -113,11 +114,6 @@ export function FilaNota({
 					/>
 				)}
 				<span className="truncate">{nota.titulo}</span>
-				{ruta && (
-					<span className="ml-auto shrink-0 truncate text-xs text-tinta-tenue">
-						{ruta}
-					</span>
-				)}
 			</Link>
 			{(onFijar || onDuplicar) && (
 				<div
@@ -177,6 +173,7 @@ export function ExploradorCarpeta({
 	onEliminar,
 	onDescargar,
 	onMover,
+	onMoverA,
 	onDuplicarNota,
 	onFijarNota,
 }: ExploradorCarpetaProps) {
@@ -190,10 +187,23 @@ export function ExploradorCarpeta({
 	const contenido = contenidoDe(actual?.id ?? null, carpetas, notas, orden);
 
 	const abrirMenuNota = (nota: NotaIndiceDto) => (e: MouseEvent) => {
-		if (!onFijarNota && !onDuplicarNota) return;
+		if (!onFijarNota && !onDuplicarNota && !editable) return;
 		e.preventDefault();
 		e.stopPropagation();
 		const opciones: OpcionMenu[] = [];
+		if (editable) {
+			opciones.push({
+				texto: "Mover a…",
+				icono: FolderInput,
+				onClick: () =>
+					onMoverA({
+						tipo: "nota",
+						id: nota.id,
+						nombre: nota.titulo,
+						desde: actual?.id ?? null,
+					}),
+			});
+		}
 		if (onFijarNota) {
 			opciones.push({
 				texto: nota.isFijada ? "Desfijar" : "Fijar",
@@ -236,11 +246,24 @@ export function ExploradorCarpeta({
 				]
 			: [];
 		if (carpeta && editable)
-			opciones.push({
-				texto: "Editar",
-				icono: Pencil,
-				onClick: () => onEditar(carpeta),
-			});
+			opciones.push(
+				{
+					texto: "Editar",
+					icono: Pencil,
+					onClick: () => onEditar(carpeta),
+				},
+				{
+					texto: "Mover a…",
+					icono: FolderInput,
+					onClick: () =>
+						onMoverA({
+							tipo: "carpeta",
+							id: carpeta.id,
+							nombre: carpeta.nombre,
+							desde: carpeta.padreId,
+						}),
+				},
+			);
 		opciones.push({
 			texto: carpeta ? "Descargar (.zip)" : "Descargar todas (.zip)",
 			icono: Download,
