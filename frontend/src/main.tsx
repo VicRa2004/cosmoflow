@@ -17,6 +17,12 @@ import { aplicarPreferenciasGuardadas } from "@/modules/configuracion/aplicarPre
 iniciarMonitoreo();
 aplicarPreferenciasGuardadas();
 
+// PWA: instalable y con página propia sin conexión (public/sw.js). Solo en producción
+// para que el SW no interfiera con el HMR de Vite.
+if (import.meta.env.PROD && "serviceWorker" in navigator) {
+	navigator.serviceWorker.register("/sw.js").catch(() => {});
+}
+
 const router = createRouter({
 	routeTree,
 	context: {

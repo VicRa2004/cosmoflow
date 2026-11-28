@@ -107,7 +107,7 @@ export function BovedaNotas({ contexto }: { contexto: ContextoNotaSearch }) {
 					/>
 					<Search className="pointer-events-none absolute top-2.5 left-3 h-4 w-4 text-tinta-tenue" />
 				</div>
-				<div className="flex items-center gap-1">
+				<div className="flex flex-wrap items-center gap-1">
 					<Select
 						aria-label="Ordenar notas y carpetas"
 						title="Ordenar"
