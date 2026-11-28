@@ -14,8 +14,8 @@ import {
 	useMoverNotaMutation,
 } from "../hooks/useNotasMutation";
 import { useDescargarCarpeta } from "../hooks/useDescargarCarpeta";
+import type { EstadoCarpetaDialog } from "./CarpetaDialog";
 import { type Arrastrado, ExploradorCarpeta } from "./ExploradorCarpeta";
-import { CarpetaDialog } from "./CarpetaDialog";
 import { type Moviendo, MoverDialog } from "./MoverDialog";
 
 interface PanelCarpetasProps {
@@ -26,6 +26,7 @@ interface PanelCarpetasProps {
 	proyectoId?: number;
 	seleccionada?: number;
 	onSeleccionar: (carpetaId?: number) => void;
+	onAbrirCarpetaDialog: (estado: EstadoCarpetaDialog) => void;
 }
 
 /** Explorador de carpetas y notas con crear, editar, eliminar, descargar y mover. */
@@ -36,12 +37,9 @@ export function PanelCarpetas({
 	proyectoId,
 	seleccionada,
 	onSeleccionar,
+	onAbrirCarpetaDialog,
 }: PanelCarpetasProps) {
 	const { puede } = usePermisos();
-	const [dialogo, setDialogo] = useState<{
-		carpeta?: CarpetaDto;
-		padreId: number | null;
-	}>();
 	const [eliminando, setEliminando] = useState<CarpetaDto | null>(null);
 	const [moviendo, setMoviendo] = useState<Moviendo>();
 	const eliminar = useEliminarCarpetaMutation();
@@ -78,9 +76,9 @@ export function PanelCarpetas({
 						search: { ...searchNota, carpetaId: carpetaId ?? undefined },
 					})
 				}
-				onNueva={(padreId) => setDialogo({ padreId })}
+				onNueva={(padreId) => onAbrirCarpetaDialog({ padreId })}
 				onEditar={(carpeta) =>
-					setDialogo({ carpeta, padreId: carpeta.padreId })
+					onAbrirCarpetaDialog({ carpeta, padreId: carpeta.padreId })
 				}
 				onEliminar={setEliminando}
 				onDescargar={(carpeta) => descargar.mutate(carpeta)}
@@ -97,12 +95,6 @@ export function PanelCarpetas({
 								fijarNota.mutate({ id: nota.id, isFijada: !nota.isFijada })
 						: undefined
 				}
-			/>
-			<CarpetaDialog
-				estado={dialogo}
-				carpetas={carpetas}
-				proyectoId={proyectoId}
-				onCerrar={() => setDialogo(undefined)}
 			/>
 			<MoverDialog
 				moviendo={moviendo}
