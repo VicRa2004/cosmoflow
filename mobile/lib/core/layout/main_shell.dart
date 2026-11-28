@@ -5,11 +5,11 @@ import '../../modules/notificaciones/api/notificaciones_api.dart';
 import '../../modules/notificaciones/preferencias_push_prompt.dart';
 import '../auth/sesion_store.dart';
 import '../push/push_service.dart';
-import '../theme/colores_noche_indigo.dart';
+import 'barra_navegacion_flotante.dart';
 import 'navegacion.dart';
 
-/// Shell autenticado: `NavigationBar` filtrada por permisos y disparo del aviso
-/// inicial para activar notificaciones solo por móvil.
+/// Shell autenticado: barra de navegación flotante filtrada por permisos y disparo
+/// del aviso inicial para activar notificaciones solo por móvil.
 /// Cada página es dueña de su `Scaffold` (título, acciones y FAB).
 class MainShell extends StatefulWidget {
   const MainShell({
@@ -90,28 +90,15 @@ class _MainShellState extends State<MainShell> {
     return Scaffold(
       body: widget.child,
       bottomNavigationBar: items.length >= 2
-          ? DecoratedBox(
-              decoration: BoxDecoration(
-                border: Border(
-                  top: BorderSide(color: context.colores.borde, width: 1),
-                ),
-              ),
-              child: NavigationBar(
-                selectedIndex: indice < 0 ? 0 : indice,
-                onDestinationSelected: (i) {
-                  if (widget.ubicacionActual != items[i].ruta) {
-                    context.go(items[i].ruta);
-                  }
-                },
-                destinations: <Widget>[
-                  for (final item in items)
-                    NavigationDestination(
-                      icon: Icon(item.icono),
-                      selectedIcon: Icon(item.iconoActivo ?? item.icono),
-                      label: item.etiqueta,
-                    ),
-                ],
-              ),
+          ? BarraNavegacionFlotante(
+              items: items,
+              indiceActivo: indice < 0 ? 0 : indice,
+              usuario: widget.sesionStore.usuario,
+              onSeleccionar: (i) {
+                if (widget.ubicacionActual != items[i].ruta) {
+                  context.go(items[i].ruta);
+                }
+              },
             )
           : null,
     );
