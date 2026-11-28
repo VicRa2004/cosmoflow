@@ -29,7 +29,11 @@ import '../../modules/organizaciones/pages/proyecto_editor_page.dart';
 import '../../modules/organizaciones/pages/rol_organizacion_editor_page.dart';
 import '../../modules/papelera/api/papelera_api.dart';
 import '../../modules/papelera/pages/papelera_page.dart';
+import '../../modules/perfil/api/perfil_api.dart';
+import '../../modules/perfil/pages/calendario_suscripcion_page.dart';
+import '../../modules/perfil/pages/dos_pasos_page.dart';
 import '../../modules/perfil/pages/perfil_page.dart';
+import '../../modules/perfil/pages/sesiones_activas_page.dart';
 import '../../modules/plantillas/api/plantillas_api.dart';
 import '../../modules/plantillas/pages/plantilla_editor_page.dart';
 import '../../modules/plantillas/pages/plantillas_page.dart';
@@ -74,6 +78,7 @@ GoRouter crearAppRouter({
       notificacionesApi ?? NotificacionesApi(apiClient: authApi.apiClient);
   final papelera = papeleraApi ?? PapeleraApi(apiClient: authApi.apiClient);
   final busqueda = busquedaApi ?? BusquedaApi(apiClient: authApi.apiClient);
+  final perfilApi = PerfilApi(apiClient: authApi.apiClient);
   void resincronizarRecordatorios() {
     if (recordatorios != null) {
       unawaited(recordatorios.sincronizar(forzar: true));
@@ -253,6 +258,28 @@ GoRouter crearAppRouter({
           notificacionesApi: notifApi,
           cargarAlIniciar: cargarDatosIniciales,
           onPreferenciasActualizadas: resincronizarRecordatorios,
+        ),
+      ),
+      GoRoute(
+        path: '/perfil/sesiones',
+        builder: (context, state) => SesionesActivasPage(
+          perfilApi: perfilApi,
+          authApi: authApi,
+          cargarAlIniciar: cargarDatosIniciales,
+        ),
+      ),
+      GoRoute(
+        path: '/perfil/dos-pasos',
+        builder: (context, state) => DosPasosPage(
+          perfilApi: perfilApi,
+          cargarAlIniciar: cargarDatosIniciales,
+        ),
+      ),
+      GoRoute(
+        path: '/perfil/calendario',
+        builder: (context, state) => CalendarioSuscripcionPage(
+          perfilApi: perfilApi,
+          cargarAlIniciar: cargarDatosIniciales,
         ),
       ),
       GoRoute(
