@@ -22,7 +22,8 @@ class NotaFormValores {
   final int? carpetaId;
 }
 
-/// Campos de la nota. La página llama a [NotaFormState.validar].
+/// Campos de la nota estilo Apple Notes / Obsidian: título editorial limpio
+/// sin recuadro sobre el editor Markdown, y propiedades abajo.
 class NotaForm extends StatefulWidget {
   const NotaForm({
     super.key,
@@ -81,34 +82,52 @@ class NotaFormState extends State<NotaForm> {
 
   @override
   Widget build(BuildContext context) {
-    final seccion = Theme.of(context).textTheme.labelLarge
-        ?.copyWith(color: context.colores.tintaTenue);
+    final colores = context.colores;
+    final textTheme = Theme.of(context).textTheme;
+    final seccion = textTheme.labelLarge?.copyWith(color: colores.tintaTenue);
+
     return Form(
       key: _formKey,
       onChanged: widget.onCambio,
       child: ListView(
-        padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
+        padding: const EdgeInsets.fromLTRB(16, 12, 16, 36),
         children: <Widget>[
           TextFormField(
             controller: _titulo,
             autofocus: widget.notaInicial == null,
             textCapitalization: TextCapitalization.sentences,
             textInputAction: TextInputAction.next,
-            decoration: const InputDecoration(labelText: 'Título'),
+            style: textTheme.headlineSmall?.copyWith(
+              fontWeight: FontWeight.w700,
+            ),
+            decoration: InputDecoration(
+              hintText: 'Título de la nota',
+              hintStyle: textTheme.headlineSmall?.copyWith(
+                color: colores.tintaTenue.withValues(alpha: 0.65),
+                fontWeight: FontWeight.w700,
+              ),
+              filled: false,
+              border: InputBorder.none,
+              enabledBorder: InputBorder.none,
+              focusedBorder: InputBorder.none,
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 2,
+                vertical: 6,
+              ),
+            ),
             validator: (v) => (v == null || v.trim().isEmpty)
                 ? 'El título es obligatorio'
                 : null,
           ),
-          const SizedBox(height: 24),
-          Text('Contenido', style: seccion),
-          const SizedBox(height: 8),
+          Divider(color: colores.borde, height: 1),
+          const SizedBox(height: 12),
           EditorMarkdown(
             controller: _contenido,
-            hint: 'Escribe tus apuntes o pulsa «/» para insertar un bloque…',
+            hint: 'Empieza a escribir o pulsa «/» para insertar un bloque…',
             onCambio: widget.onCambio,
           ),
           if (widget.carpetas.isNotEmpty) ...<Widget>[
-            const SizedBox(height: 16),
+            const SizedBox(height: 20),
             SelectorCarpeta(
               carpetas: widget.carpetas,
               valor: _carpetaId,
@@ -120,7 +139,7 @@ class NotaFormState extends State<NotaForm> {
             ),
           ],
           if (widget.tagsDisponibles.isNotEmpty) ...<Widget>[
-            const SizedBox(height: 24),
+            const SizedBox(height: 20),
             Text('Tags', style: seccion),
             const SizedBox(height: 8),
             Wrap(
@@ -129,7 +148,7 @@ class NotaFormState extends State<NotaForm> {
               children: <Widget>[
                 for (final tag in widget.tagsDisponibles)
                   FilterChip(
-                    label: Text(tag.nombre),
+                    label: Text('#${tag.nombre}'),
                     selected: _tags.contains(tag.id),
                     onSelected: (sel) {
                       setState(
