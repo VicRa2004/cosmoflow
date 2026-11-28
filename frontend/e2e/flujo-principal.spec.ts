@@ -44,15 +44,16 @@ test.describe("Flujo principal en navegador", () => {
 			page.getByRole("button", { name: `Reabrir «${tituloTarea}»` }),
 		).toBeVisible();
 
-		// 4. Crear nota desde /notas/nueva y verificar que persiste tras recargar.
+		// 4. Crear nota desde /notas/nueva y verificar que persiste tras recargar (se abre en el editor).
 		await page.goto("/notas/nueva");
 		await page.getByLabel("Título").fill(tituloNota);
 		await page.getByRole("button", { name: /^Crear/ }).click();
 
 		await expect(page).toHaveURL(/\/notas\/\d+/);
-		await expect(page.getByRole("heading", { name: tituloNota })).toBeVisible();
+		// La nota se abre en el editor: el título está en su campo, no en un encabezado.
+		await expect(page.getByLabel("Título")).toHaveValue(tituloNota);
 
 		await page.reload();
-		await expect(page.getByRole("heading", { name: tituloNota })).toBeVisible();
+		await expect(page.getByLabel("Título")).toHaveValue(tituloNota);
 	});
 });
