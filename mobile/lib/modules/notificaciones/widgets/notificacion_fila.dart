@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../core/theme/colores_noche_indigo.dart';
+import '../../../core/widgets/tarjeta_seccion.dart';
 import '../models/bandeja_notificacion_models.dart';
 import '../utils/describir_notificacion.dart';
 
@@ -19,13 +21,13 @@ class NotificacionFila extends StatelessWidget {
 
   IconData _iconoPorEvento(String? evento) {
     return switch (evento) {
-      'tareaAsignada' => Icons.person_add_alt_1_outlined,
-      'mencion' => Icons.alternate_email_rounded,
-      'comentario' => Icons.chat_bubble_outline_rounded,
-      'estadoCambiado' => Icons.sync_rounded,
-      'vencimiento' => Icons.event_busy_outlined,
-      'resumenDiario' => Icons.calendar_today_outlined,
-      _ => Icons.notifications_none_rounded,
+      'tareaAsignada' => LucideIcons.userPlus,
+      'mencion' => LucideIcons.atSign,
+      'comentario' => LucideIcons.messageSquare,
+      'estadoCambiado' => LucideIcons.refreshCw,
+      'vencimiento' => LucideIcons.clockAlert,
+      'resumenDiario' => LucideIcons.calendar,
+      _ => LucideIcons.bell,
     };
   }
 
@@ -34,6 +36,7 @@ class NotificacionFila extends StatelessWidget {
     final colores = context.colores;
     final textTheme = Theme.of(context).textTheme;
     final leida = notificacion.leida;
+    final esVencimiento = notificacion.evento == 'vencimiento';
     final etiqueta =
         etiquetasCortasEventoNotificacion[notificacion.evento] ??
         'Notificación';
@@ -43,31 +46,38 @@ class NotificacionFila extends StatelessWidget {
         ? describirResponsablesNotificacion(tarea.responsables, yoId: yoId)
         : null;
 
+    final colorIcono = leida
+        ? colores.tintaTenue
+        : esVencimiento
+        ? colores.rosePeligro
+        : colores.indigoMarca;
+    final fondoIcono = leida
+        ? colores.elevada
+        : esVencimiento
+        ? colores.roseSuave
+        : colores.indigoSuave;
+
     return Material(
       color: leida
-          ? Colors.transparent
-          : colores.indigoMarca.withValues(alpha: 0.06),
+          ? colores.superficie
+          : colores.indigoSuave.withValues(alpha: 0.4),
       child: InkWell(
         onTap: onTap,
         child: ConstrainedBox(
           constraints: const BoxConstraints(minHeight: 68),
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[
-                Container(
-                  width: 36,
-                  height: 36,
-                  margin: const EdgeInsets.only(top: 2),
-                  decoration: BoxDecoration(
-                    color: colores.elevada,
-                    shape: BoxShape.circle,
-                  ),
-                  child: Icon(
-                    _iconoPorEvento(notificacion.evento),
-                    size: 18,
-                    color: leida ? colores.tintaTenue : colores.indigoMarca,
+                Padding(
+                  padding: const EdgeInsets.only(top: 2),
+                  child: IconoCaja(
+                    icono: _iconoPorEvento(notificacion.evento),
+                    color: colorIcono,
+                    fondo: fondoIcono,
+                    dimension: 36,
+                    tamanoIcono: 18,
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -87,7 +97,12 @@ class NotificacionFila extends StatelessWidget {
                               style: textTheme.labelMedium?.copyWith(
                                 color: leida
                                     ? colores.tintaTenue
+                                    : esVencimiento
+                                    ? colores.rosePeligro
                                     : colores.indigoMarca,
+                                fontWeight: leida
+                                    ? FontWeight.w500
+                                    : FontWeight.w600,
                               ),
                             ),
                           ),
@@ -146,7 +161,9 @@ class NotificacionFila extends StatelessWidget {
                     height: 8,
                     margin: const EdgeInsets.only(left: 8, top: 8),
                     decoration: BoxDecoration(
-                      color: colores.indigoMarca,
+                      color: esVencimiento
+                          ? colores.rosePeligro
+                          : colores.indigoMarca,
                       shape: BoxShape.circle,
                     ),
                   ),

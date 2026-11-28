@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../core/theme/colores_noche_indigo.dart';
 import '../../../core/theme/tema_app.dart';
+import '../../../core/widgets/tarjeta_seccion.dart';
 import '../models/tarea_model.dart';
 
 /// Checklist interactiva de subtareas en la vista de detalle de una tarea.
@@ -35,21 +37,31 @@ class ChecklistSubtareas extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
         Padding(
-          padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+          padding: const EdgeInsets.fromLTRB(16, 6, 16, 10),
           child: Row(
             children: <Widget>[
-              Icon(
-                Icons.checklist_rounded,
-                size: 18,
-                color: colores.tintaTenue,
+              IconoCaja(
+                icono: LucideIcons.listChecks,
+                color: completas ? colores.emeraldExito : colores.indigoMarca,
+                fondo: completas ? colores.emeraldSuave : colores.indigoSuave,
+                dimension: 28,
+                tamanoIcono: 15,
+                radio: TemaApp.radioPequeno,
               ),
-              const SizedBox(width: 8),
+              const SizedBox(width: 10),
               Expanded(child: Text('Subtareas', style: textTheme.titleMedium)),
-              Text(
-                '$completadas/$total ($porcentaje%)',
-                style: textTheme.labelMedium?.copyWith(
-                  color: completas ? colores.emeraldExito : colores.tintaTenue,
-                ),
+              InsigniaPill(
+                texto: '$completadas/$total ($porcentaje%)',
+                colorTexto: completas
+                    ? colores.emeraldExito
+                    : completadas > 0
+                    ? colores.indigoMarca
+                    : colores.tintaTenue,
+                colorFondo: completas
+                    ? colores.emeraldSuave
+                    : completadas > 0
+                    ? colores.indigoSuave
+                    : colores.elevada,
               ),
             ],
           ),
@@ -57,7 +69,7 @@ class ChecklistSubtareas extends StatelessWidget {
         Padding(
           padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
           child: ClipRRect(
-            borderRadius: BorderRadius.circular(TemaApp.radioPequeno),
+            borderRadius: BorderRadius.circular(TemaApp.radioCompleto),
             child: LinearProgressIndicator(
               value: fraccion,
               minHeight: 6,
@@ -68,7 +80,7 @@ class ChecklistSubtareas extends StatelessWidget {
             ),
           ),
         ),
-        for (var i = 0; i < subtareas.length; i++)
+        for (var i = 0; i < subtareas.length; i++) ...<Widget>[
           CheckboxListTile(
             controlAffinity: ListTileControlAffinity.leading,
             dense: true,
@@ -89,6 +101,8 @@ class ChecklistSubtareas extends StatelessWidget {
               ),
             ),
           ),
+          if (i < subtareas.length - 1) const Divider(indent: 56),
+        ],
       ],
     );
   }

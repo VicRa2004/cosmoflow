@@ -118,17 +118,44 @@ class _CalendarioPageState extends State<CalendarioPage> {
     _cargar();
   }
 
+  void _irAHoy() {
+    final ahora = DateTime.now();
+    final cambioMes = _mes.year != ahora.year || _mes.month != ahora.month;
+    setState(() {
+      _mes = DateTime(ahora.year, ahora.month);
+      _seleccionado = diaLocal(ahora);
+    });
+    if (cambioMes) _cargar();
+  }
+
+  String _etiquetaDia(String iso, String hoy) {
+    if (iso == hoy) return 'Hoy';
+    final partes = iso.split('-');
+    if (partes.length != 3) return iso;
+    final mes = int.tryParse(partes[1]);
+    final dia = int.tryParse(partes[2]);
+    if (mes == null || dia == null || mes < 1 || mes > 12) return iso;
+    return '$dia de ${_meses[mes - 1].toLowerCase()}';
+  }
+
   @override
   Widget build(BuildContext context) {
     final colores = context.colores;
     final textTheme = Theme.of(context).textTheme;
-    final hoy = diaLocal(DateTime.now());
+    final ahora = DateTime.now();
+    final hoy = diaLocal(ahora);
+    final mostrandoHoy =
+        _mes.year == ahora.year &&
+        _mes.month == ahora.month &&
+        _seleccionado == hoy;
     final tareasDia = _porDia[_seleccionado] ?? const <TareaDto>[];
 
     return Scaffold(
       appBar: AppBar(
         title: Text('${_meses[_mes.month - 1]} ${_mes.year}'),
         actions: <Widget>[
+          if (!mostrandoHoy)
+            TextButton(onPressed: _irAHoy, child: const Text('Hoy')),
           IconButton(
             tooltip: 'Mes anterior',
             icon: const Icon(LucideIcons.chevronLeft),
@@ -199,7 +226,7 @@ class _CalendarioPageState extends State<CalendarioPage> {
               )
             else
               TarjetaSeccion(
-                titulo: _seleccionado == hoy ? 'Hoy' : _seleccionado,
+                titulo: _etiquetaDia(_seleccionado, hoy),
                 contador: tareasDia.length,
                 divisorIndent: 56,
                 children: <Widget>[
@@ -289,17 +316,19 @@ class _Dia extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 3),
-          Container(
+          SizedBox(
             width: 5,
             height: 5,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: tareas == 0
-                  ? Colors.transparent
-                  : vencidas
-                  ? colores.rosePeligro
-                  : colores.indigoMarca,
-            ),
+            child: tareas == 0
+                ? null
+                : DecoratedBox(
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: vencidas
+                          ? colores.rosePeligro
+                          : colores.indigoMarca,
+                    ),
+                  ),
           ),
         ],
       ),
